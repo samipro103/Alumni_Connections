@@ -1,59 +1,80 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useParams } from "next/navigation";
+import {
+  useEffect,
+  useRef,
+  useState,
+} from "react";
+import {
+  ArrowLeft,
+  MoreHorizontal,
+  Send,
+} from "lucide-react";
+import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
-import { formatDistanceToNow } from "date-fns";
-import { es } from "date-fns/locale";
-import { motion } from "framer-motion";
 import { supabase } from "@/lib/supabase";
+import { useAuth } from "@/components/auth/AuthProvider";
+import AppShell from "@/components/layout/AppShell";
 
 export default function ChatPage() {
-
   const params = useParams();
-
   const username = params.username as string;
+
+  const router = useRouter();
+  const { user, loading } = useAuth();
 
   const [messages, setMessages] = useState<any[]>([]);
   const [newMessage, setNewMessage] = useState("");
   const [receiver, setReceiver] = useState<any>(null);
-  const [currentUser, setCurrentUser] = useState<any>(null);
+  const [loadingChat, setLoadingChat] = useState(true);
+  const [sending, setSending] = useState(false);
+
+  const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    if (!loading && !user) {
+      router.push("/login");
+    }
+  }, [user, loading, router]);
+
+  useEffect(() => {
+    if (!user) return;
+
     loadChat();
-  }, []);
 
-  useEffect(() => {
     const interval = setInterval(() => {
-      loadChat();
+      loadChat(false);
     }, 2000);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [user?.id, username]);
 
-  async function loadChat() {
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({
+      behavior: "smooth",
+    });
+  }, [messages.length]);
 
-    const {
-      data: { session },
-    } = await supabase.auth.getSession();
-
-    const user = session?.user;
-
+  async function loadChat(showLoader = true) {
     if (!user) return;
 
-    setCurrentUser(user);
+    if (showLoader) setLoadingChat(true);
 
     const { data: receiverData } = await supabase
       .from("profiles")
-      .select("*")
+      .select("id, username, avatar_url, university, career")
       .eq("username", username)
       .maybeSingle();
 
-    if (!receiverData) return;
+    if (!receiverData) {
+      setReceiver(null);
+      setLoadingChat(false);
+      return;
+    }
 
     setReceiver(receiverData);
 
-    const { data: messagesData } = await supabase
+    const { data: messagesData, error } = await supabase
       .from("messages")
       .select("*")
       .or(
@@ -63,202 +84,236 @@ export default function ChatPage() {
         ascending: true,
       });
 
-    setMessages(messagesData || []);
+    if (!error) {
+      setMessages(messagesData || []);
+    }
+
+    setLoadingChat(false);
   }
 
   async function handleSendMessage(
-    e: React.FormEvent
+    e?: React.FormEvent
   ) {
-    e.preventDefault();
+    e?.preventDefault();
 
     if (
       !newMessage.trim() ||
-      !currentUser ||
-      !receiver
+      !user ||
+      !receiver ||
+      sending
     ) {
       return;
     }
 
+    const content = newMessage.trim();
+
+    setSending(true);
+    setNewMessage("");
+
     const { error } = await supabase
       .from("messages")
       .insert({
-        sender_id: currentUser.id,
+        sender_id: user.id,
         receiver_id: receiver.id,
-        content: newMessage,
+        content,
       });
 
     if (error) {
+      setNewMessage(content);
       alert(error.message);
+      setSending(false);
       return;
     }
 
-    setNewMessage("");
-    setTimeout(() => {
-      loadChat();
-    }, 500);
+    await loadChat(false);
+    setSending(false);
+  }
+
+  function formatMessageTime(date: string) {
+    return new Date(date).toLocaleTimeString("es-SV", {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  }
+
+  if (!loadingChat && !receiver) {
+    return (
+      <AppShell>
+        <div className="mx-auto w-full max-w-[760px] pt-10 text-center">
+          <h1 className="text-xl font-bold text-white">
+            Usuario no encontrado
+          </h1>
+
+          <Link
+            href="/messages"
+            className="mt-4 inline-flex text-sm font-semibold text-[#8d98ff]"
+          >
+            Volver a mensajes
+          </Link>
+        </div>
+      </AppShell>
+    );
   }
 
   return (
-    <main className="
-      flex
-      flex-col
-      h-screen
-      bg-[#09090B]
-      bg-[radial-gradient(circle_at_top,#1e293b20,transparent_40%)]
-    ">
+    <AppShell>
+      <div className="mx-auto flex h-[calc(100vh-112px)] min-h-[620px] w-full max-w-[820px] flex-col overflow-hidden rounded-[26px] border border-white/[0.07] bg-[#101318]/95">
+        <header className="flex min-h-[76px] items-center gap-3 border-b border-white/[0.06] px-4 sm:px-5">
+          <Link
+            href="/messages"
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-zinc-500 transition hover:bg-white/[0.05] hover:text-white"
+            aria-label="Volver"
+          >
+            <ArrowLeft size={19} />
+          </Link>
 
-      {/* HEADER */}
-      <div className="
-        flex
-        items-center
-        justify-between
-        px-5
-        py-4
-        backdrop-blur-xl
-        bg-zinc-950/80
-        border-b
-        border-zinc-800
-        sticky
-        top-0
-        z-50
-      ">
-
-        <div className="flex items-center gap-3">
-
-          {receiver?.avatar_url ? (
-
-            <img
-              src={receiver.avatar_url}
-              alt="Avatar"
-              className="w-12 h-12 rounded-full object-cover"
-            />
-
-          ) : (
-
-            <div className="
-              w-12
-              h-12
-              rounded-full
-              bg-gradient-to-r
-              from-blue-500
-              to-purple-600
-              flex
-              items-center
-              justify-center
-              text-white
-              font-bold
-              shadow-lg
-            ">
-              👤
+          <Link
+            href={receiver ? `/u/${receiver.username}` : "#"}
+            className="flex min-w-0 flex-1 items-center gap-3"
+          >
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[#1a1f29] text-sm font-bold text-white ring-1 ring-white/10">
+              {receiver?.avatar_url ? (
+                <img
+                  src={receiver.avatar_url}
+                  alt={receiver.username}
+                  className="h-full w-full object-cover"
+                />
+              ) : (
+                receiver?.username?.charAt(0)?.toUpperCase() || "U"
+              )}
             </div>
 
+            <div className="min-w-0">
+              <h1 className="truncate text-sm font-bold text-white">
+                @{receiver?.username || username}
+              </h1>
+
+              <p className="mt-0.5 truncate text-xs text-zinc-600">
+                {[receiver?.career, receiver?.university]
+                  .filter(Boolean)
+                  .join(" · ") || "Comunidad Alumni"}
+              </p>
+            </div>
+          </Link>
+
+          <button
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-zinc-600 transition hover:bg-white/[0.05] hover:text-zinc-200"
+            title="Más opciones"
+          >
+            <MoreHorizontal size={19} />
+          </button>
+        </header>
+
+        <div className="scrollbar-thin flex-1 overflow-y-auto px-4 py-5 sm:px-6">
+          {loadingChat ? (
+            <div className="flex h-full items-center justify-center text-sm text-zinc-600">
+              Cargando conversación...
+            </div>
+          ) : messages.length === 0 ? (
+            <div className="flex h-full items-center justify-center">
+              <div className="max-w-sm text-center">
+                <div className="mx-auto flex h-16 w-16 items-center justify-center overflow-hidden rounded-full bg-[#1a1f29] text-lg font-bold text-white ring-1 ring-white/10">
+                  {receiver?.avatar_url ? (
+                    <img
+                      src={receiver.avatar_url}
+                      alt={receiver.username}
+                      className="h-full w-full object-cover"
+                    />
+                  ) : (
+                    receiver?.username?.charAt(0)?.toUpperCase() || "U"
+                  )}
+                </div>
+
+                <h2 className="mt-4 text-base font-bold text-zinc-300">
+                  Inicia la conversación
+                </h2>
+
+                <p className="mt-2 text-sm leading-6 text-zinc-600">
+                  Envía un mensaje a @{receiver?.username} y comienza a conectar.
+                </p>
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-2.5">
+              {messages.map((message: any) => {
+                const mine = message.sender_id === user?.id;
+
+                return (
+                  <div
+                    key={message.id}
+                    className={`flex ${mine ? "justify-end" : "justify-start"}`}
+                  >
+                    <div
+                      className={`max-w-[78%] rounded-[18px] px-4 py-2.5 sm:max-w-[70%] ${
+                        mine
+                          ? "rounded-br-md bg-[#6d7cff] text-white"
+                          : "rounded-bl-md bg-white/[0.055] text-zinc-200"
+                      }`}
+                    >
+                      <p className="whitespace-pre-wrap break-words text-sm leading-5">
+                        {message.content}
+                      </p>
+
+                      <p
+                        className={`mt-1 text-[10px] ${
+                          mine
+                            ? "text-white/60"
+                            : "text-zinc-700"
+                        }`}
+                      >
+                        {formatMessageTime(message.created_at)}
+                      </p>
+                    </div>
+                  </div>
+                );
+              })}
+
+              <div ref={bottomRef} />
+            </div>
           )}
-
-          <div>
-
-            <h1 className="text-xl font-bold">
-              @{receiver?.username || username}
-            </h1>
-
-            <p className="text-zinc-400 text-sm">
-              {receiver?.university || "Alumno"}
-            </p>
-
-          </div>
-
         </div>
 
-      </div>
-
-      {/* MESSAGES */}
-      <div className="flex-1 p-6 space-y-4 overflow-y-auto">
-
-        {messages.map((msg) => (
-
-          <motion.div
-            key={msg.id}
-            initial={{
-              opacity: 0,
-              y: 15
-            }}
-            animate={{
-              opacity: 1,
-              y: 0
-            }}
-            transition={{
-              duration: 0.25
-            }}
-            className={`max-w-[70%] p-4 rounded-3xl shadow-lg ${
-              msg.sender_id === currentUser?.id
-                ? "bg-gradient-to-r from-blue-500 to-purple-600 text-white ml-auto"
-                : "bg-zinc-800"
-            }`}
-          >
-
-            <div>
-
-              <p>
-                {msg.content}
-              </p>
-
-              <p className="text-xs opacity-70 mt-2">
-                {new Date(msg.created_at).toLocaleTimeString()}
-              </p>
-
-            </div>
-
-          </motion.div>
-
-        ))}
-
-      </div>
-
-      {/* INPUT */}
-      <form 
-        onSubmit={handleSendMessage}
-        className="border-t border-zinc-800 p-4 flex gap-4 bg-[#09090B] sticky bottom-0"
-      >
-
-        <input
-          type="text"
-          placeholder="Escribe un mensaje..."
-          value={newMessage}
-          onChange={(e) => setNewMessage(e.target.value)}
-          className="
-            flex-1
-            bg-zinc-800
-            border
-            border-zinc-700
-            rounded-full
-            px-5
-            py-3
-            text-sm
-            focus:border-blue-500
-            outline-none
-            text-white
-            transition
-          "
-        />
-
-        <button
-          type="submit"
-          className="
-            p-3
-            bg-gradient-to-r
-            from-blue-500
-            to-purple-600
-            hover:scale-105
-            disabled:opacity-50
-            text-white
-            rounded-full
-            transition-all
-            shadow-xl
-          "
+        <form
+          onSubmit={handleSendMessage}
+          className="border-t border-white/[0.06] p-3 sm:p-4"
         >
-          Enviar
-        </button>
+          <div className="flex items-end gap-2 rounded-[18px] border border-white/[0.07] bg-white/[0.035] p-1.5 focus-within:border-[#6d7cff]/35">
+            <textarea
+              rows={1}
+              value={newMessage}
+              onChange={(e) => setNewMessage(e.target.value)}
+              onKeyDown={(e) => {
+                if (
+                  e.key === "Enter" &&
+                  !e.shiftKey
+                ) {
+                  e.preventDefault();
+                  handleSendMessage();
+                }
+              }}
+              placeholder="Escribe un mensaje..."
+              className="max-h-32 min-h-10 flex-1 resize-none bg-transparent px-3 py-2.5 text-sm leading-5 text-zinc-200 outline-none placeholder:text-zinc-700"
+            />
 
-      </form>
-    </main>
+            <button
+              type="submit"
+              disabled={
+                !newMessage.trim() ||
+                !receiver ||
+                sending
+              }
+              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[14px] bg-[#6d7cff] text-white transition hover:bg-[#7b87ff] disabled:cursor-not-allowed disabled:bg-white/[0.06] disabled:text-zinc-700"
+              aria-label="Enviar mensaje"
+            >
+              <Send size={17} />
+            </button>
+          </div>
+
+          <p className="mt-2 px-2 text-[10px] text-zinc-700">
+            Enter para enviar · Shift + Enter para salto de línea
+          </p>
+        </form>
+      </div>
+    </AppShell>
   );
 }

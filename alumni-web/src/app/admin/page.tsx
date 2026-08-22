@@ -1,66 +1,29 @@
-import AdminGuard from "@/components/admin/AdminGuard";
+import Link from "next/link";
+import { BarChart3, CalendarDays, FileText, Users } from "lucide-react";
+import AdminShell from "@/components/admin/AdminShell";
 
 export default function AdminPage() {
+  const modules = [
+    { href: "/admin/users", title: "Usuarios", description: "Revisa perfiles registrados y administra la comunidad.", icon: Users },
+    { href: "/admin/events", title: "Eventos", description: "Crea actividades y administra el calendario Alumni.", icon: CalendarDays },
+    { href: "/admin/posts", title: "Publicaciones", description: "Revisa y modera contenido publicado en la plataforma.", icon: FileText },
+    { href: "/admin/stats", title: "Estadísticas", description: "Consulta el tamaño y actividad general de la red.", icon: BarChart3 },
+  ];
+
   return (
-    <AdminGuard>
-      <main className="min-h-screen bg-[#09090B] text-white">
-
-      <div className="max-w-7xl mx-auto p-8">
-
-        <h1 className="text-5xl font-bold mb-8">
-          👑 Panel Administrador
-        </h1>
-
-        <div className="grid md:grid-cols-2 xl:grid-cols-4 gap-6">
-
-          <a
-            href="/admin/users"
-            className="block bg-zinc-900 border border-zinc-800 rounded-3xl p-6 hover:border-blue-500 transition"
-          >
-            <h2 className="text-xl font-bold">
-              👥 Usuarios
-            </h2>
-
-            <p className="text-zinc-400 mt-3">
-              Gestionar usuarios registrados.
-            </p>
-          </a>
-
-          <div className="bg-zinc-900 border border-zinc-800 rounded-3xl p-6">
-            <h2 className="text-xl font-bold">
-              🎓 Eventos
-            </h2>
-
-            <p className="text-zinc-400 mt-3">
-              Crear y administrar eventos.
-            </p>
-          </div>
-
-          <div className="bg-zinc-900 border border-zinc-800 rounded-3xl p-6">
-            <h2 className="text-xl font-bold">
-              📝 Publicaciones
-            </h2>
-
-            <p className="text-zinc-400 mt-3">
-              Moderar contenido.
-            </p>
-          </div>
-
-          <div className="bg-zinc-900 border border-zinc-800 rounded-3xl p-6">
-            <h2 className="text-xl font-bold">
-              📊 Estadísticas
-            </h2>
-
-            <p className="text-zinc-400 mt-3">
-              Ver actividad de la plataforma.
-            </p>
-          </div>
-
-        </div>
-
+    <AdminShell title="Centro de administración" description="Control general de AlumniConnections.">
+      <div className="grid gap-4 sm:grid-cols-2">
+        {modules.map(({ href, title, description, icon: Icon }) => (
+          <Link key={href} href={href} className="group rounded-[24px] border border-white/[0.07] bg-[#101318]/95 p-5 transition hover:border-[#6d7cff]/25 hover:bg-white/[0.04]">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#6d7cff]/10 text-[#8d98ff]">
+              <Icon size={18} />
+            </div>
+            <h2 className="mt-5 text-base font-black text-zinc-200">{title}</h2>
+            <p className="mt-2 text-sm leading-6 text-zinc-600">{description}</p>
+            <p className="mt-5 text-xs font-black text-[#8d98ff] opacity-70 transition group-hover:opacity-100">Abrir módulo →</p>
+          </Link>
+        ))}
       </div>
-
-    </main>
-    </AdminGuard>
+    </AdminShell>
   );
 }

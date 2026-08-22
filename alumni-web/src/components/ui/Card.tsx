@@ -1,5 +1,4 @@
 import { ReactNode } from "react";
-import { motion } from "framer-motion";
 import clsx from "clsx";
 
 interface CardProps {
@@ -12,19 +11,14 @@ export default function Card({
   className,
 }: CardProps) {
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 12 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: .25 }}
+    <div
       className={clsx(
-        "rounded-3xl border border-white/10",
-        "bg-white/5 backdrop-blur-xl",
-        "shadow-2xl shadow-black/20",
-        "p-6",
+        "rounded-[26px] border border-white/[0.07] bg-[#101318]/95 p-6",
+        "shadow-[0_16px_50px_rgba(0,0,0,0.18)]",
         className
       )}
     >
       {children}
-    </motion.div>
+    </div>
   );
 }

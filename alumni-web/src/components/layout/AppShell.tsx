@@ -4,6 +4,7 @@ import { ReactNode } from "react";
 import LeftSidebar from "./LeftSidebar";
 import RightSidebar from "./RightSidebar";
 import TopBar from "./TopBar";
+import MobileNav from "./MobileNav";
 
 interface Props {
   children: ReactNode;
@@ -11,22 +12,26 @@ interface Props {
 
 export default function AppShell({ children }: Props) {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-zinc-950 via-black to-zinc-950">
+    <div className="min-h-screen text-white">
       <TopBar />
 
-      <div className="max-w-[1600px] mx-auto px-6 pt-24">
-        <div className="grid grid-cols-12 gap-8">
-          <aside className="hidden lg:block col-span-3">
+      <div className="mx-auto w-full max-w-[1500px] px-4 pb-24 pt-[84px] sm:px-6 lg:px-8 lg:pb-10">
+        <div className="grid grid-cols-1 gap-7 lg:grid-cols-[220px_minmax(0,1fr)] xl:grid-cols-[220px_minmax(0,1fr)_310px]">
+          <aside className="hidden lg:block">
             <LeftSidebar />
           </aside>
 
-          <main className="col-span-12 lg:col-span-6">{children}</main>
+          <main className="min-w-0">
+            {children}
+          </main>
 
-          <aside className="hidden xl:block col-span-3">
+          <aside className="hidden xl:block">
             <RightSidebar />
           </aside>
         </div>
       </div>
+
+      <MobileNav />
     </div>
   );
 }

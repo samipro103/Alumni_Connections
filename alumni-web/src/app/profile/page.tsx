@@ -1,340 +1,464 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import {
+  Briefcase,
+  GraduationCap,
+  Heart,
+  Link2,
+  MapPin,
+  MessageCircle,
+  Pencil,
+  Settings,
+  Share2,
+} from "lucide-react";
+import { formatDistanceToNow } from "date-fns";
+import { es } from "date-fns/locale";
 import { useAuth } from "@/components/auth/AuthProvider";
-import { motion } from "framer-motion";
 import { supabase } from "@/lib/supabase";
+import AppShell from "@/components/layout/AppShell";
+
+type ProfileTab = "posts" | "about";
 
 export default function ProfilePage() {
-
   const router = useRouter();
   const { user, loading } = useAuth();
 
-  const [profileLoading, setProfileLoading] = useState(true);
   const [profile, setProfile] = useState<any>(null);
   const [followers, setFollowers] = useState(0);
   const [following, setFollowing] = useState(0);
-  const [postsCount, setPostsCount] = useState(0);
   const [posts, setPosts] = useState<any[]>([]);
+  const [loadingProfile, setLoadingProfile] = useState(true);
+  const [tab, setTab] = useState<ProfileTab>("posts");
 
   useEffect(() => {
-    if (!loading && !user) {
-      router.push("/login");
-    }
-  }, [user, loading]);
+    if (!loading && !user) router.push("/login");
+  }, [user, loading, router]);
 
   useEffect(() => {
-    getProfile();
-  }, []);
+    if (user) getProfile();
+  }, [user?.id]);
 
   async function getProfile() {
+    if (!user) return;
 
-    try {
+    setLoadingProfile(true);
 
-      const {
-        data: { user: authUser },
-      } = await supabase.auth.getUser();
-
-      if (!authUser) {
-        setProfileLoading(false);
-        return;
-      }
-
-      const { data } = await supabase
+    const [
+      { data: profileData },
+      { data: followersData },
+      { data: followingData },
+      { data: postsData },
+    ] = await Promise.all([
+      supabase
         .from("profiles")
         .select("*")
-        .eq("id", authUser.id)
-        .maybeSingle();
-
-      setProfile(data);
-
-      // Followers
-      const { data: followersData } = await supabase
+        .eq("id", user.id)
+        .maybeSingle(),
+      supabase
         .from("follows")
-        .select("*")
-        .eq("following_id", authUser.id);
-
-      setFollowers(followersData?.length || 0);
-
-      // Following
-      const { data: followingData } = await supabase
+        .select("follower_id")
+        .eq("following_id", user.id),
+      supabase
         .from("follows")
-        .select("*")
-        .eq("follower_id", authUser.id);
-
-      setFollowing(followingData?.length || 0);
-
-      // Posts
-      const { data: postsData } = await supabase
+        .select("following_id")
+        .eq("follower_id", user.id),
+      supabase
         .from("posts")
-        .select("*")
-        .eq("user_id", authUser.id);
+        .select("*, likes(user_id), comments(id)")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false }),
+    ]);
 
-      setPostsCount(postsData?.length || 0);
-      setPosts(postsData || []);
+    setProfile(profileData);
+    setFollowers(followersData?.length || 0);
+    setFollowing(followingData?.length || 0);
+    setPosts(postsData || []);
+    setLoadingProfile(false);
+  }
 
-    } catch (err) {
+  async function shareProfile() {
+    if (!profile?.username) return;
 
-      console.log(err);
+    const url = `${window.location.origin}/u/${profile.username}`;
 
-    } finally {
-
-      setProfileLoading(false);
+    try {
+      if (navigator.share) {
+        await navigator.share({
+          title: `@${profile.username} en AlumniConnections`,
+          url,
+        });
+      } else {
+        await navigator.clipboard.writeText(url);
+        alert("Enlace del perfil copiado.");
+      }
+    } catch {
+      // Compartir cancelado.
     }
   }
 
-  if (profileLoading) {
+  const links = useMemo(
+    () =>
+      [
+        ["Sitio web", profile?.website],
+        ["GitHub", profile?.github],
+        ["LinkedIn", profile?.linkedin],
+        ["Instagram", profile?.instagram],
+      ].filter(([, value]) => Boolean(value)),
+    [profile]
+  );
+
+  if (loadingProfile) {
     return (
-      <main className="min-h-screen bg-black text-white flex items-center justify-center">
-        Cargando perfil...
-      </main>
+      <AppShell>
+        <div className="py-16 text-center text-sm text-zinc-600">
+          Cargando perfil...
+        </div>
+      </AppShell>
     );
   }
 
   if (!profile) {
     return (
-      <main className="min-h-screen bg-black text-white flex items-center justify-center">
-        No se encontró perfil.
-      </main>
+      <AppShell>
+        <div className="py-16 text-center text-sm text-zinc-600">
+          No se encontró tu perfil.
+        </div>
+      </AppShell>
     );
   }
 
   return (
-    <main className="min-h-screen bg-[#09090B] text-white">
+    <AppShell>
+      <div className="mx-auto w-full max-w-[900px]">
+        <section className="rounded-[28px] border border-white/[0.07] bg-[#101318]/95">
+          <div className="overflow-hidden rounded-t-[27px]">
+            <div className="relative h-48 bg-[#151a23] sm:h-60">
+              {profile.banner_url ? (
+                <img
+                  src={profile.banner_url}
+                  alt="Banner"
+                  className="h-full w-full object-cover"
+                />
+              ) : (
+                <div className="h-full w-full bg-[radial-gradient(circle_at_20%_10%,rgba(109,124,255,.28),transparent_38%),radial-gradient(circle_at_85%_20%,rgba(124,58,237,.18),transparent_34%),#11151c]" />
+              )}
+            </div>
+          </div>
 
-      {/* Banner */}
-      {profile.banner_url ? (
-        <img
-          src={profile.banner_url}
-          alt="Banner"
-          className="h-72 w-full object-cover"
-        />
-      ) : (
-        <div className="h-72 bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 shadow-2xl"></div>
-      )}
+          <div className="px-5 pb-6 pt-5 sm:px-7 sm:pt-6">
+            <div className="flex flex-col gap-5 sm:flex-row sm:items-center">
+              <div className="flex h-24 w-24 shrink-0 items-center justify-center overflow-hidden rounded-full border border-white/[0.09] bg-[#1a1f29] text-2xl font-black shadow-[0_10px_28px_rgba(0,0,0,.16)] sm:h-28 sm:w-28">
+                {profile.avatar_url ? (
+                  <img
+                    src={profile.avatar_url}
+                    alt="Avatar"
+                    className="h-full w-full object-cover"
+                  />
+                ) : (
+                  profile.username?.charAt(0)?.toUpperCase() || "U"
+                )}
+              </div>
 
-      <div className="max-w-4xl mx-auto px-6">
+              <div className="min-w-0 flex-1">
+                <h1 className="truncate text-2xl font-black tracking-[-0.035em]">
+                  @{profile.username}
+                </h1>
+                {profile.full_name && (
+                  <p className="mt-1 text-sm text-zinc-500">
+                    {profile.full_name}
+                  </p>
+                )}
+              </div>
 
-        {/* Avatar */}
-        <div className="-mt-16">
+              <div className="flex shrink-0 gap-2">
+                <Link
+                  href="/settings"
+                  className="flex h-10 items-center gap-2 rounded-xl bg-[#6d7cff] px-4 text-xs font-black text-white transition hover:bg-[#7b87ff]"
+                >
+                  <Pencil size={15} />
+                  Editar perfil
+                </Link>
 
-          {profile.avatar_url ? (
-
-            <img
-              src={profile.avatar_url}
-              alt="Avatar"
-              className="w-40 h-40 rounded-full object-cover border-4 border-[#09090B] ring-4 ring-blue-500/20 shadow-2xl"
-            />
-
-          ) : (
-
-            <div className="w-40 h-40 rounded-full bg-zinc-700 border-4 border-[#09090B] ring-4 ring-blue-500/20 flex items-center justify-center text-5xl shadow-2xl">
-              👤
+                <button
+                  onClick={shareProfile}
+                  className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/[0.07] bg-white/[0.035] text-zinc-500 transition hover:text-white"
+                  aria-label="Compartir perfil"
+                >
+                  <Share2 size={16} />
+                </button>
+              </div>
             </div>
 
-          )}
+            {profile.bio && (
+              <p className="mt-5 max-w-2xl whitespace-pre-wrap text-sm leading-6 text-zinc-400">
+                {profile.bio}
+              </p>
+            )}
 
+            <div className="mt-6 flex flex-wrap gap-x-5 gap-y-2 text-xs text-zinc-600">
+              {profile.career && (
+                <span className="flex items-center gap-1.5">
+                  <Briefcase size={14} />
+                  {profile.career}
+                </span>
+              )}
+
+              {profile.university && (
+                <span className="flex items-center gap-1.5">
+                  <GraduationCap size={14} />
+                  {profile.university}
+                </span>
+              )}
+
+              {(profile.city || profile.country) && (
+                <span className="flex items-center gap-1.5">
+                  <MapPin size={14} />
+                  {[profile.city, profile.country]
+                    .filter(Boolean)
+                    .join(", ")}
+                </span>
+              )}
+            </div>
+
+            <div className="mt-6 flex gap-8 border-t border-white/[0.06] pt-5">
+              <Stat value={posts.length} label="Publicaciones" />
+              <Stat value={followers} label="Seguidores" />
+              <Stat value={following} label="Siguiendo" />
+            </div>
+          </div>
+        </section>
+
+        <div className="mt-6 flex items-center border-b border-white/[0.07]">
+          <Tab
+            active={tab === "posts"}
+            onClick={() => setTab("posts")}
+            label="Publicaciones"
+          />
+          <Tab
+            active={tab === "about"}
+            onClick={() => setTab("about")}
+            label="Acerca de"
+          />
         </div>
 
-        {/* Info */}
-        <div className="mt-4">
+        {tab === "posts" ? (
+          <section className="pt-4">
+            {posts.length === 0 ? (
+              <div className="rounded-[24px] border border-dashed border-white/[0.09] px-6 py-14 text-center text-sm text-zinc-600">
+                Todavía no has publicado nada.
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {posts.map((post: any) => (
+                  <article
+                    key={post.id}
+                    className="overflow-hidden rounded-[24px] border border-white/[0.07] bg-[#101318]/95"
+                  >
+                    <div className="p-5">
+                      <div className="flex items-center gap-3">
+                        <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-full bg-[#1a1f29] text-xs font-bold">
+                          {profile.avatar_url ? (
+                            <img
+                              src={profile.avatar_url}
+                              alt="Avatar"
+                              className="h-full w-full object-cover"
+                            />
+                          ) : (
+                            profile.username?.charAt(0)?.toUpperCase() ||
+                            "U"
+                          )}
+                        </div>
 
-          <h1 className="text-5xl font-bold">
-            @{profile.username}
-          </h1>
+                        <div>
+                          <p className="text-sm font-black">
+                            @{profile.username}
+                          </p>
+                          <p className="mt-0.5 text-[11px] text-zinc-700">
+                            {formatDistanceToNow(
+                              new Date(post.created_at),
+                              {
+                                addSuffix: true,
+                                locale: es,
+                              }
+                            )}
+                          </p>
+                        </div>
+                      </div>
 
-          <p className="text-zinc-400 mt-2 text-lg">
-            {profile.career || "Profesional"}
-          </p>
+                      {post.content && (
+                        <p className="mt-4 whitespace-pre-wrap text-[15px] leading-6 text-zinc-300">
+                          {post.content}
+                        </p>
+                      )}
+                    </div>
 
-          <p className="text-zinc-500">
-            {profile.university || "Universidad"}
-          </p>
+                    {post.image_url && (
+                      <img
+                        src={post.image_url}
+                        alt="Publicación"
+                        className="max-h-[650px] w-full object-cover"
+                      />
+                    )}
 
+                    <div className="flex items-center gap-5 px-5 py-3 text-xs font-bold text-zinc-600">
+                      <span className="flex items-center gap-1.5">
+                        <Heart size={15} />
+                        {post.likes?.length || 0}
+                      </span>
+
+                      <span className="flex items-center gap-1.5">
+                        <MessageCircle size={15} />
+                        {post.comments?.length || 0}
+                      </span>
+                    </div>
+                  </article>
+                ))}
+              </div>
+            )}
+          </section>
+        ) : (
+          <section className="grid gap-4 pt-4 md:grid-cols-2">
+            <InfoBlock
+              title="Trayectoria académica"
+              icon={<GraduationCap size={17} />}
+            >
+              <Detail label="Universidad" value={profile.university} />
+              <Detail label="Carrera" value={profile.career} />
+            </InfoBlock>
+
+            <InfoBlock
+              title="Ubicación"
+              icon={<MapPin size={17} />}
+            >
+              <Detail label="Ciudad" value={profile.city} />
+              <Detail label="País" value={profile.country} />
+            </InfoBlock>
+
+            <InfoBlock
+              title="Enlaces"
+              icon={<Link2 size={17} />}
+              className="md:col-span-2"
+            >
+              {links.length > 0 ? (
+                <div className="flex flex-wrap gap-2">
+                  {links.map(([label, value]) => (
+                    <a
+                      key={label}
+                      href={String(value)}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="rounded-xl border border-white/[0.07] bg-white/[0.025] px-3 py-2 text-xs font-bold text-zinc-500 transition hover:text-zinc-200"
+                    >
+                      {label}
+                    </a>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm text-zinc-700">
+                  Todavía no has agregado enlaces públicos.
+                </p>
+              )}
+            </InfoBlock>
+          </section>
+        )}
+
+        <div className="mt-7 flex justify-end">
           <Link
             href="/settings"
-            className="
-              inline-flex
-              items-center
-              gap-2
-              mt-4
-              bg-gradient-to-r
-              from-blue-500
-              to-purple-600
-              hover:scale-105
-              transition-all
-              px-5
-              py-3
-              rounded-2xl
-              font-semibold
-              shadow-xl
-            "
+            className="flex items-center gap-1.5 text-xs font-bold text-zinc-600 hover:text-zinc-300"
           >
-            ✏️ Editar perfil
+            <Settings size={14} />
+            Configuración
           </Link>
-
-          <p className="text-zinc-400 mt-4">
-            {profile.bio || "Sin biografía"}
-          </p>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-8">
-
-              <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4 }}
-              className="glass rounded-3xl p-5 shadow-2xl text-center"
-            >
-
-              <p className="text-zinc-500 text-sm">
-                Seguidores
-              </p>
-
-              <h3 className="text-3xl font-bold mt-2">
-                {followers}
-              </h3>
-
-            </motion.div>
-
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4 }}
-              className="glass rounded-3xl p-5 shadow-2xl text-center"
-            >
-
-              <p className="text-zinc-500 text-sm">
-                Siguiendo
-              </p>
-
-              <h3 className="text-3xl font-bold mt-2">
-                {following}
-              </h3>
-
-            </motion.div>
-
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4 }}
-              className="glass rounded-3xl p-5 shadow-2xl text-center"
-            >
-
-              <p className="text-zinc-500 text-sm">
-                Publicaciones
-              </p>
-
-              <h3 className="text-3xl font-bold mt-2">
-                {postsCount}
-              </h3>
-
-            </motion.div>
-
-          </div>
-
-          <div className="flex flex-wrap gap-6 mt-4 text-zinc-400">
-
-            <p>
-              🎓 {profile.university || "Universidad no agregada"}
-            </p>
-
-            <p>
-              💻 {profile.career || "Carrera no agregada"}
-            </p>
-
-          </div>
-
-          <div className="
-            mt-10
-            glass
-            rounded-3xl
-            p-8
-            shadow-2xl
-          ">
-
-            <h2 className="text-2xl font-bold mb-4">
-              Acerca de mí
-            </h2>
-
-            <p className="text-zinc-300 leading-relaxed">
-              {profile.bio || "Este usuario todavía no ha agregado una biografía."}
-            </p>
-
-          </div>
-
         </div>
-
       </div>
+    </AppShell>
+  );
+}
 
-      <div className="max-w-4xl mx-auto px-6 pb-10 mt-10">
+function Stat({
+  value,
+  label,
+}: {
+  value: number;
+  label: string;
+}) {
+  return (
+    <div>
+      <p className="text-lg font-black text-zinc-100">{value}</p>
+      <p className="text-xs text-zinc-600">{label}</p>
+    </div>
+  );
+}
 
-        <div className="bg-zinc-900 border border-zinc-800 rounded-3xl p-6">
+function Tab({
+  active,
+  onClick,
+  label,
+}: {
+  active: boolean;
+  onClick: () => void;
+  label: string;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      className={`relative px-4 pb-3 text-sm font-bold transition ${
+        active
+          ? "text-zinc-100"
+          : "text-zinc-600 hover:text-zinc-300"
+      }`}
+    >
+      {label}
+      {active && (
+        <span className="absolute inset-x-4 bottom-0 h-0.5 rounded-full bg-[#6d7cff]" />
+      )}
+    </button>
+  );
+}
 
-          <h2 className="text-2xl font-bold mb-6">
-            Publicaciones
-          </h2>
-
-          {posts.length === 0 ? (
-
-            <p className="text-zinc-500">
-              No has publicado nada todavía.
-            </p>
-
-          ) : (
-
-            <div className="space-y-6">
-
-              {posts.map((post) => (
-
-                <div
-                  key={post.id}
-                  className="
-                    bg-zinc-800
-                    rounded-2xl
-                    p-5
-                    hover:bg-zinc-700
-                    transition
-                  "
-                >
-
-                  <p className="whitespace-pre-wrap">
-                    {post.content}
-                  </p>
-
-                  {post.image_url && (
-
-                    <img
-                      src={post.image_url}
-                      alt="Post"
-                      className="
-                        mt-4
-                        rounded-2xl
-                        w-full
-                        max-h-[500px]
-                        object-cover
-                      "
-                    />
-
-                  )}
-
-                  <p className="text-zinc-500 text-sm mt-4">
-                    {new Date(post.created_at).toLocaleDateString()}
-                  </p>
-
-                </div>
-
-              ))}
-
-            </div>
-
-          )}
-
-        </div>
-
+function InfoBlock({
+  title,
+  icon,
+  className = "",
+  children,
+}: {
+  title: string;
+  icon: React.ReactNode;
+  className?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div
+      className={`rounded-[22px] border border-white/[0.07] bg-[#101318]/95 p-5 ${className}`}
+    >
+      <div className="flex items-center gap-2 text-[#8d98ff]">
+        {icon}
+        <p className="text-sm font-black text-zinc-200">{title}</p>
       </div>
+      <div className="mt-4 space-y-3">{children}</div>
+    </div>
+  );
+}
 
-    </main>
+function Detail({
+  label,
+  value,
+}: {
+  label: string;
+  value?: string | null;
+}) {
+  return (
+    <div>
+      <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-zinc-700">
+        {label}
+      </p>
+      <p className="mt-1 text-sm text-zinc-400">
+        {value || "No especificado"}
+      </p>
+    </div>
   );
 }

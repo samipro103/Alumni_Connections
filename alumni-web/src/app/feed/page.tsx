@@ -1,35 +1,58 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { Heart } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import {
+  Heart,
+  MessageCircle,
+  Share2,
+  Trash2,
+  X,
+} from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { es } from "date-fns/locale";
 import { supabase } from "@/lib/supabase";
-import Card from "@/components/ui/Card";
 import AppShell from "@/components/layout/AppShell";
 import PostComposer from "@/components/feed/PostComposer";
-import { motion } from "framer-motion";
+import StoriesRail from "@/components/feed/StoriesRail";
+
+type FeedMode = "for-you" | "following";
 
 export default function FeedPage() {
   const [posts, setPosts] = useState<any[]>([]);
   const [content, setContent] = useState("");
   const [image, setImage] = useState<File | null>(null);
-  const [commentInputs, setCommentInputs] = useState<any>({});
+  const [commentInputs, setCommentInputs] = useState<Record<number, string>>({});
   const [currentUser, setCurrentUser] = useState<any>(null);
-  const [selectedImage, setSelectedImage] =
-    useState<string | null>(null);
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [openComments, setOpenComments] = useState<Record<number, boolean>>({});
+  const [followingIds, setFollowingIds] = useState<string[]>([]);
+  const [feedMode, setFeedMode] = useState<FeedMode>("for-you");
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     getPosts();
   }, []);
 
   async function getPosts() {
+    setLoading(true);
+
     const {
       data: { session },
     } = await supabase.auth.getSession();
 
     const user = session?.user;
-    setCurrentUser(user);
+    setCurrentUser(user || null);
+
+    if (user) {
+      const { data: followingData } = await supabase
+        .from("follows")
+        .select("following_id")
+        .eq("follower_id", user.id);
+
+      setFollowingIds((followingData || []).map((row: any) => row.following_id));
+    } else {
+      setFollowingIds([]);
+    }
 
     const { data: postsData } = await supabase
       .from("posts")
@@ -47,40 +70,41 @@ export default function FeedPage() {
       `)
       .order("created_at", { ascending: false });
 
-    if (!postsData) return;
+    if (!postsData) {
+      setPosts([]);
+      setLoading(false);
+      return;
+    }
 
     const { data: commentsData } = await supabase
       .from("comments")
-      .select("*");
+      .select("*")
+      .order("created_at", { ascending: true });
 
     const commentUserIds = [
-      ...new Set(
-        commentsData?.map((comment) => comment.user_id) ||
-        []
-      ),
+      ...new Set((commentsData || []).map((comment: any) => comment.user_id)),
     ];
 
-    const { data: commentProfiles } = await supabase
-      .from("profiles")
-      .select("*")
-      .in("id", commentUserIds);
+    let commentProfiles: any[] = [];
+
+    if (commentUserIds.length > 0) {
+      const { data } = await supabase
+        .from("profiles")
+        .select("id, username, avatar_url")
+        .in("id", commentUserIds);
+
+      commentProfiles = data || [];
+    }
 
     const formattedPosts = postsData.map((post: any) => {
-      const liked = post.likes.some(
-        (like: any) => like.user_id === user?.id
-      );
+      const liked = post.likes.some((like: any) => like.user_id === user?.id);
 
-      const postComments =
-        commentsData
-          ?.filter(
-            (comment: any) => comment.post_id === post.id
-          )
-          .map((comment: any) => ({
-            ...comment,
-            profile: commentProfiles?.find(
-              (p) => p.id === comment.user_id
-            ),
-          })) || [];
+      const postComments = (commentsData || [])
+        .filter((comment: any) => comment.post_id === post.id)
+        .map((comment: any) => ({
+          ...comment,
+          profile: commentProfiles.find((profile) => profile.id === comment.user_id),
+        }));
 
       return {
         ...post,
@@ -91,6 +115,7 @@ export default function FeedPage() {
     });
 
     setPosts(formattedPosts);
+    setLoading(false);
   }
 
   async function uploadImage() {
@@ -115,23 +140,31 @@ export default function FeedPage() {
   }
 
   async function createPost() {
+    if (!content.trim() && !image) return;
+
     const {
       data: { session },
     } = await supabase.auth.getSession();
 
     const user = session?.user;
-    if (!user) return;
+
+    if (!user) {
+      window.location.href = "/login";
+      return;
+    }
 
     let imageUrl = null;
+
     if (image) {
       imageUrl = await uploadImage();
+      if (!imageUrl) return;
     }
 
     const { error } = await supabase
       .from("posts")
       .insert({
         user_id: user.id,
-        content,
+        content: content.trim(),
         image_url: imageUrl,
       });
 
@@ -142,70 +175,66 @@ export default function FeedPage() {
 
     setContent("");
     setImage(null);
-    getPosts();
+    await getPosts();
   }
 
   async function deletePost(postId: number) {
-    const confirmDelete = confirm(
-      "¿Eliminar publicación?"
-    );
+    const confirmDelete = confirm("¿Eliminar esta publicación?");
     if (!confirmDelete) return;
 
-    await supabase
+    const { error } = await supabase
       .from("posts")
       .delete()
       .eq("id", postId);
 
-    getPosts();
+    if (error) {
+      alert(error.message);
+      return;
+    }
+
+    await getPosts();
   }
 
-  async function toggleLike(
-    postId: number,
-    liked: boolean
-  ) {
+  async function toggleLike(postId: number, liked: boolean) {
     if (!currentUser) {
       window.location.href = "/login";
       return;
     }
-
-    const {
-      data: { session },
-    } = await supabase.auth.getSession();
-
-    const user = session?.user;
-    if (!user) return;
 
     if (liked) {
       await supabase
         .from("likes")
         .delete()
         .eq("post_id", postId)
-        .eq("user_id", user.id);
+        .eq("user_id", currentUser.id);
     } else {
-      await supabase
+      const { error } = await supabase
         .from("likes")
         .insert({
           post_id: postId,
-          user_id: user.id,
+          user_id: currentUser.id,
         });
 
-      const post = posts.find(
-        (p: any) => p.id === postId
-      );
+      if (error) {
+        alert(error.message);
+        return;
+      }
 
-      if (post && post.user_id !== user.id) {
+      const post = posts.find((item: any) => item.id === postId);
+
+      if (post && post.user_id !== currentUser.id) {
         await supabase
           .from("notifications")
           .insert({
             user_id: post.user_id,
-            actor_id: user.id,
+            actor_id: currentUser.id,
             type: "like",
             post_id: postId,
           });
       }
     }
 
-    getPosts();
+    await getPosts();
   }
 
   async function addComment(postId: number) {
@@ -214,275 +243,307 @@ export default function FeedPage() {
       return;
     }
 
-    const {
-      data: { session },
-    } = await supabase.auth.getSession();
-
-    const user = session?.user;
-    if (!user) return;
-
-    const comment = commentInputs[postId];
+    const comment = commentInputs[postId]?.trim();
     if (!comment) return;
 
     const { error } = await supabase
       .from("comments")
       .insert({
         post_id: postId,
-        user_id: user.id,
+        user_id: currentUser.id,
         content: comment,
       });
-
-    const post = posts.find(
-      (p: any) => p.id === postId
-    );
-
-    if (post && post.user_id !== user.id) {
-      await supabase
-        .from("notifications")
-        .insert({
-          user_id: post.user_id,
-          actor_id: user.id,
-          type: "comment",
-          post_id: postId,
-        });
-    }
 
     if (error) {
       alert(error.message);
       return;
     }
 
-    setCommentInputs({
-      ...commentInputs,
+    const post = posts.find((item: any) => item.id === postId);
+
+    if (post && post.user_id !== currentUser.id) {
+      await supabase
+        .from("notifications")
+        .insert({
+          user_id: post.user_id,
+          actor_id: currentUser.id,
+          type: "comment",
+          post_id: postId,
+        });
+    }
+
+    setCommentInputs((current) => ({
+      ...current,
       [postId]: "",
-    });
+    }));
 
-    getPosts();
+    setOpenComments((current) => ({
+      ...current,
+      [postId]: true,
+    }));
+
+    await getPosts();
   }
 
-  async function sharePost(username: string) {
-    await navigator.clipboard.writeText(
-      `${window.location.origin}/u/${username}`
-    );
+  async function sharePost(post: any) {
+    const url = `${window.location.origin}/u/${post.profiles?.username || ""}`;
 
-    alert("Enlace copiado");
+    try {
+      if (navigator.share) {
+        await navigator.share({
+          title: `Publicación de @${post.profiles?.username || "Alumni"}`,
+          text: post.content || "Mira esta publicación en AlumniConnections",
+          url,
+        });
+      } else {
+        await navigator.clipboard.writeText(url);
+        alert("Enlace copiado");
+      }
+    } catch {
+      // El usuario puede cancelar el diálogo nativo de compartir.
+    }
   }
+
+  const visiblePosts = useMemo(() => {
+    if (feedMode === "following") {
+      return posts.filter((post: any) => followingIds.includes(post.user_id));
+    }
+
+    return posts;
+  }, [posts, followingIds, feedMode]);
 
   return (
     <AppShell>
-      <main className="text-white">
-        <div className="max-w-3xl mx-auto p-6">
-          <div className="mb-8">
-            <h1 className="text-5xl font-black gradient-text">
-              AlumniConnections
+      <div className="mx-auto w-full max-w-[760px]">
+        <div className="mb-4 flex items-center justify-between px-1 pt-2">
+          <div>
+            <h1 className="text-[26px] font-black tracking-[-0.04em] text-white">
+              Inicio
             </h1>
-            <p className="text-zinc-400 mt-2">
-              Conecta estudiantes y graduados.
+            <p className="mt-1 text-sm text-zinc-600">
+              Tu comunidad académica y profesional.
             </p>
-          </div>
-
-          <PostComposer
-            content={content}
-            setContent={setContent}
-            image={image}
-            setImage={setImage}
-            createPost={createPost}
-          />
-
-          {/* POSTS */}
-          <div className="space-y-6">
-            {posts.map((post, index) => (
-              <motion.div
-                key={post.id}
-                initial={{ opacity: 0, y: 30 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.05 }}
-              >
-                <Card className="glass hover:scale-[1.01] transition-all duration-300">
-                  {/* USER */}
-                  <div className="flex items-start gap-3 mb-4">
-                    {post.profiles?.avatar_url ? (
-                      <img
-                        src={post.profiles.avatar_url}
-                        alt="Avatar"
-                        className="w-14 h-14 rounded-full object-cover flex-shrink-0"
-                      />
-                    ) : (
-                      <div className="w-14 h-14 rounded-full bg-zinc-700 flex items-center justify-center text-white font-bold flex-shrink-0">
-                        {post.profiles?.username?.charAt(0).toUpperCase() || "U"}
-                      </div>
-                    )}
-
-                    <div className="flex-1">
-                      <div className="flex flex-col sm:flex-row sm:items-center sm:gap-3 gap-1">
-                        <a
-                          href={`/u/${post.profiles?.username}`}
-                          className="font-semibold text-lg hover:text-blue-400 transition"
-                        >
-                          {post.profiles?.username
-                            ? `@${post.profiles.username}`
-                            : "Alumno"}
-                        </a>
-
-                        <span className="text-sm text-zinc-500">
-                          {post.profiles?.university || "Universidad"}
-                        </span>
-
-                        {post.user_id === currentUser?.id && (
-                          <button
-                            onClick={() => deletePost(post.id)}
-                            className="
-                            text-red-500
-                            hover:text-red-400
-                            text-sm
-                          "
-                          >
-                            🗑 Eliminar
-                          </button>
-                        )}
-                      </div>
-
-                      <p className="text-xs text-zinc-500 mt-1">
-                        {formatDistanceToNow(
-                          new Date(post.created_at),
-                          {
-                            addSuffix: true,
-                            locale: es,
-                          }
-                        )}
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* CONTENT */}
-                  <p className="text-lg whitespace-pre-wrap mb-4">
-                    {post.content}
-                  </p>
-
-                  {/* IMAGE */}
-                  {post.image_url && (
-                    <img
-                      src={post.image_url}
-                      onClick={() =>
-                        setSelectedImage(post.image_url)
-                      }
-                      className="
-                      cursor-pointer
-                      rounded-2xl
-                      w-full
-                      max-h-[650px]
-                      object-cover
-                      mb-4
-                    "
-                      alt="Post"
-                    />
-                  )}
-
-                  <div className="flex items-center justify-between text-zinc-400 gap-4 mb-4">
-                    <button
-                      onClick={() => toggleLike(post.id, post.liked)}
-                      className="flex items-center gap-2 hover:text-red-500 transition"
-                    >
-                      <Heart
-                        fill={post.liked ? "currentColor" : "none"}
-                        size={22}
-                      />
-                      <span>{post.likesCount}</span>
-                    </button>
-
-                    <div className="flex items-center gap-4 text-sm">
-                      <span className="flex items-center gap-2">
-                        <span>💬</span>
-                        <span>{post.comments?.length || 0}</span>
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* COMMENTS */}
-                  <div className="mt-6 space-y-3">
-                    {post.comments?.map((comment: any) => (
-                      <div
-                        key={comment.id}
-                        className="bg-zinc-800 rounded-xl p-3"
-                      >
-                        <div className="flex items-center gap-3 mb-2">
-                          {comment.profile?.avatar_url ? (
-                            <img
-                              src={comment.profile.avatar_url}
-                              alt="Avatar"
-                              className="w-8 h-8 rounded-full object-cover"
-                            />
-                          ) : (
-                            <div className="w-8 h-8 rounded-full bg-zinc-700 flex items-center justify-center text-white font-bold">
-                              {comment.profile?.username?.charAt(0).toUpperCase() || "U"}
-                            </div>
-                          )}
-                          <p className="font-semibold text-sm">
-                            @{comment.profile?.username}
-                          </p>
-                        </div>
-
-                        <p className="text-zinc-300">
-                          {comment.content}
-                        </p>
-                      </div>
-                    ))}
-                  </div>
-
-                  {/* ADD COMMENT */}
-                  <div className="mt-4 flex gap-2">
-                    <input
-                      type="text"
-                      placeholder="Escribe un comentario..."
-                      value={commentInputs[post.id] || ""}
-                      onChange={(e) =>
-                        setCommentInputs({
-                          ...commentInputs,
-                          [post.id]: e.target.value,
-                        })
-                      }
-                      className="flex-1 bg-zinc-800 rounded-xl px-4 py-3 outline-none"
-                    />
-
-                    <button
-                      onClick={() => addComment(post.id)}
-                      className="bg-blue-500 hover:bg-blue-600 transition px-4 rounded-xl"
-                    >
-                      Comentar
-                    </button>
-                  </div>
-                </Card>
-              </motion.div>
-            ))}
           </div>
         </div>
 
-        {selectedImage && (
-          <div
-            onClick={() => setSelectedImage(null)}
-            className="
-            fixed
-            inset-0
-            bg-black/90
-            z-[9999]
-            flex
-            items-center
-            justify-center
-            p-8
-          "
+        <StoriesRail />
+
+        <PostComposer
+          content={content}
+          setContent={setContent}
+          image={image}
+          setImage={setImage}
+          createPost={createPost}
+        />
+
+        <div className="mb-4 flex items-center border-b border-white/[0.07]">
+          <button
+            onClick={() => setFeedMode("for-you")}
+            className={`relative px-4 pb-3 text-sm font-bold transition ${feedMode === "for-you" ? "text-white" : "text-zinc-600 hover:text-zinc-300"}`}
           >
-            <img
-              src={selectedImage}
-              className="
-              max-h-[90vh]
-              max-w-[90vw]
-              rounded-2xl
-            "
-            />
+            Para ti
+            {feedMode === "for-you" && (
+              <span className="absolute inset-x-4 bottom-0 h-0.5 rounded-full bg-[#7f8cff]" />
+            )}
+          </button>
+
+          <button
+            onClick={() => setFeedMode("following")}
+            className={`relative px-4 pb-3 text-sm font-bold transition ${feedMode === "following" ? "text-white" : "text-zinc-600 hover:text-zinc-300"}`}
+          >
+            Siguiendo
+            {feedMode === "following" && (
+              <span className="absolute inset-x-4 bottom-0 h-0.5 rounded-full bg-[#7f8cff]" />
+            )}
+          </button>
+        </div>
+
+        {loading ? (
+          <div className="py-16 text-center text-sm text-zinc-600">
+            Cargando publicaciones...
+          </div>
+        ) : visiblePosts.length === 0 ? (
+          <div className="rounded-2xl border border-dashed border-white/[0.09] px-6 py-12 text-center">
+            <p className="font-semibold text-zinc-300">
+              {feedMode === "following"
+                ? "Todavía no hay publicaciones de las personas que sigues."
+                : "Todavía no hay publicaciones."}
+            </p>
+            <p className="mt-2 text-sm text-zinc-600">
+              {feedMode === "following"
+                ? "Explora perfiles y crea nuevas conexiones."
+                : "Sé la primera persona en compartir algo."}
+            </p>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {visiblePosts.map((post: any) => {
+              const commentsOpen = Boolean(openComments[post.id]);
+
+              return (
+                <article key={post.id} className="overflow-hidden rounded-[24px] border border-white/[0.07] bg-[#101318]/95">
+                  <div className="p-4 sm:p-5">
+                    <div className="flex items-start gap-3">
+                      <a href={`/u/${post.profiles?.username}`} className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[#1a1f29] text-sm font-bold text-white">
+                        {post.profiles?.avatar_url ? (
+                          <img src={post.profiles.avatar_url} alt="Avatar" className="h-full w-full object-cover" />
+                        ) : (
+                          post.profiles?.username?.charAt(0)?.toUpperCase() || "U"
+                        )}
+                      </a>
+
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2">
+                          <a href={`/u/${post.profiles?.username}`} className="truncate text-sm font-bold text-white hover:underline">
+                            @{post.profiles?.username || "alumni"}
+                          </a>
+                          <span className="text-zinc-700">·</span>
+                          <span className="shrink-0 text-xs text-zinc-600">
+                            {formatDistanceToNow(new Date(post.created_at), {
+                              addSuffix: true,
+                              locale: es,
+                            })}
+                          </span>
+                        </div>
+
+                        <p className="mt-0.5 truncate text-xs text-zinc-600">
+                          {[post.profiles?.career, post.profiles?.university]
+                            .filter(Boolean)
+                            .join(" · ") || "Comunidad Alumni"}
+                        </p>
+                      </div>
+
+                      {post.user_id === currentUser?.id && (
+                        <button
+                          onClick={() => deletePost(post.id)}
+                          className="flex h-9 w-9 items-center justify-center rounded-xl text-zinc-700 transition hover:bg-red-500/10 hover:text-red-400"
+                          aria-label="Eliminar publicación"
+                        >
+                          <Trash2 size={17} />
+                        </button>
+                      )}
+                    </div>
+
+                    {post.content && (
+                      <p className="mt-4 whitespace-pre-wrap text-[15px] leading-6 text-zinc-200">
+                        {post.content}
+                      </p>
+                    )}
+                  </div>
+
+                  {post.image_url && (
+                    <button onClick={() => setSelectedImage(post.image_url)} className="block w-full bg-black/20">
+                      <img src={post.image_url} alt="Publicación" className="max-h-[650px] w-full object-cover" />
+                    </button>
+                  )}
+
+                  <div className="px-4 pb-4 pt-3 sm:px-5">
+                    <div className="flex items-center gap-1 border-b border-white/[0.06] pb-3">
+                      <button
+                        onClick={() => toggleLike(post.id, post.liked)}
+                        className={`flex h-9 items-center gap-2 rounded-xl px-3 text-sm font-semibold transition ${post.liked ? "bg-red-500/10 text-red-400" : "text-zinc-500 hover:bg-white/[0.04] hover:text-zinc-200"}`}
+                      >
+                        <Heart fill={post.liked ? "currentColor" : "none"} size={18} />
+                        <span>{post.likesCount}</span>
+                      </button>
+
+                      <button
+                        onClick={() =>
+                          setOpenComments((current) => ({
+                            ...current,
+                            [post.id]: !current[post.id],
+                          }))
+                        }
+                        className="flex h-9 items-center gap-2 rounded-xl px-3 text-sm font-semibold text-zinc-500 transition hover:bg-white/[0.04] hover:text-zinc-200"
+                      >
+                        <MessageCircle size={18} />
+                        <span>{post.comments?.length || 0}</span>
+                      </button>
+
+                      <button
+                        onClick={() => sharePost(post)}
+                        className="ml-auto flex h-9 items-center gap-2 rounded-xl px-3 text-sm font-semibold text-zinc-500 transition hover:bg-white/[0.04] hover:text-zinc-200"
+                      >
+                        <Share2 size={18} />
+                        <span className="hidden sm:inline">Compartir</span>
+                      </button>
+                    </div>
+
+                    {commentsOpen && (
+                      <div className="pt-4">
+                        {post.comments?.length > 0 ? (
+                          <div className="space-y-4">
+                            {post.comments.map((comment: any) => (
+                              <div key={comment.id} className="flex gap-3">
+                                <div className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[#1a1f29] text-[11px] font-bold">
+                                  {comment.profile?.avatar_url ? (
+                                    <img src={comment.profile.avatar_url} alt="Avatar" className="h-full w-full object-cover" />
+                                  ) : (
+                                    comment.profile?.username?.charAt(0)?.toUpperCase() || "U"
+                                  )}
+                                </div>
+
+                                <div className="min-w-0 flex-1 rounded-2xl bg-white/[0.035] px-3.5 py-2.5">
+                                  <p className="text-xs font-bold text-zinc-300">
+                                    @{comment.profile?.username || "usuario"}
+                                  </p>
+                                  <p className="mt-1 text-sm leading-5 text-zinc-400">
+                                    {comment.content}
+                                  </p>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <p className="text-sm text-zinc-600">Sé la primera persona en comentar.</p>
+                        )}
+
+                        <div className="mt-4 flex gap-2">
+                          <input
+                            type="text"
+                            placeholder={currentUser ? "Escribe un comentario..." : "Inicia sesión para comentar"}
+                            value={commentInputs[post.id] || ""}
+                            disabled={!currentUser}
+                            onChange={(e) =>
+                              setCommentInputs((current) => ({
+                                ...current,
+                                [post.id]: e.target.value,
+                              }))
+                            }
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter") {
+                                addComment(post.id);
+                              }
+                            }}
+                            className="h-10 flex-1 rounded-xl border border-white/[0.07] bg-white/[0.035] px-3 text-sm text-zinc-200 outline-none placeholder:text-zinc-700 focus:border-[#6d7cff]/40 disabled:opacity-50"
+                          />
+
+                          <button
+                            onClick={() => addComment(post.id)}
+                            disabled={!currentUser || !commentInputs[post.id]?.trim()}
+                            className="h-10 rounded-xl bg-white/[0.06] px-4 text-xs font-bold text-zinc-300 transition hover:bg-[#6d7cff] hover:text-white disabled:cursor-not-allowed disabled:opacity-40"
+                          >
+                            Enviar
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </article>
+              );
+            })}
           </div>
         )}
-      </main>
+      </div>
+
+      {selectedImage && (
+        <div onClick={() => setSelectedImage(null)} className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/90 p-4 sm:p-8">
+          <button onClick={() => setSelectedImage(null)} className="absolute right-5 top-5 flex h-11 w-11 items-center justify-center rounded-full bg-white/10 text-white backdrop-blur" aria-label="Cerrar imagen">
+            <X size={22} />
+          </button>
+          <img src={selectedImage} alt="Publicación ampliada" className="max-h-[92vh] max-w-[94vw] rounded-2xl object-contain" />
+        </div>
+      )}
     </AppShell>
   );
 }
-

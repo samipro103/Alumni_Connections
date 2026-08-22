@@ -1,6 +1,7 @@
 import React from "react";
 import type { Metadata } from "next";
 import { AuthProvider } from "@/components/auth/AuthProvider";
+import { ThemeProvider } from "@/components/theme/ThemeProvider";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 
@@ -19,23 +20,43 @@ export const metadata: Metadata = {
   description: "Connect students and alumni around the world",
 };
 
+const themeScript = `
+(function () {
+  try {
+    var allowed = ["dark","light","chill","pride","midnight","emerald","executive"];
+    var saved = localStorage.getItem("alumni-theme") || "dark";
+    var theme = allowed.indexOf(saved) >= 0 ? saved : "dark";
+    document.documentElement.dataset.theme = theme;
+    document.documentElement.style.colorScheme =
+      theme === "light" || theme === "chill" ? "light" : "dark";
+  } catch (e) {}
+})();
+`;
+
 export default function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-
   return (
     <html
-      lang="en"
+      lang="es"
+      data-theme="dark"
+      suppressHydrationWarning
       className={`${geistSans.variable} ${geistMono.variable}`}
     >
-      <body className="bg-[#09090B] text-white antialiased">
-        <AuthProvider>
-          <div className="min-h-screen">
-            {children}
-          </div>
-        </AuthProvider>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
+      </head>
+
+      <body className="antialiased">
+        <ThemeProvider>
+          <AuthProvider>
+            <div className="min-h-screen">
+              {children}
+            </div>
+          </AuthProvider>
+        </ThemeProvider>
       </body>
     </html>
   );
