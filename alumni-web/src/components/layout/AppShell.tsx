@@ -5,6 +5,7 @@ import LeftSidebar from "./LeftSidebar";
 import RightSidebar from "./RightSidebar";
 import TopBar from "./TopBar";
 import MobileNav from "./MobileNav";
+import AppUtilities from "./AppUtilities";
 
 interface Props {
   children: ReactNode;
@@ -21,9 +22,7 @@ export default function AppShell({ children }: Props) {
             <LeftSidebar />
           </aside>
 
-          <main className="min-w-0">
-            {children}
-          </main>
+          <main className="min-w-0">{children}</main>
 
           <aside className="hidden xl:block">
             <RightSidebar />
@@ -31,6 +30,7 @@ export default function AppShell({ children }: Props) {
         </div>
       </div>
 
+      <AppUtilities />
       <MobileNav />
     </div>
   );
