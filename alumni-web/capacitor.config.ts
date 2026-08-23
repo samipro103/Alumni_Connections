@@ -6,8 +6,7 @@ const config: CapacitorConfig = {
   webDir: 'mobile-shell',
 
   server: {
-    url: 'http://10.0.2.2:3000',
-    cleartext: true,
+    url: 'https://alumni-connections.vercel.app',
   },
 };
 

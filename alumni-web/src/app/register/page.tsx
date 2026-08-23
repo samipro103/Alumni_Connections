@@ -35,6 +35,11 @@ export default function RegisterPage() {
     const { data, error } = await supabase.auth.signUp({
       email: email.trim(),
       password,
+      options: {
+        data: {
+          username: cleanUsername,
+        },
+      },
     });
 
     if (error) {
@@ -49,18 +54,7 @@ export default function RegisterPage() {
       return;
     }
 
-    const { error: profileError } = await supabase
-      .from("profiles")
-      .insert({
-        id: data.user.id,
-        username: cleanUsername,
-      });
 
-    if (profileError) {
-      alert(profileError.message);
-      setSubmitting(false);
-      return;
-    }
 
     if (data.session) {
       window.location.href = "/settings";
