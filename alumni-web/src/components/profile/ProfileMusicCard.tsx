@@ -1,31 +1,84 @@
 "use client";
 
-import { useState } from "react";
-import {
-  ChevronDown,
-  ExternalLink,
-  Music2,
-  Play,
-  Sparkles,
-} from "lucide-react";
+import { useMemo, useRef } from "react";
+import { Loader2, Pause, Play, Sparkles } from "lucide-react";
 import type { ProfileMusic } from "@/lib/profileMusic";
+import { useSpotifyClip } from "@/hooks/useSpotifyClip";
 
 type Props = {
   track: ProfileMusic | null | undefined;
   className?: string;
 };
 
+const BARS = [
+  12, 20, 9, 27, 15, 31, 13, 23, 34, 17, 29, 11, 25, 36, 16, 30,
+  19, 10, 28, 35, 15, 24, 32, 13, 26, 18, 34, 12, 29, 21, 11, 31,
+];
+
+function formatTime(totalSeconds: number) {
+  const safe = Math.max(0, Math.floor(totalSeconds));
+  return `${Math.floor(safe / 60)}:${String(safe % 60).padStart(2, "0")}`;
+}
+
+function SpotifyGlyph() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      width="17"
+      height="17"
+      fill="none"
+      aria-hidden="true"
+    >
+      <circle
+        cx="12"
+        cy="12"
+        r="9.1"
+        stroke="currentColor"
+        strokeWidth="1.35"
+      />
+      <path
+        d="M7.25 9.45c3.35-1.02 7.3-.75 10.2.75M7.85 12.25c2.76-.8 6.16-.57 8.7.66M8.45 14.83c2.15-.57 4.78-.4 6.78.54"
+        stroke="currentColor"
+        strokeWidth="1.45"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
 export default function ProfileMusicCard({
   track,
   className = "",
 }: Props) {
-  const [expanded, setExpanded] = useState(false);
+  const spotifyMountRef = useRef<HTMLDivElement | null>(null);
+
+  const start = Number(track?.clip_start_seconds ?? 0);
+  const clipDuration = Number(track?.clip_duration_seconds ?? 30) || 30;
+
+  const {
+    ready,
+    isPlaying,
+    positionMs,
+    error,
+    toggle,
+  } = useSpotifyClip({
+    mountRef: spotifyMountRef,
+    trackUrl: track?.track_url || "",
+    trackId: track?.provider_track_id || null,
+    startSeconds: start,
+    clipDurationSeconds: clipDuration,
+  });
+
+  const progress = useMemo(() => {
+    const relative = positionMs / 1000 - start;
+    return Math.max(0, Math.min(1, relative / clipDuration));
+  }, [positionMs, start, clipDuration]);
 
   if (!track) return null;
 
   return (
     <div
-      className={`relative overflow-hidden rounded-[22px] border border-white/[0.07] bg-[#0f1218] ${className}`}
+      className={`relative overflow-hidden rounded-[22px] border border-white/[0.07] bg-[#0e1117] ${className}`}
     >
       {track.artwork_url && (
         <>
@@ -33,124 +86,137 @@ export default function ProfileMusicCard({
             src={track.artwork_url}
             alt=""
             aria-hidden="true"
-            className="pointer-events-none absolute inset-0 h-full w-full scale-125 object-cover opacity-[0.13] blur-3xl"
+            className="pointer-events-none absolute -left-8 top-1/2 h-44 w-44 -translate-y-1/2 scale-125 rounded-full object-cover opacity-[0.12] blur-[42px]"
           />
-          <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(90deg,rgba(15,18,24,.76),rgba(15,18,24,.93))]" />
+          <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(90deg,rgba(13,16,22,.76),rgba(13,16,22,.96)_68%)]" />
         </>
       )}
 
-      <div className="relative p-4 sm:p-5">
-        <div className="flex items-center gap-4">
-          <div className="relative h-[74px] w-[74px] shrink-0">
-            <div
-              className={`absolute -inset-2 rounded-full border border-[#6d7cff]/25 opacity-60 ${
-                expanded ? "animate-pulse" : ""
-              }`}
-            />
-            <div
-              className={`relative h-full w-full overflow-hidden rounded-[18px] border border-white/[0.08] bg-[#191d27] shadow-[0_12px_30px_rgba(0,0,0,.25)] ${
-                expanded ? "animate-[musicFloat_3.2s_ease-in-out_infinite]" : ""
-              }`}
-            >
-              {track.artwork_url ? (
-                <img
-                  src={track.artwork_url}
-                  alt={`Portada de ${track.track_title}`}
-                  className="h-full w-full object-cover"
-                />
-              ) : (
-                <div className="flex h-full w-full items-center justify-center text-[#8d98ff]">
-                  <Music2 size={25} />
-                </div>
-              )}
-            </div>
+      <div className="relative p-4 sm:p-[18px]">
+        <div className="flex items-center gap-3.5">
+          <div
+            className={`relative h-14 w-14 shrink-0 overflow-hidden rounded-[15px] border border-white/[0.08] bg-[#181c25] shadow-[0_10px_26px_rgba(0,0,0,.24)] ${
+              isPlaying
+                ? "animate-[alumniMusicFloat_3s_ease-in-out_infinite]"
+                : ""
+            }`}
+          >
+            {track.artwork_url ? (
+              <img
+                src={track.artwork_url}
+                alt={`Portada de ${track.track_title}`}
+                className="h-full w-full object-cover"
+              />
+            ) : (
+              <div className="h-full w-full bg-[radial-gradient(circle_at_30%_20%,rgba(109,124,255,.35),transparent_40%),#161a22]" />
+            )}
           </div>
 
           <div className="min-w-0 flex-1">
-            <div className="mb-1.5 flex items-center gap-1.5 text-[#8d98ff]">
-              <Sparkles size={12} />
-              <span className="text-[10px] font-black uppercase tracking-[0.16em]">
+            <div className="flex items-center gap-1.5 text-[#8d98ff]">
+              <Sparkles size={11} />
+              <span className="text-[9px] font-black uppercase tracking-[0.17em]">
                 Mi vibra
               </span>
             </div>
 
-            <p className="truncate text-[15px] font-black text-zinc-100">
+            <p className="mt-1 truncate text-sm font-black text-zinc-100">
               {track.track_title}
             </p>
 
-            <p className="mt-1 truncate text-xs text-zinc-600">
-              {track.artist_name || "Canción elegida en Spotify"}
+            <p className="mt-0.5 truncate text-[11px] text-zinc-600">
+              {track.artist_name || "Spotify"}
             </p>
-
-            {expanded && (
-              <div className="mt-3 flex h-4 items-end gap-1">
-                {[8, 14, 10, 16, 12, 7, 13].map((height, index) => (
-                  <span
-                    key={`${height}-${index}`}
-                    className="w-1 rounded-full bg-[#8d98ff]/70 animate-[musicBar_.9s_ease-in-out_infinite_alternate]"
-                    style={{
-                      height,
-                      animationDelay: `${index * 90}ms`,
-                    }}
-                  />
-                ))}
-              </div>
-            )}
           </div>
 
           <button
             type="button"
-            onClick={() => setExpanded((value) => !value)}
-            className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full transition ${
-              expanded
-                ? "bg-white/[0.08] text-zinc-300"
-                : "bg-[#6d7cff] text-white shadow-[0_8px_24px_rgba(109,124,255,.28)] hover:bg-[#7b87ff]"
-            }`}
-            aria-label={expanded ? "Cerrar reproductor" : "Escuchar canción"}
+            onClick={toggle}
+            disabled={!ready}
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-white/[0.07] bg-white/[0.055] text-zinc-200 transition hover:bg-white/[0.09] disabled:cursor-wait disabled:text-zinc-700"
+            aria-label={isPlaying ? "Pausar fragmento" : "Escuchar fragmento"}
           >
-            {expanded ? <ChevronDown size={19} /> : <Play size={18} fill="currentColor" />}
+            {!ready ? (
+              <Loader2 size={15} className="animate-spin" />
+            ) : isPlaying ? (
+              <Pause size={15} fill="currentColor" />
+            ) : (
+              <Play size={15} fill="currentColor" className="ml-0.5" />
+            )}
           </button>
         </div>
 
-        {expanded && (
-          <div className="mt-4 overflow-hidden rounded-[16px] border border-white/[0.07] bg-black/20">
-            <iframe
-              src={track.embed_url}
-              title={`Spotify: ${track.track_title}`}
-              width="100%"
-              height="152"
-              frameBorder="0"
-              allowFullScreen
-              allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
-              loading="lazy"
-              className="block w-full"
-            />
+        <div className="mt-4 flex items-center gap-3">
+          <div className="flex min-w-0 flex-1 items-center gap-[3px] overflow-hidden">
+            {BARS.map((height, index) => {
+              const active = index / (BARS.length - 1) <= progress;
+
+              return (
+                <span
+                  key={`${height}-${index}`}
+                  className={`w-[3px] shrink-0 rounded-full transition ${
+                    active ? "bg-[#8d98ff]/85" : "bg-white/[0.10]"
+                  } ${
+                    isPlaying
+                      ? "animate-[alumniMusicBar_.8s_ease-in-out_infinite_alternate]"
+                      : ""
+                  }`}
+                  style={{
+                    height: `${Math.max(5, height * 0.68)}px`,
+                    animationDelay: `${index * 22}ms`,
+                  }}
+                />
+              );
+            })}
           </div>
+
+          <span className="shrink-0 whitespace-nowrap text-[10px] font-bold tabular-nums text-zinc-700">
+            {formatTime(start)}–{formatTime(start + clipDuration)}
+          </span>
+
+          <span
+            className="shrink-0 text-zinc-700"
+            aria-label="Spotify"
+            title="Spotify"
+          >
+            <SpotifyGlyph />
+          </span>
+        </div>
+
+        {error && (
+          <p className="mt-2 text-[10px] font-bold text-red-300/70">
+            {error}
+          </p>
         )}
 
-        <div className="mt-3 flex items-center justify-between gap-3 border-t border-white/[0.05] pt-3">
-          <p className="text-[10px] font-bold text-zinc-700">
-            Reproducción mediante Spotify.
-          </p>
-          <a
-            href={track.track_url}
-            target="_blank"
-            rel="noreferrer"
-            className="flex shrink-0 items-center gap-1 text-[10px] font-black text-zinc-600 transition hover:text-zinc-300"
-          >
-            Spotify <ExternalLink size={11} />
-          </a>
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute -left-[10000px] top-0 h-[80px] w-[300px] overflow-hidden opacity-0"
+        >
+          <div ref={spotifyMountRef} />
         </div>
       </div>
 
       <style jsx>{`
-        @keyframes musicFloat {
-          0%, 100% { transform: translateY(0) rotate(-1deg); }
-          50% { transform: translateY(-3px) rotate(1deg); }
+        @keyframes alumniMusicFloat {
+          0%,
+          100% {
+            transform: translateY(0) rotate(-0.5deg);
+          }
+          50% {
+            transform: translateY(-2px) rotate(0.5deg);
+          }
         }
-        @keyframes musicBar {
-          from { transform: scaleY(0.45); opacity: 0.42; }
-          to { transform: scaleY(1); opacity: 1; }
+
+        @keyframes alumniMusicBar {
+          from {
+            transform: scaleY(0.64);
+            opacity: 0.55;
+          }
+          to {
+            transform: scaleY(1);
+            opacity: 1;
+          }
         }
       `}</style>
     </div>

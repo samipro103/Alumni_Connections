@@ -8,6 +8,9 @@ export type ProfileMusic = {
   artwork_url: string | null;
   track_url: string;
   embed_url: string;
+  clip_start_seconds?: number | null;
+  clip_duration_seconds?: number | null;
+  track_duration_seconds?: number | null;
   updated_at?: string;
 };
 
