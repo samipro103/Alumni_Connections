@@ -1,7 +1,13 @@
 "use client";
 
 import { useMemo, useRef } from "react";
-import { Loader2, Pause, Play, Sparkles } from "lucide-react";
+import {
+  ExternalLink,
+  Loader2,
+  Pause,
+  Play,
+  Sparkles,
+} from "lucide-react";
 import type { ProfileMusic } from "@/lib/profileMusic";
 import { useSpotifyClip } from "@/hooks/useSpotifyClip";
 
@@ -57,6 +63,7 @@ export default function ProfileMusicCard({
 
   const {
     ready,
+    failed,
     isPlaying,
     positionMs,
     error,
@@ -75,6 +82,15 @@ export default function ProfileMusicCard({
   }, [positionMs, start, clipDuration]);
 
   if (!track) return null;
+
+  function handleMainAction() {
+    if (failed) {
+      window.open(track!.track_url, "_blank", "noopener,noreferrer");
+      return;
+    }
+
+    toggle();
+  }
 
   return (
     <div
@@ -131,13 +147,21 @@ export default function ProfileMusicCard({
 
           <button
             type="button"
-            onClick={toggle}
-            disabled={!ready}
+            onClick={handleMainAction}
+            disabled={!ready && !failed}
             className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-white/[0.07] bg-white/[0.055] text-zinc-200 transition hover:bg-white/[0.09] disabled:cursor-wait disabled:text-zinc-700"
-            aria-label={isPlaying ? "Pausar fragmento" : "Escuchar fragmento"}
+            aria-label={
+              failed
+                ? "Abrir canción en Spotify"
+                : isPlaying
+                ? "Pausar fragmento"
+                : "Escuchar fragmento"
+            }
           >
-            {!ready ? (
+            {!ready && !failed ? (
               <Loader2 size={15} className="animate-spin" />
+            ) : failed ? (
+              <ExternalLink size={15} />
             ) : isPlaying ? (
               <Pause size={15} fill="currentColor" />
             ) : (
@@ -183,7 +207,13 @@ export default function ProfileMusicCard({
           </span>
         </div>
 
-        {error && (
+        {failed && (
+          <p className="mt-2 text-[10px] font-bold text-zinc-700">
+            El reproductor interno no respondió; el botón abrirá Spotify.
+          </p>
+        )}
+
+        {error && !failed && (
           <p className="mt-2 text-[10px] font-bold text-red-300/70">
             {error}
           </p>

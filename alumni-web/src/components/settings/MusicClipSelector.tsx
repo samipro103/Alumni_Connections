@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import {
+  ExternalLink,
   Loader2,
   Minus,
   Pause,
@@ -40,6 +41,7 @@ export default function MusicClipSelector({
 
   const {
     ready,
+    failed,
     isPlaying,
     durationMs,
     toggle,
@@ -71,12 +73,32 @@ export default function MusicClipSelector({
     startSeconds,
   ]);
 
+  const windowWidth = useMemo(() => {
+    if (effectiveDuration <= 30) return 100;
+    return Math.max(10, Math.min(32, (30 / effectiveDuration) * 100));
+  }, [effectiveDuration]);
+
+  const leftPercent = useMemo(() => {
+    if (maxStart <= 0) return 0;
+    const travel = 100 - windowWidth;
+    return (startSeconds / maxStart) * travel;
+  }, [maxStart, startSeconds, windowWidth]);
+
   function updateStart(value: number) {
     onStartChange(Math.max(0, Math.min(maxStart, value)));
   }
 
   function nudge(value: number) {
     updateStart(startSeconds + value);
+  }
+
+  function handlePreview() {
+    if (failed) {
+      window.open(track.track_url, "_blank", "noopener,noreferrer");
+      return;
+    }
+
+    toggle();
   }
 
   return (
@@ -95,24 +117,30 @@ export default function MusicClipSelector({
       </div>
 
       <p className="mt-2 text-[11px] leading-5 text-zinc-700">
-        Arrastra sobre las ondas para elegir qué parte de la canción quieres
-        mostrar.
+        Arrastra sobre las ondas. La ventana violeta se mueve contigo y marca
+        exactamente el tramo que guardarás.
       </p>
 
-      <div className="relative mt-5 h-16">
-        <div className="absolute inset-x-0 top-1/2 flex h-10 -translate-y-1/2 items-center justify-between gap-[2px] overflow-hidden">
+      <div className="relative mt-5 h-20 overflow-hidden rounded-[14px] border border-white/[0.045] bg-black/10 px-3">
+        <div className="absolute inset-x-3 top-1/2 flex h-11 -translate-y-1/2 items-center justify-between gap-[2px] overflow-hidden">
           {WAVE.map((height, index) => (
             <span
               key={`${height}-${index}`}
-              className="w-[3px] shrink-0 rounded-full bg-white/[0.11]"
+              className="w-[3px] shrink-0 rounded-full bg-white/[0.12]"
               style={{
-                height: `${Math.max(5, height * 0.76)}px`,
+                height: `${Math.max(5, height * 0.78)}px`,
               }}
             />
           ))}
         </div>
 
-        <div className="pointer-events-none absolute inset-y-2 left-1/2 w-[22%] -translate-x-1/2 rounded-xl border border-[#8d98ff]/45 bg-[#6d7cff]/10 shadow-[0_0_26px_rgba(109,124,255,.08)]" />
+        <div
+          className="pointer-events-none absolute inset-y-2 rounded-xl border border-[#8d98ff]/55 bg-[#6d7cff]/12 shadow-[0_0_28px_rgba(109,124,255,.12)] transition-[left,width] duration-100"
+          style={{
+            left: `${leftPercent}%`,
+            width: `${windowWidth}%`,
+          }}
+        />
 
         <input
           type="range"
@@ -126,14 +154,21 @@ export default function MusicClipSelector({
           className="absolute inset-0 z-10 h-full w-full cursor-ew-resize opacity-0"
           aria-label="Seleccionar inicio del fragmento"
         />
+
+        <div
+          className="pointer-events-none absolute bottom-1.5 h-1.5 w-1.5 -translate-x-1/2 rounded-full bg-[#8d98ff] shadow-[0_0_10px_rgba(141,152,255,.7)] transition-[left] duration-100"
+          style={{
+            left: `${Math.min(98, Math.max(2, leftPercent + windowWidth / 2))}%`,
+          }}
+        />
       </div>
 
-      <div className="mt-1 flex justify-between text-[9px] font-bold tabular-nums text-zinc-800">
+      <div className="mt-2 flex justify-between text-[9px] font-bold tabular-nums text-zinc-800">
         <span>0:00</span>
         <span>
           {durationSeconds > 0
             ? formatTime(durationSeconds)
-            : "toca Probar para detectar duración"}
+            : "puedes elegir aunque Spotify siga cargando"}
         </span>
       </div>
 
@@ -149,18 +184,24 @@ export default function MusicClipSelector({
 
         <button
           type="button"
-          onClick={toggle}
-          disabled={!ready}
+          onClick={handlePreview}
+          disabled={!ready && !failed}
           className="flex h-9 min-w-0 flex-1 items-center justify-center gap-2 rounded-xl bg-[#6d7cff] px-3 text-[10px] font-black text-white transition hover:bg-[#7b87ff] disabled:cursor-wait disabled:opacity-50"
         >
-          {!ready ? (
+          {!ready && !failed ? (
             <Loader2 size={13} className="animate-spin" />
+          ) : failed ? (
+            <ExternalLink size={13} />
           ) : isPlaying ? (
             <Pause size={13} fill="currentColor" />
           ) : (
             <Play size={13} fill="currentColor" />
           )}
-          {isPlaying ? "Pausar" : "Probar 30 segundos"}
+          {failed
+            ? "Abrir en Spotify"
+            : isPlaying
+            ? "Pausar"
+            : "Probar 30 segundos"}
         </button>
 
         <button

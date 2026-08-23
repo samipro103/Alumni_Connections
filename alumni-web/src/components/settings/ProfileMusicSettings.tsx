@@ -3,9 +3,11 @@
 import { useCallback, useEffect, useState } from "react";
 import {
   Check,
+  Clipboard,
   ExternalLink,
   Loader2,
   Music2,
+  Pencil,
   Search,
   Trash2,
 } from "lucide-react";
@@ -52,13 +54,33 @@ export default function ProfileMusicSettings({ userId }: Props) {
     if (queryError) {
       console.error(queryError);
       setError(
-        "No se pudo cargar tu canción. Ejecuta el SQL de Música Premium 1.1."
+        "No se pudo cargar tu canción. Verifica que ejecutaste el SQL de Música Premium."
       );
     } else {
       setCurrent((data as ProfileMusic | null) || null);
     }
 
     setLoading(false);
+  }
+
+  async function pasteSpotifyLink() {
+    setError("");
+
+    try {
+      const text = await navigator.clipboard.readText();
+
+      if (!text?.trim()) {
+        setError("El portapapeles está vacío.");
+        return;
+      }
+
+      setSpotifyUrl(text.trim());
+      setCandidate(null);
+    } catch {
+      setError(
+        "No pude leer el portapapeles. Mantén presionado el campo y pega el enlace manualmente."
+      );
+    }
   }
 
   async function readSpotifyLink() {
@@ -92,6 +114,35 @@ export default function ProfileMusicSettings({ userId }: Props) {
     } finally {
       setReading(false);
     }
+  }
+
+  function editCurrentClip() {
+    if (!current) return;
+
+    setCandidate({
+      provider: "spotify",
+      provider_track_id: current.provider_track_id,
+      track_title: current.track_title,
+      artist_name: current.artist_name,
+      album_name: current.album_name,
+      artwork_url: current.artwork_url,
+      track_url: current.track_url,
+      embed_url: current.embed_url,
+    });
+
+    setSpotifyUrl(current.track_url);
+    setClipStart(Number(current.clip_start_seconds ?? 0));
+    setTrackDuration(
+      current.track_duration_seconds
+        ? Number(current.track_duration_seconds)
+        : null
+    );
+
+    window.setTimeout(() => {
+      document
+        .getElementById("alumni-music-clip-editor")
+        ?.scrollIntoView({ behavior: "smooth", block: "center" });
+    }, 50);
   }
 
   async function saveMusic() {
@@ -174,7 +225,8 @@ export default function ProfileMusicSettings({ userId }: Props) {
               Tu canción del momento
             </p>
             <p className="mt-1 max-w-2xl text-xs leading-5 text-zinc-600">
-              Portada, ondas y solo 30 segundos elegidos por ti.
+              Elige la canción y también el tramo exacto de 30 segundos que
+              quieres enseñar en tu perfil.
             </p>
           </div>
         </div>
@@ -183,7 +235,16 @@ export default function ProfileMusicSettings({ userId }: Props) {
           <div className="mt-5">
             <ProfileMusicCard track={current} />
 
-            <div className="mt-3 flex justify-end">
+            <div className="mt-3 flex items-center justify-end gap-4">
+              <button
+                type="button"
+                onClick={editCurrentClip}
+                className="flex items-center gap-1.5 text-xs font-bold text-zinc-600 transition hover:text-zinc-300"
+              >
+                <Pencil size={13} />
+                Editar fragmento
+              </button>
+
               <button
                 type="button"
                 onClick={removeMusic}
@@ -205,7 +266,7 @@ export default function ProfileMusicSettings({ userId }: Props) {
               Aún no tienes una canción.
             </p>
             <p className="mt-1 text-xs text-zinc-700">
-              Elige una y selecciona tu fragmento favorito.
+              Carga una canción y selecciona tu fragmento favorito.
             </p>
           </div>
         )}
@@ -253,9 +314,21 @@ export default function ProfileMusicSettings({ userId }: Props) {
                   void readSpotifyLink();
                 }
               }}
-              placeholder="https://open.spotify.com/track/..."
-              className="h-11 w-full rounded-xl border border-white/[0.07] bg-white/[0.025] pl-10 pr-3 text-sm text-zinc-300 outline-none transition placeholder:text-zinc-800 focus:border-[#6d7cff]/45"
+              placeholder="Pega el enlace de la canción"
+              autoComplete="off"
+              spellCheck={false}
+              inputMode="url"
+              className="h-11 w-full rounded-xl border border-white/[0.07] bg-white/[0.025] pl-10 pr-20 text-sm text-zinc-300 outline-none transition placeholder:text-zinc-800 focus:border-[#6d7cff]/45"
             />
+
+            <button
+              type="button"
+              onClick={pasteSpotifyLink}
+              className="absolute right-2 top-1/2 flex h-7 -translate-y-1/2 items-center gap-1 rounded-lg bg-white/[0.045] px-2 text-[9px] font-black text-zinc-600 transition hover:text-zinc-300"
+            >
+              <Clipboard size={11} />
+              Pegar
+            </button>
           </div>
 
           <button
@@ -280,7 +353,10 @@ export default function ProfileMusicSettings({ userId }: Props) {
         )}
 
         {candidate && (
-          <div className="mt-6 space-y-4 border-t border-white/[0.06] pt-6">
+          <div
+            id="alumni-music-clip-editor"
+            className="mt-6 space-y-4 border-t border-white/[0.06] pt-6"
+          >
             <div className="flex items-center gap-3">
               {candidate.artwork_url && (
                 <img
@@ -295,7 +371,7 @@ export default function ProfileMusicSettings({ userId }: Props) {
                   {candidate.track_title}
                 </p>
                 <p className="mt-0.5 text-[11px] text-zinc-700">
-                  Ahora selecciona exactamente qué parte quieres mostrar.
+                  Mueve la selección y guarda el tramo que más te guste.
                 </p>
               </div>
             </div>
@@ -320,7 +396,14 @@ export default function ProfileMusicSettings({ userId }: Props) {
               )}
               {saving
                 ? "Guardando..."
-                : "Guardar estos 30 segundos en mi perfil"}
+                : `Guardar ${Math.floor(clipStart / 60)}:${String(
+                    Math.floor(clipStart % 60)
+                  ).padStart(2, "0")}–${Math.floor(
+                    (clipStart + 30) / 60
+                  )}:${String(Math.floor((clipStart + 30) % 60)).padStart(
+                    2,
+                    "0"
+                  )} en mi perfil`}
             </button>
           </div>
         )}
