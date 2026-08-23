@@ -43,6 +43,8 @@ export type StoryItem = {
   music_embed_url?: string | null;
   music_preview_url?: string | null;
   music_duration_ms?: number | null;
+  music_clip_start_seconds?: number | null;
+  music_clip_duration_seconds?: number | null;
 };
 
 export type StoryGroup = {
@@ -62,8 +64,7 @@ type Props = {
   onChanged?: () => void | Promise<void>;
 };
 
-const DEFAULT_IMAGE_DURATION_MS = 6500;
-const MUSIC_IMAGE_DURATION_MS = 30000;
+const STORY_DURATION_MS = 15000;
 
 function SpotifyGlyph() {
   return (
@@ -103,6 +104,7 @@ export default function StoryViewer({
   const rafRef = useRef<number | null>(null);
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const pausedRef = useRef(false);
+  const advancingRef = useRef(false);
 
   const [groupIndex, setGroupIndex] =
     useState(startGroupIndex);
@@ -153,6 +155,7 @@ export default function StoryViewer({
   useEffect(() => {
     if (!open || !story) return;
 
+    advancingRef.current = false;
     setProgress(0);
     setViewCount(null);
     setReply("");
@@ -166,42 +169,35 @@ export default function StoryViewer({
 
     cancelAnimation();
 
-    if (story.media_type === "image") {
-      let elapsed = 0;
-      let last = performance.now();
+    // Todas las historias duran exactamente 15 segundos.
+    // El progreso ya no depende de la duración del video ni de si lleva música.
+    let elapsed = 0;
+    let last = performance.now();
 
-      const duration =
-        story.music_track_url
-          ? MUSIC_IMAGE_DURATION_MS
-          : DEFAULT_IMAGE_DURATION_MS;
+    const tick = (now: number) => {
+      const delta = now - last;
+      last = now;
 
-      const tick = (now: number) => {
-        const delta = now - last;
-        last = now;
+      if (!pausedRef.current) {
+        elapsed += delta;
+      }
 
-        if (!pausedRef.current) {
-          elapsed += delta;
-        }
+      const nextProgress = Math.min(
+        100,
+        (elapsed / STORY_DURATION_MS) * 100
+      );
 
-        const nextProgress = Math.min(
-          100,
-          (elapsed / duration) * 100
-        );
+      setProgress(nextProgress);
 
-        setProgress(nextProgress);
+      if (nextProgress >= 100) {
+        next();
+        return;
+      }
 
-        if (nextProgress >= 100) {
-          next();
-          return;
-        }
+      rafRef.current = requestAnimationFrame(tick);
+    };
 
-        rafRef.current =
-          requestAnimationFrame(tick);
-      };
-
-      rafRef.current =
-        requestAnimationFrame(tick);
-    }
+    rafRef.current = requestAnimationFrame(tick);
 
     return cancelAnimation;
   }, [
@@ -460,9 +456,14 @@ export default function StoryViewer({
   }
 
   function next() {
+    if (advancingRef.current) return;
+    advancingRef.current = true;
     cancelAnimation();
 
-    if (!group) return;
+    if (!group) {
+      advancingRef.current = false;
+      return;
+    }
 
     if (
       storyIndex <
@@ -489,6 +490,7 @@ export default function StoryViewer({
   }
 
   function previous() {
+    advancingRef.current = false;
     cancelAnimation();
 
     if (!group) return;
@@ -731,27 +733,7 @@ export default function StoryViewer({
               videoMuted ||
               storyMusicPlaying
             }
-            onLoadedMetadata={() =>
-              setProgress(0)
-            }
-            onTimeUpdate={() => {
-              const video =
-                videoRef.current;
-
-              if (
-                !video ||
-                !video.duration
-              ) {
-                return;
-              }
-
-              setProgress(
-                (video.currentTime /
-                  video.duration) *
-                  100
-              );
-            }}
-            onEnded={next}
+            loop
             className="h-full w-full object-contain"
           />
         ) : (
@@ -857,28 +839,19 @@ export default function StoryViewer({
                   "Canción"}
               </p>
               <p className="mt-0.5 truncate text-[9px] text-white/45">
-                {story.music_artist ||
-                  "Spotify"}
+                {story.music_artist || "Spotify"} · 15s
               </p>
             </div>
 
             <StoryMusicPlayer
-              previewUrl={
-                story.music_preview_url
-              }
-              trackUrl={
-                story.music_track_url
-              }
-              trackId={
-                story.music_track_id
-              }
-              autoTry={
-                story.media_type ===
-                "image"
-              }
-              onPlayingChange={
-                setStoryMusicPlaying
-              }
+              trackUrl={story.music_track_url}
+              trackId={story.music_track_id}
+              startSeconds={Math.max(
+                0,
+                Number(story.music_clip_start_seconds || 0)
+              )}
+              clipDurationSeconds={15}
+              onPlayingChange={setStoryMusicPlaying}
             />
 
             <span

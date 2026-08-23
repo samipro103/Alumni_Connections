@@ -12,8 +12,6 @@ import {
   ImagePlus,
   Loader2,
   Music2,
-  Pause,
-  Play,
   Search,
   Send,
   Trash2,
@@ -22,6 +20,8 @@ import {
 import { useAuth } from "@/components/auth/AuthProvider";
 import { supabase } from "@/lib/supabase";
 import type { StoryMusicTrack } from "@/lib/musicCatalog";
+import type { SpotifyTrackImport } from "@/lib/profileMusic";
+import MusicClipSelector from "@/components/settings/MusicClipSelector";
 
 type Props = {
   open: boolean;
@@ -54,7 +54,6 @@ export default function StoryComposer({
   const { user } = useAuth();
   const inputRef = useRef<HTMLInputElement>(null);
   const searchTimerRef = useRef<number | null>(null);
-  const previewAudioRef = useRef<HTMLAudioElement | null>(null);
 
   const [file, setFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState("");
@@ -67,7 +66,8 @@ export default function StoryComposer({
   const [musicSearching, setMusicSearching] = useState(false);
   const [musicSearchError, setMusicSearchError] = useState("");
   const [music, setMusic] = useState<StoryMusicTrack | null>(null);
-  const [previewPlaying, setPreviewPlaying] = useState(false);
+  const [musicClipStart, setMusicClipStart] = useState(0);
+  const [musicTrackDuration, setMusicTrackDuration] = useState<number | null>(null);
 
   useEffect(() => {
     if (!file) {
@@ -99,7 +99,8 @@ export default function StoryComposer({
       setMusicSearching(false);
       setMusicSearchError("");
       setMusic(null);
-      setPreviewPlaying(false);
+      setMusicClipStart(0);
+      setMusicTrackDuration(null);
     }
   }, [open]);
 
@@ -282,35 +283,29 @@ export default function StoryComposer({
   }
 
   function selectTrack(track: StoryMusicTrack) {
-    previewAudioRef.current?.pause();
-    setPreviewPlaying(false);
     setMusic(track);
+    setMusicClipStart(0);
+    setMusicTrackDuration(
+      typeof track.duration_ms === "number" && track.duration_ms > 0
+        ? Math.floor(track.duration_ms / 1000)
+        : null
+    );
     setMusicQuery("");
     setMusicResults([]);
     setMusicSearchError("");
   }
 
-  function toggleSelectedPreview() {
-    if (!music?.preview_url) return;
-
-    if (!previewAudioRef.current) {
-      previewAudioRef.current = new Audio(music.preview_url);
-      previewAudioRef.current.preload = "auto";
-      previewAudioRef.current.onplay = () =>
-        setPreviewPlaying(true);
-      previewAudioRef.current.onpause = () =>
-        setPreviewPlaying(false);
-      previewAudioRef.current.onended = () =>
-        setPreviewPlaying(false);
-    }
-
-    const audio = previewAudioRef.current;
-
-    if (audio.paused) {
-      void audio.play();
-    } else {
-      audio.pause();
-    }
+  function asSpotifyTrack(track: StoryMusicTrack): SpotifyTrackImport {
+    return {
+      provider: "spotify",
+      provider_track_id: track.provider_track_id,
+      track_title: track.track_title,
+      artist_name: track.artist_name,
+      album_name: track.album_name,
+      artwork_url: track.artwork_url,
+      track_url: track.track_url,
+      embed_url: track.embed_url,
+    };
   }
 
   async function publishStory() {
@@ -366,6 +361,10 @@ export default function StoryComposer({
           music_embed_url: music?.embed_url || null,
           music_preview_url: music?.preview_url || null,
           music_duration_ms: music?.duration_ms || null,
+          music_clip_start_seconds: music
+            ? Math.max(0, Math.floor(musicClipStart))
+            : 0,
+          music_clip_duration_seconds: 15,
         });
 
       if (insertError) {
@@ -375,7 +374,6 @@ export default function StoryComposer({
         throw insertError;
       }
 
-      previewAudioRef.current?.pause();
       await onPublished();
     } catch (error: any) {
       console.error(error);
@@ -401,7 +399,7 @@ export default function StoryComposer({
               Nueva historia
             </p>
             <p className="mt-0.5 text-[10px] text-zinc-600">
-              Foto o video · visible durante 24 horas
+              Foto o video · 15 segundos · visible durante 24 horas
             </p>
           </div>
 
@@ -478,38 +476,16 @@ export default function StoryComposer({
                     </p>
                   </div>
 
-                  {music.preview_url && (
-                    <button
-                      type="button"
-                      onClick={toggleSelectedPreview}
-                      className="flex h-8 w-8 items-center justify-center rounded-full bg-white/10 text-white/80 transition hover:bg-white/15"
-                      aria-label={
-                        previewPlaying
-                          ? "Pausar preview"
-                          : "Escuchar preview"
-                      }
-                    >
-                      {previewPlaying ? (
-                        <Pause
-                          size={13}
-                          fill="currentColor"
-                        />
-                      ) : (
-                        <Play
-                          size={13}
-                          fill="currentColor"
-                          className="ml-0.5"
-                        />
-                      )}
-                    </button>
-                  )}
+                  <span className="rounded-full border border-white/10 bg-white/[0.06] px-2 py-1 text-[9px] font-black tabular-nums text-white/55">
+                    {Math.floor(musicClipStart / 60)}:{String(musicClipStart % 60).padStart(2, "0")} · 15s
+                  </span>
 
                   <button
                     type="button"
                     onClick={() => {
-                      previewAudioRef.current?.pause();
-                      setPreviewPlaying(false);
                       setMusic(null);
+                      setMusicClipStart(0);
+                      setMusicTrackDuration(null);
                     }}
                     className="flex h-8 w-8 items-center justify-center rounded-full text-white/45 transition hover:bg-white/10 hover:text-white"
                     aria-label="Quitar música"
@@ -566,7 +542,7 @@ export default function StoryComposer({
                     Música
                   </p>
                   <p className="mt-0.5 text-[10px] text-zinc-700">
-                    Busca una canción o artista.
+                    Busca una canción o artista y elige un tramo de 15 segundos.
                   </p>
                 </div>
               </div>
@@ -645,7 +621,7 @@ export default function StoryComposer({
                               <div className="flex shrink-0 items-center gap-2">
                                 {track.preview_url && (
                                   <span className="rounded-full bg-white/[0.05] px-2 py-1 text-[8px] font-black uppercase tracking-[0.08em] text-zinc-600">
-                                    30s
+                                    15s
                                   </span>
                                 )}
                                 <Check
@@ -659,6 +635,37 @@ export default function StoryComposer({
                       )}
                     </div>
                   )}
+                </div>
+              )}
+
+
+              {music && (
+                <div className="mt-4 space-y-3">
+                  <div className="flex items-center justify-between gap-3">
+                    <p className="text-[10px] font-bold text-zinc-700">
+                      Elige exactamente qué 15 segundos sonarán en esta historia.
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setMusic(null);
+                        setMusicClipStart(0);
+                        setMusicTrackDuration(null);
+                      }}
+                      className="shrink-0 text-[10px] font-black text-zinc-600 transition hover:text-zinc-300"
+                    >
+                      Cambiar canción
+                    </button>
+                  </div>
+
+                  <MusicClipSelector
+                    track={asSpotifyTrack(music)}
+                    startSeconds={musicClipStart}
+                    onStartChange={setMusicClipStart}
+                    onDurationKnown={setMusicTrackDuration}
+                    clipDurationSeconds={15}
+                    knownDurationSeconds={musicTrackDuration}
+                  />
                 </div>
               )}
             </section>

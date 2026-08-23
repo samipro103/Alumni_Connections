@@ -18,6 +18,8 @@ type Props = {
   startSeconds: number;
   onStartChange: (value: number) => void;
   onDurationKnown: (value: number) => void;
+  clipDurationSeconds?: number;
+  knownDurationSeconds?: number | null;
 };
 
 const WAVE = [
@@ -36,8 +38,11 @@ export default function MusicClipSelector({
   startSeconds,
   onStartChange,
   onDurationKnown,
+  clipDurationSeconds = 30,
+  knownDurationSeconds = null,
 }: Props) {
   const spotifyMountRef = useRef<HTMLDivElement | null>(null);
+  const safeClipDuration = Math.max(1, Math.floor(clipDurationSeconds));
 
   const {
     ready,
@@ -50,19 +55,28 @@ export default function MusicClipSelector({
     trackUrl: track.track_url,
     trackId: track.provider_track_id,
     startSeconds,
-    clipDurationSeconds: 30,
+    clipDurationSeconds: safeClipDuration,
   });
 
-  const durationSeconds = Math.floor(durationMs / 1000);
-  const effectiveDuration = durationSeconds > 30 ? durationSeconds : 240;
-  const maxStart = Math.max(0, effectiveDuration - 30);
+  const spotifyDurationSeconds = Math.floor(durationMs / 1000);
+  const durationSeconds =
+    spotifyDurationSeconds > 0
+      ? spotifyDurationSeconds
+      : Math.max(0, Math.floor(knownDurationSeconds || 0));
+
+  const effectiveDuration =
+    durationSeconds > safeClipDuration
+      ? durationSeconds
+      : Math.max(240, safeClipDuration);
+
+  const maxStart = Math.max(0, effectiveDuration - safeClipDuration);
 
   useEffect(() => {
     if (durationSeconds <= 0) return;
 
     onDurationKnown(durationSeconds);
 
-    const realMax = Math.max(0, durationSeconds - 30);
+    const realMax = Math.max(0, durationSeconds - safeClipDuration);
 
     if (startSeconds > realMax) {
       onStartChange(realMax);
@@ -71,19 +85,24 @@ export default function MusicClipSelector({
     durationSeconds,
     onDurationKnown,
     onStartChange,
+    safeClipDuration,
     startSeconds,
   ]);
 
   const windowWidth = useMemo(() => {
-    if (effectiveDuration <= 30) return 100;
-    return Math.max(10, Math.min(32, (30 / effectiveDuration) * 100));
-  }, [effectiveDuration]);
+    if (effectiveDuration <= safeClipDuration) return 100;
+
+    return Math.max(
+      8,
+      Math.min(34, (safeClipDuration / effectiveDuration) * 100)
+    );
+  }, [effectiveDuration, safeClipDuration]);
 
   const leftPercent = useMemo(() => {
     if (maxStart <= 0) return 0;
 
     const travel = 100 - windowWidth;
-    return (startSeconds / maxStart) * travel;
+    return (Math.min(startSeconds, maxStart) / maxStart) * travel;
   }, [maxStart, startSeconds, windowWidth]);
 
   function updateStart(value: number) {
@@ -109,17 +128,17 @@ export default function MusicClipSelector({
         <div className="flex items-center gap-2 text-[#8d98ff]">
           <Scissors size={14} />
           <p className="text-xs font-black">
-            Elige tus 30 segundos
+            Elige tus {safeClipDuration} segundos
           </p>
         </div>
 
         <span className="rounded-full border border-white/[0.07] bg-white/[0.025] px-2.5 py-1 text-[10px] font-black tabular-nums text-zinc-600">
-          {formatTime(startSeconds)} → {formatTime(startSeconds + 30)}
+          {formatTime(startSeconds)} → {formatTime(startSeconds + safeClipDuration)}
         </span>
       </div>
 
       <p className="mt-2 text-[11px] leading-5 text-zinc-700">
-        Arrastra sobre las ondas para elegir el tramo.
+        Mueve la selección. Si estaba sonando, se pausa y reanuda en el nuevo tramo sin lanzar varios seeks a la vez.
       </p>
 
       <div className="relative mt-5 h-20 overflow-hidden rounded-[14px] border border-white/[0.045] bg-black/10 px-3">
@@ -149,9 +168,7 @@ export default function MusicClipSelector({
           max={maxStart}
           step={1}
           value={Math.min(startSeconds, maxStart)}
-          onChange={(event) =>
-            updateStart(Number(event.target.value))
-          }
+          onChange={(event) => updateStart(Number(event.target.value))}
           className="absolute inset-0 z-10 h-full w-full cursor-ew-resize opacity-0"
           aria-label="Seleccionar inicio del fragmento"
         />

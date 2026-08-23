@@ -30,6 +30,10 @@ export function useSpotifyClip({
   const playingRef = useRef(false);
   const preparedRef = useRef(false);
   const correctionDoneRef = useRef(false);
+  const startChangeTimerRef = useRef<number | null>(null);
+  const restartAfterSeekRef = useRef(false);
+  const transitionUntilRef = useRef(0);
+  const correctionWindowUntilRef = useRef(0);
 
   const [ready, setReady] = useState(false);
   const [failed, setFailed] = useState(false);
@@ -39,23 +43,59 @@ export function useSpotifyClip({
   const [error, setError] = useState("");
 
   useEffect(() => {
-    startRef.current = Math.max(0, Math.floor(startSeconds));
+    const nextStart = Math.max(0, Math.floor(startSeconds));
+    startRef.current = nextStart;
     correctionDoneRef.current = false;
-    setPositionMs(startRef.current * 1000);
+    setPositionMs(nextStart * 1000);
 
-    // En el editor movemos solo el cursor del controlador existente.
-    // No recargamos la entidad al mover el slider.
-    if (controllerRef.current && ready && !playingRef.current) {
-      try {
-        controllerRef.current.seek?.(startRef.current);
-      } catch {
-        // Spotify puede ignorar seek para algunos tracks.
-      }
+    const controller = controllerRef.current;
+    if (!controller || !ready) return;
+
+    if (startChangeTimerRef.current !== null) {
+      window.clearTimeout(startChangeTimerRef.current);
+      startChangeTimerRef.current = null;
     }
+
+    // Si el usuario mueve el selector mientras suena, pausamos una sola vez.
+    // Después esperamos a que deje de moverlo para hacer UN seek y reanudar.
+    // Esto evita una lluvia de seek/play que era la causa principal del bug.
+    if (playingRef.current) {
+      restartAfterSeekRef.current = true;
+      try {
+        controller.pause?.();
+      } catch {}
+      playingRef.current = false;
+      setIsPlaying(false);
+    }
+
+    startChangeTimerRef.current = window.setTimeout(() => {
+      startChangeTimerRef.current = null;
+      const latestController = controllerRef.current;
+      if (!latestController) return;
+
+      transitionUntilRef.current = Date.now() + 900;
+      correctionWindowUntilRef.current = Date.now() + 1800;
+      correctionDoneRef.current = false;
+
+      try {
+        latestController.seek?.(startRef.current);
+      } catch {}
+
+      if (restartAfterSeekRef.current) {
+        restartAfterSeekRef.current = false;
+        window.setTimeout(() => {
+          const activeController = controllerRef.current;
+          if (!activeController) return;
+          try {
+            activeController.play?.();
+          } catch {}
+        }, 90);
+      }
+    }, 220);
   }, [startSeconds, ready]);
 
   useEffect(() => {
-    clipDurationRef.current = clipDurationSeconds;
+    clipDurationRef.current = Math.max(1, clipDurationSeconds);
   }, [clipDurationSeconds]);
 
   useEffect(() => {
@@ -105,8 +145,6 @@ export function useSpotifyClip({
               if (preparedRef.current) return;
               preparedRef.current = true;
 
-              // Preparamos el punto elegido UNA sola vez al inicializar.
-              // Antes se hacía loadEntity() en cada Play y eso parecía un F5.
               if (startRef.current > 0) {
                 try {
                   controller.loadEntity?.(
@@ -117,9 +155,7 @@ export function useSpotifyClip({
                 } catch {
                   try {
                     controller.seek?.(startRef.current);
-                  } catch {
-                    // Fallback no crítico.
-                  }
+                  } catch {}
                 }
               }
 
@@ -136,8 +172,13 @@ export function useSpotifyClip({
             prepareSelectedStart();
 
             controller.addListener?.("playback_started", () => {
+              // Ignora un playback_started viejo mientras el usuario todavía
+              // está moviendo el fragmento. El nuevo play llegará después.
+              if (startChangeTimerRef.current !== null) return;
+
               playingRef.current = true;
               correctionDoneRef.current = false;
+              correctionWindowUntilRef.current = Date.now() + 1800;
               setIsPlaying(true);
             });
 
@@ -148,6 +189,12 @@ export function useSpotifyClip({
               const paused = Boolean(state.isPaused);
 
               if (nextDuration > 0) setDurationMs(nextDuration);
+
+              // Durante un cambio de fragmento pueden llegar eventos viejos.
+              // Los ignoramos por un instante para que no salte el UI ni se pause
+              // usando la posición anterior.
+              if (Date.now() < transitionUntilRef.current) return;
+
               if (nextPosition >= 0) setPositionMs(nextPosition);
 
               playingRef.current = !paused;
@@ -157,24 +204,27 @@ export function useSpotifyClip({
               const endMs =
                 (startRef.current + clipDurationRef.current) * 1000;
 
-              // Solo una corrección. No hay loops ni reloads.
+              // Corrección única justo al iniciar/reanudar el fragmento.
+              // Sirve tanto si Spotify quedó antes como después del nuevo inicio.
               if (
                 !paused &&
-                startRef.current > 0 &&
-                nextPosition + 1500 < startMs &&
+                Date.now() < correctionWindowUntilRef.current &&
+                Math.abs(nextPosition - startMs) > 2200 &&
                 !correctionDoneRef.current
               ) {
                 correctionDoneRef.current = true;
+                transitionUntilRef.current = Date.now() + 600;
 
                 try {
                   controller.seek?.(startRef.current);
-                } catch {
-                  // Spotify Embed no garantiza seek exacto en canciones.
-                }
+                } catch {}
+                return;
               }
 
               if (!paused && nextPosition >= endMs - 180) {
-                controller.pause?.();
+                try {
+                  controller.pause?.();
+                } catch {}
                 playingRef.current = false;
                 setIsPlaying(false);
               }
@@ -200,9 +250,17 @@ export function useSpotifyClip({
         window.clearTimeout(timeoutId);
       }
 
+      if (startChangeTimerRef.current !== null) {
+        window.clearTimeout(startChangeTimerRef.current);
+        startChangeTimerRef.current = null;
+      }
+
       playingRef.current = false;
       preparedRef.current = false;
       correctionDoneRef.current = false;
+      restartAfterSeekRef.current = false;
+      transitionUntilRef.current = 0;
+      correctionWindowUntilRef.current = 0;
       setIsPlaying(false);
       setReady(false);
 
@@ -215,18 +273,28 @@ export function useSpotifyClip({
     const controller = controllerRef.current;
     if (!controller || !ready) return;
 
-    // NO loadEntity aquí: Play nunca vuelve a cargar el embed.
+    transitionUntilRef.current = Date.now() + 650;
+    correctionWindowUntilRef.current = Date.now() + 1800;
+    correctionDoneRef.current = false;
+
     try {
       controller.seek?.(startRef.current);
-    } catch {
-      // El startAt preparado durante init sigue siendo el respaldo.
-    }
+    } catch {}
 
-    controller.play?.();
+    window.setTimeout(() => {
+      try {
+        controllerRef.current?.play?.();
+      } catch {}
+    }, 70);
   }, [ready]);
 
   const pause = useCallback(() => {
-    controllerRef.current?.pause?.();
+    restartAfterSeekRef.current = false;
+    try {
+      controllerRef.current?.pause?.();
+    } catch {}
+    playingRef.current = false;
+    setIsPlaying(false);
   }, []);
 
   const toggle = useCallback(() => {

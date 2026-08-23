@@ -504,6 +504,7 @@ export default function ProfileMusicSettings({
               startSeconds={clipStart}
               onStartChange={setClipStart}
               onDurationKnown={handleDurationKnown}
+              knownDurationSeconds={trackDuration}
             />
 
             <button
