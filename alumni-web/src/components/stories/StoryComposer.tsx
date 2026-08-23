@@ -2,7 +2,6 @@
 
 import {
   useEffect,
-  useMemo,
   useRef,
   useState,
 } from "react";
@@ -20,8 +19,7 @@ import {
 import { useAuth } from "@/components/auth/AuthProvider";
 import { supabase } from "@/lib/supabase";
 import type { StoryMusicTrack } from "@/lib/musicCatalog";
-import type { SpotifyTrackImport } from "@/lib/profileMusic";
-import MusicClipSelector from "@/components/settings/MusicClipSelector";
+import StoryMusicStartPicker from "@/components/stories/StoryMusicStartPicker";
 
 type Props = {
   open: boolean;
@@ -67,6 +65,7 @@ export default function StoryComposer({
   const [musicSearchError, setMusicSearchError] = useState("");
   const [music, setMusic] = useState<StoryMusicTrack | null>(null);
   const [musicClipStart, setMusicClipStart] = useState(0);
+  const [musicClipConfirmed, setMusicClipConfirmed] = useState(false);
   const [musicTrackDuration, setMusicTrackDuration] = useState<number | null>(null);
 
   useEffect(() => {
@@ -100,6 +99,7 @@ export default function StoryComposer({
       setMusicSearchError("");
       setMusic(null);
       setMusicClipStart(0);
+      setMusicClipConfirmed(false);
       setMusicTrackDuration(null);
     }
   }, [open]);
@@ -285,6 +285,7 @@ export default function StoryComposer({
   function selectTrack(track: StoryMusicTrack) {
     setMusic(track);
     setMusicClipStart(0);
+    setMusicClipConfirmed(false);
     setMusicTrackDuration(
       typeof track.duration_ms === "number" && track.duration_ms > 0
         ? Math.floor(track.duration_ms / 1000)
@@ -295,21 +296,13 @@ export default function StoryComposer({
     setMusicSearchError("");
   }
 
-  function asSpotifyTrack(track: StoryMusicTrack): SpotifyTrackImport {
-    return {
-      provider: "spotify",
-      provider_track_id: track.provider_track_id,
-      track_title: track.track_title,
-      artist_name: track.artist_name,
-      album_name: track.album_name,
-      artwork_url: track.artwork_url,
-      track_url: track.track_url,
-      embed_url: track.embed_url,
-    };
-  }
-
   async function publishStory() {
     if (!user || !file || publishing) return;
+
+    if (music && !musicClipConfirmed) {
+      alert("Confirma primero desde dónde debe empezar la canción.");
+      return;
+    }
 
     setPublishing(true);
 
@@ -485,6 +478,7 @@ export default function StoryComposer({
                     onClick={() => {
                       setMusic(null);
                       setMusicClipStart(0);
+                      setMusicClipConfirmed(false);
                       setMusicTrackDuration(null);
                     }}
                     className="flex h-8 w-8 items-center justify-center rounded-full text-white/45 transition hover:bg-white/10 hover:text-white"
@@ -640,31 +634,21 @@ export default function StoryComposer({
 
 
               {music && (
-                <div className="mt-4 space-y-3">
-                  <div className="flex items-center justify-between gap-3">
-                    <p className="text-[10px] font-bold text-zinc-700">
-                      Elige exactamente qué 15 segundos sonarán en esta historia.
-                    </p>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setMusic(null);
-                        setMusicClipStart(0);
-                        setMusicTrackDuration(null);
-                      }}
-                      className="shrink-0 text-[10px] font-black text-zinc-600 transition hover:text-zinc-300"
-                    >
-                      Cambiar canción
-                    </button>
-                  </div>
-
-                  <MusicClipSelector
-                    track={asSpotifyTrack(music)}
+                <div className="mt-4">
+                  <StoryMusicStartPicker
                     startSeconds={musicClipStart}
-                    onStartChange={setMusicClipStart}
-                    onDurationKnown={setMusicTrackDuration}
-                    clipDurationSeconds={15}
-                    knownDurationSeconds={musicTrackDuration}
+                    durationSeconds={
+                      musicTrackDuration ||
+                      (typeof music.duration_ms === "number" && music.duration_ms > 0
+                        ? Math.floor(music.duration_ms / 1000)
+                        : 240)
+                    }
+                    confirmed={musicClipConfirmed}
+                    onStartChange={(value) => {
+                      setMusicClipStart(value);
+                      setMusicClipConfirmed(false);
+                    }}
+                    onConfirm={() => setMusicClipConfirmed(true)}
                   />
                 </div>
               )}
@@ -688,7 +672,7 @@ export default function StoryComposer({
             <button
               type="button"
               onClick={publishStory}
-              disabled={!file || publishing}
+              disabled={!file || publishing || Boolean(music && !musicClipConfirmed)}
               className="flex h-10 items-center gap-2 rounded-xl bg-[#6d7cff] px-4 text-xs font-black text-white transition hover:bg-[#7b87ff] disabled:cursor-not-allowed disabled:bg-white/[0.05] disabled:text-zinc-700"
             >
               {publishing ? (

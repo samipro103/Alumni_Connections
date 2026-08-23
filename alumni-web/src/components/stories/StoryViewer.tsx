@@ -162,7 +162,7 @@ export default function StoryViewer({
     setPaused(false);
     setReplyFocused(false);
     setStoryMusicPlaying(false);
-    setVideoMuted(Boolean(story.music_track_url));
+    setVideoMuted(false);
 
     void recordView();
     void loadStoryLikes();

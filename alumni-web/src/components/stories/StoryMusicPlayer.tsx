@@ -1,11 +1,5 @@
 "use client";
 
-import {
-  ExternalLink,
-  Loader2,
-  Pause,
-  Play,
-} from "lucide-react";
 import { useEffect, useRef } from "react";
 import { useSpotifyClip } from "@/hooks/useSpotifyClip";
 
@@ -25,6 +19,9 @@ export default function StoryMusicPlayer({
   onPlayingChange,
 }: Props) {
   const spotifyMountRef = useRef<HTMLDivElement | null>(null);
+  const playingRef = useRef(false);
+  const signatureRef = useRef("");
+  const retryTimersRef = useRef<number[]>([]);
 
   const spotify = useSpotifyClip({
     mountRef: spotifyMountRef,
@@ -35,51 +32,59 @@ export default function StoryMusicPlayer({
   });
 
   useEffect(() => {
+    playingRef.current = spotify.isPlaying;
     onPlayingChange?.(spotify.isPlaying);
   }, [spotify.isPlaying, onPlayingChange]);
 
-  function handleAction() {
-    if (spotify.failed) {
-      window.open(trackUrl, "_blank", "noopener,noreferrer");
-      return;
+  useEffect(() => {
+    const signature = `${trackId || trackUrl}:${Math.max(
+      0,
+      Math.floor(startSeconds)
+    )}:${Math.max(1, Math.floor(clipDurationSeconds))}`;
+
+    retryTimersRef.current.forEach((timer) => window.clearTimeout(timer));
+    retryTimersRef.current = [];
+
+    if (!spotify.ready || spotify.failed) return;
+
+    if (signatureRef.current !== signature) {
+      signatureRef.current = signature;
+      playingRef.current = false;
     }
 
-    spotify.toggle();
-  }
+    // La historia ya fue abierta por una interacción del usuario.
+    // Intentamos arrancar la música automáticamente en el fragmento guardado.
+    // Los reintentos son espaciados y solo ocurren si Spotify todavía no reporta
+    // reproducción, evitando loops de play/seek.
+    [0, 260, 820].forEach((delay) => {
+      const timer = window.setTimeout(() => {
+        if (playingRef.current) return;
+        spotify.play();
+      }, delay);
+
+      retryTimersRef.current.push(timer);
+    });
+
+    return () => {
+      retryTimersRef.current.forEach((timer) => window.clearTimeout(timer));
+      retryTimersRef.current = [];
+    };
+  }, [
+    spotify.ready,
+    spotify.failed,
+    spotify.play,
+    trackId,
+    trackUrl,
+    startSeconds,
+    clipDurationSeconds,
+  ]);
 
   return (
-    <>
-      <button
-        type="button"
-        onClick={(event) => {
-          event.stopPropagation();
-          handleAction();
-        }}
-        disabled={!spotify.ready && !spotify.failed}
-        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-white/10 bg-white/[0.08] text-white/85 backdrop-blur-xl transition hover:bg-white/[0.14] disabled:cursor-wait disabled:text-white/35"
-        aria-label={
-          spotify.isPlaying
-            ? "Pausar música"
-            : "Reproducir música"
-        }
-      >
-        {!spotify.ready && !spotify.failed ? (
-          <Loader2 size={14} className="animate-spin" />
-        ) : spotify.failed ? (
-          <ExternalLink size={14} />
-        ) : spotify.isPlaying ? (
-          <Pause size={14} fill="currentColor" />
-        ) : (
-          <Play size={15} fill="currentColor" className="ml-0.5" />
-        )}
-      </button>
-
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute -left-[10000px] top-0 h-[80px] w-[300px] overflow-hidden opacity-[0.01]"
-      >
-        <div ref={spotifyMountRef} />
-      </div>
-    </>
+    <div
+      aria-hidden="true"
+      className="pointer-events-none absolute -left-[10000px] top-0 h-[80px] w-[300px] overflow-hidden opacity-[0.01]"
+    >
+      <div ref={spotifyMountRef} />
+    </div>
   );
 }
