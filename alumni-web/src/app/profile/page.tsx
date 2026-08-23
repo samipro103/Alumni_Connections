@@ -20,6 +20,7 @@ import { useAuth } from "@/components/auth/AuthProvider";
 import { supabase } from "@/lib/supabase";
 import AppShell from "@/components/layout/AppShell";
 import HDProfileImage from "@/components/profile/HDProfileImage";
+import ProfileSocialLinks from "@/components/profile/ProfileSocialLinks";
 
 type ProfileTab = "posts" | "about";
 
@@ -47,36 +48,76 @@ export default function ProfilePage() {
 
     setLoadingProfile(true);
 
+    const currentUserId = user.id;
+
     const [
-      { data: profileData },
-      { data: followersData },
-      { data: followingData },
-      { data: postsData },
+      { data: profileData, error: profileError },
+      { data: followersData, error: followersError },
+      { data: followingData, error: followingError },
+      { data: postsData, error: postsError },
     ] = await Promise.all([
       supabase
         .from("profiles")
         .select("*")
-        .eq("id", user.id)
+        .eq("id", currentUserId)
         .maybeSingle(),
       supabase
         .from("follows")
         .select("follower_id")
-        .eq("following_id", user.id),
+        .eq("following_id", currentUserId),
       supabase
         .from("follows")
         .select("following_id")
-        .eq("follower_id", user.id),
+        .eq("follower_id", currentUserId),
       supabase
         .from("posts")
-        .select("*, likes(user_id), comments(id)")
-        .eq("user_id", user.id)
+        .select("*, likes(user_id)")
+        .eq("user_id", currentUserId)
         .order("created_at", { ascending: false }),
     ]);
 
-    setProfile(profileData);
+    if (profileError) {
+      console.error("Error cargando perfil:", profileError);
+    }
+    if (followersError) {
+      console.error("Error cargando seguidores:", followersError);
+    }
+    if (followingError) {
+      console.error("Error cargando seguidos:", followingError);
+    }
+    if (postsError) {
+      console.error("Error cargando publicaciones del perfil:", postsError);
+    }
+
+    const safePosts = postsData || [];
+    const postIds = safePosts.map((post: any) => post.id);
+
+    let commentsData: any[] = [];
+
+    if (postIds.length > 0) {
+      const { data, error } = await supabase
+        .from("comments")
+        .select("id, post_id")
+        .in("post_id", postIds);
+
+      if (error) {
+        console.error("Error cargando comentarios del perfil:", error);
+      } else {
+        commentsData = data || [];
+      }
+    }
+
+    setProfile(profileData || null);
     setFollowers(followersData?.length || 0);
     setFollowing(followingData?.length || 0);
-    setPosts(postsData || []);
+    setPosts(
+      safePosts.map((post: any) => ({
+        ...post,
+        comments: commentsData.filter(
+          (comment: any) => comment.post_id === post.id
+        ),
+      }))
+    );
     setLoadingProfile(false);
   }
 
@@ -225,6 +266,8 @@ export default function ProfilePage() {
                 </span>
               )}
             </div>
+
+            <ProfileSocialLinks profile={profile} className="mt-5" />
 
             <div className="mt-6 flex gap-8 border-t border-white/[0.06] pt-5">
               <Stat value={posts.length} label="Publicaciones" />

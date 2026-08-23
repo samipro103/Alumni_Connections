@@ -19,6 +19,7 @@ import { useAuth } from "@/components/auth/AuthProvider";
 import { supabase } from "@/lib/supabase";
 import AppShell from "@/components/layout/AppShell";
 import HDProfileImage from "@/components/profile/HDProfileImage";
+import ProfileSocialLinks from "@/components/profile/ProfileSocialLinks";
 import CommentLikeButton from "@/components/social/CommentLikeButton";
 
 type ProfileTab = "posts" | "about";
@@ -445,6 +446,8 @@ export default function UserProfilePage() {
                 </span>
               )}
             </div>
+
+            <ProfileSocialLinks profile={profile} className="mt-5" />
 
             <div className="mt-6 flex gap-8 border-t border-white/[0.06] pt-5">
               <Stat value={posts.length} label="Publicaciones" />
