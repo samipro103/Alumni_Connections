@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useMemo, useState } from "react";
 import {
@@ -419,6 +419,42 @@ export default function AdminFeedbackPage() {
                   </div>
                 </div>
 
+                <div className="border-t border-white/[0.07] pt-5">
+                  {selected.status === "resolved" ? (
+                    <div className="flex items-center gap-3 rounded-2xl border border-emerald-500/15 bg-emerald-500/[0.06] px-4 py-3.5">
+                      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-400">
+                        <CheckCircle2 size={18} />
+                      </span>
+                      <div className="min-w-0">
+                        <p className="text-sm font-black text-emerald-300">
+                          Feedback corregido
+                        </p>
+                        <p className="mt-0.5 text-[11px] leading-5 text-emerald-300/45">
+                          Este reporte ya fue marcado como solucionado.
+                        </p>
+                      </div>
+                    </div>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() =>
+                        updateReport(selected.id, {
+                          status: "resolved",
+                          admin_notes:
+                            notes.trim() || selected.admin_notes || null,
+                        })
+                      }
+                      disabled={saving}
+                      className="group flex w-full items-center justify-center gap-2 rounded-2xl bg-emerald-500 px-4 py-3 text-xs font-black text-[#07120d] transition hover:bg-emerald-400 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      <CheckCircle2
+                        size={16}
+                        className="transition group-hover:scale-110"
+                      />
+                      {saving ? "Guardando..." : "Marcar como corregido"}
+                    </button>
+                  )}
+                </div>
                 <div>
                   <p className="mb-2 text-xs font-black text-zinc-400">
                     Nota interna
@@ -451,3 +487,4 @@ export default function AdminFeedbackPage() {
     </AdminShell>
   );
 }
+
