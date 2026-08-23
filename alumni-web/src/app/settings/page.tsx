@@ -15,6 +15,7 @@ import {
   Save,
   Shield,
   User,
+  Music2,
 } from "lucide-react";
 import { useAuth } from "@/components/auth/AuthProvider";
 import {
@@ -24,12 +25,14 @@ import {
 import { supabase } from "@/lib/supabase";
 import { uploadImage } from "@/lib/storage";
 import AppShell from "@/components/layout/AppShell";
+import ProfileMusicSettings from "@/components/settings/ProfileMusicSettings";
 
 type SettingsSectionId =
   | "appearance"
   | "profile"
   | "academic"
   | "links"
+  | "music"
   | "account";
 
 const SETTINGS_ITEMS: Array<{
@@ -61,6 +64,12 @@ const SETTINGS_ITEMS: Array<{
     label: "Enlaces",
     description: "Web y redes profesionales",
     icon: Link2,
+  },
+  {
+    id: "music",
+    label: "Música",
+    description: "Tu canción del momento",
+    icon: Music2,
   },
   {
     id: "account",
@@ -364,7 +373,8 @@ export default function SettingsPage() {
               </div>
 
               {activeSection !== "appearance" &&
-                activeSection !== "account" && (
+                activeSection !== "account" &&
+                activeSection !== "music" && (
                   <button
                     onClick={saveProfile}
                     disabled={saving}
@@ -408,6 +418,10 @@ export default function SettingsPage() {
                 form={form}
                 update={update}
               />
+            )}
+
+            {activeSection === "music" && (
+              <ProfileMusicSettings userId={user?.id || ""} />
             )}
 
             {activeSection === "account" && (

@@ -18,6 +18,7 @@ import { es } from "date-fns/locale";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { supabase } from "@/lib/supabase";
 import AppShell from "@/components/layout/AppShell";
+import ProfileMusicCard from "@/components/profile/ProfileMusicCard";
 import HDProfileImage from "@/components/profile/HDProfileImage";
 import ProfileSocialLinks from "@/components/profile/ProfileSocialLinks";
 import CommentLikeButton from "@/components/social/CommentLikeButton";
@@ -34,6 +35,7 @@ export default function UserProfilePage() {
   const [followers, setFollowers] = useState(0);
   const [followingCount, setFollowingCount] = useState(0);
   const [posts, setPosts] = useState<any[]>([]);
+  const [profileMusic, setProfileMusic] = useState<any>(null);
   const [following, setFollowing] = useState(false);
   const [openComments, setOpenComments] = useState<Record<number, boolean>>(
     {}
@@ -64,6 +66,18 @@ export default function UserProfilePage() {
     }
 
     setProfile(profileData);
+
+    const { data: musicData, error: musicError } = await supabase
+      .from("profile_music")
+      .select("*")
+      .eq("user_id", profileData.id)
+      .maybeSingle();
+
+    if (musicError) {
+      console.error("Error cargando música pública:", musicError);
+    }
+
+    setProfileMusic(musicData || null);
 
     const [
       { data: followersData },
@@ -448,6 +462,8 @@ export default function UserProfilePage() {
             </div>
 
             <ProfileSocialLinks profile={profile} className="mt-5" />
+
+            <ProfileMusicCard track={profileMusic} className="mt-5" />
 
             <div className="mt-6 flex gap-8 border-t border-white/[0.06] pt-5">
               <Stat value={posts.length} label="Publicaciones" />

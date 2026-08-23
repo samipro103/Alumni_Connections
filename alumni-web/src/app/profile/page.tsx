@@ -19,6 +19,7 @@ import { es } from "date-fns/locale";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { supabase } from "@/lib/supabase";
 import AppShell from "@/components/layout/AppShell";
+import ProfileMusicCard from "@/components/profile/ProfileMusicCard";
 import HDProfileImage from "@/components/profile/HDProfileImage";
 import ProfileSocialLinks from "@/components/profile/ProfileSocialLinks";
 
@@ -32,6 +33,7 @@ export default function ProfilePage() {
   const [followers, setFollowers] = useState(0);
   const [following, setFollowing] = useState(0);
   const [posts, setPosts] = useState<any[]>([]);
+  const [profileMusic, setProfileMusic] = useState<any>(null);
   const [loadingProfile, setLoadingProfile] = useState(true);
   const [tab, setTab] = useState<ProfileTab>("posts");
 
@@ -118,6 +120,17 @@ export default function ProfilePage() {
         ),
       }))
     );
+    const { data: musicData, error: musicError } = await supabase
+      .from("profile_music")
+      .select("*")
+      .eq("user_id", currentUserId)
+      .maybeSingle();
+
+    if (musicError) {
+      console.error("Error cargando música del perfil:", musicError);
+    }
+
+    setProfileMusic(musicData || null);
     setLoadingProfile(false);
   }
 
@@ -268,6 +281,8 @@ export default function ProfilePage() {
             </div>
 
             <ProfileSocialLinks profile={profile} className="mt-5" />
+
+            <ProfileMusicCard track={profileMusic} className="mt-5" />
 
             <div className="mt-6 flex gap-8 border-t border-white/[0.06] pt-5">
               <Stat value={posts.length} label="Publicaciones" />
