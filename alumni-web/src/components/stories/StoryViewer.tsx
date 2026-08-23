@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  useCallback,
   useEffect,
   useMemo,
   useRef,
@@ -22,6 +23,7 @@ import {
   X,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
+import StoryMusicPlayer from "@/components/stories/StoryMusicPlayer";
 
 export type StoryItem = {
   id: string;
@@ -39,6 +41,8 @@ export type StoryItem = {
   music_artwork_url?: string | null;
   music_track_url?: string | null;
   music_embed_url?: string | null;
+  music_preview_url?: string | null;
+  music_duration_ms?: number | null;
 };
 
 export type StoryGroup = {
@@ -58,7 +62,8 @@ type Props = {
   onChanged?: () => void | Promise<void>;
 };
 
-const IMAGE_DURATION_MS = 6500;
+const DEFAULT_IMAGE_DURATION_MS = 6500;
+const MUSIC_IMAGE_DURATION_MS = 30000;
 
 function SpotifyGlyph() {
   return (
@@ -99,19 +104,25 @@ export default function StoryViewer({
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const pausedRef = useRef(false);
 
-  const [groupIndex, setGroupIndex] = useState(startGroupIndex);
+  const [groupIndex, setGroupIndex] =
+    useState(startGroupIndex);
   const [storyIndex, setStoryIndex] = useState(0);
   const [progress, setProgress] = useState(0);
-  const [viewCount, setViewCount] = useState<number | null>(null);
+  const [viewCount, setViewCount] =
+    useState<number | null>(null);
   const [likeCount, setLikeCount] = useState(0);
   const [liked, setLiked] = useState(false);
   const [reply, setReply] = useState("");
-  const [sendingReply, setSendingReply] = useState(false);
+  const [sendingReply, setSendingReply] =
+    useState(false);
   const [likeBusy, setLikeBusy] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [paused, setPaused] = useState(false);
   const [videoMuted, setVideoMuted] = useState(false);
-  const [replyFocused, setReplyFocused] = useState(false);
+  const [replyFocused, setReplyFocused] =
+    useState(false);
+  const [storyMusicPlaying, setStoryMusicPlaying] =
+    useState(false);
 
   useEffect(() => {
     pausedRef.current = paused || replyFocused;
@@ -127,11 +138,17 @@ export default function StoryViewer({
       )
     );
     setStoryIndex(Math.max(startStoryIndex, 0));
-  }, [open, startGroupIndex, startStoryIndex, groups.length]);
+  }, [
+    open,
+    startGroupIndex,
+    startStoryIndex,
+    groups.length,
+  ]);
 
   const group = groups[groupIndex];
   const story = group?.stories[storyIndex];
-  const ownStory = story?.user_id === currentUserId;
+  const ownStory =
+    story?.user_id === currentUserId;
 
   useEffect(() => {
     if (!open || !story) return;
@@ -141,7 +158,8 @@ export default function StoryViewer({
     setReply("");
     setPaused(false);
     setReplyFocused(false);
-    setVideoMuted(false);
+    setStoryMusicPlaying(false);
+    setVideoMuted(Boolean(story.music_track_url));
 
     void recordView();
     void loadStoryLikes();
@@ -151,6 +169,11 @@ export default function StoryViewer({
     if (story.media_type === "image") {
       let elapsed = 0;
       let last = performance.now();
+
+      const duration =
+        story.music_track_url
+          ? MUSIC_IMAGE_DURATION_MS
+          : DEFAULT_IMAGE_DURATION_MS;
 
       const tick = (now: number) => {
         const delta = now - last;
@@ -162,7 +185,7 @@ export default function StoryViewer({
 
         const nextProgress = Math.min(
           100,
-          (elapsed / IMAGE_DURATION_MS) * 100
+          (elapsed / duration) * 100
         );
 
         setProgress(nextProgress);
@@ -172,18 +195,31 @@ export default function StoryViewer({
           return;
         }
 
-        rafRef.current = requestAnimationFrame(tick);
+        rafRef.current =
+          requestAnimationFrame(tick);
       };
 
-      rafRef.current = requestAnimationFrame(tick);
+      rafRef.current =
+        requestAnimationFrame(tick);
     }
 
     return cancelAnimation;
-  }, [open, story?.id, storyIndex, groupIndex]);
+  }, [
+    open,
+    story?.id,
+    storyIndex,
+    groupIndex,
+  ]);
 
   useEffect(() => {
     const video = videoRef.current;
-    if (!video || story?.media_type !== "video") return;
+
+    if (
+      !video ||
+      story?.media_type !== "video"
+    ) {
+      return;
+    }
 
     if (paused || replyFocused) {
       video.pause();
@@ -192,7 +228,19 @@ export default function StoryViewer({
         setPaused(true);
       });
     }
-  }, [paused, replyFocused, story?.id, story?.media_type]);
+  }, [
+    paused,
+    replyFocused,
+    story?.id,
+    story?.media_type,
+  ]);
+
+  useEffect(() => {
+    if (!videoRef.current) return;
+
+    videoRef.current.muted =
+      videoMuted || storyMusicPlaying;
+  }, [videoMuted, storyMusicPlaying]);
 
   useEffect(() => {
     if (!open) return;
@@ -201,15 +249,32 @@ export default function StoryViewer({
       if (event.key === "Escape") onClose();
       if (event.key === "ArrowRight") next();
       if (event.key === "ArrowLeft") previous();
-      if (event.key === " " && !replyFocused) {
+
+      if (
+        event.key === " " &&
+        !replyFocused
+      ) {
         event.preventDefault();
         setPaused((value) => !value);
       }
     }
 
-    window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
-  }, [open, replyFocused, groupIndex, storyIndex]);
+    window.addEventListener(
+      "keydown",
+      onKeyDown
+    );
+
+    return () =>
+      window.removeEventListener(
+        "keydown",
+        onKeyDown
+      );
+  }, [
+    open,
+    replyFocused,
+    groupIndex,
+    storyIndex,
+  ]);
 
   async function recordView() {
     if (!story) return;
@@ -221,12 +286,18 @@ export default function StoryViewer({
           viewer_id: currentUserId,
           viewed_at: new Date().toISOString(),
         },
-        { onConflict: "story_id,viewer_id" }
+        {
+          onConflict:
+            "story_id,viewer_id",
+        }
       );
     } else {
       const { count } = await supabase
         .from("story_views")
-        .select("id", { count: "exact", head: true })
+        .select("id", {
+          count: "exact",
+          head: true,
+        })
         .eq("story_id", story.id);
 
       setViewCount(count || 0);
@@ -251,12 +322,21 @@ export default function StoryViewer({
     const rows = data || [];
     setLikeCount(rows.length);
     setLiked(
-      rows.some((row: any) => row.user_id === currentUserId)
+      rows.some(
+        (row: any) =>
+          row.user_id === currentUserId
+      )
     );
   }
 
   async function toggleStoryLike() {
-    if (!story || ownStory || likeBusy) return;
+    if (
+      !story ||
+      ownStory ||
+      likeBusy
+    ) {
+      return;
+    }
 
     setLikeBusy(true);
 
@@ -280,7 +360,9 @@ export default function StoryViewer({
           .eq("target_id", story.id);
 
         setLiked(false);
-        setLikeCount((value) => Math.max(0, value - 1));
+        setLikeCount((value) =>
+          Math.max(0, value - 1)
+        );
       } else {
         const { error } = await supabase
           .from("story_likes")
@@ -291,56 +373,78 @@ export default function StoryViewer({
 
         if (error) throw error;
 
-        await supabase.from("notifications").insert({
-          user_id: story.user_id,
-          actor_id: currentUserId,
-          type: "like",
-          target_type: "story",
-          target_id: story.id,
-        });
+        await supabase
+          .from("notifications")
+          .insert({
+            user_id: story.user_id,
+            actor_id: currentUserId,
+            type: "like",
+            target_type: "story",
+            target_id: story.id,
+          });
 
         setLiked(true);
-        setLikeCount((value) => value + 1);
+        setLikeCount(
+          (value) => value + 1
+        );
       }
     } catch (error: any) {
       console.error(error);
-      alert(error?.message || "No se pudo actualizar el me gusta.");
+      alert(
+        error?.message ||
+          "No se pudo actualizar el me gusta."
+      );
     } finally {
       setLikeBusy(false);
     }
   }
 
   async function sendStoryReply() {
-    if (!story || ownStory || !reply.trim() || sendingReply) return;
+    if (
+      !story ||
+      ownStory ||
+      !reply.trim() ||
+      sendingReply
+    ) {
+      return;
+    }
 
     const content = reply.trim();
     setSendingReply(true);
 
     try {
-      const { error } = await supabase.from("messages").insert({
-        sender_id: currentUserId,
-        receiver_id: story.user_id,
-        content,
-        message_type: "story_reply",
-        story_id: story.id,
-        story_media_url: story.media_url,
-      });
+      const { error } = await supabase
+        .from("messages")
+        .insert({
+          sender_id: currentUserId,
+          receiver_id: story.user_id,
+          content,
+          message_type: "story_reply",
+          story_id: story.id,
+          story_media_url:
+            story.media_url,
+        });
 
       if (error) throw error;
 
-      await supabase.from("notifications").insert({
-        user_id: story.user_id,
-        actor_id: currentUserId,
-        type: "story_reply",
-        target_type: "message",
-        target_id: story.id,
-      });
+      await supabase
+        .from("notifications")
+        .insert({
+          user_id: story.user_id,
+          actor_id: currentUserId,
+          type: "story_reply",
+          target_type: "message",
+          target_id: story.id,
+        });
 
       setReply("");
       setReplyFocused(false);
     } catch (error: any) {
       console.error(error);
-      alert(error?.message || "No se pudo responder la historia.");
+      alert(
+        error?.message ||
+          "No se pudo responder la historia."
+      );
     } finally {
       setSendingReply(false);
     }
@@ -348,22 +452,35 @@ export default function StoryViewer({
 
   function cancelAnimation() {
     if (rafRef.current !== null) {
-      cancelAnimationFrame(rafRef.current);
+      cancelAnimationFrame(
+        rafRef.current
+      );
       rafRef.current = null;
     }
   }
 
   function next() {
     cancelAnimation();
+
     if (!group) return;
 
-    if (storyIndex < group.stories.length - 1) {
-      setStoryIndex((value) => value + 1);
+    if (
+      storyIndex <
+      group.stories.length - 1
+    ) {
+      setStoryIndex(
+        (value) => value + 1
+      );
       return;
     }
 
-    if (groupIndex < groups.length - 1) {
-      setGroupIndex((value) => value + 1);
+    if (
+      groupIndex <
+      groups.length - 1
+    ) {
+      setGroupIndex(
+        (value) => value + 1
+      );
       setStoryIndex(0);
       return;
     }
@@ -373,53 +490,85 @@ export default function StoryViewer({
 
   function previous() {
     cancelAnimation();
+
     if (!group) return;
 
     if (storyIndex > 0) {
-      setStoryIndex((value) => value - 1);
+      setStoryIndex(
+        (value) => value - 1
+      );
       return;
     }
 
     if (groupIndex > 0) {
-      const previousGroup = groups[groupIndex - 1];
-      setGroupIndex((value) => value - 1);
-      setStoryIndex(Math.max(previousGroup.stories.length - 1, 0));
+      const previousGroup =
+        groups[groupIndex - 1];
+
+      setGroupIndex(
+        (value) => value - 1
+      );
+
+      setStoryIndex(
+        Math.max(
+          previousGroup.stories
+            .length - 1,
+          0
+        )
+      );
     }
   }
 
   async function deleteCurrentStory() {
-    if (!story || !ownStory || deleting) return;
+    if (
+      !story ||
+      !ownStory ||
+      deleting
+    ) {
+      return;
+    }
 
-    const confirmed = confirm("¿Eliminar esta historia?");
+    const confirmed = confirm(
+      "¿Eliminar esta historia?"
+    );
+
     if (!confirmed) return;
 
     setDeleting(true);
 
     try {
-      const { data: fullStory } = await supabase
-        .from("stories")
-        .select("media_path")
-        .eq("id", story.id)
-        .maybeSingle();
+      const { data: fullStory } =
+        await supabase
+          .from("stories")
+          .select("media_path")
+          .eq("id", story.id)
+          .maybeSingle();
 
-      const { error: deleteError } = await supabase
-        .from("stories")
-        .delete()
-        .eq("id", story.id);
+      const { error: deleteError } =
+        await supabase
+          .from("stories")
+          .delete()
+          .eq("id", story.id);
 
-      if (deleteError) throw deleteError;
+      if (deleteError) {
+        throw deleteError;
+      }
 
       if (fullStory?.media_path) {
         await supabase.storage
           .from("stories")
-          .remove([fullStory.media_path]);
+          .remove([
+            fullStory.media_path,
+          ]);
       }
 
       await onChanged?.();
       onClose();
     } catch (error: any) {
       console.error(error);
-      alert(error?.message || "No se pudo eliminar la historia.");
+      alert(
+        error?.message ||
+          "No se pudo eliminar la historia."
+      );
     } finally {
       setDeleting(false);
     }
@@ -431,42 +580,60 @@ export default function StoryViewer({
     const minutes = Math.max(
       0,
       Math.floor(
-        (Date.now() - new Date(story.created_at).getTime()) / 60000
+        (Date.now() -
+          new Date(
+            story.created_at
+          ).getTime()) /
+          60000
       )
     );
 
     if (minutes < 1) return "ahora";
-    if (minutes < 60) return `hace ${minutes} min`;
 
-    const hours = Math.floor(minutes / 60);
-    return `hace ${hours} h`;
+    if (minutes < 60) {
+      return `hace ${minutes} min`;
+    }
+
+    return `hace ${Math.floor(
+      minutes / 60
+    )} h`;
   }, [story?.created_at]);
 
-  if (!open || !story || !group) return null;
+  if (
+    !open ||
+    !story ||
+    !group
+  ) {
+    return null;
+  }
 
   return (
     <div className="fixed inset-0 z-[110] bg-black">
       <div className="relative mx-auto flex h-dvh w-full max-w-[560px] items-center justify-center overflow-hidden bg-[#050506] sm:border-x sm:border-white/[0.08]">
         <div className="absolute left-3 right-3 top-3 z-40 px-1">
           <div className="flex gap-1">
-            {group.stories.map((item, index) => (
-              <div
-                key={item.id}
-                className="h-[3px] flex-1 overflow-hidden rounded-full bg-white/18"
-              >
+            {group.stories.map(
+              (item, index) => (
                 <div
-                  className="h-full rounded-full bg-white"
-                  style={{
-                    width:
-                      index < storyIndex
-                        ? "100%"
-                        : index === storyIndex
-                          ? `${progress}%`
-                          : "0%",
-                  }}
-                />
-              </div>
-            ))}
+                  key={item.id}
+                  className="h-[3px] flex-1 overflow-hidden rounded-full bg-white/18"
+                >
+                  <div
+                    className="h-full rounded-full bg-white"
+                    style={{
+                      width:
+                        index <
+                        storyIndex
+                          ? "100%"
+                          : index ===
+                              storyIndex
+                            ? `${progress}%`
+                            : "0%",
+                    }}
+                  />
+                </div>
+              )
+            )}
           </div>
         </div>
 
@@ -479,7 +646,9 @@ export default function StoryViewer({
                 className="h-full w-full object-cover"
               />
             ) : (
-              group.username?.charAt(0)?.toUpperCase() || "U"
+              group.username
+                ?.charAt(0)
+                ?.toUpperCase() || "U"
             )}
           </div>
 
@@ -492,27 +661,45 @@ export default function StoryViewer({
             </p>
           </div>
 
-          {story.media_type === "video" && (
+          {story.media_type ===
+            "video" && (
             <button
               type="button"
-              onClick={() => setVideoMuted((value) => !value)}
+              onClick={() =>
+                setVideoMuted(
+                  (value) => !value
+                )
+              }
               className="flex h-10 w-10 items-center justify-center rounded-full bg-black/35 text-white/70 backdrop-blur-xl"
-              aria-label={videoMuted ? "Activar audio" : "Silenciar video"}
+              aria-label={
+                videoMuted
+                  ? "Activar audio"
+                  : "Silenciar video"
+              }
             >
-              {videoMuted ? <VolumeX size={17} /> : <Volume2 size={17} />}
+              {videoMuted ? (
+                <VolumeX size={17} />
+              ) : (
+                <Volume2 size={17} />
+              )}
             </button>
           )}
 
           {ownStory && (
             <button
               type="button"
-              onClick={deleteCurrentStory}
+              onClick={
+                deleteCurrentStory
+              }
               disabled={deleting}
               className="flex h-10 w-10 items-center justify-center rounded-full bg-black/35 text-white/65 backdrop-blur-xl transition hover:text-red-300"
               aria-label="Eliminar historia"
             >
               {deleting ? (
-                <Loader2 size={15} className="animate-spin" />
+                <Loader2
+                  size={15}
+                  className="animate-spin"
+                />
               ) : (
                 <Trash2 size={15} />
               )}
@@ -532,19 +719,37 @@ export default function StoryViewer({
         <div className="absolute inset-x-0 top-0 z-20 h-36 bg-gradient-to-b from-black/70 to-transparent" />
         <div className="absolute inset-x-0 bottom-0 z-20 h-64 bg-gradient-to-t from-black/85 via-black/30 to-transparent" />
 
-        {story.media_type === "video" ? (
+        {story.media_type ===
+        "video" ? (
           <video
             ref={videoRef}
             key={story.id}
             src={story.media_url}
             autoPlay
             playsInline
-            muted={videoMuted}
-            onLoadedMetadata={() => setProgress(0)}
+            muted={
+              videoMuted ||
+              storyMusicPlaying
+            }
+            onLoadedMetadata={() =>
+              setProgress(0)
+            }
             onTimeUpdate={() => {
-              const video = videoRef.current;
-              if (!video || !video.duration) return;
-              setProgress((video.currentTime / video.duration) * 100);
+              const video =
+                videoRef.current;
+
+              if (
+                !video ||
+                !video.duration
+              ) {
+                return;
+              }
+
+              setProgress(
+                (video.currentTime /
+                  video.duration) *
+                  100
+              );
             }}
             onEnded={next}
             className="h-full w-full object-contain"
@@ -575,20 +780,33 @@ export default function StoryViewer({
 
         <button
           type="button"
-          onClick={() => setPaused((value) => !value)}
-          className="absolute left-[28%] right-[28%] top-[90px] bottom-[100px] z-10"
-          aria-label={paused ? "Reanudar historia" : "Pausar historia"}
+          onClick={() =>
+            setPaused(
+              (value) => !value
+            )
+          }
+          className="absolute bottom-[100px] left-[28%] right-[28%] top-[90px] z-10"
+          aria-label={
+            paused
+              ? "Reanudar historia"
+              : "Pausar historia"
+          }
         />
 
-        {paused && !replyFocused && (
-          <div className="pointer-events-none absolute left-1/2 top-1/2 z-30 flex h-14 w-14 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-white/10 bg-black/45 text-white backdrop-blur-xl">
-            {story.media_type === "video" ? (
-              <Play size={21} fill="currentColor" />
-            ) : (
-              <Pause size={20} />
-            )}
-          </div>
-        )}
+        {paused &&
+          !replyFocused && (
+            <div className="pointer-events-none absolute left-1/2 top-1/2 z-30 flex h-14 w-14 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-white/10 bg-black/45 text-white backdrop-blur-xl">
+              {story.media_type ===
+              "video" ? (
+                <Play
+                  size={21}
+                  fill="currentColor"
+                />
+              ) : (
+                <Pause size={20} />
+              )}
+            </div>
+          )}
 
         <button
           type="button"
@@ -609,18 +827,21 @@ export default function StoryViewer({
         </button>
 
         {story.music_track_url && (
-          <a
-            href={story.music_track_url}
-            target="_blank"
-            rel="noreferrer"
-            onClick={(event) => event.stopPropagation()}
-            className={`absolute left-4 z-40 flex max-w-[72%] items-center gap-2.5 rounded-[16px] border border-white/10 bg-black/45 p-2.5 text-left backdrop-blur-2xl transition hover:bg-black/60 ${
-              ownStory ? "bottom-20" : "bottom-[92px]"
+          <div
+            className={`absolute left-4 z-40 flex max-w-[78%] items-center gap-2.5 rounded-[17px] border border-white/10 bg-black/45 p-2.5 backdrop-blur-2xl ${
+              ownStory
+                ? "bottom-20"
+                : "bottom-[92px]"
             }`}
+            onClick={(event) =>
+              event.stopPropagation()
+            }
           >
             {story.music_artwork_url ? (
               <img
-                src={story.music_artwork_url}
+                src={
+                  story.music_artwork_url
+                }
                 alt=""
                 className="h-10 w-10 rounded-[10px] object-cover"
               />
@@ -632,17 +853,41 @@ export default function StoryViewer({
 
             <div className="min-w-0 flex-1">
               <p className="truncate text-[11px] font-black text-white/90">
-                {story.music_title || "Canción"}
+                {story.music_title ||
+                  "Canción"}
               </p>
               <p className="mt-0.5 truncate text-[9px] text-white/45">
-                {story.music_artist || "Abrir en Spotify"}
+                {story.music_artist ||
+                  "Spotify"}
               </p>
             </div>
 
-            <span className="text-white/35">
+            <StoryMusicPlayer
+              previewUrl={
+                story.music_preview_url
+              }
+              trackUrl={
+                story.music_track_url
+              }
+              trackId={
+                story.music_track_id
+              }
+              autoTry={
+                story.media_type ===
+                "image"
+              }
+              onPlayingChange={
+                setStoryMusicPlaying
+              }
+            />
+
+            <span
+              className="text-white/30"
+              aria-label="Spotify"
+            >
               <SpotifyGlyph />
             </span>
-          </a>
+          </div>
         )}
 
         {ownStory ? (
@@ -657,7 +902,11 @@ export default function StoryViewer({
             <div className="flex items-center gap-2 rounded-full bg-black/40 px-3 py-2 text-[11px] font-bold text-white/70 backdrop-blur-xl">
               <Heart
                 size={14}
-                fill={likeCount > 0 ? "currentColor" : "none"}
+                fill={
+                  likeCount > 0
+                    ? "currentColor"
+                    : "none"
+                }
               />
               {likeCount}
             </div>
@@ -665,7 +914,9 @@ export default function StoryViewer({
         ) : (
           <div
             className="absolute bottom-0 left-0 right-0 z-40 px-4 pb-[max(14px,env(safe-area-inset-bottom))] pt-14"
-            onClick={(event) => event.stopPropagation()}
+            onClick={(event) =>
+              event.stopPropagation()
+            }
           >
             <div className="flex items-center gap-2.5">
               <div
@@ -677,13 +928,25 @@ export default function StoryViewer({
               >
                 <input
                   value={reply}
-                  onChange={(event) => setReply(event.target.value)}
-                  onFocus={() => setReplyFocused(true)}
+                  onChange={(event) =>
+                    setReply(
+                      event.target.value
+                    )
+                  }
+                  onFocus={() =>
+                    setReplyFocused(true)
+                  }
                   onBlur={() => {
-                    if (!reply.trim()) setReplyFocused(false);
+                    if (!reply.trim()) {
+                      setReplyFocused(false);
+                    }
                   }}
                   onKeyDown={(event) => {
-                    if (event.key === "Enter" && !event.shiftKey) {
+                    if (
+                      event.key ===
+                        "Enter" &&
+                      !event.shiftKey
+                    ) {
                       event.preventDefault();
                       void sendStoryReply();
                     }
@@ -694,14 +957,24 @@ export default function StoryViewer({
 
                 <button
                   type="button"
-                  onMouseDown={(event) => event.preventDefault()}
-                  onClick={() => void sendStoryReply()}
-                  disabled={!reply.trim() || sendingReply}
+                  onMouseDown={(event) =>
+                    event.preventDefault()
+                  }
+                  onClick={() =>
+                    void sendStoryReply()
+                  }
+                  disabled={
+                    !reply.trim() ||
+                    sendingReply
+                  }
                   className="ml-2 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white text-black transition disabled:bg-white/10 disabled:text-white/25"
                   aria-label="Enviar respuesta"
                 >
                   {sendingReply ? (
-                    <Loader2 size={14} className="animate-spin" />
+                    <Loader2
+                      size={14}
+                      className="animate-spin"
+                    />
                   ) : (
                     <Send size={14} />
                   )}
@@ -710,25 +983,35 @@ export default function StoryViewer({
 
               <button
                 type="button"
-                onClick={() => void toggleStoryLike()}
+                onClick={() =>
+                  void toggleStoryLike()
+                }
                 disabled={likeBusy}
                 className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-full border backdrop-blur-2xl transition ${
                   liked
                     ? "border-red-400/25 bg-red-500/12 text-red-400"
                     : "border-white/10 bg-black/35 text-white/70 hover:bg-black/55 hover:text-white"
                 }`}
-                aria-label={liked ? "Quitar me gusta" : "Me gusta"}
+                aria-label={
+                  liked
+                    ? "Quitar me gusta"
+                    : "Me gusta"
+                }
               >
                 <Heart
                   size={18}
-                  fill={liked ? "currentColor" : "none"}
+                  fill={
+                    liked
+                      ? "currentColor"
+                      : "none"
+                  }
                 />
               </button>
             </div>
 
             {likeCount > 0 && (
               <p className="mt-2 pl-3 text-[9px] font-bold text-white/30">
-                {likeCount} {likeCount === 1 ? "me gusta" : "me gusta"}
+                {likeCount} me gusta
               </p>
             )}
           </div>

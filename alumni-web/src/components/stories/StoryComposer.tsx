@@ -1,11 +1,19 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
 import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
+import {
+  Check,
   Film,
   ImagePlus,
   Loader2,
   Music2,
+  Pause,
+  Play,
   Search,
   Send,
   Trash2,
@@ -13,7 +21,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { supabase } from "@/lib/supabase";
-import type { SpotifyTrackImport } from "@/lib/profileMusic";
+import type { StoryMusicTrack } from "@/lib/musicCatalog";
 
 type Props = {
   open: boolean;
@@ -25,6 +33,19 @@ const MAX_WIDTH = 1080;
 const MAX_HEIGHT = 1920;
 const MAX_VIDEO_BYTES = 50 * 1024 * 1024;
 
+function getMarketFromLocale() {
+  if (typeof navigator === "undefined") return "SV";
+
+  const locale =
+    navigator.languages?.[0] ||
+    navigator.language ||
+    "es-SV";
+
+  const match = locale.match(/[-_]([A-Za-z]{2})$/);
+
+  return match?.[1]?.toUpperCase() || "SV";
+}
+
 export default function StoryComposer({
   open,
   onClose,
@@ -32,15 +53,21 @@ export default function StoryComposer({
 }: Props) {
   const { user } = useAuth();
   const inputRef = useRef<HTMLInputElement>(null);
+  const searchTimerRef = useRef<number | null>(null);
+  const previewAudioRef = useRef<HTMLAudioElement | null>(null);
 
   const [file, setFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState("");
   const [publishing, setPublishing] = useState(false);
 
-  const [musicUrl, setMusicUrl] = useState("");
-  const [music, setMusic] = useState<SpotifyTrackImport | null>(null);
-  const [musicBusy, setMusicBusy] = useState(false);
-  const [musicError, setMusicError] = useState("");
+  const [musicQuery, setMusicQuery] = useState("");
+  const [musicResults, setMusicResults] = useState<
+    StoryMusicTrack[]
+  >([]);
+  const [musicSearching, setMusicSearching] = useState(false);
+  const [musicSearchError, setMusicSearchError] = useState("");
+  const [music, setMusic] = useState<StoryMusicTrack | null>(null);
+  const [previewPlaying, setPreviewPlaying] = useState(false);
 
   useEffect(() => {
     if (!file) {
@@ -55,18 +82,87 @@ export default function StoryComposer({
   }, [file]);
 
   useEffect(() => {
+    return () => {
+      if (searchTimerRef.current !== null) {
+        window.clearTimeout(searchTimerRef.current);
+      }
+    };
+  }, []);
+
+  useEffect(() => {
     if (!open) {
       setFile(null);
       setPreviewUrl("");
       setPublishing(false);
-      setMusicUrl("");
+      setMusicQuery("");
+      setMusicResults([]);
+      setMusicSearching(false);
+      setMusicSearchError("");
       setMusic(null);
-      setMusicBusy(false);
-      setMusicError("");
+      setPreviewPlaying(false);
     }
   }, [open]);
 
+  const hasSearch = musicQuery.trim().length >= 2;
+
+  useEffect(() => {
+    if (!open || !file) return;
+
+    const query = musicQuery.trim();
+
+    if (searchTimerRef.current !== null) {
+      window.clearTimeout(searchTimerRef.current);
+    }
+
+    if (query.length < 2) {
+      setMusicResults([]);
+      setMusicSearching(false);
+      setMusicSearchError("");
+      return;
+    }
+
+    searchTimerRef.current = window.setTimeout(() => {
+      void searchMusic(query);
+    }, 350);
+
+    return () => {
+      if (searchTimerRef.current !== null) {
+        window.clearTimeout(searchTimerRef.current);
+      }
+    };
+  }, [musicQuery, open, file]);
+
   if (!open) return null;
+
+  async function searchMusic(query: string) {
+    setMusicSearching(true);
+    setMusicSearchError("");
+
+    try {
+      const response = await fetch(
+        `/api/music/search?q=${encodeURIComponent(
+          query
+        )}&market=${encodeURIComponent(getMarketFromLocale())}`
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(
+          data?.error || "No se pudo buscar en Spotify."
+        );
+      }
+
+      setMusicResults((data?.tracks || []) as StoryMusicTrack[]);
+    } catch (error: any) {
+      setMusicResults([]);
+      setMusicSearchError(
+        error?.message || "No se pudo buscar música."
+      );
+    } finally {
+      setMusicSearching(false);
+    }
+  }
 
   async function optimizeImageForStory(originalFile: File) {
     if (!originalFile.type.startsWith("image/")) {
@@ -94,8 +190,14 @@ export default function StoryComposer({
             return;
           }
 
-          const targetWidth = Math.max(1, Math.round(width * scale));
-          const targetHeight = Math.max(1, Math.round(height * scale));
+          const targetWidth = Math.max(
+            1,
+            Math.round(width * scale)
+          );
+          const targetHeight = Math.max(
+            1,
+            Math.round(height * scale)
+          );
 
           const canvas = document.createElement("canvas");
           canvas.width = targetWidth;
@@ -111,7 +213,13 @@ export default function StoryComposer({
 
           context.imageSmoothingEnabled = true;
           context.imageSmoothingQuality = "high";
-          context.drawImage(image, 0, 0, targetWidth, targetHeight);
+          context.drawImage(
+            image,
+            0,
+            0,
+            targetWidth,
+            targetHeight
+          );
 
           canvas.toBlob(
             (blob) => {
@@ -122,7 +230,10 @@ export default function StoryComposer({
                 return;
               }
 
-              const nextName = originalFile.name.replace(/\.[^.]+$/, "");
+              const nextName = originalFile.name.replace(
+                /\.[^.]+$/,
+                ""
+              );
 
               resolve(
                 new File([blob], `${nextName}-story.jpg`, {
@@ -170,30 +281,35 @@ export default function StoryComposer({
     setFile(selected);
   }
 
-  async function loadMusic() {
-    const cleanUrl = musicUrl.trim();
+  function selectTrack(track: StoryMusicTrack) {
+    previewAudioRef.current?.pause();
+    setPreviewPlaying(false);
+    setMusic(track);
+    setMusicQuery("");
+    setMusicResults([]);
+    setMusicSearchError("");
+  }
 
-    if (!cleanUrl || musicBusy) return;
+  function toggleSelectedPreview() {
+    if (!music?.preview_url) return;
 
-    setMusicBusy(true);
-    setMusicError("");
+    if (!previewAudioRef.current) {
+      previewAudioRef.current = new Audio(music.preview_url);
+      previewAudioRef.current.preload = "auto";
+      previewAudioRef.current.onplay = () =>
+        setPreviewPlaying(true);
+      previewAudioRef.current.onpause = () =>
+        setPreviewPlaying(false);
+      previewAudioRef.current.onended = () =>
+        setPreviewPlaying(false);
+    }
 
-    try {
-      const response = await fetch(
-        `/api/music/spotify?url=${encodeURIComponent(cleanUrl)}`
-      );
-      const data = await response.json();
+    const audio = previewAudioRef.current;
 
-      if (!response.ok) {
-        throw new Error(data?.error || "No se pudo leer la canción.");
-      }
-
-      setMusic(data as SpotifyTrackImport);
-    } catch (error: any) {
-      setMusic(null);
-      setMusicError(error?.message || "No se pudo leer la canción.");
-    } finally {
-      setMusicBusy(false);
+    if (audio.paused) {
+      void audio.play();
+    } else {
+      audio.pause();
     }
   }
 
@@ -203,7 +319,8 @@ export default function StoryComposer({
     setPublishing(true);
 
     try {
-      const preparedFile = await optimizeImageForStory(file);
+      const preparedFile =
+        await optimizeImageForStory(file);
 
       const cleanName = preparedFile.name.replace(
         /[^a-zA-Z0-9._-]/g,
@@ -240,23 +357,32 @@ export default function StoryComposer({
             ? "video"
             : "image",
           music_provider: music?.provider || null,
-          music_track_id: music?.provider_track_id || null,
+          music_track_id:
+            music?.provider_track_id || null,
           music_title: music?.track_title || null,
           music_artist: music?.artist_name || null,
           music_artwork_url: music?.artwork_url || null,
           music_track_url: music?.track_url || null,
           music_embed_url: music?.embed_url || null,
+          music_preview_url: music?.preview_url || null,
+          music_duration_ms: music?.duration_ms || null,
         });
 
       if (insertError) {
-        await supabase.storage.from("stories").remove([path]);
+        await supabase.storage
+          .from("stories")
+          .remove([path]);
         throw insertError;
       }
 
+      previewAudioRef.current?.pause();
       await onPublished();
     } catch (error: any) {
       console.error(error);
-      alert(error?.message || "No se pudo publicar la historia.");
+      alert(
+        error?.message ||
+          "No se pudo publicar la historia."
+      );
     } finally {
       setPublishing(false);
     }
@@ -314,7 +440,9 @@ export default function StoryComposer({
                 ) : (
                   <ImagePlus size={13} />
                 )}
-                {file?.type.startsWith("video/") ? "Video" : "Foto"}
+                {file?.type.startsWith("video/")
+                  ? "Video"
+                  : "Foto"}
               </div>
 
               <button
@@ -346,17 +474,44 @@ export default function StoryComposer({
                       {music.track_title}
                     </p>
                     <p className="mt-0.5 truncate text-[10px] text-white/50">
-                      Spotify
+                      {music.artist_name}
                     </p>
                   </div>
+
+                  {music.preview_url && (
+                    <button
+                      type="button"
+                      onClick={toggleSelectedPreview}
+                      className="flex h-8 w-8 items-center justify-center rounded-full bg-white/10 text-white/80 transition hover:bg-white/15"
+                      aria-label={
+                        previewPlaying
+                          ? "Pausar preview"
+                          : "Escuchar preview"
+                      }
+                    >
+                      {previewPlaying ? (
+                        <Pause
+                          size={13}
+                          fill="currentColor"
+                        />
+                      ) : (
+                        <Play
+                          size={13}
+                          fill="currentColor"
+                          className="ml-0.5"
+                        />
+                      )}
+                    </button>
+                  )}
 
                   <button
                     type="button"
                     onClick={() => {
+                      previewAudioRef.current?.pause();
+                      setPreviewPlaying(false);
                       setMusic(null);
-                      setMusicUrl("");
                     }}
-                    className="flex h-8 w-8 items-center justify-center rounded-full text-white/50 hover:bg-white/10 hover:text-white"
+                    className="flex h-8 w-8 items-center justify-center rounded-full text-white/45 transition hover:bg-white/10 hover:text-white"
                     aria-label="Quitar música"
                   >
                     <Trash2 size={14} />
@@ -382,11 +537,6 @@ export default function StoryComposer({
               <p className="mt-4 text-sm font-black text-zinc-200">
                 Foto o video
               </p>
-
-              <p className="mt-2 max-w-[280px] text-xs leading-5 text-zinc-600">
-                Comparte un momento en imagen o video y, si quieres,
-                acompáñalo con una canción.
-              </p>
             </button>
           )}
 
@@ -396,7 +546,9 @@ export default function StoryComposer({
             accept="image/*,video/mp4,video/webm,video/quicktime"
             hidden
             onChange={(event) => {
-              const selected = event.target.files?.[0];
+              const selected =
+                event.target.files?.[0];
+
               if (selected) chooseFile(selected);
               event.currentTarget.value = "";
             }}
@@ -405,63 +557,109 @@ export default function StoryComposer({
           {file && (
             <section className="mt-5 border-t border-white/[0.06] pt-5">
               <div className="flex items-center gap-2">
-                <Music2 size={15} className="text-[#8d98ff]" />
+                <Music2
+                  size={15}
+                  className="text-[#8d98ff]"
+                />
                 <div>
                   <p className="text-xs font-black text-zinc-300">
                     Música
                   </p>
                   <p className="mt-0.5 text-[10px] text-zinc-700">
-                    Opcional · agrega un sticker musical a tu historia.
+                    Busca una canción o artista.
                   </p>
                 </div>
               </div>
 
               {!music && (
-                <>
-                  <div className="mt-3 flex gap-2">
-                    <div className="relative min-w-0 flex-1">
-                      <Search
-                        size={14}
-                        className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-700"
-                      />
-                      <input
-                        value={musicUrl}
-                        onChange={(event) => {
-                          setMusicUrl(event.target.value);
-                          setMusicError("");
-                        }}
-                        onKeyDown={(event) => {
-                          if (event.key === "Enter") {
-                            event.preventDefault();
-                            void loadMusic();
-                          }
-                        }}
-                        placeholder="Pega enlace de Spotify"
-                        className="h-10 w-full rounded-xl border border-white/[0.07] bg-white/[0.025] pl-9 pr-3 text-xs text-zinc-300 outline-none placeholder:text-zinc-800 focus:border-[#6d7cff]/40"
-                      />
-                    </div>
+                <div className="relative mt-3">
+                  <Search
+                    size={14}
+                    className="pointer-events-none absolute left-3 top-[19px] -translate-y-1/2 text-zinc-700"
+                  />
 
-                    <button
-                      type="button"
-                      onClick={loadMusic}
-                      disabled={!musicUrl.trim() || musicBusy}
-                      className="flex h-10 items-center gap-2 rounded-xl bg-white/[0.06] px-3 text-[10px] font-black text-zinc-300 transition hover:bg-white/[0.09] disabled:opacity-40"
-                    >
-                      {musicBusy ? (
-                        <Loader2 size={13} className="animate-spin" />
-                      ) : (
-                        <Music2 size={13} />
-                      )}
-                      Añadir
-                    </button>
-                  </div>
+                  <input
+                    value={musicQuery}
+                    onChange={(event) => {
+                      setMusicQuery(event.target.value);
+                      setMusicSearchError("");
+                    }}
+                    placeholder="Buscar canción o artista..."
+                    autoComplete="off"
+                    className="h-10 w-full rounded-xl border border-white/[0.07] bg-white/[0.025] pl-9 pr-10 text-xs text-zinc-300 outline-none placeholder:text-zinc-800 focus:border-[#6d7cff]/40"
+                  />
 
-                  {musicError && (
-                    <p className="mt-2 text-[10px] font-bold text-red-300/80">
-                      {musicError}
-                    </p>
+                  {musicSearching && (
+                    <Loader2
+                      size={14}
+                      className="absolute right-3 top-[19px] -translate-y-1/2 animate-spin text-zinc-600"
+                    />
                   )}
-                </>
+
+                  {hasSearch && (
+                    <div className="mt-2 overflow-hidden rounded-[16px] border border-white/[0.07] bg-[#0e1117]">
+                      {musicSearchError ? (
+                        <p className="px-4 py-4 text-[11px] font-bold text-red-300/80">
+                          {musicSearchError}
+                        </p>
+                      ) : !musicSearching &&
+                        musicResults.length === 0 ? (
+                        <p className="px-4 py-4 text-[11px] text-zinc-700">
+                          No encontré canciones con esa búsqueda.
+                        </p>
+                      ) : (
+                        <div className="max-h-[280px] overflow-y-auto">
+                          {musicResults.map((track) => (
+                            <button
+                              key={track.provider_track_id}
+                              type="button"
+                              onClick={() =>
+                                selectTrack(track)
+                              }
+                              className="flex w-full items-center gap-3 border-b border-white/[0.045] px-3 py-3 text-left transition last:border-b-0 hover:bg-white/[0.035]"
+                            >
+                              {track.artwork_url ? (
+                                <img
+                                  src={track.artwork_url}
+                                  alt=""
+                                  className="h-11 w-11 shrink-0 rounded-xl object-cover"
+                                />
+                              ) : (
+                                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-white/[0.05] text-zinc-600">
+                                  <Music2 size={15} />
+                                </div>
+                              )}
+
+                              <div className="min-w-0 flex-1">
+                                <p className="truncate text-xs font-black text-zinc-200">
+                                  {track.track_title}
+                                </p>
+                                <p className="mt-1 truncate text-[10px] text-zinc-600">
+                                  {track.artist_name}
+                                  {track.album_name
+                                    ? ` · ${track.album_name}`
+                                    : ""}
+                                </p>
+                              </div>
+
+                              <div className="flex shrink-0 items-center gap-2">
+                                {track.preview_url && (
+                                  <span className="rounded-full bg-white/[0.05] px-2 py-1 text-[8px] font-black uppercase tracking-[0.08em] text-zinc-600">
+                                    30s
+                                  </span>
+                                )}
+                                <Check
+                                  size={14}
+                                  className="text-zinc-700"
+                                />
+                              </div>
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
               )}
             </section>
           )}
@@ -469,11 +667,15 @@ export default function StoryComposer({
           <div className="mt-5 flex items-center justify-between gap-3">
             <button
               type="button"
-              onClick={() => inputRef.current?.click()}
+              onClick={() =>
+                inputRef.current?.click()
+              }
               disabled={publishing}
               className="h-10 rounded-xl px-3 text-xs font-bold text-zinc-600 transition hover:bg-white/[0.04] hover:text-zinc-200"
             >
-              {file ? "Cambiar archivo" : "Elegir archivo"}
+              {file
+                ? "Cambiar archivo"
+                : "Elegir archivo"}
             </button>
 
             <button
@@ -483,11 +685,16 @@ export default function StoryComposer({
               className="flex h-10 items-center gap-2 rounded-xl bg-[#6d7cff] px-4 text-xs font-black text-white transition hover:bg-[#7b87ff] disabled:cursor-not-allowed disabled:bg-white/[0.05] disabled:text-zinc-700"
             >
               {publishing ? (
-                <Loader2 size={15} className="animate-spin" />
+                <Loader2
+                  size={15}
+                  className="animate-spin"
+                />
               ) : (
                 <Send size={15} />
               )}
-              {publishing ? "Publicando..." : "Publicar"}
+              {publishing
+                ? "Publicando..."
+                : "Publicar"}
             </button>
           </div>
         </div>
