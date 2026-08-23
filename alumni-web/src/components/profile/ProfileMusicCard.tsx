@@ -6,7 +6,6 @@ import {
   Loader2,
   Pause,
   Play,
-  Sparkles,
 } from "lucide-react";
 import type { ProfileMusic } from "@/lib/profileMusic";
 import { useSpotifyClip } from "@/hooks/useSpotifyClip";
@@ -129,18 +128,11 @@ export default function ProfileMusicCard({
           </div>
 
           <div className="min-w-0 flex-1">
-            <div className="flex items-center gap-1.5 text-[#8d98ff]">
-              <Sparkles size={11} />
-              <span className="text-[9px] font-black uppercase tracking-[0.17em]">
-                Mi vibra
-              </span>
-            </div>
-
-            <p className="mt-1 truncate text-sm font-black text-zinc-100">
+            <p className="truncate text-sm font-black text-zinc-100">
               {track.track_title}
             </p>
 
-            <p className="mt-0.5 truncate text-[11px] text-zinc-600">
+            <p className="mt-1 truncate text-[11px] text-zinc-600">
               {track.artist_name || "Spotify"}
             </p>
           </div>
@@ -209,7 +201,7 @@ export default function ProfileMusicCard({
 
         {failed && (
           <p className="mt-2 text-[10px] font-bold text-zinc-700">
-            El reproductor interno no respondió; el botón abrirá Spotify.
+            Spotify no respondió dentro de Alumni. Toca el botón para abrir la canción.
           </p>
         )}
 
@@ -221,9 +213,11 @@ export default function ProfileMusicCard({
 
         <div
           aria-hidden="true"
-          className="pointer-events-none absolute -left-[10000px] top-0 h-[80px] w-[300px] overflow-hidden opacity-0"
+          className="pointer-events-none absolute bottom-0 right-0 h-px w-px overflow-hidden opacity-[0.01]"
         >
-          <div ref={spotifyMountRef} />
+          <div className="h-[80px] w-[300px]">
+            <div ref={spotifyMountRef} />
+          </div>
         </div>
       </div>
 

@@ -11,6 +11,9 @@ export type SpotifyIframeApi = {
   ) => void;
 };
 
+const SPOTIFY_IFRAME_API_SRC =
+  "https://open.spotify.com/embed/iframe-api/v1";
+
 declare global {
   interface Window {
     onSpotifyIframeApiReady?: (api: SpotifyIframeApi) => void;
@@ -34,39 +37,73 @@ export function loadSpotifyIframeApi(): Promise<SpotifyIframeApi> {
 
   window.__alumniSpotifyIframePromise = new Promise<SpotifyIframeApi>(
     (resolve, reject) => {
-      const previousReady = window.onSpotifyIframeApiReady;
+      let settled = false;
 
-      window.onSpotifyIframeApiReady = (api) => {
+      const finishResolve = (api: SpotifyIframeApi) => {
+        if (settled) return;
+        settled = true;
         window.__alumniSpotifyIframeApi = api;
-        previousReady?.(api);
         resolve(api);
       };
 
-      const existing = document.querySelector<HTMLScriptElement>(
-        'script[src="https://open.spotify.com/embed/iframe-api/v1"]'
-      );
+      const finishReject = (message: string) => {
+        if (settled) return;
+        settled = true;
+        window.__alumniSpotifyIframePromise = undefined;
+        reject(new Error(message));
+      };
 
-      if (existing) {
-        const waitForApi = window.setInterval(() => {
-          if (window.__alumniSpotifyIframeApi) {
-            window.clearInterval(waitForApi);
-            resolve(window.__alumniSpotifyIframeApi);
+      const previousReady = window.onSpotifyIframeApiReady;
+
+      // IMPORTANTE:
+      // La callback global debe existir ANTES de cargar el script.
+      // En la versión anterior, si el script ya estaba cargado por una
+      // navegación previa, la promesa podía quedar esperando para siempre.
+      window.onSpotifyIframeApiReady = (api) => {
+        finishResolve(api);
+
+        if (
+          previousReady &&
+          previousReady !== window.onSpotifyIframeApiReady
+        ) {
+          try {
+            previousReady(api);
+          } catch {
+            // No permitimos que una callback anterior rompa Alumni.
           }
-        }, 100);
+        }
+      };
 
-        window.setTimeout(() => {
-          window.clearInterval(waitForApi);
-        }, 10000);
-
-        return;
-      }
+      // Si había una copia previa del script pero no tenemos la API guardada,
+      // la retiramos y la cargamos de nuevo para que Spotify vuelva a disparar
+      // onSpotifyIframeApiReady.
+      document
+        .querySelectorAll<HTMLScriptElement>(
+          'script[src^="https://open.spotify.com/embed/iframe-api/v1"]'
+        )
+        .forEach((script) => script.remove());
 
       const script = document.createElement("script");
-      script.src = "https://open.spotify.com/embed/iframe-api/v1";
+      script.src = SPOTIFY_IFRAME_API_SRC;
       script.async = true;
-      script.onerror = () =>
-        reject(new Error("No se pudo cargar Spotify."));
+
+      script.onerror = () => {
+        finishReject("No se pudo cargar el reproductor de Spotify.");
+      };
+
       document.body.appendChild(script);
+
+      // Nunca más dejamos un spinner infinito.
+      window.setTimeout(() => {
+        if (window.__alumniSpotifyIframeApi) {
+          finishResolve(window.__alumniSpotifyIframeApi);
+          return;
+        }
+
+        finishReject(
+          "Spotify tardó demasiado en responder. Intenta de nuevo."
+        );
+      }, 7000);
     }
   );
 
