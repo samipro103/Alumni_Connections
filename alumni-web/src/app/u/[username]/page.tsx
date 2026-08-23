@@ -18,6 +18,7 @@ import { es } from "date-fns/locale";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { supabase } from "@/lib/supabase";
 import AppShell from "@/components/layout/AppShell";
+import HDProfileImage from "@/components/profile/HDProfileImage";
 import CommentLikeButton from "@/components/social/CommentLikeButton";
 
 type ProfileTab = "posts" | "about";
@@ -333,11 +334,12 @@ export default function UserProfilePage() {
           <div className="overflow-hidden rounded-t-[27px]">
             <div className="h-48 bg-[#151a23] sm:h-60">
               {profile.banner_url ? (
-                <img
+                <HDProfileImage
                   src={profile.banner_url}
                   alt="Banner"
+                  variant="banner"
                   className="h-full w-full object-cover"
-                />
+/>
               ) : (
                 <div className="h-full w-full bg-[radial-gradient(circle_at_20%_10%,rgba(109,124,255,.28),transparent_38%),radial-gradient(circle_at_85%_20%,rgba(124,58,237,.18),transparent_34%),#11151c]" />
               )}
@@ -348,11 +350,12 @@ export default function UserProfilePage() {
             <div className="flex flex-col gap-5 sm:flex-row sm:items-center">
               <div className="flex h-24 w-24 shrink-0 items-center justify-center overflow-hidden rounded-full border border-white/[0.09] bg-[#1a1f29] text-2xl font-black shadow-[0_10px_28px_rgba(0,0,0,.16)] sm:h-28 sm:w-28">
                 {profile.avatar_url ? (
-                  <img
+                  <HDProfileImage
                     src={profile.avatar_url}
                     alt="Avatar"
+                    variant="avatar"
                     className="h-full w-full object-cover"
-                  />
+/>
                 ) : (
                   profile.username?.charAt(0)?.toUpperCase() || "U"
                 )}
