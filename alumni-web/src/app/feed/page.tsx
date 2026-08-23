@@ -1,6 +1,6 @@
-"use client";
+﻿"use client";
 
-import { Suspense, useEffect, useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import {
   Heart,
@@ -35,20 +35,36 @@ function FeedContent() {
   const [currentProfile, setCurrentProfile] = useState<any>(null);
   const [focusedPostId, setFocusedPostId] = useState<number | null>(null);
   const [focusedCommentId, setFocusedCommentId] = useState<number | null>(null);
+  const refreshTimerRef = useRef<number | null>(null);
 
   useEffect(() => {
-    getPosts();
+    void getPosts({ showLoader: true });
   }, []);
 
   useEffect(() => {
     const channel = supabase
       .channel("feed-live")
-      .on("postgres_changes", { event: "*", schema: "public", table: "posts" }, () => getPosts())
-      .on("postgres_changes", { event: "*", schema: "public", table: "likes" }, () => getPosts())
-      .on("postgres_changes", { event: "*", schema: "public", table: "comments" }, () => getPosts())
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "posts" },
+        () => schedulePostsRefresh()
+      )
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "likes" },
+        () => schedulePostsRefresh()
+      )
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "comments" },
+        () => schedulePostsRefresh()
+      )
       .subscribe();
 
     return () => {
+      if (refreshTimerRef.current !== null) {
+        window.clearTimeout(refreshTimerRef.current);
+      }
       supabase.removeChannel(channel);
     };
   }, []);
@@ -96,8 +112,25 @@ function FeedContent() {
     };
   }, [loading, searchParams]);
 
-  async function getPosts() {
-    setLoading(true);
+  function schedulePostsRefresh(delay = 140) {
+    if (refreshTimerRef.current !== null) {
+      window.clearTimeout(refreshTimerRef.current);
+    }
+
+    refreshTimerRef.current = window.setTimeout(() => {
+      refreshTimerRef.current = null;
+      void getPosts({ showLoader: false });
+    }, delay);
+  }
+
+  async function getPosts({
+    showLoader = false,
+  }: {
+    showLoader?: boolean;
+  } = {}) {
+    if (showLoader) {
+      setLoading(true);
+    }
 
     const { data: { session } } = await supabase.auth.getSession();
     const user = session?.user;
@@ -106,7 +139,7 @@ function FeedContent() {
     if (user) {
       const { data: profileData } = await supabase
         .from("profiles")
-        .select("id, university, career, city, country")
+        .select("id, username, avatar_url, university, career, city, country")
         .eq("id", user.id)
         .maybeSingle();
 
@@ -143,8 +176,10 @@ function FeedContent() {
       .order("created_at", { ascending: false });
 
     if (!postsData) {
-      setPosts([]);
-      setLoading(false);
+      if (showLoader) {
+        setPosts([]);
+        setLoading(false);
+      }
       return;
     }
 
@@ -187,7 +222,10 @@ function FeedContent() {
     });
 
     setPosts(formattedPosts);
-    setLoading(false);
+
+    if (showLoader) {
+      setLoading(false);
+    }
   }
 
   async function uploadImage() {
@@ -242,7 +280,7 @@ function FeedContent() {
 
     setContent("");
     setImage(null);
-    await getPosts();
+    schedulePostsRefresh(60);
   }
 
   async function deletePost(postId: number) {
@@ -254,7 +292,7 @@ function FeedContent() {
       return;
     }
 
-    await getPosts();
+    schedulePostsRefresh(60);
   }
 
   async function toggleLike(postId: number, liked: boolean) {
@@ -264,6 +302,22 @@ function FeedContent() {
     }
 
     const post = posts.find((item: any) => item.id === postId);
+
+    // Actualizacion optimista: el usuario ve el cambio al instante.
+    setPosts((current) =>
+      current.map((item: any) =>
+        item.id === postId
+          ? {
+              ...item,
+              liked: !liked,
+              likesCount: Math.max(
+                0,
+                (item.likesCount || 0) + (liked ? -1 : 1)
+              ),
+            }
+          : item
+      )
+    );
 
     if (liked) {
       await supabase
@@ -288,6 +342,20 @@ function FeedContent() {
       });
 
       if (error) {
+        setPosts((current) =>
+          current.map((item: any) =>
+            item.id === postId
+              ? {
+                  ...item,
+                  liked,
+                  likesCount: Math.max(
+                    0,
+                    (item.likesCount || 0) + (liked ? 1 : -1)
+                  ),
+                }
+              : item
+          )
+        );
         alert(error.message);
         return;
       }
@@ -304,7 +372,7 @@ function FeedContent() {
       }
     }
 
-    await getPosts();
+    schedulePostsRefresh(60);
   }
 
   async function addComment(postId: number) {
@@ -344,9 +412,33 @@ function FeedContent() {
       });
     }
 
+    setPosts((current) =>
+      current.map((item: any) =>
+        item.id === postId
+          ? {
+              ...item,
+              comments: [
+                ...(item.comments || []),
+                {
+                  id: insertedComment.id,
+                  post_id: postId,
+                  user_id: currentUser.id,
+                  content: comment,
+                  created_at: new Date().toISOString(),
+                  profile: {
+                    username: currentProfile?.username || "usuario",
+                    avatar_url: currentProfile?.avatar_url || null,
+                  },
+                },
+              ],
+            }
+          : item
+      )
+    );
+
     setCommentInputs((current) => ({ ...current, [postId]: "" }));
     setOpenComments((current) => ({ ...current, [postId]: true }));
-    await getPosts();
+    schedulePostsRefresh(220);
   }
 
   async function sharePost(post: any) {
@@ -666,3 +758,4 @@ export default function FeedPage() {
     </Suspense>
   );
 }
+
