@@ -24,6 +24,10 @@ import {
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import StoryMusicPlayer from "@/components/stories/StoryMusicPlayer";
+import {
+  startStoryMusicNow,
+  stopAllStoryMusic,
+} from "@/lib/storyMusicBridge";
 
 export type StoryItem = {
   id: string;
@@ -469,6 +473,15 @@ export default function StoryViewer({
       storyIndex <
       group.stories.length - 1
     ) {
+      const target =
+        group.stories[storyIndex + 1];
+
+      if (target?.music_track_url) {
+        startStoryMusicNow(target.id);
+      } else {
+        stopAllStoryMusic();
+      }
+
       setStoryIndex(
         (value) => value + 1
       );
@@ -479,6 +492,15 @@ export default function StoryViewer({
       groupIndex <
       groups.length - 1
     ) {
+      const target =
+        groups[groupIndex + 1]?.stories[0];
+
+      if (target?.music_track_url) {
+        startStoryMusicNow(target.id);
+      } else {
+        stopAllStoryMusic();
+      }
+
       setGroupIndex(
         (value) => value + 1
       );
@@ -486,6 +508,7 @@ export default function StoryViewer({
       return;
     }
 
+    stopAllStoryMusic();
     onClose();
   }
 
@@ -496,6 +519,15 @@ export default function StoryViewer({
     if (!group) return;
 
     if (storyIndex > 0) {
+      const target =
+        group.stories[storyIndex - 1];
+
+      if (target?.music_track_url) {
+        startStoryMusicNow(target.id);
+      } else {
+        stopAllStoryMusic();
+      }
+
       setStoryIndex(
         (value) => value - 1
       );
@@ -506,17 +538,25 @@ export default function StoryViewer({
       const previousGroup =
         groups[groupIndex - 1];
 
+      const targetIndex = Math.max(
+        previousGroup.stories.length - 1,
+        0
+      );
+
+      const target =
+        previousGroup.stories[targetIndex];
+
+      if (target?.music_track_url) {
+        startStoryMusicNow(target.id);
+      } else {
+        stopAllStoryMusic();
+      }
+
       setGroupIndex(
         (value) => value - 1
       );
 
-      setStoryIndex(
-        Math.max(
-          previousGroup.stories
-            .length - 1,
-          0
-        )
-      );
+      setStoryIndex(targetIndex);
     }
   }
 
@@ -844,13 +884,7 @@ export default function StoryViewer({
             </div>
 
             <StoryMusicPlayer
-              trackUrl={story.music_track_url}
-              trackId={story.music_track_id}
-              startSeconds={Math.max(
-                0,
-                Number(story.music_clip_start_seconds || 0)
-              )}
-              clipDurationSeconds={15}
+              storyId={story.id}
               onPlayingChange={setStoryMusicPlaying}
             />
 

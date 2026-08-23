@@ -13,6 +13,11 @@ import StoryViewer, {
   StoryGroup,
   StoryItem,
 } from "@/components/stories/StoryViewer";
+import StoryMusicPreloader from "@/components/stories/StoryMusicPreloader";
+import {
+  startStoryMusicNow,
+  stopAllStoryMusic,
+} from "@/lib/storyMusicBridge";
 
 type ProfileLite = {
   id: string;
@@ -397,6 +402,17 @@ export default function StoriesRail({
     groupIndex: number,
     storyIndex = 0
   ) {
+    const targetStory =
+      groups[groupIndex]?.stories[storyIndex];
+
+    // IMPORTANTE: se ejecuta dentro del mismo click/tap que abre
+    // la historia. El controlador ya fue precargado en segundo plano.
+    if (targetStory?.music_track_url) {
+      startStoryMusicNow(targetStory.id);
+    } else {
+      stopAllStoryMusic();
+    }
+
     setViewerStartIndex(
       groupIndex
     );
@@ -422,6 +438,23 @@ export default function StoriesRail({
 
   return (
     <>
+      {groups.flatMap((group) =>
+        group.stories
+          .filter((story) => Boolean(story.music_track_url))
+          .map((story) => (
+            <StoryMusicPreloader
+              key={`story-music-${story.id}`}
+              storyId={story.id}
+              trackUrl={story.music_track_url as string}
+              startSeconds={Math.max(
+                0,
+                Number(story.music_clip_start_seconds || 0)
+              )}
+              clipDurationSeconds={15}
+            />
+          ))
+      )}
+
       <section className="mb-5 border-b border-white/[0.07] pb-5">
         <div className="scrollbar-thin flex items-start gap-4 overflow-x-auto overflow-y-visible px-1 pb-2 pt-1">
           <div className="w-[82px] shrink-0 text-center">
@@ -578,6 +611,7 @@ export default function StoriesRail({
         }
         currentUserId={user.id}
         onClose={() => {
+          stopAllStoryMusic();
           setViewerOpen(false);
           void loadStories();
         }}
