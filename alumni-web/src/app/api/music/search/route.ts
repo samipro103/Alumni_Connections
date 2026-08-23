@@ -25,6 +25,11 @@ type SpotifyTrack = {
   };
 };
 
+type SpotifyAuthError = {
+  error?: string;
+  error_description?: string;
+};
+
 let cachedToken:
   | {
       value: string;
@@ -32,13 +37,47 @@ let cachedToken:
     }
   | null = null;
 
+function cleanCredential(
+  rawValue: string | undefined,
+  variableName: string
+) {
+  let value = (rawValue || "").trim();
+
+  // Permite corregir el error común de pegar:
+  // SPOTIFY_CLIENT_ID=xxxx
+  // como VALUE completo dentro de Vercel.
+  const prefix = `${variableName}=`;
+
+  if (value.startsWith(prefix)) {
+    value = value.slice(prefix.length).trim();
+  }
+
+  // También tolera valores pegados con comillas.
+  if (
+    value.length >= 2 &&
+    ((value.startsWith('"') && value.endsWith('"')) ||
+      (value.startsWith("'") && value.endsWith("'")))
+  ) {
+    value = value.slice(1, -1).trim();
+  }
+
+  return value;
+}
+
 async function getSpotifyToken() {
-  const clientId = process.env.SPOTIFY_CLIENT_ID?.trim();
-  const clientSecret = process.env.SPOTIFY_CLIENT_SECRET?.trim();
+  const clientId = cleanCredential(
+    process.env.SPOTIFY_CLIENT_ID,
+    "SPOTIFY_CLIENT_ID"
+  );
+
+  const clientSecret = cleanCredential(
+    process.env.SPOTIFY_CLIENT_SECRET,
+    "SPOTIFY_CLIENT_SECRET"
+  );
 
   if (!clientId || !clientSecret) {
     throw new Error(
-      "Spotify Search no está configurado. Faltan SPOTIFY_CLIENT_ID y SPOTIFY_CLIENT_SECRET."
+      "Spotify Search no está configurado. Revisa SPOTIFY_CLIENT_ID y SPOTIFY_CLIENT_SECRET en Vercel."
     );
   }
 
@@ -60,6 +99,7 @@ async function getSpotifyToken() {
       headers: {
         Authorization: `Basic ${credentials}`,
         "Content-Type": "application/x-www-form-urlencoded",
+        Accept: "application/json",
       },
       body: new URLSearchParams({
         grant_type: "client_credentials",
@@ -69,11 +109,33 @@ async function getSpotifyToken() {
   );
 
   if (!response.ok) {
-    const detail = await response.text();
-    console.error("Spotify token error:", response.status, detail);
+    let authError: SpotifyAuthError | null = null;
+
+    try {
+      authError = (await response.json()) as SpotifyAuthError;
+    } catch {
+      authError = null;
+    }
+
+    console.error("Spotify token error", {
+      status: response.status,
+      error: authError?.error || "unknown",
+      description: authError?.error_description || "none",
+      // Nunca loguear Client ID ni Client Secret.
+    });
+
+    if (
+      response.status === 400 ||
+      response.status === 401 ||
+      authError?.error === "invalid_client"
+    ) {
+      throw new Error(
+        "Spotify no pudo autenticar Alumni. Revisa que el Client ID y Client Secret sean de la misma app, que en Vercel hayas pegado SOLO el valor (sin SPOTIFY_CLIENT_ID= ni comillas), que las variables estén habilitadas para Production y después haz Redeploy. Las apps nuevas de Spotify en Development Mode también requieren que el dueño de la app tenga Spotify Premium."
+      );
+    }
 
     throw new Error(
-      "Spotify rechazó las credenciales de la aplicación."
+      "Spotify no pudo autenticar la aplicación en este momento."
     );
   }
 
@@ -97,7 +159,7 @@ export async function GET(request: Request) {
 
   const rawMarket =
     url.searchParams.get("market")?.toUpperCase() ||
-    process.env.SPOTIFY_MARKET?.toUpperCase() ||
+    cleanCredential(process.env.SPOTIFY_MARKET, "SPOTIFY_MARKET").toUpperCase() ||
     "SV";
 
   const market = /^[A-Z]{2}$/.test(rawMarket)
@@ -125,21 +187,41 @@ export async function GET(request: Request) {
     });
 
     if (!response.ok) {
-      const detail = await response.text();
-      console.error(
-        "Spotify search error:",
-        response.status,
-        detail
-      );
+      let detail: any = null;
+
+      try {
+        detail = await response.json();
+      } catch {
+        detail = null;
+      }
+
+      console.error("Spotify search error", {
+        status: response.status,
+        reason: detail?.error?.reason || null,
+        message: detail?.error?.message || null,
+      });
+
+      if (response.status === 429) {
+        const reason = detail?.error?.reason;
+
+        return NextResponse.json(
+          {
+            error:
+              reason === "QUOTA_EXCEEDED"
+                ? "Se alcanzó temporalmente la cuota de Spotify para esta app. Intenta más tarde."
+                : "Spotify está limitando temporalmente las búsquedas. Intenta de nuevo en unos segundos.",
+          },
+          { status: 429 }
+        );
+      }
 
       return NextResponse.json(
         {
           error:
-            response.status === 429
-              ? "Spotify está limitando temporalmente las búsquedas. Intenta de nuevo en unos segundos."
-              : "No se pudo buscar en Spotify.",
+            detail?.error?.message ||
+            "No se pudo buscar en Spotify.",
         },
-        { status: response.status === 429 ? 429 : 502 }
+        { status: 502 }
       );
     }
 
@@ -177,7 +259,7 @@ export async function GET(request: Request) {
       market,
     });
   } catch (error: any) {
-    console.error("Spotify catalog search:", error);
+    console.error("Spotify catalog search:", error?.message || error);
 
     return NextResponse.json(
       {
