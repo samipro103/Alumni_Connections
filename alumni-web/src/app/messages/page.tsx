@@ -17,15 +17,33 @@ export default function MessagesPage() {
   const [loadingConversations, setLoadingConversations] = useState(true);
 
   useEffect(() => {
-    if (!loading && !user) {
-      router.push("/login");
-    }
+    if (!loading && !user) router.push("/login");
   }, [user, loading, router]);
 
   useEffect(() => {
-    if (user) {
-      loadConversations();
-    }
+    if (user) loadConversations();
+  }, [user?.id]);
+
+  useEffect(() => {
+    if (!user) return;
+
+    const channel = supabase
+      .channel(`message-list:${user.id}`)
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "messages", filter: `receiver_id=eq.${user.id}` },
+        () => loadConversations()
+      )
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "messages", filter: `sender_id=eq.${user.id}` },
+        () => loadConversations()
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [user?.id]);
 
   async function loadConversations() {
@@ -73,14 +91,10 @@ export default function MessagesPage() {
       .in("id", ids);
 
     const merged = (profiles || [])
-      .map((profile: any) => {
-        const lastMessage = latestByUser.get(profile.id);
-
-        return {
-          ...profile,
-          lastMessage,
-        };
-      })
+      .map((profile: any) => ({
+        ...profile,
+        lastMessage: latestByUser.get(profile.id),
+      }))
       .sort(
         (a: any, b: any) =>
           new Date(b.lastMessage?.created_at || 0).getTime() -
@@ -93,21 +107,18 @@ export default function MessagesPage() {
 
   const filteredConversations = useMemo(() => {
     const value = search.trim().toLowerCase();
-
     if (!value) return conversations;
 
-    return conversations.filter((conversation: any) => {
-      return [
+    return conversations.filter((conversation: any) =>
+      [
         conversation.username,
         conversation.university,
         conversation.career,
         conversation.lastMessage?.content,
       ]
         .filter(Boolean)
-        .some((field) =>
-          String(field).toLowerCase().includes(value)
-        );
-    });
+        .some((field) => String(field).toLowerCase().includes(value))
+    );
   }, [conversations, search]);
 
   function formatTime(date?: string) {
@@ -134,6 +145,21 @@ export default function MessagesPage() {
     });
   }
 
+  function previewText(conversation: any) {
+    const message = conversation.lastMessage;
+    if (!message) return "Sin mensajes todavía";
+
+    const mine = message.sender_id === user?.id;
+
+    if (message.message_type === "story_reply") {
+      return mine
+        ? `Tú respondiste a su historia: ${message.content}`
+        : `Respondió a tu historia: ${message.content}`;
+    }
+
+    return `${mine ? "Tú: " : ""}${message.content || ""}`;
+  }
+
   return (
     <AppShell>
       <div className="mx-auto w-full max-w-[760px]">
@@ -141,7 +167,6 @@ export default function MessagesPage() {
           <h1 className="text-[30px] font-black tracking-[-0.04em] text-white">
             Mensajes
           </h1>
-
           <p className="mt-1 text-sm text-zinc-600">
             Conversaciones con tu comunidad Alumni.
           </p>
@@ -149,7 +174,6 @@ export default function MessagesPage() {
 
         <div className="mb-5 flex h-12 items-center rounded-2xl border border-white/[0.07] bg-white/[0.035] px-4 transition focus-within:border-[#6d7cff]/40">
           <Search size={18} className="text-zinc-600" />
-
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
@@ -168,19 +192,14 @@ export default function MessagesPage() {
               <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-white/[0.04] text-zinc-500">
                 <MessageCircle size={24} />
               </div>
-
               <h2 className="mt-4 text-base font-bold text-zinc-300">
-                {search
-                  ? "No encontramos conversaciones"
-                  : "Aún no tienes conversaciones"}
+                {search ? "No encontramos conversaciones" : "Aún no tienes conversaciones"}
               </h2>
-
               <p className="mx-auto mt-2 max-w-sm text-sm leading-6 text-zinc-600">
                 {search
                   ? "Prueba buscando por usuario, universidad o carrera."
                   : "Explora perfiles y envía un mensaje para comenzar a conectar."}
               </p>
-
               {!search && (
                 <Link
                   href="/explore"
@@ -192,61 +211,51 @@ export default function MessagesPage() {
             </div>
           ) : (
             <div className="divide-y divide-white/[0.06]">
-              {filteredConversations.map((conversation: any) => {
-                const ownLastMessage =
-                  conversation.lastMessage?.sender_id === user?.id;
+              {filteredConversations.map((conversation: any) => (
+                <Link
+                  key={conversation.id}
+                  href={`/messages/${conversation.username}`}
+                  className="group flex items-center gap-4 px-4 py-4 transition hover:bg-white/[0.035] sm:px-5"
+                >
+                  <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[#1a1f29] text-sm font-bold text-white ring-1 ring-white/10">
+                    {conversation.avatar_url ? (
+                      <img
+                        src={conversation.avatar_url}
+                        alt={conversation.username}
+                        className="h-full w-full object-cover"
+                      />
+                    ) : (
+                      conversation.username?.charAt(0)?.toUpperCase() || "U"
+                    )}
+                  </div>
 
-                return (
-                  <Link
-                    key={conversation.id}
-                    href={`/messages/${conversation.username}`}
-                    className="group flex items-center gap-4 px-4 py-4 transition hover:bg-white/[0.035] sm:px-5"
-                  >
-                    <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[#1a1f29] text-sm font-bold text-white ring-1 ring-white/10">
-                      {conversation.avatar_url ? (
-                        <img
-                          src={conversation.avatar_url}
-                          alt={conversation.username}
-                          className="h-full w-full object-cover"
-                        />
-                      ) : (
-                        conversation.username?.charAt(0)?.toUpperCase() || "U"
-                      )}
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2">
+                      <p className="truncate text-sm font-bold text-zinc-100">
+                        @{conversation.username}
+                      </p>
+                      <span className="ml-auto shrink-0 text-[11px] text-zinc-700">
+                        {formatTime(conversation.lastMessage?.created_at)}
+                      </span>
                     </div>
 
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-2">
-                        <p className="truncate text-sm font-bold text-zinc-100">
-                          @{conversation.username}
-                        </p>
+                    <p className="mt-0.5 truncate text-xs text-zinc-600">
+                      {[conversation.career, conversation.university]
+                        .filter(Boolean)
+                        .join(" · ") || "Comunidad Alumni"}
+                    </p>
 
-                        <span className="ml-auto shrink-0 text-[11px] text-zinc-700">
-                          {formatTime(conversation.lastMessage?.created_at)}
-                        </span>
-                      </div>
+                    <p className="mt-2 truncate text-sm text-zinc-500">
+                      {previewText(conversation)}
+                    </p>
+                  </div>
 
-                      <p className="mt-0.5 truncate text-xs text-zinc-600">
-                        {[conversation.career, conversation.university]
-                          .filter(Boolean)
-                          .join(" · ") || "Comunidad Alumni"}
-                      </p>
-
-                      <p className="mt-2 truncate text-sm text-zinc-500">
-                        {ownLastMessage && (
-                          <span className="text-zinc-700">Tú: </span>
-                        )}
-                        {conversation.lastMessage?.content ||
-                          "Sin mensajes todavía"}
-                      </p>
-                    </div>
-
-                    <ChevronRight
-                      size={18}
-                      className="shrink-0 text-zinc-800 transition group-hover:translate-x-0.5 group-hover:text-zinc-500"
-                    />
-                  </Link>
-                );
-              })}
+                  <ChevronRight
+                    size={18}
+                    className="shrink-0 text-zinc-800 transition group-hover:translate-x-0.5 group-hover:text-zinc-500"
+                  />
+                </Link>
+              ))}
             </div>
           )}
         </div>

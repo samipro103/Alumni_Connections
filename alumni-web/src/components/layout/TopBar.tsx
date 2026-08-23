@@ -10,45 +10,93 @@ import { supabase } from "@/lib/supabase";
 export default function TopBar() {
   const router = useRouter();
   const { user } = useAuth();
+
   const [profile, setProfile] = useState<any>(null);
   const [search, setSearch] = useState("");
+  const [unreadNotifications, setUnreadNotifications] = useState(0);
+  const [unreadMessages, setUnreadMessages] = useState(0);
 
   useEffect(() => {
     if (!user) {
       setProfile(null);
+      setUnreadNotifications(0);
+      setUnreadMessages(0);
       return;
     }
 
+    const currentUser = user;
     let active = true;
 
-    async function loadProfile() {
-      const { data } = await supabase
-        .from("profiles")
-        .select("username, avatar_url")
-        .eq("id", user!.id)
-        .maybeSingle();
+    async function refresh() {
+      const [
+        { data: profileData },
+        { count: nCount },
+        { count: mCount },
+      ] = await Promise.all([
+        supabase.from("profiles")
+          .select("username, avatar_url")
+          .eq("id", currentUser.id)
+          .maybeSingle(),
 
-      if (active) setProfile(data);
+        supabase.from("notifications")
+          .select("id", { count: "exact", head: true })
+          .eq("user_id", currentUser.id)
+          .is("read_at", null),
+
+        supabase.from("messages")
+          .select("id", { count: "exact", head: true })
+          .eq("receiver_id", currentUser.id)
+          .is("read_at", null),
+      ]);
+
+      if (!active) return;
+      setProfile(profileData);
+      setUnreadNotifications(nCount || 0);
+      setUnreadMessages(mCount || 0);
     }
 
-    loadProfile();
+    refresh();
+
+    const nc = supabase.channel(`top-n:${currentUser.id}`)
+      .on("postgres_changes", {
+        event: "*",
+        schema: "public",
+        table: "notifications",
+        filter: `user_id=eq.${currentUser.id}`,
+      }, refresh)
+      .subscribe();
+
+    const mc = supabase.channel(`top-m:${currentUser.id}`)
+      .on("postgres_changes", {
+        event: "*",
+        schema: "public",
+        table: "messages",
+        filter: `receiver_id=eq.${currentUser.id}`,
+      }, refresh)
+      .subscribe();
+
+    window.addEventListener("focus", refresh);
 
     return () => {
       active = false;
+      supabase.removeChannel(nc);
+      supabase.removeChannel(mc);
+      window.removeEventListener("focus", refresh);
     };
   }, [user?.id]);
 
   function submitSearch(e: React.FormEvent) {
     e.preventDefault();
-    const value = search.trim();
-
-    if (!value) {
-      router.push("/explore");
-      return;
-    }
-
-    router.push(`/explore?q=${encodeURIComponent(value)}`);
+    const q = search.trim();
+    router.push(q ? `/explore?q=${encodeURIComponent(q)}` : "/explore");
   }
+
+  const badge = (value: number) =>
+    value > 0 ? (
+      <span className="absolute right-0.5 top-0.5 flex min-h-4 min-w-4 items-center justify-center rounded-full bg-[#6d7cff] px-1 text-[9px] font-black leading-none text-white ring-2 ring-[#090b0f]">
+        {value > 99 ? "99+" : value}
+      </span>
+    ) : null;
 
   return (
     <header className="fixed inset-x-0 top-0 z-50 h-[68px] border-b border-white/[0.07] bg-[#090b0f]/90 backdrop-blur-xl">
@@ -60,7 +108,7 @@ export default function TopBar() {
         </Link>
 
         <form onSubmit={submitSearch} className="mx-auto hidden w-full max-w-[540px] md:block">
-          <div className="flex h-11 items-center rounded-2xl border border-white/[0.07] bg-white/[0.035] px-4 transition focus-within:border-[#6d7cff]/50 focus-within:bg-white/[0.05]">
+          <div className="flex h-11 items-center rounded-2xl border border-white/[0.07] bg-white/[0.035] px-4 transition focus-within:border-[#6d7cff]/50">
             <Search className="h-[18px] w-[18px] text-zinc-500" />
             <input
               value={search}
@@ -72,12 +120,14 @@ export default function TopBar() {
         </form>
 
         <div className="ml-auto flex items-center gap-1.5 sm:gap-2">
-          <Link href="/notifications" className="flex h-10 w-10 items-center justify-center rounded-xl text-zinc-400 transition hover:bg-white/[0.06] hover:text-white" aria-label="Notificaciones">
+          <Link href="/notifications" className="relative flex h-10 w-10 items-center justify-center rounded-xl text-zinc-400 transition hover:bg-white/[0.06] hover:text-white">
             <Bell size={20} />
+            {badge(unreadNotifications)}
           </Link>
 
-          <Link href="/messages" className="flex h-10 w-10 items-center justify-center rounded-xl text-zinc-400 transition hover:bg-white/[0.06] hover:text-white" aria-label="Mensajes">
+          <Link href="/messages" className="relative flex h-10 w-10 items-center justify-center rounded-xl text-zinc-400 transition hover:bg-white/[0.06] hover:text-white">
             <MessageCircle size={20} />
+            {badge(unreadMessages)}
           </Link>
 
           <Link href="/feed#composer" className="hidden h-10 items-center gap-2 rounded-xl bg-[#6d7cff] px-4 text-sm font-bold text-white transition hover:bg-[#7b87ff] sm:flex">

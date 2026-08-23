@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">AlumniConnections</string>
+    <string name="title_activity_main">AlumniConnections</string>
+    <string name="package_name">com.alumniconnections.app</string>
+    <string name="custom_url_scheme">com.alumniconnections.app</string>
+</resources>

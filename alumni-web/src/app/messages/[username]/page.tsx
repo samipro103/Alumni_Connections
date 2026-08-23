@@ -1,10 +1,6 @@
 "use client";
 
-import {
-  useEffect,
-  useRef,
-  useState,
-} from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   ArrowLeft,
   MoreHorizontal,
@@ -19,7 +15,6 @@ import AppShell from "@/components/layout/AppShell";
 export default function ChatPage() {
   const params = useParams();
   const username = params.username as string;
-
   const router = useRouter();
   const { user, loading } = useAuth();
 
@@ -32,9 +27,7 @@ export default function ChatPage() {
   const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (!loading && !user) {
-      router.push("/login");
-    }
+    if (!loading && !user) router.push("/login");
   }, [user, loading, router]);
 
   useEffect(() => {
@@ -42,22 +35,31 @@ export default function ChatPage() {
 
     loadChat();
 
-    const interval = setInterval(() => {
-      loadChat(false);
-    }, 2000);
+    const channel = supabase
+      .channel(`chat:${user.id}:${username}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "messages",
+          filter: `receiver_id=eq.${user.id}`,
+        },
+        () => loadChat(false)
+      )
+      .subscribe();
 
-    return () => clearInterval(interval);
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [user?.id, username]);
 
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({
-      behavior: "smooth",
-    });
+    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages.length]);
 
   async function loadChat(showLoader = true) {
     if (!user) return;
-
     if (showLoader) setLoadingChat(true);
 
     const { data: receiverData } = await supabase
@@ -80,43 +82,37 @@ export default function ChatPage() {
       .or(
         `and(sender_id.eq.${user.id},receiver_id.eq.${receiverData.id}),and(sender_id.eq.${receiverData.id},receiver_id.eq.${user.id})`
       )
-      .order("created_at", {
-        ascending: true,
-      });
+      .order("created_at", { ascending: true });
 
     if (!error) {
       setMessages(messagesData || []);
+
+      await supabase
+        .from("messages")
+        .update({ read_at: new Date().toISOString() })
+        .eq("receiver_id", user.id)
+        .eq("sender_id", receiverData.id)
+        .is("read_at", null);
     }
 
     setLoadingChat(false);
   }
 
-  async function handleSendMessage(
-    e?: React.FormEvent
-  ) {
+  async function handleSendMessage(e?: React.FormEvent) {
     e?.preventDefault();
 
-    if (
-      !newMessage.trim() ||
-      !user ||
-      !receiver ||
-      sending
-    ) {
-      return;
-    }
+    if (!newMessage.trim() || !user || !receiver || sending) return;
 
     const content = newMessage.trim();
-
     setSending(true);
     setNewMessage("");
 
-    const { error } = await supabase
-      .from("messages")
-      .insert({
-        sender_id: user.id,
-        receiver_id: receiver.id,
-        content,
-      });
+    const { error } = await supabase.from("messages").insert({
+      sender_id: user.id,
+      receiver_id: receiver.id,
+      content,
+      message_type: "text",
+    });
 
     if (error) {
       setNewMessage(content);
@@ -140,14 +136,8 @@ export default function ChatPage() {
     return (
       <AppShell>
         <div className="mx-auto w-full max-w-[760px] pt-10 text-center">
-          <h1 className="text-xl font-bold text-white">
-            Usuario no encontrado
-          </h1>
-
-          <Link
-            href="/messages"
-            className="mt-4 inline-flex text-sm font-semibold text-[#8d98ff]"
-          >
+          <h1 className="text-xl font-bold text-white">Usuario no encontrado</h1>
+          <Link href="/messages" className="mt-4 inline-flex text-sm font-semibold text-[#8d98ff]">
             Volver a mensajes
           </Link>
         </div>
@@ -187,7 +177,6 @@ export default function ChatPage() {
               <h1 className="truncate text-sm font-bold text-white">
                 @{receiver?.username || username}
               </h1>
-
               <p className="mt-0.5 truncate text-xs text-zinc-600">
                 {[receiver?.career, receiver?.university]
                   .filter(Boolean)
@@ -196,10 +185,7 @@ export default function ChatPage() {
             </div>
           </Link>
 
-          <button
-            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-zinc-600 transition hover:bg-white/[0.05] hover:text-zinc-200"
-            title="Más opciones"
-          >
+          <button className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-zinc-600 transition hover:bg-white/[0.05] hover:text-zinc-200">
             <MoreHorizontal size={19} />
           </button>
         </header>
@@ -223,11 +209,9 @@ export default function ChatPage() {
                     receiver?.username?.charAt(0)?.toUpperCase() || "U"
                   )}
                 </div>
-
                 <h2 className="mt-4 text-base font-bold text-zinc-300">
                   Inicia la conversación
                 </h2>
-
                 <p className="mt-2 text-sm leading-6 text-zinc-600">
                   Envía un mensaje a @{receiver?.username} y comienza a conectar.
                 </p>
@@ -237,56 +221,78 @@ export default function ChatPage() {
             <div className="space-y-2.5">
               {messages.map((message: any) => {
                 const mine = message.sender_id === user?.id;
+                const storyReply = message.message_type === "story_reply";
 
                 return (
                   <div
                     key={message.id}
                     className={`flex ${mine ? "justify-end" : "justify-start"}`}
                   >
-                    <div
-                      className={`max-w-[78%] rounded-[18px] px-4 py-2.5 sm:max-w-[70%] ${
-                        mine
-                          ? "rounded-br-md bg-[#6d7cff] text-white"
-                          : "rounded-bl-md bg-white/[0.055] text-zinc-200"
-                      }`}
-                    >
-                      <p className="whitespace-pre-wrap break-words text-sm leading-5">
-                        {message.content}
-                      </p>
+                    {storyReply ? (
+                      <div className="max-w-[82%] sm:max-w-[68%]">
+                        <div
+                          className={`overflow-hidden rounded-[20px] border ${
+                            mine
+                              ? "border-[#6d7cff]/25 bg-[#6d7cff]/10"
+                              : "border-white/[0.08] bg-white/[0.04]"
+                          }`}
+                        >
+                          {message.story_media_url && (
+                            <div className="bg-black/25 p-2.5">
+                              <img
+                                src={message.story_media_url}
+                                alt="Historia respondida"
+                                className="mx-auto max-h-[220px] w-full rounded-[15px] object-cover"
+                              />
+                            </div>
+                          )}
 
-                      <p
-                        className={`mt-1 text-[10px] ${
+                          <div className="px-4 py-3 text-zinc-200">
+                            <p className="whitespace-pre-wrap break-words text-sm leading-5">
+                              {message.content}
+                            </p>
+                            <p className="mt-1.5 text-[10px] text-zinc-700">
+                              {formatMessageTime(message.created_at)}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      <div
+                        className={`max-w-[78%] rounded-[18px] px-4 py-2.5 sm:max-w-[70%] ${
                           mine
-                            ? "text-white/60"
-                            : "text-zinc-700"
+                            ? "rounded-br-md bg-[#6d7cff] text-white"
+                            : "rounded-bl-md bg-white/[0.055] text-zinc-200"
                         }`}
                       >
-                        {formatMessageTime(message.created_at)}
-                      </p>
-                    </div>
+                        <p className="whitespace-pre-wrap break-words text-sm leading-5">
+                          {message.content}
+                        </p>
+                        <p
+                          className={`mt-1 text-[10px] ${
+                            mine ? "text-white/60" : "text-zinc-700"
+                          }`}
+                        >
+                          {formatMessageTime(message.created_at)}
+                        </p>
+                      </div>
+                    )}
                   </div>
                 );
               })}
-
               <div ref={bottomRef} />
             </div>
           )}
         </div>
 
-        <form
-          onSubmit={handleSendMessage}
-          className="border-t border-white/[0.06] p-3 sm:p-4"
-        >
+        <form onSubmit={handleSendMessage} className="border-t border-white/[0.06] p-3 sm:p-4">
           <div className="flex items-end gap-2 rounded-[18px] border border-white/[0.07] bg-white/[0.035] p-1.5 focus-within:border-[#6d7cff]/35">
             <textarea
               rows={1}
               value={newMessage}
               onChange={(e) => setNewMessage(e.target.value)}
               onKeyDown={(e) => {
-                if (
-                  e.key === "Enter" &&
-                  !e.shiftKey
-                ) {
+                if (e.key === "Enter" && !e.shiftKey) {
                   e.preventDefault();
                   handleSendMessage();
                 }
@@ -297,18 +303,13 @@ export default function ChatPage() {
 
             <button
               type="submit"
-              disabled={
-                !newMessage.trim() ||
-                !receiver ||
-                sending
-              }
+              disabled={!newMessage.trim() || !receiver || sending}
               className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[14px] bg-[#6d7cff] text-white transition hover:bg-[#7b87ff] disabled:cursor-not-allowed disabled:bg-white/[0.06] disabled:text-zinc-700"
               aria-label="Enviar mensaje"
             >
               <Send size={17} />
             </button>
           </div>
-
           <p className="mt-2 px-2 text-[10px] text-zinc-700">
             Enter para enviar · Shift + Enter para salto de línea
           </p>

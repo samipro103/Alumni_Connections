@@ -18,6 +18,7 @@ import { es } from "date-fns/locale";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { supabase } from "@/lib/supabase";
 import AppShell from "@/components/layout/AppShell";
+import CommentLikeButton from "@/components/social/CommentLikeButton";
 
 type ProfileTab = "posts" | "about";
 
@@ -192,12 +193,24 @@ export default function UserProfilePage() {
       return;
     }
 
+    const post = posts.find((item: any) => item.id === postId);
+
     if (liked) {
       await supabase
         .from("likes")
         .delete()
         .eq("post_id", postId)
         .eq("user_id", user.id);
+
+      if (post && post.user_id !== user.id) {
+        await supabase
+          .from("notifications")
+          .delete()
+          .eq("user_id", post.user_id)
+          .eq("actor_id", user.id)
+          .eq("type", "like")
+          .eq("post_id", postId);
+      }
     } else {
       const { error } = await supabase.from("likes").insert({
         post_id: postId,
@@ -209,14 +222,14 @@ export default function UserProfilePage() {
         return;
       }
 
-      const post = posts.find((item: any) => item.id === postId);
-
       if (post && post.user_id !== user.id) {
         await supabase.from("notifications").insert({
           user_id: post.user_id,
           actor_id: user.id,
           type: "like",
           post_id: postId,
+          target_type: "post",
+          target_id: String(postId),
         });
       }
     }
@@ -233,11 +246,15 @@ export default function UserProfilePage() {
     const content = commentInputs[postId]?.trim();
     if (!content) return;
 
-    const { error } = await supabase.from("comments").insert({
-      post_id: postId,
-      user_id: user.id,
-      content,
-    });
+    const { data: insertedComment, error } = await supabase
+      .from("comments")
+      .insert({
+        post_id: postId,
+        user_id: user.id,
+        content,
+      })
+      .select("id")
+      .single();
 
     if (error) {
       alert(error.message);
@@ -250,6 +267,8 @@ export default function UserProfilePage() {
         actor_id: user.id,
         type: "comment",
         post_id: postId,
+        target_type: "post_comment",
+        target_id: String(insertedComment.id),
       });
     }
 
@@ -573,16 +592,24 @@ export default function UserProfilePage() {
                                       )}
                                     </div>
 
-                                    <div className="flex-1 rounded-2xl bg-white/[0.035] px-3.5 py-2.5">
-                                      <p className="text-xs font-black text-zinc-300">
-                                        @
-                                        {comment.profile
-                                          ?.username ||
-                                          "usuario"}
-                                      </p>
-                                      <p className="mt-1 text-sm text-zinc-500">
-                                        {comment.content}
-                                      </p>
+                                    <div className="min-w-0 flex-1">
+                                      <div className="rounded-2xl bg-white/[0.035] px-3.5 py-2.5">
+                                        <p className="text-xs font-black text-zinc-300">
+                                          @
+                                          {comment.profile
+                                            ?.username ||
+                                            "usuario"}
+                                        </p>
+                                        <p className="mt-1 text-sm text-zinc-500">
+                                          {comment.content}
+                                        </p>
+                                      </div>
+
+                                      <CommentLikeButton
+                                        commentId={comment.id}
+                                        commentOwnerId={comment.user_id}
+                                        currentUserId={user?.id}
+                                      />
                                     </div>
                                   </div>
                                 )

@@ -1,5 +1,6 @@
 import React from "react";
 import type { Metadata } from "next";
+import Script from "next/script";
 import { AuthProvider } from "@/components/auth/AuthProvider";
 import { ThemeProvider } from "@/components/theme/ThemeProvider";
 import { Geist, Geist_Mono } from "next/font/google";
@@ -26,6 +27,7 @@ const themeScript = `
     var allowed = ["dark","light","chill","pride","midnight","emerald","executive"];
     var saved = localStorage.getItem("alumni-theme") || "dark";
     var theme = allowed.indexOf(saved) >= 0 ? saved : "dark";
+
     document.documentElement.dataset.theme = theme;
     document.documentElement.style.colorScheme =
       theme === "light" || theme === "chill" ? "light" : "dark";
@@ -45,11 +47,13 @@ export default function RootLayout({
       suppressHydrationWarning
       className={`${geistSans.variable} ${geistMono.variable}`}
     >
-      <head>
-        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
-      </head>
-
       <body className="antialiased">
+        <Script
+          id="alumni-theme-init"
+          strategy="beforeInteractive"
+          dangerouslySetInnerHTML={{ __html: themeScript }}
+        />
+
         <ThemeProvider>
           <AuthProvider>
             <div className="min-h-screen">

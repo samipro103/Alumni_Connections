@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import {
   Heart,
   MessageCircle,
@@ -14,10 +15,13 @@ import { supabase } from "@/lib/supabase";
 import AppShell from "@/components/layout/AppShell";
 import PostComposer from "@/components/feed/PostComposer";
 import StoriesRail from "@/components/feed/StoriesRail";
+import CommentLikeButton from "@/components/social/CommentLikeButton";
+import { rankForYouPosts } from "@/lib/feedRanking";
 
 type FeedMode = "for-you" | "following";
 
-export default function FeedPage() {
+function FeedContent() {
+  const searchParams = useSearchParams();
   const [posts, setPosts] = useState<any[]>([]);
   const [content, setContent] = useState("");
   const [image, setImage] = useState<File | null>(null);
@@ -28,20 +32,88 @@ export default function FeedPage() {
   const [followingIds, setFollowingIds] = useState<string[]>([]);
   const [feedMode, setFeedMode] = useState<FeedMode>("for-you");
   const [loading, setLoading] = useState(true);
+  const [currentProfile, setCurrentProfile] = useState<any>(null);
+  const [focusedPostId, setFocusedPostId] = useState<number | null>(null);
+  const [focusedCommentId, setFocusedCommentId] = useState<number | null>(null);
 
   useEffect(() => {
     getPosts();
   }, []);
 
+  useEffect(() => {
+    const channel = supabase
+      .channel("feed-live")
+      .on("postgres_changes", { event: "*", schema: "public", table: "posts" }, () => getPosts())
+      .on("postgres_changes", { event: "*", schema: "public", table: "likes" }, () => getPosts())
+      .on("postgres_changes", { event: "*", schema: "public", table: "comments" }, () => getPosts())
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (loading) return;
+
+    const postId = Number(searchParams.get("post"));
+    const commentId = Number(searchParams.get("comment"));
+
+    if (!Number.isFinite(postId) || postId <= 0) return;
+
+    setFocusedPostId(postId);
+
+    if (Number.isFinite(commentId) && commentId > 0) {
+      setFocusedCommentId(commentId);
+      setOpenComments((current) => ({
+        ...current,
+        [postId]: true,
+      }));
+    }
+
+    const timer = window.setTimeout(() => {
+      document
+        .getElementById(`post-${postId}`)
+        ?.scrollIntoView({
+          behavior: "smooth",
+          block: "center",
+        });
+    }, 120);
+
+    const clearHighlight = window.setTimeout(() => {
+      setFocusedPostId(null);
+      setFocusedCommentId(null);
+
+      const url = new URL(window.location.href);
+      url.searchParams.delete("post");
+      url.searchParams.delete("comment");
+      window.history.replaceState({}, "", url.pathname + url.search);
+    }, 2600);
+
+    return () => {
+      window.clearTimeout(timer);
+      window.clearTimeout(clearHighlight);
+    };
+  }, [loading, searchParams]);
+
   async function getPosts() {
     setLoading(true);
 
-    const {
-      data: { session },
-    } = await supabase.auth.getSession();
-
+    const { data: { session } } = await supabase.auth.getSession();
     const user = session?.user;
     setCurrentUser(user || null);
+
+    if (user) {
+      const { data: profileData } = await supabase
+        .from("profiles")
+        .select("id, university, career, city, country")
+        .eq("id", user.id)
+        .maybeSingle();
+
+      setCurrentProfile(profileData || null);
+    } else {
+      setCurrentProfile(null);
+    }
 
     if (user) {
       const { data: followingData } = await supabase
@@ -142,10 +214,7 @@ export default function FeedPage() {
   async function createPost() {
     if (!content.trim() && !image) return;
 
-    const {
-      data: { session },
-    } = await supabase.auth.getSession();
-
+    const { data: { session } } = await supabase.auth.getSession();
     const user = session?.user;
 
     if (!user) {
@@ -160,13 +229,11 @@ export default function FeedPage() {
       if (!imageUrl) return;
     }
 
-    const { error } = await supabase
-      .from("posts")
-      .insert({
-        user_id: user.id,
-        content: content.trim(),
-        image_url: imageUrl,
-      });
+    const { error } = await supabase.from("posts").insert({
+      user_id: user.id,
+      content: content.trim(),
+      image_url: imageUrl,
+    });
 
     if (error) {
       alert(error.message);
@@ -179,14 +246,9 @@ export default function FeedPage() {
   }
 
   async function deletePost(postId: number) {
-    const confirmDelete = confirm("¿Eliminar esta publicación?");
-    if (!confirmDelete) return;
+    if (!confirm("¿Eliminar esta publicación?")) return;
 
-    const { error } = await supabase
-      .from("posts")
-      .delete()
-      .eq("id", postId);
-
+    const { error } = await supabase.from("posts").delete().eq("id", postId);
     if (error) {
       alert(error.message);
       return;
@@ -201,36 +263,44 @@ export default function FeedPage() {
       return;
     }
 
+    const post = posts.find((item: any) => item.id === postId);
+
     if (liked) {
       await supabase
         .from("likes")
         .delete()
         .eq("post_id", postId)
         .eq("user_id", currentUser.id);
+
+      if (post && post.user_id !== currentUser.id) {
+        await supabase
+          .from("notifications")
+          .delete()
+          .eq("user_id", post.user_id)
+          .eq("actor_id", currentUser.id)
+          .eq("type", "like")
+          .eq("post_id", postId);
+      }
     } else {
-      const { error } = await supabase
-        .from("likes")
-        .insert({
-          post_id: postId,
-          user_id: currentUser.id,
-        });
+      const { error } = await supabase.from("likes").insert({
+        post_id: postId,
+        user_id: currentUser.id,
+      });
 
       if (error) {
         alert(error.message);
         return;
       }
 
-      const post = posts.find((item: any) => item.id === postId);
-
       if (post && post.user_id !== currentUser.id) {
-        await supabase
-          .from("notifications")
-          .insert({
-            user_id: post.user_id,
-            actor_id: currentUser.id,
-            type: "like",
-            post_id: postId,
-          });
+        await supabase.from("notifications").insert({
+          user_id: post.user_id,
+          actor_id: currentUser.id,
+          type: "like",
+          post_id: postId,
+          target_type: "post",
+          target_id: String(postId),
+        });
       }
     }
 
@@ -246,13 +316,15 @@ export default function FeedPage() {
     const comment = commentInputs[postId]?.trim();
     if (!comment) return;
 
-    const { error } = await supabase
+    const { data: insertedComment, error } = await supabase
       .from("comments")
       .insert({
         post_id: postId,
         user_id: currentUser.id,
         content: comment,
-      });
+      })
+      .select("id")
+      .single();
 
     if (error) {
       alert(error.message);
@@ -262,26 +334,18 @@ export default function FeedPage() {
     const post = posts.find((item: any) => item.id === postId);
 
     if (post && post.user_id !== currentUser.id) {
-      await supabase
-        .from("notifications")
-        .insert({
-          user_id: post.user_id,
-          actor_id: currentUser.id,
-          type: "comment",
-          post_id: postId,
-        });
+      await supabase.from("notifications").insert({
+        user_id: post.user_id,
+        actor_id: currentUser.id,
+        type: "comment",
+        post_id: postId,
+        target_type: "post_comment",
+        target_id: String(insertedComment.id),
+      });
     }
 
-    setCommentInputs((current) => ({
-      ...current,
-      [postId]: "",
-    }));
-
-    setOpenComments((current) => ({
-      ...current,
-      [postId]: true,
-    }));
-
+    setCommentInputs((current) => ({ ...current, [postId]: "" }));
+    setOpenComments((current) => ({ ...current, [postId]: true }));
     await getPosts();
   }
 
@@ -299,34 +363,34 @@ export default function FeedPage() {
         await navigator.clipboard.writeText(url);
         alert("Enlace copiado");
       }
-    } catch {
-      // El usuario puede cancelar el diálogo nativo de compartir.
-    }
+    } catch { }
   }
 
   const visiblePosts = useMemo(() => {
     if (feedMode === "following") {
-      return posts.filter((post: any) => followingIds.includes(post.user_id));
+      return posts
+        .filter((post: any) => followingIds.includes(post.user_id))
+        .sort(
+          (a: any, b: any) =>
+            new Date(b.created_at).getTime() -
+            new Date(a.created_at).getTime()
+        );
     }
 
-    return posts;
-  }, [posts, followingIds, feedMode]);
+    return rankForYouPosts(posts, currentProfile, followingIds);
+  }, [posts, followingIds, feedMode, currentProfile]);
 
   return (
     <AppShell>
       <div className="mx-auto w-full max-w-[760px]">
         <div className="mb-4 flex items-center justify-between px-1 pt-2">
           <div>
-            <h1 className="text-[26px] font-black tracking-[-0.04em] text-white">
-              Inicio
-            </h1>
-            <p className="mt-1 text-sm text-zinc-600">
-              Tu comunidad académica y profesional.
-            </p>
+            <h1 className="text-[26px] font-black tracking-[-0.04em] text-white">Inicio</h1>
+            <p className="mt-1 text-sm text-zinc-600">Tu comunidad académica y profesional.</p>
           </div>
         </div>
 
-        <StoriesRail />
+        <StoriesRail focusStoryId={searchParams.get("story")} />
 
         <PostComposer
           content={content}
@@ -337,42 +401,29 @@ export default function FeedPage() {
         />
 
         <div className="mb-4 flex items-center border-b border-white/[0.07]">
-          <button
-            onClick={() => setFeedMode("for-you")}
-            className={`relative px-4 pb-3 text-sm font-bold transition ${feedMode === "for-you" ? "text-white" : "text-zinc-600 hover:text-zinc-300"}`}
-          >
-            Para ti
-            {feedMode === "for-you" && (
-              <span className="absolute inset-x-4 bottom-0 h-0.5 rounded-full bg-[#7f8cff]" />
-            )}
-          </button>
-
-          <button
-            onClick={() => setFeedMode("following")}
-            className={`relative px-4 pb-3 text-sm font-bold transition ${feedMode === "following" ? "text-white" : "text-zinc-600 hover:text-zinc-300"}`}
-          >
-            Siguiendo
-            {feedMode === "following" && (
-              <span className="absolute inset-x-4 bottom-0 h-0.5 rounded-full bg-[#7f8cff]" />
-            )}
-          </button>
+          {(["for-you", "following"] as FeedMode[]).map((mode) => (
+            <button
+              key={mode}
+              onClick={() => setFeedMode(mode)}
+              className={`relative px-4 pb-3 text-sm font-bold transition ${feedMode === mode ? "text-white" : "text-zinc-600 hover:text-zinc-300"
+                }`}
+            >
+              {mode === "for-you" ? "Para ti" : "Siguiendo"}
+              {feedMode === mode && (
+                <span className="absolute inset-x-4 bottom-0 h-0.5 rounded-full bg-[#7f8cff]" />
+              )}
+            </button>
+          ))}
         </div>
 
         {loading ? (
-          <div className="py-16 text-center text-sm text-zinc-600">
-            Cargando publicaciones...
-          </div>
+          <div className="py-16 text-center text-sm text-zinc-600">Cargando publicaciones...</div>
         ) : visiblePosts.length === 0 ? (
           <div className="rounded-2xl border border-dashed border-white/[0.09] px-6 py-12 text-center">
             <p className="font-semibold text-zinc-300">
               {feedMode === "following"
                 ? "Todavía no hay publicaciones de las personas que sigues."
                 : "Todavía no hay publicaciones."}
-            </p>
-            <p className="mt-2 text-sm text-zinc-600">
-              {feedMode === "following"
-                ? "Explora perfiles y crea nuevas conexiones."
-                : "Sé la primera persona en compartir algo."}
             </p>
           </div>
         ) : (
@@ -381,12 +432,26 @@ export default function FeedPage() {
               const commentsOpen = Boolean(openComments[post.id]);
 
               return (
-                <article key={post.id} className="overflow-hidden rounded-[24px] border border-white/[0.07] bg-[#101318]/95">
+                <article
+                  id={`post-${post.id}`}
+                  key={post.id}
+                  className={`overflow-hidden rounded-[24px] border bg-[#101318]/95 transition-[border-color,box-shadow,background-color] duration-500 ${focusedPostId === post.id
+                      ? "border-[#8d98ff]/70 bg-[#6d7cff]/[0.06] shadow-[0_0_0_3px_rgba(109,124,255,.10),0_16px_45px_rgba(0,0,0,.18)]"
+                      : "border-white/[0.07]"
+                    }`}
+                >
                   <div className="p-4 sm:p-5">
                     <div className="flex items-start gap-3">
-                      <a href={`/u/${post.profiles?.username}`} className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[#1a1f29] text-sm font-bold text-white">
+                      <a
+                        href={`/u/${post.profiles?.username}`}
+                        className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[#1a1f29] text-sm font-bold text-white"
+                      >
                         {post.profiles?.avatar_url ? (
-                          <img src={post.profiles.avatar_url} alt="Avatar" className="h-full w-full object-cover" />
+                          <img
+                            src={post.profiles.avatar_url}
+                            alt="Avatar"
+                            className="h-full w-full object-cover"
+                          />
                         ) : (
                           post.profiles?.username?.charAt(0)?.toUpperCase() || "U"
                         )}
@@ -394,7 +459,10 @@ export default function FeedPage() {
 
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-2">
-                          <a href={`/u/${post.profiles?.username}`} className="truncate text-sm font-bold text-white hover:underline">
+                          <a
+                            href={`/u/${post.profiles?.username}`}
+                            className="truncate text-sm font-bold text-white hover:underline"
+                          >
                             @{post.profiles?.username || "alumni"}
                           </a>
                           <span className="text-zinc-700">·</span>
@@ -405,7 +473,6 @@ export default function FeedPage() {
                             })}
                           </span>
                         </div>
-
                         <p className="mt-0.5 truncate text-xs text-zinc-600">
                           {[post.profiles?.career, post.profiles?.university]
                             .filter(Boolean)
@@ -432,8 +499,15 @@ export default function FeedPage() {
                   </div>
 
                   {post.image_url && (
-                    <button onClick={() => setSelectedImage(post.image_url)} className="block w-full bg-black/20">
-                      <img src={post.image_url} alt="Publicación" className="max-h-[650px] w-full object-cover" />
+                    <button
+                      onClick={() => setSelectedImage(post.image_url)}
+                      className="block w-full bg-black/20"
+                    >
+                      <img
+                        src={post.image_url}
+                        alt="Publicación"
+                        className="max-h-[650px] w-full object-cover"
+                      />
                     </button>
                   )}
 
@@ -441,7 +515,10 @@ export default function FeedPage() {
                     <div className="flex items-center gap-1 border-b border-white/[0.06] pb-3">
                       <button
                         onClick={() => toggleLike(post.id, post.liked)}
-                        className={`flex h-9 items-center gap-2 rounded-xl px-3 text-sm font-semibold transition ${post.liked ? "bg-red-500/10 text-red-400" : "text-zinc-500 hover:bg-white/[0.04] hover:text-zinc-200"}`}
+                        className={`flex h-9 items-center gap-2 rounded-xl px-3 text-sm font-semibold transition ${post.liked
+                            ? "bg-red-500/10 text-red-400"
+                            : "text-zinc-500 hover:bg-white/[0.04] hover:text-zinc-200"
+                          }`}
                       >
                         <Heart fill={post.liked ? "currentColor" : "none"} size={18} />
                         <span>{post.likesCount}</span>
@@ -474,22 +551,41 @@ export default function FeedPage() {
                         {post.comments?.length > 0 ? (
                           <div className="space-y-4">
                             {post.comments.map((comment: any) => (
-                              <div key={comment.id} className="flex gap-3">
+                              <div
+                                id={`comment-${comment.id}`}
+                                key={comment.id}
+                                className={`flex gap-3 rounded-2xl transition-[background-color,box-shadow] duration-500 ${focusedCommentId === comment.id
+                                    ? "bg-[#6d7cff]/10 shadow-[0_0_0_2px_rgba(109,124,255,.16)]"
+                                    : ""
+                                  }`}
+                              >
                                 <div className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[#1a1f29] text-[11px] font-bold">
                                   {comment.profile?.avatar_url ? (
-                                    <img src={comment.profile.avatar_url} alt="Avatar" className="h-full w-full object-cover" />
+                                    <img
+                                      src={comment.profile.avatar_url}
+                                      alt="Avatar"
+                                      className="h-full w-full object-cover"
+                                    />
                                   ) : (
                                     comment.profile?.username?.charAt(0)?.toUpperCase() || "U"
                                   )}
                                 </div>
 
-                                <div className="min-w-0 flex-1 rounded-2xl bg-white/[0.035] px-3.5 py-2.5">
-                                  <p className="text-xs font-bold text-zinc-300">
-                                    @{comment.profile?.username || "usuario"}
-                                  </p>
-                                  <p className="mt-1 text-sm leading-5 text-zinc-400">
-                                    {comment.content}
-                                  </p>
+                                <div className="min-w-0 flex-1">
+                                  <div className="rounded-2xl bg-white/[0.035] px-3.5 py-2.5">
+                                    <p className="text-xs font-bold text-zinc-300">
+                                      @{comment.profile?.username || "usuario"}
+                                    </p>
+                                    <p className="mt-1 text-sm leading-5 text-zinc-400">
+                                      {comment.content}
+                                    </p>
+                                  </div>
+
+                                  <CommentLikeButton
+                                    commentId={comment.id}
+                                    commentOwnerId={comment.user_id}
+                                    currentUserId={currentUser?.id}
+                                  />
                                 </div>
                               </div>
                             ))}
@@ -511,9 +607,7 @@ export default function FeedPage() {
                               }))
                             }
                             onKeyDown={(e) => {
-                              if (e.key === "Enter") {
-                                addComment(post.id);
-                              }
+                              if (e.key === "Enter") addComment(post.id);
                             }}
                             className="h-10 flex-1 rounded-xl border border-white/[0.07] bg-white/[0.035] px-3 text-sm text-zinc-200 outline-none placeholder:text-zinc-700 focus:border-[#6d7cff]/40 disabled:opacity-50"
                           />
@@ -537,13 +631,38 @@ export default function FeedPage() {
       </div>
 
       {selectedImage && (
-        <div onClick={() => setSelectedImage(null)} className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/90 p-4 sm:p-8">
-          <button onClick={() => setSelectedImage(null)} className="absolute right-5 top-5 flex h-11 w-11 items-center justify-center rounded-full bg-white/10 text-white backdrop-blur" aria-label="Cerrar imagen">
+        <div
+          onClick={() => setSelectedImage(null)}
+          className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/90 p-4 sm:p-8"
+        >
+          <button
+            onClick={() => setSelectedImage(null)}
+            className="absolute right-5 top-5 flex h-11 w-11 items-center justify-center rounded-full bg-white/10 text-white backdrop-blur"
+            aria-label="Cerrar imagen"
+          >
             <X size={22} />
           </button>
-          <img src={selectedImage} alt="Publicación ampliada" className="max-h-[92vh] max-w-[94vw] rounded-2xl object-contain" />
+          <img
+            src={selectedImage}
+            alt="Publicación ampliada"
+            className="max-h-[92vh] max-w-[94vw] rounded-2xl object-contain"
+          />
         </div>
       )}
     </AppShell>
+  );
+}
+
+export default function FeedPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex min-h-screen items-center justify-center bg-[#090b0f] text-sm text-zinc-500">
+          Cargando Alumni...
+        </div>
+      }
+    >
+      <FeedContent />
+    </Suspense>
   );
 }

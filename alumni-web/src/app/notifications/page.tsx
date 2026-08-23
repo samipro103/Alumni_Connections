@@ -2,20 +2,33 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 import {
   Bell,
   Heart,
   MessageCircle,
   UserPlus,
 } from "lucide-react";
-import { formatDistanceToNow, isToday, isYesterday } from "date-fns";
+import {
+  formatDistanceToNow,
+  isToday,
+  isYesterday,
+} from "date-fns";
 import { es } from "date-fns/locale";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { supabase } from "@/lib/supabase";
 import AppShell from "@/components/layout/AppShell";
 
 type FilterType = "all" | "connections" | "activity";
+
+type NotificationGroup = {
+  key: string;
+  type: string;
+  targetType: string;
+  targetId: string;
+  latestAt: string;
+  items: any[];
+  actors: any[];
+};
 
 export default function NotificationsPage() {
   const router = useRouter();
@@ -33,18 +46,41 @@ export default function NotificationsPage() {
     if (user) loadNotifications();
   }, [user?.id]);
 
-  async function loadNotifications() {
+  useEffect(() => {
+    if (!user) return;
+
+    const channel = supabase
+      .channel(`notifications:${user.id}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "notifications",
+          filter: `user_id=eq.${user.id}`,
+        },
+        () => loadNotifications(false)
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user?.id]);
+
+  async function loadNotifications(markRead = true) {
     if (!user) return;
 
     setLoadingNotifications(true);
 
-    const { data: notificationsData } = await supabase
+    const { data: notificationsData, error } = await supabase
       .from("notifications")
       .select("*")
       .eq("user_id", user.id)
       .order("created_at", { ascending: false });
 
-    if (!notificationsData) {
+    if (error || !notificationsData) {
+      console.error(error);
       setNotifications([]);
       setLoadingNotifications(false);
       return;
@@ -78,71 +114,217 @@ export default function NotificationsPage() {
       }))
     );
 
+    if (markRead) {
+      await supabase
+        .from("notifications")
+        .update({ read_at: new Date().toISOString() })
+        .eq("user_id", user.id)
+        .is("read_at", null);
+    }
+
     setLoadingNotifications(false);
   }
 
+  const groupedNotifications = useMemo(() => {
+    const map = new Map<string, NotificationGroup>();
+
+    notifications.forEach((item: any) => {
+      const targetType =
+        item.target_type ||
+        (item.post_id ? "post" : item.type === "follow" ? "profile" : "other");
+
+      const targetId =
+        item.target_id ||
+        (item.post_id ? String(item.post_id) : item.type === "follow" ? "followers" : String(item.id));
+
+      const key = `${item.type}:${targetType}:${targetId}`;
+      const current = map.get(key);
+
+      if (current) {
+        current.items.push(item);
+        if (
+          item.profile &&
+          !current.actors.some((actor) => actor.id === item.profile.id)
+        ) {
+          current.actors.push(item.profile);
+        }
+      } else {
+        map.set(key, {
+          key,
+          type: item.type,
+          targetType,
+          targetId,
+          latestAt: item.created_at,
+          items: [item],
+          actors: item.profile ? [item.profile] : [],
+        });
+      }
+    });
+
+    return [...map.values()].sort(
+      (a, b) =>
+        new Date(b.latestAt).getTime() - new Date(a.latestAt).getTime()
+    );
+  }, [notifications]);
+
   const filtered = useMemo(() => {
     if (filter === "connections") {
-      return notifications.filter((item: any) => item.type === "follow");
+      return groupedNotifications.filter((group) => group.type === "follow");
     }
 
     if (filter === "activity") {
-      return notifications.filter(
-        (item: any) => item.type === "like" || item.type === "comment"
-      );
+      return groupedNotifications.filter((group) => group.type !== "follow");
     }
 
-    return notifications;
-  }, [notifications, filter]);
+    return groupedNotifications;
+  }, [groupedNotifications, filter]);
 
-  const grouped = useMemo(() => {
-    const result: Record<string, any[]> = {
+  const groupedByDate = useMemo(() => {
+    const result: Record<string, NotificationGroup[]> = {
       Hoy: [],
       Ayer: [],
       Anteriores: [],
     };
 
-    filtered.forEach((item: any) => {
-      const date = new Date(item.created_at);
+    filtered.forEach((group) => {
+      const date = new Date(group.latestAt);
 
-      if (isToday(date)) {
-        result.Hoy.push(item);
-      } else if (isYesterday(date)) {
-        result.Ayer.push(item);
-      } else {
-        result.Anteriores.push(item);
-      }
+      if (isToday(date)) result.Hoy.push(group);
+      else if (isYesterday(date)) result.Ayer.push(group);
+      else result.Anteriores.push(group);
     });
 
     return result;
   }, [filtered]);
 
-  function notificationMeta(type: string) {
-    if (type === "follow") {
+  function notificationMeta(group: NotificationGroup) {
+    if (group.type === "follow") {
       return {
         icon: UserPlus,
-        text: "comenzó a seguirte",
+        action: group.items.length === 1 ? "comenzó a seguirte" : "comenzaron a seguirte",
         tone: "text-[#8d98ff]",
         background: "bg-[#6d7cff]/10",
       };
     }
 
-    if (type === "like") {
+    if (group.type === "story_reply") {
+      return {
+        icon: MessageCircle,
+        action: group.items.length === 1
+          ? "respondió a tu historia"
+          : "respondieron a tu historia",
+        tone: "text-[#8d98ff]",
+        background: "bg-[#6d7cff]/10",
+      };
+    }
+
+    if (group.type === "comment") {
+      return {
+        icon: MessageCircle,
+        action:
+          group.items.length === 1
+            ? "comentó tu publicación"
+            : "comentaron tu publicación",
+        tone: "text-emerald-400",
+        background: "bg-emerald-500/10",
+      };
+    }
+
+    if (group.targetType === "comment") {
       return {
         icon: Heart,
-        text: "le dio me gusta a tu publicación",
+        action:
+          group.items.length === 1
+            ? "le dio me gusta a tu comentario"
+            : "le dieron me gusta a tu comentario",
         tone: "text-red-400",
         background: "bg-red-500/10",
       };
     }
 
+    if (group.targetType === "story") {
+      return {
+        icon: Heart,
+        action:
+          group.items.length === 1
+            ? "le dio me gusta a tu historia"
+            : "le dieron me gusta a tu historia",
+        tone: "text-pink-400",
+        background: "bg-pink-500/10",
+      };
+    }
+
     return {
-      icon: MessageCircle,
-      text: "comentó tu publicación",
-      tone: "text-emerald-400",
-      background: "bg-emerald-500/10",
+      icon: Heart,
+      action:
+        group.items.length === 1
+          ? "le dio me gusta a tu publicación"
+          : "le dieron me gusta a tu publicación",
+      tone: "text-red-400",
+      background: "bg-red-500/10",
     };
   }
+
+  function actorsText(group: NotificationGroup) {
+    const names = group.actors
+      .map((actor) => actor?.username)
+      .filter(Boolean);
+
+    if (names.length === 0) return "Alguien";
+    if (names.length === 1) return `@${names[0]}`;
+    if (names.length === 2) return `@${names[0]} y @${names[1]}`;
+
+    const remaining = Math.max(group.items.length - 2, names.length - 2);
+    return `@${names[0]}, @${names[1]} y ${remaining} ${remaining === 1 ? "persona más" : "personas más"}`;
+  }
+
+  async function openNotification(group: NotificationGroup) {
+    if (group.type === "follow") {
+      const username = group.actors[0]?.username;
+      if (username) router.push(`/u/${username}`);
+      return;
+    }
+
+    if (group.type === "story_reply") {
+      const username = group.actors[0]?.username;
+      if (username) router.push(`/messages/${username}`);
+      return;
+    }
+
+    if (group.targetType === "story") {
+      router.push(`/feed?story=${encodeURIComponent(group.targetId)}`);
+      return;
+    }
+
+    if (
+      group.targetType === "comment" ||
+      group.targetType === "post_comment"
+    ) {
+      const { data: comment } = await supabase
+        .from("comments")
+        .select("id, post_id")
+        .eq("id", Number(group.targetId))
+        .maybeSingle();
+
+      if (comment) {
+        router.push(
+          `/feed?post=${comment.post_id}&comment=${comment.id}`
+        );
+      }
+
+      return;
+    }
+
+    if (group.targetType === "post") {
+      router.push(`/feed?post=${encodeURIComponent(group.targetId)}`);
+      return;
+    }
+
+    if (group.items[0]?.post_id) {
+      router.push(`/feed?post=${group.items[0].post_id}`);
+    }
+  }
+
 
   return (
     <AppShell>
@@ -152,7 +334,7 @@ export default function NotificationsPage() {
             Notificaciones
           </h1>
           <p className="mt-1 text-sm text-zinc-600">
-            Actividad reciente de tus conexiones y publicaciones.
+            Likes, comentarios y nuevas conexiones en un solo lugar.
           </p>
         </div>
 
@@ -192,8 +374,8 @@ export default function NotificationsPage() {
           </div>
         ) : (
           <div className="space-y-7">
-            {Object.entries(grouped).map(([label, items]) => {
-              if (items.length === 0) return null;
+            {Object.entries(groupedByDate).map(([label, groups]) => {
+              if (groups.length === 0) return null;
 
               return (
                 <section key={label}>
@@ -203,36 +385,39 @@ export default function NotificationsPage() {
 
                   <div className="overflow-hidden rounded-[24px] border border-white/[0.07] bg-[#101318]/95">
                     <div className="divide-y divide-white/[0.06]">
-                      {items.map((notification: any) => {
-                        const meta = notificationMeta(notification.type);
+                      {groups.map((group) => {
+                        const meta = notificationMeta(group);
                         const Icon = meta.icon;
-                        const profileHref = notification.profile?.username
-                          ? `/u/${notification.profile.username}`
-                          : "/notifications";
+                        const visibleActors = group.actors.slice(0, 3);
 
                         return (
-                          <Link
-                            key={notification.id}
-                            href={profileHref}
-                            className="flex gap-4 px-4 py-4 transition hover:bg-white/[0.035] sm:px-5"
+                          <button
+                            key={group.key}
+                            type="button"
+                            onClick={() => openNotification(group)}
+                            className="flex w-full gap-4 px-4 py-4 text-left transition hover:bg-white/[0.035] active:bg-white/[0.055] sm:px-5"
                           >
-                            <div className="relative h-12 w-12 shrink-0">
-                              <div className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-full bg-[#1a1f29] text-sm font-bold ring-1 ring-white/10">
-                                {notification.profile?.avatar_url ? (
-                                  <img
-                                    src={notification.profile.avatar_url}
-                                    alt="Avatar"
-                                    className="h-full w-full object-cover"
-                                  />
-                                ) : (
-                                  notification.profile?.username
-                                    ?.charAt(0)
-                                    ?.toUpperCase() || "U"
-                                )}
-                              </div>
+                            <div className="relative h-12 w-[58px] shrink-0">
+                              {visibleActors.map((actor, index) => (
+                                <div
+                                  key={actor.id}
+                                  className="absolute top-0 flex h-11 w-11 items-center justify-center overflow-hidden rounded-full border-2 border-[#101318] bg-[#1a1f29] text-xs font-bold ring-1 ring-white/10"
+                                  style={{ left: `${index * 9}px`, zIndex: 10 - index }}
+                                >
+                                  {actor.avatar_url ? (
+                                    <img
+                                      src={actor.avatar_url}
+                                      alt={actor.username}
+                                      className="h-full w-full object-cover"
+                                    />
+                                  ) : (
+                                    actor.username?.charAt(0)?.toUpperCase() || "U"
+                                  )}
+                                </div>
+                              ))}
 
                               <span
-                                className={`absolute -bottom-1 -right-1 flex h-6 w-6 items-center justify-center rounded-full border-2 border-[#101318] ${meta.background} ${meta.tone}`}
+                                className={`absolute bottom-0 right-0 z-20 flex h-6 w-6 items-center justify-center rounded-full border-2 border-[#101318] ${meta.background} ${meta.tone}`}
                               >
                                 <Icon size={12} />
                               </span>
@@ -241,34 +426,19 @@ export default function NotificationsPage() {
                             <div className="min-w-0 flex-1">
                               <p className="text-sm leading-5 text-zinc-400">
                                 <span className="font-black text-zinc-100">
-                                  @{notification.profile?.username || "usuario"}
+                                  {actorsText(group)}
                                 </span>{" "}
-                                {meta.text}.
+                                {meta.action}.
                               </p>
-
-                              {(notification.profile?.career ||
-                                notification.profile?.university) && (
-                                <p className="mt-1 truncate text-xs text-zinc-700">
-                                  {[
-                                    notification.profile?.career,
-                                    notification.profile?.university,
-                                  ]
-                                    .filter(Boolean)
-                                    .join(" · ")}
-                                </p>
-                              )}
 
                               <p className="mt-1.5 text-[11px] text-zinc-700">
-                                {formatDistanceToNow(
-                                  new Date(notification.created_at),
-                                  {
-                                    addSuffix: true,
-                                    locale: es,
-                                  }
-                                )}
+                                {formatDistanceToNow(new Date(group.latestAt), {
+                                  addSuffix: true,
+                                  locale: es,
+                                })}
                               </p>
                             </div>
-                          </Link>
+                          </button>
                         );
                       })}
                     </div>
