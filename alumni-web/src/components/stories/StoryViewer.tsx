@@ -1,13 +1,24 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import {
   ChevronLeft,
   ChevronRight,
   Eye,
   Heart,
+  Loader2,
+  Music2,
+  Pause,
+  Play,
   Send,
   Trash2,
+  Volume2,
+  VolumeX,
   X,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
@@ -21,6 +32,13 @@ export type StoryItem = {
   created_at: string;
   expires_at: string;
   viewed?: boolean;
+  music_provider?: string | null;
+  music_track_id?: string | null;
+  music_title?: string | null;
+  music_artist?: string | null;
+  music_artwork_url?: string | null;
+  music_track_url?: string | null;
+  music_embed_url?: string | null;
 };
 
 export type StoryGroup = {
@@ -42,6 +60,32 @@ type Props = {
 
 const IMAGE_DURATION_MS = 6500;
 
+function SpotifyGlyph() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      width="15"
+      height="15"
+      fill="none"
+      aria-hidden="true"
+    >
+      <circle
+        cx="12"
+        cy="12"
+        r="9.1"
+        stroke="currentColor"
+        strokeWidth="1.35"
+      />
+      <path
+        d="M7.25 9.45c3.35-1.02 7.3-.75 10.2.75M7.85 12.25c2.76-.8 6.16-.57 8.7.66M8.45 14.83c2.15-.57 4.78-.4 6.78.54"
+        stroke="currentColor"
+        strokeWidth="1.45"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
 export default function StoryViewer({
   open,
   groups,
@@ -53,6 +97,7 @@ export default function StoryViewer({
 }: Props) {
   const rafRef = useRef<number | null>(null);
   const videoRef = useRef<HTMLVideoElement | null>(null);
+  const pausedRef = useRef(false);
 
   const [groupIndex, setGroupIndex] = useState(startGroupIndex);
   const [storyIndex, setStoryIndex] = useState(0);
@@ -64,6 +109,13 @@ export default function StoryViewer({
   const [sendingReply, setSendingReply] = useState(false);
   const [likeBusy, setLikeBusy] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [paused, setPaused] = useState(false);
+  const [videoMuted, setVideoMuted] = useState(false);
+  const [replyFocused, setReplyFocused] = useState(false);
+
+  useEffect(() => {
+    pausedRef.current = paused || replyFocused;
+  }, [paused, replyFocused]);
 
   useEffect(() => {
     if (!open) return;
@@ -87,16 +139,27 @@ export default function StoryViewer({
     setProgress(0);
     setViewCount(null);
     setReply("");
-    recordView();
-    loadStoryLikes();
+    setPaused(false);
+    setReplyFocused(false);
+    setVideoMuted(false);
+
+    void recordView();
+    void loadStoryLikes();
 
     cancelAnimation();
 
     if (story.media_type === "image") {
-      const startedAt = performance.now();
+      let elapsed = 0;
+      let last = performance.now();
 
       const tick = (now: number) => {
-        const elapsed = now - startedAt;
+        const delta = now - last;
+        last = now;
+
+        if (!pausedRef.current) {
+          elapsed += delta;
+        }
+
         const nextProgress = Math.min(
           100,
           (elapsed / IMAGE_DURATION_MS) * 100
@@ -119,17 +182,34 @@ export default function StoryViewer({
   }, [open, story?.id, storyIndex, groupIndex]);
 
   useEffect(() => {
+    const video = videoRef.current;
+    if (!video || story?.media_type !== "video") return;
+
+    if (paused || replyFocused) {
+      video.pause();
+    } else {
+      void video.play().catch(() => {
+        setPaused(true);
+      });
+    }
+  }, [paused, replyFocused, story?.id, story?.media_type]);
+
+  useEffect(() => {
     if (!open) return;
 
     function onKeyDown(event: KeyboardEvent) {
       if (event.key === "Escape") onClose();
       if (event.key === "ArrowRight") next();
       if (event.key === "ArrowLeft") previous();
+      if (event.key === " " && !replyFocused) {
+        event.preventDefault();
+        setPaused((value) => !value);
+      }
     }
 
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  });
+  }, [open, replyFocused, groupIndex, storyIndex]);
 
   async function recordView() {
     if (!story) return;
@@ -257,6 +337,7 @@ export default function StoryViewer({
       });
 
       setReply("");
+      setReplyFocused(false);
     } catch (error: any) {
       console.error(error);
       alert(error?.message || "No se pudo responder la historia.");
@@ -366,15 +447,15 @@ export default function StoryViewer({
   return (
     <div className="fixed inset-0 z-[110] bg-black">
       <div className="relative mx-auto flex h-dvh w-full max-w-[560px] items-center justify-center overflow-hidden bg-[#050506] sm:border-x sm:border-white/[0.08]">
-        <div className="absolute left-3 right-3 top-3 z-30 rounded-full bg-black/25 px-2 py-2 backdrop-blur">
+        <div className="absolute left-3 right-3 top-3 z-40 px-1">
           <div className="flex gap-1">
             {group.stories.map((item, index) => (
               <div
                 key={item.id}
-                className="h-[4px] flex-1 overflow-hidden rounded-full bg-white/20"
+                className="h-[3px] flex-1 overflow-hidden rounded-full bg-white/18"
               >
                 <div
-                  className="h-full rounded-full bg-white transition-[width]"
+                  className="h-full rounded-full bg-white"
                   style={{
                     width:
                       index < storyIndex
@@ -389,14 +470,13 @@ export default function StoryViewer({
           </div>
         </div>
 
-        <div className="absolute left-4 right-4 top-8 z-30 flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-full bg-white/10 text-xs font-black text-white ring-1 ring-white/20 shadow-[0_6px_18px_rgba(0,0,0,.22)]">
+        <div className="absolute left-4 right-4 top-7 z-40 flex items-center gap-3">
+          <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-full bg-white/10 text-xs font-black text-white ring-1 ring-white/15">
             {group.avatar_url ? (
               <img
                 src={group.avatar_url}
                 alt={group.username}
                 className="h-full w-full object-cover"
-                loading="eager"
               />
             ) : (
               group.username?.charAt(0)?.toUpperCase() || "U"
@@ -407,33 +487,50 @@ export default function StoryViewer({
             <p className="truncate text-sm font-black text-white">
               @{group.username}
             </p>
-            <p className="text-[10px] text-white/55">{createdLabel}</p>
+            <p className="text-[10px] text-white/45">
+              {createdLabel}
+            </p>
           </div>
+
+          {story.media_type === "video" && (
+            <button
+              type="button"
+              onClick={() => setVideoMuted((value) => !value)}
+              className="flex h-10 w-10 items-center justify-center rounded-full bg-black/35 text-white/70 backdrop-blur-xl"
+              aria-label={videoMuted ? "Activar audio" : "Silenciar video"}
+            >
+              {videoMuted ? <VolumeX size={17} /> : <Volume2 size={17} />}
+            </button>
+          )}
 
           {ownStory && (
             <button
               type="button"
               onClick={deleteCurrentStory}
               disabled={deleting}
-              className="flex h-10 w-10 items-center justify-center rounded-2xl border border-white/10 bg-black/35 text-white/70 shadow-[0_8px_24px_rgba(0,0,0,.26)] backdrop-blur transition hover:border-red-400/25 hover:text-red-300"
+              className="flex h-10 w-10 items-center justify-center rounded-full bg-black/35 text-white/65 backdrop-blur-xl transition hover:text-red-300"
               aria-label="Eliminar historia"
             >
-              <Trash2 size={16} />
+              {deleting ? (
+                <Loader2 size={15} className="animate-spin" />
+              ) : (
+                <Trash2 size={15} />
+              )}
             </button>
           )}
 
           <button
             type="button"
             onClick={onClose}
-            className="flex h-10 w-10 items-center justify-center rounded-2xl border border-white/10 bg-black/35 text-white/80 shadow-[0_8px_24px_rgba(0,0,0,.26)] backdrop-blur transition hover:border-white/20 hover:text-white"
+            className="flex h-10 w-10 items-center justify-center rounded-full bg-black/35 text-white/80 backdrop-blur-xl"
             aria-label="Cerrar historia"
           >
             <X size={19} />
           </button>
         </div>
 
-        <div className="absolute inset-x-0 top-0 z-20 h-36 bg-gradient-to-b from-black/65 to-transparent" />
-        <div className="absolute inset-x-0 bottom-0 z-20 h-44 bg-gradient-to-t from-black/70 to-transparent" />
+        <div className="absolute inset-x-0 top-0 z-20 h-36 bg-gradient-to-b from-black/70 to-transparent" />
+        <div className="absolute inset-x-0 bottom-0 z-20 h-64 bg-gradient-to-t from-black/85 via-black/30 to-transparent" />
 
         {story.media_type === "video" ? (
           <video
@@ -442,6 +539,7 @@ export default function StoryViewer({
             src={story.media_url}
             autoPlay
             playsInline
+            muted={videoMuted}
             onLoadedMetadata={() => setProgress(0)}
             onTimeUpdate={() => {
               const video = videoRef.current;
@@ -464,92 +562,175 @@ export default function StoryViewer({
         <button
           type="button"
           onClick={previous}
-          className="absolute inset-y-[90px] left-0 z-10 w-[31%]"
+          className="absolute inset-y-[90px] left-0 z-10 w-[28%]"
           aria-label="Historia anterior"
         />
 
         <button
           type="button"
           onClick={next}
-          className="absolute inset-y-[90px] right-0 z-10 w-[31%]"
+          className="absolute inset-y-[90px] right-0 z-10 w-[28%]"
           aria-label="Historia siguiente"
         />
 
         <button
           type="button"
+          onClick={() => setPaused((value) => !value)}
+          className="absolute left-[28%] right-[28%] top-[90px] bottom-[100px] z-10"
+          aria-label={paused ? "Reanudar historia" : "Pausar historia"}
+        />
+
+        {paused && !replyFocused && (
+          <div className="pointer-events-none absolute left-1/2 top-1/2 z-30 flex h-14 w-14 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-white/10 bg-black/45 text-white backdrop-blur-xl">
+            {story.media_type === "video" ? (
+              <Play size={21} fill="currentColor" />
+            ) : (
+              <Pause size={20} />
+            )}
+          </div>
+        )}
+
+        <button
+          type="button"
           onClick={previous}
-          className="absolute left-3 top-1/2 z-30 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-2xl border border-white/12 bg-black/35 text-white/80 shadow-[0_12px_28px_rgba(0,0,0,.28)] backdrop-blur transition hover:scale-[1.02] hover:border-white/20 hover:text-white"
+          className="absolute left-3 top-1/2 z-30 hidden h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-black/30 text-white/65 backdrop-blur-lg sm:flex"
           aria-label="Anterior"
         >
-          <ChevronLeft size={21} />
+          <ChevronLeft size={20} />
         </button>
 
         <button
           type="button"
           onClick={next}
-          className="absolute right-3 top-1/2 z-30 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-2xl border border-white/12 bg-black/35 text-white/80 shadow-[0_12px_28px_rgba(0,0,0,.28)] backdrop-blur transition hover:scale-[1.02] hover:border-white/20 hover:text-white"
+          className="absolute right-3 top-1/2 z-30 hidden h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-black/30 text-white/65 backdrop-blur-lg sm:flex"
           aria-label="Siguiente"
         >
-          <ChevronRight size={21} />
+          <ChevronRight size={20} />
         </button>
 
+        {story.music_track_url && (
+          <a
+            href={story.music_track_url}
+            target="_blank"
+            rel="noreferrer"
+            onClick={(event) => event.stopPropagation()}
+            className={`absolute left-4 z-40 flex max-w-[72%] items-center gap-2.5 rounded-[16px] border border-white/10 bg-black/45 p-2.5 text-left backdrop-blur-2xl transition hover:bg-black/60 ${
+              ownStory ? "bottom-20" : "bottom-[92px]"
+            }`}
+          >
+            {story.music_artwork_url ? (
+              <img
+                src={story.music_artwork_url}
+                alt=""
+                className="h-10 w-10 rounded-[10px] object-cover"
+              />
+            ) : (
+              <span className="flex h-10 w-10 items-center justify-center rounded-[10px] bg-white/10 text-white/60">
+                <Music2 size={15} />
+              </span>
+            )}
+
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-[11px] font-black text-white/90">
+                {story.music_title || "Canción"}
+              </p>
+              <p className="mt-0.5 truncate text-[9px] text-white/45">
+                {story.music_artist || "Abrir en Spotify"}
+              </p>
+            </div>
+
+            <span className="text-white/35">
+              <SpotifyGlyph />
+            </span>
+          </a>
+        )}
+
         {ownStory ? (
-          <div className="absolute bottom-5 left-5 z-30 flex items-center gap-2">
+          <div className="absolute bottom-5 left-5 z-40 flex items-center gap-2">
             {viewCount !== null && (
-              <div className="flex items-center gap-2 rounded-full border border-white/10 bg-black/40 px-3 py-2 text-xs font-bold text-white/80 backdrop-blur">
-                <Eye size={15} />
-                {viewCount} {viewCount === 1 ? "vista" : "vistas"}
+              <div className="flex items-center gap-2 rounded-full bg-black/40 px-3 py-2 text-[11px] font-bold text-white/70 backdrop-blur-xl">
+                <Eye size={14} />
+                {viewCount}
               </div>
             )}
 
-            <div className="flex items-center gap-2 rounded-full border border-white/10 bg-black/40 px-3 py-2 text-xs font-bold text-white/80 backdrop-blur">
-              <Heart size={15} fill={likeCount > 0 ? "currentColor" : "none"} />
+            <div className="flex items-center gap-2 rounded-full bg-black/40 px-3 py-2 text-[11px] font-bold text-white/70 backdrop-blur-xl">
+              <Heart
+                size={14}
+                fill={likeCount > 0 ? "currentColor" : "none"}
+              />
               {likeCount}
             </div>
           </div>
         ) : (
-          <div className="absolute bottom-4 left-4 right-4 z-30 flex items-center gap-2">
-            <div className="flex min-w-0 flex-1 items-center rounded-[18px] border border-white/15 bg-black/40 px-3 backdrop-blur-xl focus-within:border-white/30">
-              <input
-                value={reply}
-                onChange={(event) => setReply(event.target.value)}
-                onKeyDown={(event) => {
-                  if (event.key === "Enter" && !event.shiftKey) {
-                    event.preventDefault();
-                    sendStoryReply();
-                  }
-                }}
-                placeholder={`Responder a @${group.username}...`}
-                className="h-11 min-w-0 flex-1 bg-transparent text-sm text-white outline-none placeholder:text-white/45"
-              />
+          <div
+            className="absolute bottom-0 left-0 right-0 z-40 px-4 pb-[max(14px,env(safe-area-inset-bottom))] pt-14"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="flex items-center gap-2.5">
+              <div
+                className={`flex min-w-0 flex-1 items-center rounded-[22px] border bg-black/35 px-4 backdrop-blur-2xl transition ${
+                  replyFocused
+                    ? "border-white/25 bg-black/55"
+                    : "border-white/10"
+                }`}
+              >
+                <input
+                  value={reply}
+                  onChange={(event) => setReply(event.target.value)}
+                  onFocus={() => setReplyFocused(true)}
+                  onBlur={() => {
+                    if (!reply.trim()) setReplyFocused(false);
+                  }}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter" && !event.shiftKey) {
+                      event.preventDefault();
+                      void sendStoryReply();
+                    }
+                  }}
+                  placeholder={`Responder a @${group.username}`}
+                  className="h-12 min-w-0 flex-1 bg-transparent text-[13px] text-white outline-none placeholder:text-white/35"
+                />
+
+                <button
+                  type="button"
+                  onMouseDown={(event) => event.preventDefault()}
+                  onClick={() => void sendStoryReply()}
+                  disabled={!reply.trim() || sendingReply}
+                  className="ml-2 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white text-black transition disabled:bg-white/10 disabled:text-white/25"
+                  aria-label="Enviar respuesta"
+                >
+                  {sendingReply ? (
+                    <Loader2 size={14} className="animate-spin" />
+                  ) : (
+                    <Send size={14} />
+                  )}
+                </button>
+              </div>
 
               <button
                 type="button"
-                onClick={sendStoryReply}
-                disabled={!reply.trim() || sendingReply}
-                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-white/75 transition hover:bg-white/10 hover:text-white disabled:opacity-30"
-                aria-label="Enviar respuesta"
+                onClick={() => void toggleStoryLike()}
+                disabled={likeBusy}
+                className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-full border backdrop-blur-2xl transition ${
+                  liked
+                    ? "border-red-400/25 bg-red-500/12 text-red-400"
+                    : "border-white/10 bg-black/35 text-white/70 hover:bg-black/55 hover:text-white"
+                }`}
+                aria-label={liked ? "Quitar me gusta" : "Me gusta"}
               >
-                <Send size={16} />
+                <Heart
+                  size={18}
+                  fill={liked ? "currentColor" : "none"}
+                />
               </button>
             </div>
 
-            <button
-              type="button"
-              onClick={toggleStoryLike}
-              disabled={likeBusy}
-              className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-[16px] border backdrop-blur-xl transition ${
-                liked
-                  ? "border-red-400/20 bg-red-500/15 text-red-400"
-                  : "border-white/15 bg-black/40 text-white/80 hover:bg-white/10 hover:text-white"
-              }`}
-              aria-label="Me gusta esta historia"
-            >
-              <Heart
-                size={20}
-                fill={liked ? "currentColor" : "none"}
-              />
-            </button>
+            {likeCount > 0 && (
+              <p className="mt-2 pl-3 text-[9px] font-bold text-white/30">
+                {likeCount} {likeCount === 1 ? "me gusta" : "me gusta"}
+              </p>
+            )}
           </div>
         )}
       </div>

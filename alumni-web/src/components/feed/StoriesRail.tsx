@@ -31,7 +31,8 @@ export default function StoriesRail({
   const [viewerOpen, setViewerOpen] = useState(false);
   const [viewerStartIndex, setViewerStartIndex] = useState(0);
   const [viewerStartStoryIndex, setViewerStartStoryIndex] = useState(0);
-  const [lastHandledFocusStory, setLastHandledFocusStory] = useState<string | null>(null);
+  const [lastHandledFocusStory, setLastHandledFocusStory] =
+    useState<string | null>(null);
 
   useEffect(() => {
     if (!user) {
@@ -41,7 +42,7 @@ export default function StoriesRail({
       return;
     }
 
-    loadStories();
+    void loadStories();
   }, [user?.id]);
 
   async function loadStories() {
@@ -71,28 +72,41 @@ export default function StoriesRail({
         (row: any) => row.following_id as string
       );
 
-      const candidateIds = Array.from(new Set([user.id, ...followingIds]));
-      const nowIso = new Date().toISOString();
+      const candidateIds = Array.from(
+        new Set([user.id, ...followingIds])
+      );
 
       const { data: storiesData, error: storiesError } = await supabase
         .from("stories")
-        .select("id, user_id, media_url, media_type, created_at, expires_at")
+        .select(`
+          id,
+          user_id,
+          media_url,
+          media_type,
+          created_at,
+          expires_at,
+          music_provider,
+          music_track_id,
+          music_title,
+          music_artist,
+          music_artwork_url,
+          music_track_url,
+          music_embed_url
+        `)
         .in("user_id", candidateIds)
-        .gt("expires_at", nowIso)
+        .gt("expires_at", new Date().toISOString())
         .order("created_at", { ascending: true });
 
       if (storiesError) {
         console.error("Stories load error:", storiesError);
         setGroups([]);
-        setLoading(false);
         return;
       }
 
       const stories = (storiesData || []) as StoryItem[];
 
-      if (stories.length === 0) {
+      if (!stories.length) {
         setGroups([]);
-        setLoading(false);
         return;
       }
 
@@ -100,10 +114,11 @@ export default function StoriesRail({
         new Set(stories.map((story) => story.user_id))
       );
 
-      const { data: profilesData, error: profilesError } = await supabase
-        .from("profiles")
-        .select("id, username, avatar_url")
-        .in("id", storyUserIds);
+      const { data: profilesData, error: profilesError } =
+        await supabase
+          .from("profiles")
+          .select("id, username, avatar_url")
+          .in("id", storyUserIds);
 
       if (profilesError) throw profilesError;
 
@@ -176,9 +191,12 @@ export default function StoriesRail({
     [groups, user?.id]
   );
 
-
   useEffect(() => {
-    if (!focusStoryId || loading || lastHandledFocusStory === focusStoryId) {
+    if (
+      !focusStoryId ||
+      loading ||
+      lastHandledFocusStory === focusStoryId
+    ) {
       return;
     }
 
@@ -234,7 +252,9 @@ export default function StoriesRail({
                     : "border border-white/10"
                 }`}
                 aria-label={
-                  ownGroupIndex >= 0 ? "Ver tu historia" : "Crear historia"
+                  ownGroupIndex >= 0
+                    ? "Ver tu historia"
+                    : "Crear historia"
                 }
               >
                 {me?.avatar_url ? (
@@ -254,7 +274,6 @@ export default function StoriesRail({
                 onClick={() => setComposerOpen(true)}
                 className="absolute bottom-[2px] right-[1px] z-10 flex h-6 w-6 items-center justify-center rounded-full border-[2px] border-[var(--app-bg)] bg-[var(--app-accent-2)] text-[var(--app-on-accent)] shadow-[0_6px_18px_rgba(0,0,0,.28)] transition-transform duration-200 hover:scale-105"
                 aria-label="Agregar historia"
-                title="Agregar historia"
               >
                 <Camera size={11} strokeWidth={2.4} />
               </button>
@@ -269,7 +288,9 @@ export default function StoriesRail({
             groups.map((group, index) => {
               if (group.user_id === user.id) return null;
 
-              const allViewed = group.stories.every((story) => story.viewed);
+              const allViewed = group.stories.every(
+                (story) => story.viewed
+              );
 
               return (
                 <button
@@ -280,7 +301,7 @@ export default function StoriesRail({
                 >
                   <div className="mx-auto flex h-[72px] w-[72px] items-center justify-center overflow-visible">
                     <div
-                      className={`rounded-full p-[2px] shadow-[0_8px_22px_rgba(0,0,0,.15)] ${
+                      className={`rounded-full p-[2px] ${
                         allViewed
                           ? "bg-white/[0.10]"
                           : "bg-[var(--app-accent-fill)]"
@@ -295,7 +316,8 @@ export default function StoriesRail({
                             loading="lazy"
                           />
                         ) : (
-                          group.username?.charAt(0)?.toUpperCase() || "U"
+                          group.username?.charAt(0)?.toUpperCase() ||
+                          "U"
                         )}
                       </div>
                     </div>
@@ -327,7 +349,7 @@ export default function StoriesRail({
         currentUserId={user.id}
         onClose={() => {
           setViewerOpen(false);
-          loadStories();
+          void loadStories();
         }}
         onChanged={loadStories}
       />
