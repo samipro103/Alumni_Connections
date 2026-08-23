@@ -2,7 +2,6 @@
 
 import { useCallback, useEffect, useState } from "react";
 import {
-  Check,
   Clipboard,
   ExternalLink,
   Loader2,
@@ -78,7 +77,7 @@ export default function ProfileMusicSettings({ userId }: Props) {
       setCandidate(null);
     } catch {
       setError(
-        "No pude leer el portapapeles. Mantén presionado el campo y pega el enlace manualmente."
+        "No pude leer el portapapeles. Pega el enlace manualmente en el campo."
       );
     }
   }
@@ -225,8 +224,7 @@ export default function ProfileMusicSettings({ userId }: Props) {
               Tu canción del momento
             </p>
             <p className="mt-1 max-w-2xl text-xs leading-5 text-zinc-600">
-              Elige la canción y también el tramo exacto de 30 segundos que
-              quieres enseñar en tu perfil.
+              Elige la canción y el tramo de 30 segundos que quieres mostrar.
             </p>
           </div>
         </div>
@@ -264,9 +262,6 @@ export default function ProfileMusicSettings({ userId }: Props) {
           <div className="mt-5 border-l-2 border-[#6d7cff]/35 pl-4">
             <p className="text-sm font-bold text-zinc-400">
               Aún no tienes una canción.
-            </p>
-            <p className="mt-1 text-xs text-zinc-700">
-              Carga una canción y selecciona tu fragmento favorito.
             </p>
           </div>
         )}
@@ -387,23 +382,9 @@ export default function ProfileMusicSettings({ userId }: Props) {
               type="button"
               onClick={saveMusic}
               disabled={saving}
-              className="flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-[#6d7cff] text-xs font-black text-white transition hover:bg-[#7b87ff] disabled:opacity-50"
+              className="flex h-11 w-full items-center justify-center rounded-xl bg-[#6d7cff] text-xs font-black text-white transition hover:bg-[#7b87ff] disabled:opacity-50"
             >
-              {saving ? (
-                <Loader2 size={15} className="animate-spin" />
-              ) : (
-                <Check size={15} />
-              )}
-              {saving
-                ? "Guardando..."
-                : `Guardar ${Math.floor(clipStart / 60)}:${String(
-                    Math.floor(clipStart % 60)
-                  ).padStart(2, "0")}–${Math.floor(
-                    (clipStart + 30) / 60
-                  )}:${String(Math.floor((clipStart + 30) % 60)).padStart(
-                    2,
-                    "0"
-                  )} en mi perfil`}
+              {saving ? "Guardando..." : "Guardar"}
             </button>
           </div>
         )}

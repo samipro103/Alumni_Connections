@@ -63,6 +63,7 @@ export default function MusicClipSelector({
     onDurationKnown(durationSeconds);
 
     const realMax = Math.max(0, durationSeconds - 30);
+
     if (startSeconds > realMax) {
       onStartChange(realMax);
     }
@@ -80,6 +81,7 @@ export default function MusicClipSelector({
 
   const leftPercent = useMemo(() => {
     if (maxStart <= 0) return 0;
+
     const travel = 100 - windowWidth;
     return (startSeconds / maxStart) * travel;
   }, [maxStart, startSeconds, windowWidth]);
@@ -117,8 +119,7 @@ export default function MusicClipSelector({
       </div>
 
       <p className="mt-2 text-[11px] leading-5 text-zinc-700">
-        Arrastra sobre las ondas. La ventana violeta se mueve contigo y marca
-        exactamente el tramo que guardarás.
+        Arrastra sobre las ondas para elegir el tramo.
       </p>
 
       <div className="relative mt-5 h-20 overflow-hidden rounded-[14px] border border-white/[0.045] bg-black/10 px-3">
@@ -154,13 +155,6 @@ export default function MusicClipSelector({
           className="absolute inset-0 z-10 h-full w-full cursor-ew-resize opacity-0"
           aria-label="Seleccionar inicio del fragmento"
         />
-
-        <div
-          className="pointer-events-none absolute bottom-1.5 h-1.5 w-1.5 -translate-x-1/2 rounded-full bg-[#8d98ff] shadow-[0_0_10px_rgba(141,152,255,.7)] transition-[left] duration-100"
-          style={{
-            left: `${Math.min(98, Math.max(2, leftPercent + windowWidth / 2))}%`,
-          }}
-        />
       </div>
 
       <div className="mt-2 flex justify-between text-[9px] font-bold tabular-nums text-zinc-800">
@@ -168,15 +162,16 @@ export default function MusicClipSelector({
         <span>
           {durationSeconds > 0
             ? formatTime(durationSeconds)
-            : "puedes elegir aunque Spotify siga cargando"}
+            : "duración pendiente"}
         </span>
       </div>
 
-      <div className="mt-4 flex items-center gap-2">
+      <div className="mt-4 flex items-center justify-center gap-3">
         <button
           type="button"
           onClick={() => nudge(-5)}
           className="flex h-9 items-center gap-1 rounded-xl border border-white/[0.07] bg-white/[0.025] px-3 text-[10px] font-black text-zinc-600 transition hover:text-zinc-300"
+          aria-label="Retroceder cinco segundos"
         >
           <Minus size={12} />
           5s
@@ -186,28 +181,31 @@ export default function MusicClipSelector({
           type="button"
           onClick={handlePreview}
           disabled={!ready && !failed}
-          className="flex h-9 min-w-0 flex-1 items-center justify-center gap-2 rounded-xl bg-[#6d7cff] px-3 text-[10px] font-black text-white transition hover:bg-[#7b87ff] disabled:cursor-wait disabled:opacity-50"
+          className="flex h-11 w-14 items-center justify-center rounded-2xl bg-[#6d7cff] text-white shadow-[0_8px_24px_rgba(109,124,255,.18)] transition hover:bg-[#7b87ff] disabled:cursor-wait disabled:opacity-55"
+          aria-label={
+            failed
+              ? "Abrir en Spotify"
+              : isPlaying
+              ? "Pausar"
+              : "Reproducir fragmento"
+          }
         >
           {!ready && !failed ? (
-            <Loader2 size={13} className="animate-spin" />
+            <Loader2 size={17} className="animate-spin" />
           ) : failed ? (
-            <ExternalLink size={13} />
+            <ExternalLink size={17} />
           ) : isPlaying ? (
-            <Pause size={13} fill="currentColor" />
+            <Pause size={17} fill="currentColor" />
           ) : (
-            <Play size={13} fill="currentColor" />
+            <Play size={18} fill="currentColor" className="ml-0.5" />
           )}
-          {failed
-            ? "Abrir en Spotify"
-            : isPlaying
-            ? "Pausar"
-            : "Probar 30 segundos"}
         </button>
 
         <button
           type="button"
           onClick={() => nudge(5)}
           className="flex h-9 items-center gap-1 rounded-xl border border-white/[0.07] bg-white/[0.025] px-3 text-[10px] font-black text-zinc-600 transition hover:text-zinc-300"
+          aria-label="Avanzar cinco segundos"
         >
           5s
           <Plus size={12} />
@@ -216,9 +214,11 @@ export default function MusicClipSelector({
 
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute -left-[10000px] top-0 h-[80px] w-[300px] overflow-hidden opacity-0"
+        className="pointer-events-none absolute bottom-0 right-0 h-px w-px overflow-hidden opacity-[0.01]"
       >
-        <div ref={spotifyMountRef} />
+        <div className="h-[80px] w-[300px]">
+          <div ref={spotifyMountRef} />
+        </div>
       </div>
     </div>
   );

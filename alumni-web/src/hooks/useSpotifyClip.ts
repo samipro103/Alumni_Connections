@@ -28,7 +28,8 @@ export function useSpotifyClip({
   const startRef = useRef(Math.max(0, startSeconds));
   const clipDurationRef = useRef(clipDurationSeconds);
   const playingRef = useRef(false);
-  const pendingSeekRef = useRef(false);
+  const seekPendingRef = useRef(false);
+  const seekCorrectionDoneRef = useRef(false);
 
   const [ready, setReady] = useState(false);
   const [failed, setFailed] = useState(false);
@@ -39,8 +40,21 @@ export function useSpotifyClip({
 
   useEffect(() => {
     startRef.current = Math.max(0, Math.floor(startSeconds));
+    seekCorrectionDoneRef.current = false;
     setPositionMs(startRef.current * 1000);
-  }, [startSeconds]);
+
+    const controller = controllerRef.current;
+
+    // Si el controlador ya está listo, mover el selector NO vuelve a cargar
+    // la canción ni el iframe. Solo actualizamos la posición.
+    if (controller && ready && !playingRef.current) {
+      try {
+        controller.seek?.(startRef.current);
+      } catch {
+        // Spotify puede ignorar seek en algunos contextos.
+      }
+    }
+  }, [startSeconds, ready]);
 
   useEffect(() => {
     clipDurationRef.current = clipDurationSeconds;
@@ -64,9 +78,10 @@ export function useSpotifyClip({
 
         controllerTimeout = window.setTimeout(() => {
           if (cancelled || controllerRef.current) return;
+
           setFailed(true);
           setError(
-            "Spotify tardó demasiado en iniciar. Aún puedes elegir y guardar tu fragmento."
+            "Spotify tardó demasiado en iniciar. Puedes guardar el fragmento igualmente."
           );
         }, 7000);
 
@@ -89,10 +104,6 @@ export function useSpotifyClip({
             }
 
             controllerRef.current = controller;
-
-            // El callback ya significa que tenemos un controlador utilizable.
-            // Antes esperábamos solo el evento "ready", que en algunos WebViews
-            // podía haberse disparado antes de registrar el listener.
             setReady(true);
             setFailed(false);
             setError("");
@@ -107,13 +118,19 @@ export function useSpotifyClip({
               playingRef.current = true;
               setIsPlaying(true);
 
-              if (pendingSeekRef.current) {
-                pendingSeekRef.current = false;
-                try {
-                  controller.seek?.(startRef.current);
-                } catch {
-                  // loadEntity(startAt) sigue siendo la ruta principal.
-                }
+              // No usamos loadEntity() aquí.
+              // loadEntity recargaba el embed y visualmente parecía un F5.
+              // Intentamos posicionar el controlador ya existente.
+              if (seekPendingRef.current) {
+                seekPendingRef.current = false;
+
+                window.setTimeout(() => {
+                  try {
+                    controller.seek?.(startRef.current);
+                  } catch {
+                    // No crítico.
+                  }
+                }, 80);
               }
             });
 
@@ -133,24 +150,28 @@ export function useSpotifyClip({
               const endMs =
                 (startRef.current + clipDurationRef.current) * 1000;
 
-              // Si Spotify arranca desde otro punto, corregimos una sola vez.
+              // Una sola corrección por reproducción. Evita bucles/reloads.
               if (
                 !paused &&
-                nextPosition + 1200 < startMs &&
-                !pendingSeekRef.current
+                startRef.current > 0 &&
+                nextPosition + 1500 < startMs &&
+                !seekCorrectionDoneRef.current
               ) {
+                seekCorrectionDoneRef.current = true;
+
                 try {
                   controller.seek?.(startRef.current);
                 } catch {
-                  // No crítico.
+                  // Spotify puede limitar seek para algunos tracks/entornos.
                 }
               }
 
-              if (!paused && nextPosition >= endMs - 150) {
+              if (!paused && nextPosition >= endMs - 180) {
                 controller.pause?.();
                 playingRef.current = false;
                 setIsPlaying(false);
                 setPositionMs(startMs);
+                seekCorrectionDoneRef.current = false;
               }
             });
           }
@@ -175,7 +196,8 @@ export function useSpotifyClip({
         window.clearTimeout(controllerTimeout);
       }
 
-      pendingSeekRef.current = false;
+      seekPendingRef.current = false;
+      seekCorrectionDoneRef.current = false;
       playingRef.current = false;
       setIsPlaying(false);
       setReady(false);
@@ -190,27 +212,24 @@ export function useSpotifyClip({
 
     if (!controller || !ready) return;
 
-    const start = startRef.current;
-    pendingSeekRef.current = true;
+    seekPendingRef.current = true;
+    seekCorrectionDoneRef.current = false;
 
+    // IMPORTANTE:
+    // Antes hacíamos loadEntity(trackUrl, false, start) cada vez que pulsabas
+    // play. Eso recargaba el Spotify Embed y parecía un refresh/F5.
+    // Ahora la canción se carga UNA VEZ al crear el controlador.
     try {
-      controller.loadEntity?.(trackUrl, false, start);
+      controller.seek?.(startRef.current);
     } catch {
-      // Si la entidad ya está cargada, usamos seek como respaldo.
-      try {
-        controller.seek?.(start);
-      } catch {
-        // No crítico.
-      }
+      // El segundo intento se hace al recibir playback_started.
     }
 
-    window.setTimeout(() => {
-      controller.play?.();
-    }, 60);
-  }, [ready, trackUrl]);
+    controller.play?.();
+  }, [ready]);
 
   const pause = useCallback(() => {
-    pendingSeekRef.current = false;
+    seekPendingRef.current = false;
     controllerRef.current?.pause?.();
   }, []);
 
