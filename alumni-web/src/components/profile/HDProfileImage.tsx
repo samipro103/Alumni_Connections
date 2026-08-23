@@ -1,13 +1,18 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Maximize2, X } from "lucide-react";
+import { Loader2, Maximize2, X } from "lucide-react";
 
 type Props = {
   src: string;
   alt: string;
   className?: string;
   variant?: "avatar" | "banner";
+};
+
+type NaturalSize = {
+  width: number;
+  height: number;
 };
 
 export default function HDProfileImage({
@@ -17,6 +22,12 @@ export default function HDProfileImage({
   variant = "banner",
 }: Props) {
   const [open, setOpen] = useState(false);
+  const [opening, setOpening] = useState(false);
+  const [naturalSize, setNaturalSize] = useState<NaturalSize | null>(null);
+
+  useEffect(() => {
+    setNaturalSize(null);
+  }, [src]);
 
   useEffect(() => {
     if (!open) return;
@@ -35,24 +46,77 @@ export default function HDProfileImage({
     };
   }, [open]);
 
+  async function openViewer() {
+    if (opening) return;
+
+    setOpening(true);
+
+    try {
+      const image = new Image();
+      image.src = src;
+
+      if (!image.complete) {
+        await new Promise<void>((resolve, reject) => {
+          image.onload = () => resolve();
+          image.onerror = () => reject(new Error("No se pudo cargar la imagen"));
+        });
+      }
+
+      if (typeof image.decode === "function") {
+        try {
+          await image.decode();
+        } catch {
+          // Ya puede estar decodificada por el navegador.
+        }
+      }
+
+      setNaturalSize({
+        width: image.naturalWidth,
+        height: image.naturalHeight,
+      });
+    } catch {
+      setNaturalSize(null);
+    } finally {
+      setOpening(false);
+      setOpen(true);
+    }
+  }
+
+  const viewerStyle = naturalSize
+    ? {
+        width: `min(94vw, ${naturalSize.width}px)`,
+        height: "auto",
+        maxHeight: variant === "avatar" ? "82vh" : "92vh",
+        imageRendering: "auto" as const,
+      }
+    : {
+        width: "auto",
+        height: "auto",
+        maxWidth: "94vw",
+        maxHeight: variant === "avatar" ? "82vh" : "92vh",
+        imageRendering: "auto" as const,
+      };
+
   return (
     <>
       <button
         type="button"
-        onClick={() => setOpen(true)}
+        onClick={openViewer}
+        disabled={opening}
         className={`group relative block h-full w-full overflow-hidden ${
           variant === "avatar" ? "rounded-full" : ""
         }`}
-        aria-label={`Ver ${alt.toLowerCase()} en alta resolución`}
+        aria-label={`Ver ${alt.toLowerCase()}`}
       >
         <img
           src={src}
           alt={alt}
           loading="eager"
-          decoding="async"
+          decoding="sync"
           fetchPriority="high"
           draggable={false}
           className={`${className} select-none`}
+          style={{ imageRendering: "auto" }}
         />
 
         <span
@@ -62,7 +126,14 @@ export default function HDProfileImage({
               : "bottom-3 right-3 h-9 w-9 rounded-xl"
           }`}
         >
-          <Maximize2 size={variant === "avatar" ? 18 : 16} />
+          {opening ? (
+            <Loader2
+              size={variant === "avatar" ? 18 : 16}
+              className="animate-spin"
+            />
+          ) : (
+            <Maximize2 size={variant === "avatar" ? 18 : 16} />
+          )}
         </span>
       </button>
 
@@ -71,7 +142,7 @@ export default function HDProfileImage({
           className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/[0.94] p-4 backdrop-blur-md sm:p-8"
           role="dialog"
           aria-modal="true"
-          aria-label={`${alt} en alta resolución`}
+          aria-label={alt}
           onClick={() => setOpen(false)}
         >
           <button
@@ -87,19 +158,24 @@ export default function HDProfileImage({
             src={src}
             alt={alt}
             loading="eager"
-            decoding="async"
+            decoding="sync"
+            fetchPriority="high"
             draggable={false}
+            onLoad={(event) => {
+              const image = event.currentTarget;
+              if (!naturalSize && image.naturalWidth && image.naturalHeight) {
+                setNaturalSize({
+                  width: image.naturalWidth,
+                  height: image.naturalHeight,
+                });
+              }
+            }}
             onClick={(event) => event.stopPropagation()}
-            className={`max-h-[92vh] max-w-[96vw] object-contain shadow-2xl ${
-              variant === "avatar"
-                ? "max-h-[76vh] rounded-[32px]"
-                : "rounded-2xl"
+            className={`object-contain shadow-2xl ${
+              variant === "avatar" ? "rounded-[28px]" : "rounded-2xl"
             }`}
+            style={viewerStyle}
           />
-
-          <div className="pointer-events-none absolute bottom-5 left-1/2 -translate-x-1/2 rounded-full border border-white/10 bg-black/55 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.12em] text-white/55 backdrop-blur-md">
-            Imagen original · HD
-          </div>
         </div>
       )}
     </>
