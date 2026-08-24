@@ -18,8 +18,40 @@ function percent(value: any) {
 }
 
 function labelCategory(value: string | null) {
-  if (!value) return "Sin señal";
-  return value.replaceAll("/", " / ").replaceAll("-", " ");
+  const labels: Record<string, string> = {
+    safe: "sin señal",
+    threat: "amenaza",
+    violence: "violencia",
+    harassment: "acoso",
+    self_harm: "autolesión",
+    sexual: "sexual",
+    sexual_image: "sexual en imagen",
+    hate: "odio",
+    spam: "spam",
+    scam: "estafa",
+    illicit: "actividad ilícita",
+    suspicious_link: "enlace sospechoso",
+  };
+
+  return labels[value || ""] || value || "sin señal";
+}
+
+function imageSummary(result: any) {
+  const image = result?.raw_response?.image;
+
+  if (!image) {
+    return result?.raw_response?.coverage?.image?.length
+      ? "imagen sin señal local"
+      : "sin imagen";
+  }
+
+  if (image.status === "error") return "imagen no analizada";
+
+  const top = Object.entries(image.classes || {})
+    .map(([name, score]) => ({ name, score: Number(score || 0) }))
+    .sort((a, b) => b.score - a.score)[0];
+
+  return top ? `${top.name} ${percent(top.score)}` : "imagen analizada";
 }
 
 export default function AdminPostsPage() {
@@ -92,24 +124,14 @@ export default function AdminPostsPage() {
     setModeration((current) =>
       current.map((item) =>
         item.id === resultId
-          ? {
-              ...item,
-              human_label: label,
-              reviewed_at: new Date().toISOString(),
-            }
+          ? { ...item, human_label: label, reviewed_at: new Date().toISOString() }
           : item
       )
     );
   }
 
   const moderationByPost = useMemo(
-    () =>
-      new Map(
-        moderation.map((item) => [
-          Number(item.post_id),
-          item,
-        ])
-      ),
+    () => new Map(moderation.map((item) => [Number(item.post_id), item])),
     [moderation]
   );
 
@@ -125,48 +147,43 @@ export default function AdminPostsPage() {
         post.profiles?.career,
       ]
         .filter(Boolean)
-        .some((field) =>
-          String(field).toLowerCase().includes(value)
-        )
+        .some((field) => String(field).toLowerCase().includes(value))
     );
   }, [posts, search]);
 
   const totals = useMemo(() => {
-    const completed = moderation.filter(
-      (item) => item.status === "completed"
-    );
+    const completed = moderation.filter((item) => item.status === "completed");
 
     return {
       analyzed: completed.length,
       flagged: completed.filter((item) => item.flagged).length,
-      errors: moderation.filter((item) => item.status === "error").length,
-      reviewed: moderation.filter((item) =>
-        Boolean(item.human_label)
-      ).length,
+      reviewed: moderation.filter((item) => Boolean(item.human_label)).length,
+      shield: completed.filter((item) => item.provider === "alumni_shield").length,
     };
   }, [moderation]);
 
   return (
     <AdminShell
       title="Publicaciones"
-      description="Moderación en modo sombra: la IA analiza sin bloquear contenido todavía."
+      description="Alumni Shield en modo sombra: reglas propias + filtro local de imagen, sin costo por publicación."
     >
       <div className="mb-6 grid grid-cols-4 gap-3 border-b border-white/[0.07] pb-5">
-        {[
-          ["Analizadas", totals.analyzed, "text-zinc-200"],
-          ["Marcadas", totals.flagged, "text-amber-300"],
-          ["Revisadas", totals.reviewed, "text-zinc-200"],
-          ["Errores", totals.errors, "text-zinc-500"],
-        ].map(([label, value, cls]) => (
-          <div key={String(label)}>
-            <p className="text-[10px] font-black uppercase tracking-[0.12em] text-zinc-700">
-              {label}
-            </p>
-            <p className={`mt-1 text-xl font-black ${cls}`}>
-              {value}
-            </p>
-          </div>
-        ))}
+        <div>
+          <p className="text-[10px] font-black uppercase tracking-[0.12em] text-zinc-700">Analizadas</p>
+          <p className="mt-1 text-xl font-black text-zinc-200">{totals.analyzed}</p>
+        </div>
+        <div>
+          <p className="text-[10px] font-black uppercase tracking-[0.12em] text-zinc-700">Marcadas</p>
+          <p className="mt-1 text-xl font-black text-amber-300">{totals.flagged}</p>
+        </div>
+        <div>
+          <p className="text-[10px] font-black uppercase tracking-[0.12em] text-zinc-700">Revisadas</p>
+          <p className="mt-1 text-xl font-black text-zinc-200">{totals.reviewed}</p>
+        </div>
+        <div>
+          <p className="text-[10px] font-black uppercase tracking-[0.12em] text-zinc-700">Shield</p>
+          <p className="mt-1 text-xl font-black text-emerald-300">{totals.shield}</p>
+        </div>
       </div>
 
       <div className="mb-5 flex h-11 items-center border-b border-white/[0.07] px-1">
@@ -177,52 +194,34 @@ export default function AdminPostsPage() {
           placeholder="Buscar publicación..."
           className="h-full flex-1 bg-transparent px-3 text-sm outline-none placeholder:text-zinc-700"
         />
-        <span className="text-[11px] font-bold text-zinc-700">
-          {filtered.length}
-        </span>
+        <span className="text-[11px] font-bold text-zinc-700">{filtered.length}</span>
       </div>
 
       {loading ? (
-        <div className="py-14 text-center text-sm text-zinc-600">
-          Cargando publicaciones...
-        </div>
+        <div className="py-14 text-center text-sm text-zinc-600">Cargando publicaciones...</div>
       ) : (
         <div className="space-y-5">
           {filtered.map((post: any) => {
             const result = moderationByPost.get(Number(post.id));
 
             return (
-              <article
-                key={post.id}
-                className="border-b border-white/[0.07] pb-5"
-              >
+              <article key={post.id} className="border-b border-white/[0.07] pb-5">
                 <div className="flex gap-3">
                   <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[#1a1f29] text-xs font-bold">
                     {post.profiles?.avatar_url ? (
-                      <img
-                        src={post.profiles.avatar_url}
-                        alt="Avatar"
-                        className="h-full w-full object-cover"
-                      />
+                      <img src={post.profiles.avatar_url} alt="Avatar" className="h-full w-full object-cover" />
                     ) : (
-                      post.profiles?.username
-                        ?.charAt(0)
-                        ?.toUpperCase() || "U"
+                      post.profiles?.username?.charAt(0)?.toUpperCase() || "U"
                     )}
                   </div>
 
                   <div className="min-w-0 flex-1">
-                    <p className="text-xs font-black text-zinc-300">
-                      @{post.profiles?.username || "usuario"}
-                    </p>
+                    <p className="text-xs font-black text-zinc-300">@{post.profiles?.username || "usuario"}</p>
                     <p className="mt-1 text-[11px] text-zinc-700">
                       {new Date(post.created_at).toLocaleString("es-SV")}
                     </p>
-
                     {post.content && (
-                      <p className="mt-3 whitespace-pre-wrap text-sm leading-6 text-zinc-500">
-                        {post.content}
-                      </p>
+                      <p className="mt-3 whitespace-pre-wrap text-sm leading-6 text-zinc-500">{post.content}</p>
                     )}
                   </div>
 
@@ -235,11 +234,7 @@ export default function AdminPostsPage() {
                 </div>
 
                 {post.image_url && (
-                  <img
-                    src={post.image_url}
-                    alt="Publicación"
-                    className="mt-4 max-h-72 w-full rounded-2xl object-cover"
-                  />
+                  <img src={post.image_url} alt="Publicación" className="mt-4 max-h-72 w-full rounded-2xl object-cover" />
                 )}
 
                 <div className="mt-4 border-l border-white/[0.08] pl-4">
@@ -249,13 +244,9 @@ export default function AdminPostsPage() {
                       Sin análisis registrado
                     </div>
                   ) : result.status === "error" ? (
-                    <div className="text-xs text-red-300/70">
-                      Error de moderación: {result.error_message}
-                    </div>
+                    <div className="text-xs text-red-300/70">Error de moderación: {result.error_message}</div>
                   ) : result.status !== "completed" ? (
-                    <div className="text-xs text-zinc-700">
-                      Analizando...
-                    </div>
+                    <div className="text-xs text-zinc-700">Analizando...</div>
                   ) : (
                     <>
                       <div className="flex flex-wrap items-center gap-3">
@@ -272,23 +263,31 @@ export default function AdminPostsPage() {
                         )}
 
                         <span className="text-xs text-zinc-600">
-                          Señal mayor:{" "}
-                          <strong className="text-zinc-400">
-                            {labelCategory(result.top_category)}
-                          </strong>
-                          {" · "}
-                          {percent(result.top_score)}
+                          Riesgo mayor: <strong className="text-zinc-400">{labelCategory(result.top_category)}</strong>
+                          {" · "}{percent(result.top_score)}
                         </span>
 
                         <span className="text-[10px] font-bold uppercase tracking-[0.12em] text-zinc-800">
-                          Modo sombra
+                          {result.provider === "alumni_shield" ? "Alumni Shield" : result.provider}
                         </span>
                       </div>
 
+                      {result.provider === "alumni_shield" && (
+                        <div className="mt-2 flex flex-wrap gap-x-5 gap-y-1 text-[10px] text-zinc-700">
+                          <span>
+                            Texto: {labelCategory(result?.raw_response?.text?.topCategory || "safe")}
+                            {" · "}{percent(result?.raw_response?.text?.topScore || 0)}
+                          </span>
+                          {post.image_url && <span>Imagen: {imageSummary(result)}</span>}
+                        </div>
+                      )}
+
+                      {result.error_message && (
+                        <p className="mt-2 text-[10px] text-amber-300/65">Nota: {result.error_message}</p>
+                      )}
+
                       <div className="mt-3 flex items-center gap-2">
-                        <span className="mr-1 text-[10px] font-bold text-zinc-700">
-                          ¿Acertó?
-                        </span>
+                        <span className="mr-1 text-[10px] font-bold text-zinc-700">Tu revisión:</span>
 
                         <button
                           type="button"

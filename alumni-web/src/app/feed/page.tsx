@@ -17,6 +17,7 @@ import PostComposer from "@/components/feed/PostComposer";
 import StoriesRail from "@/components/feed/StoriesRail";
 import CommentLikeButton from "@/components/social/CommentLikeButton";
 import { rankForYouPosts } from "@/lib/feedRanking";
+import { analyzeImageLocally } from "@/lib/imageModerationClient";
 
 type FeedMode = "for-you" | "following";
 
@@ -288,17 +289,32 @@ function FeedContent() {
       return;
     }
 
-    void fetch("/api/moderation/post", {
-      method: "POST",
-      headers: {
-        Authorization:
-          `Bearer ${session.access_token}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        post_id: insertedPost.id,
-      }),
-    }).catch(() => {});
+    const imageForModeration = image;
+
+    /*
+     * Alumni Shield 8.1:
+     * La publicación no espera el análisis.
+     * Texto = reglas Alumni en servidor.
+     * Imagen = NSFWJS/TensorFlow.js local, solo señal de calibración.
+     */
+    void (async () => {
+      const imageSignal = imageForModeration
+        ? await analyzeImageLocally(imageForModeration)
+        : null;
+
+      await fetch("/api/moderation/post", {
+        method: "POST",
+        headers: {
+          Authorization:
+            `Bearer ${session.access_token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          post_id: insertedPost.id,
+          image_signal: imageSignal,
+        }),
+      });
+    })().catch(() => {});
 
     setContent("");
     setImage(null);
