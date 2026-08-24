@@ -13,8 +13,7 @@ export type SpotifyPremiumSession = {
 async function authHeader() {
   const {
     data: { session },
-  } =
-    await supabase.auth.getSession();
+  } = await supabase.auth.getSession();
 
   if (!session?.access_token) {
     throw new Error(
@@ -29,22 +28,19 @@ async function authHeader() {
 }
 
 export async function getSpotifyPremiumSession() {
-  const headers =
-    await authHeader();
+  const headers = await authHeader();
 
-  const response =
-    await fetch(
-      "/api/music/spotify/session",
-      {
-        headers,
-        cache: "no-store",
-      }
-    );
+  const response = await fetch(
+    "/api/music/spotify/session",
+    {
+      headers,
+      cache: "no-store",
+    }
+  );
 
-  const data =
-    await response
-      .json()
-      .catch(() => ({}));
+  const data = await response
+    .json()
+    .catch(() => ({}));
 
   if (!response.ok) {
     return {
@@ -63,29 +59,26 @@ export async function startSpotifyConnect(
   returnTo =
     "/settings?section=music"
 ) {
-  const headers =
-    await authHeader();
+  const headers = await authHeader();
 
-  const response =
-    await fetch(
-      "/api/music/spotify/connect",
-      {
-        method: "POST",
-        headers: {
-          ...headers,
-          "Content-Type":
-            "application/json",
-        },
-        body: JSON.stringify({
-          return_to: returnTo,
-        }),
-      }
-    );
+  const response = await fetch(
+    "/api/music/spotify/connect",
+    {
+      method: "POST",
+      headers: {
+        ...headers,
+        "Content-Type":
+          "application/json",
+      },
+      body: JSON.stringify({
+        return_to: returnTo,
+      }),
+    }
+  );
 
-  const data =
-    await response
-      .json()
-      .catch(() => ({}));
+  const data = await response
+    .json()
+    .catch(() => ({}));
 
   if (
     !response.ok ||
@@ -97,46 +90,55 @@ export async function startSpotifyConnect(
     );
   }
 
-  /*
-   * iOS Home Screen Web App:
-   * window.open mantiene mejor los OAuth de terceros dentro
-   * del contexto de la web app que una navegación normal.
-   */
-  const opened =
-    window.open(
-      data.url,
-      "_self"
-    );
-
-  if (!opened) {
-    window.location.assign(
-      data.url
-    );
-  }
+  window.location.assign(data.url);
 }
 
 export async function disconnectSpotify() {
-  const headers =
-    await authHeader();
+  const headers = await authHeader();
 
-  const response =
-    await fetch(
-      "/api/music/spotify/disconnect",
-      {
-        method: "POST",
-        headers,
-      }
-    );
+  const response = await fetch(
+    "/api/music/spotify/disconnect",
+    {
+      method: "POST",
+      headers,
+    }
+  );
 
   if (!response.ok) {
-    const data =
-      await response
-        .json()
-        .catch(() => ({}));
+    const data = await response
+      .json()
+      .catch(() => ({}));
 
     throw new Error(
       data?.error ||
         "No se pudo desconectar Spotify."
+    );
+  }
+}
+
+export async function setSpotifyPremiumVerified(
+  premium: boolean
+) {
+  const headers = await authHeader();
+
+  const response = await fetch(
+    "/api/music/spotify/premium",
+    {
+      method: "POST",
+      headers: {
+        ...headers,
+        "Content-Type":
+          "application/json",
+      },
+      body: JSON.stringify({
+        premium,
+      }),
+    }
+  );
+
+  if (!response.ok) {
+    throw new Error(
+      "No se pudo validar Spotify Premium."
     );
   }
 }

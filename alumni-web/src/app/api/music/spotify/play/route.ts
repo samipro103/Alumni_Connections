@@ -1,11 +1,8 @@
-import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import {
-  SPOTIFY_COOKIES,
-  cookieOptions,
-  resolveSpotifyAccess,
+  getSpotifyConnection,
+  resolveSpotifyAccessForUser,
   verifyAlumniUser,
-  verifyOwner,
 } from "@/lib/spotifyServer";
 
 export async function POST(request: Request) {
@@ -20,22 +17,22 @@ export async function POST(request: Request) {
     );
   }
 
-  const cookieStore = await cookies();
+  const connection =
+    await getSpotifyConnection(
+      user.id
+    );
 
-  const ownerId = verifyOwner(
-    cookieStore.get(
-      SPOTIFY_COOKIES.owner
-    )?.value
-  );
-
-  if (!ownerId || ownerId !== user.id) {
+  if (
+    !connection ||
+    connection.product !==
+      "premium"
+  ) {
     return NextResponse.json(
       {
         error:
-          "Conecta Spotify Premium para reproducir.",
-        reason: "spotify_disconnected",
+          "Spotify Premium es obligatorio.",
       },
-      { status: 401 }
+      { status: 403 }
     );
   }
 
@@ -44,29 +41,39 @@ export async function POST(request: Request) {
     .catch(() => ({}));
 
   const trackId =
-    String(body?.track_id || "").trim();
+    String(
+      body?.track_id || ""
+    ).trim();
 
   const deviceId =
-    String(body?.device_id || "").trim();
+    String(
+      body?.device_id || ""
+    ).trim();
 
-  const startSeconds = Math.max(
-    0,
-    Math.floor(
-      Number(body?.start_seconds || 0)
-    )
-  );
+  const startSeconds =
+    Math.max(
+      0,
+      Math.floor(
+        Number(
+          body?.start_seconds || 0
+        )
+      )
+    );
 
   if (!trackId || !deviceId) {
     return NextResponse.json(
-      { error: "Falta canción o reproductor." },
+      {
+        error:
+          "Falta canción o reproductor.",
+      },
       { status: 400 }
     );
   }
 
   try {
     const resolved =
-      await resolveSpotifyAccess(
-        cookieStore
+      await resolveSpotifyAccessForUser(
+        user.id
       );
 
     const endpoint = new URL(
@@ -78,9 +85,8 @@ export async function POST(request: Request) {
       deviceId
     );
 
-    const spotifyResponse = await fetch(
-      endpoint,
-      {
+    const spotifyResponse =
+      await fetch(endpoint, {
         method: "PUT",
         headers: {
           Authorization:
@@ -96,72 +102,27 @@ export async function POST(request: Request) {
             startSeconds * 1000,
         }),
         cache: "no-store",
-      }
-    );
+      });
 
     if (!spotifyResponse.ok) {
-      const detail = await spotifyResponse
-        .json()
-        .catch(() => ({}));
-
-      const status =
-        spotifyResponse.status;
-
       return NextResponse.json(
         {
           error:
-            status === 403
+            spotifyResponse.status ===
+            403
               ? "Spotify Premium es obligatorio para reproducir dentro de Alumni."
-              : detail?.error?.message ||
-                "Spotify no pudo iniciar la canción.",
-          reason:
-            status === 403
-              ? "premium_required"
-              : "spotify_playback",
+              : "Spotify no pudo iniciar la canción.",
         },
-        { status }
+        {
+          status:
+            spotifyResponse.status,
+        }
       );
     }
 
-    const response = NextResponse.json({
+    return NextResponse.json({
       ok: true,
-      start_seconds:
-        startSeconds,
     });
-
-    if (resolved.refreshed) {
-      response.cookies.set(
-        SPOTIFY_COOKIES.access,
-        resolved.accessToken,
-        cookieOptions(
-          Math.max(
-            60,
-            Number(
-              resolved.refreshed.expires_in ||
-                3600
-            )
-          )
-        )
-      );
-
-      response.cookies.set(
-        SPOTIFY_COOKIES.refresh,
-        resolved.refreshToken,
-        cookieOptions(
-          180 * 24 * 60 * 60
-        )
-      );
-
-      response.cookies.set(
-        SPOTIFY_COOKIES.expiresAt,
-        String(resolved.expiresAt),
-        cookieOptions(
-          180 * 24 * 60 * 60
-        )
-      );
-    }
-
-    return response;
   } catch (error: any) {
     return NextResponse.json(
       {

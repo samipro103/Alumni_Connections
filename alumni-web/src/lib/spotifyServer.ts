@@ -1,16 +1,6 @@
 import { createHmac, timingSafeEqual } from "crypto";
 import { createClient } from "@supabase/supabase-js";
 
-export const SPOTIFY_COOKIES = {
-  state: "alumni_spotify_state",
-  pendingUser: "alumni_spotify_pending_user",
-  owner: "alumni_spotify_owner",
-  access: "alumni_spotify_access",
-  refresh: "alumni_spotify_refresh",
-  expiresAt: "alumni_spotify_expires_at",
-  returnTo: "alumni_spotify_return_to",
-} as const;
-
 export type SpotifyTokenPayload = {
   access_token: string;
   token_type?: string;
@@ -23,22 +13,6 @@ export type SpotifyMe = {
   account_id?: string | null;
   id?: string | null;
   display_name?: string | null;
-};
-
-/*
- * IMPORTANTE - Spotify 2026:
- * El campo User.product fue ELIMINADO de GET /me para apps
- * en Development Mode. No debemos usarlo para decidir Premium.
- *
- * Alumni valida la conexión usando una llamada autenticada a /me.
- * Si Spotify permite /me en esta app Dev Mode, guardamos la conexión
- * como Premium. El Web Playback SDK sigue siendo la validación final
- * de reproducción y emitirá account_error si la cuenta no es válida
- * para Premium.
- */
-
-type CookieReader = {
-  get(name: string): { value: string } | undefined;
 };
 
 function cleanCredential(
@@ -101,17 +75,15 @@ function getSupabaseConfig() {
     "NEXT_PUBLIC_SUPABASE_ANON_KEY"
   );
 
-  const secret = cleanCredential(
-    process.env.SUPABASE_SECRET_KEY,
-    "SUPABASE_SECRET_KEY"
-  );
-
-  const legacyService = cleanCredential(
-    process.env.SUPABASE_SERVICE_ROLE_KEY,
-    "SUPABASE_SERVICE_ROLE_KEY"
-  );
-
-  const adminKey = secret || legacyService;
+  const adminKey =
+    cleanCredential(
+      process.env.SUPABASE_SECRET_KEY,
+      "SUPABASE_SECRET_KEY"
+    ) ||
+    cleanCredential(
+      process.env.SUPABASE_SERVICE_ROLE_KEY,
+      "SUPABASE_SERVICE_ROLE_KEY"
+    );
 
   if (!url || !anon) {
     throw new Error(
@@ -119,23 +91,16 @@ function getSupabaseConfig() {
     );
   }
 
-  return {
-    url,
-    anon,
-    adminKey,
-  };
+  return { url, anon, adminKey };
 }
 
-function createSupabaseAdmin() {
+function adminClient() {
   const { url, adminKey } = getSupabaseConfig();
 
   if (!adminKey) {
-    const error = new Error(
-      "SUPABASE_SECRET_KEY no está disponible en el servidor."
-    ) as Error & { code?: string };
-
-    error.code = "SUPABASE_ADMIN_MISSING";
-    throw error;
+    throw new Error(
+      "SUPABASE_SECRET_KEY no está disponible en servidor."
+    );
   }
 
   return createClient(url, adminKey, {
@@ -153,23 +118,14 @@ export function safeSpotifyReturnPath(
   const fallback = "/settings?section=music";
   const raw = (value || "").trim();
 
-  if (
-    !raw.startsWith("/") ||
-    raw.startsWith("//")
-  ) {
+  if (!raw.startsWith("/") || raw.startsWith("//")) {
     return fallback;
   }
 
   try {
-    const parsed = new URL(
-      raw,
-      "https://alumni.local"
-    );
+    const parsed = new URL(raw, "https://alumni.local");
 
-    if (
-      parsed.origin !==
-      "https://alumni.local"
-    ) {
+    if (parsed.origin !== "https://alumni.local") {
       return fallback;
     }
 
@@ -177,16 +133,6 @@ export function safeSpotifyReturnPath(
   } catch {
     return fallback;
   }
-}
-
-export function cookieOptions(maxAge: number) {
-  return {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax" as const,
-    path: "/",
-    maxAge,
-  };
 }
 
 function hmac(value: string) {
@@ -217,34 +163,6 @@ export function verifyPendingUser(
   const userId = signedValue.slice(0, separator);
   const supplied = signedValue.slice(separator + 1);
   const expected = hmac(`${userId}:${state}`);
-
-  if (supplied.length !== expected.length) {
-    return null;
-  }
-
-  const valid = timingSafeEqual(
-    Buffer.from(supplied),
-    Buffer.from(expected)
-  );
-
-  return valid ? userId : null;
-}
-
-export function signOwner(userId: string) {
-  return `${userId}.${hmac(`owner:${userId}`)}`;
-}
-
-export function verifyOwner(
-  signedValue: string | undefined
-) {
-  if (!signedValue) return null;
-
-  const separator = signedValue.lastIndexOf(".");
-  if (separator <= 0) return null;
-
-  const userId = signedValue.slice(0, separator);
-  const supplied = signedValue.slice(separator + 1);
-  const expected = hmac(`owner:${userId}`);
 
   if (supplied.length !== expected.length) {
     return null;
@@ -293,6 +211,77 @@ export async function verifyAlumniUser(
     : null;
 }
 
+export async function saveOAuthState(
+  userId: string,
+  state: string,
+  returnTo: string
+) {
+  const admin = adminClient();
+
+  await admin
+    .from("spotify_oauth_states")
+    .delete()
+    .lt("expires_at", new Date().toISOString());
+
+  const { error } = await admin
+    .from("spotify_oauth_states")
+    .insert({
+      state,
+      user_id: userId,
+      return_to: safeSpotifyReturnPath(returnTo),
+      expires_at: new Date(
+        Date.now() + 10 * 60 * 1000
+      ).toISOString(),
+    });
+
+  if (error) {
+    throw new Error(
+      `No se pudo preparar OAuth: ${error.message}`
+    );
+  }
+}
+
+export async function consumeOAuthState(
+  state: string
+) {
+  const admin = adminClient();
+
+  const { data, error } = await admin
+    .from("spotify_oauth_states")
+    .select("state,user_id,return_to,expires_at")
+    .eq("state", state)
+    .maybeSingle();
+
+  if (error) {
+    throw new Error(
+      `No se pudo leer OAuth state: ${error.message}`
+    );
+  }
+
+  if (!data) {
+    return null;
+  }
+
+  await admin
+    .from("spotify_oauth_states")
+    .delete()
+    .eq("state", state);
+
+  if (
+    new Date(data.expires_at).getTime() <
+    Date.now()
+  ) {
+    return null;
+  }
+
+  return {
+    userId: String(data.user_id),
+    returnTo: safeSpotifyReturnPath(
+      String(data.return_to || "")
+    ),
+  };
+}
+
 export async function exchangeSpotifyCode(
   code: string,
   redirectUri: string
@@ -322,15 +311,11 @@ export async function exchangeSpotifyCode(
   const data = await response.json().catch(() => ({}));
 
   if (!response.ok || !data?.access_token) {
-    const error = new Error(
+    throw new Error(
       data?.error_description ||
         data?.error ||
         "Spotify no pudo completar la conexión."
-    ) as Error & { code?: string; status?: number };
-
-    error.code = "SPOTIFY_TOKEN_EXCHANGE";
-    error.status = response.status;
-    throw error;
+    );
   }
 
   return data as SpotifyTokenPayload;
@@ -393,38 +378,115 @@ export async function getSpotifyMe(
     const error = new Error(
       data?.error?.message ||
         "Spotify no permitió leer la cuenta."
-    ) as Error & {
-      status?: number;
-      code?: string;
-    };
+    ) as Error & { status?: number };
 
     error.status = response.status;
-
-    if (response.status === 403) {
-      error.code = "SPOTIFY_NOT_ALLOWLISTED";
-    }
-
     throw error;
   }
 
   return data as SpotifyMe;
 }
 
+export async function saveSpotifyTokens(
+  userId: string,
+  token: SpotifyTokenPayload
+) {
+  const admin = adminClient();
+
+  const expiresAt = new Date(
+    Date.now() +
+      Math.max(60, Number(token.expires_in || 3600)) *
+        1000
+  ).toISOString();
+
+  const { data: existing } = await admin
+    .from("spotify_oauth_tokens")
+    .select("refresh_token")
+    .eq("user_id", userId)
+    .maybeSingle();
+
+  const { error } = await admin
+    .from("spotify_oauth_tokens")
+    .upsert(
+      {
+        user_id: userId,
+        access_token: token.access_token,
+        refresh_token:
+          token.refresh_token ||
+          existing?.refresh_token ||
+          null,
+        expires_at: expiresAt,
+        scope: token.scope || null,
+        token_type: token.token_type || "Bearer",
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: "user_id" }
+    );
+
+  if (error) {
+    throw new Error(
+      `No se pudieron guardar tokens Spotify: ${error.message}`
+    );
+  }
+}
+
+export async function resolveSpotifyAccessForUser(
+  userId: string
+) {
+  const admin = adminClient();
+
+  const { data, error } = await admin
+    .from("spotify_oauth_tokens")
+    .select("*")
+    .eq("user_id", userId)
+    .maybeSingle();
+
+  if (error || !data) {
+    throw new Error("Spotify no está conectado.");
+  }
+
+  const expiresAt =
+    new Date(data.expires_at).getTime();
+
+  if (
+    data.access_token &&
+    expiresAt > Date.now() + 60_000
+  ) {
+    return {
+      accessToken: String(data.access_token),
+      expiresAt,
+    };
+  }
+
+  if (!data.refresh_token) {
+    throw new Error("Spotify necesita reconexión.");
+  }
+
+  const refreshed = await refreshSpotifyToken(
+    String(data.refresh_token)
+  );
+
+  await saveSpotifyTokens(userId, refreshed);
+
+  return {
+    accessToken: refreshed.access_token,
+    expiresAt:
+      Date.now() +
+      Math.max(
+        60,
+        Number(refreshed.expires_in || 3600)
+      ) *
+        1000,
+  };
+}
+
 export async function upsertSpotifyConnection(
   userId: string,
-  me: SpotifyMe
+  me: SpotifyMe,
+  product = "pending"
 ) {
-  const admin = createSupabaseAdmin();
+  const admin = adminClient();
 
-  /*
-   * Spotify eliminó product de GET /me en febrero de 2026.
-   * Ya no se puede hacer: me.product === "premium".
-   *
-   * Una respuesta válida de /me confirma que Spotify aceptó
-   * el OAuth y el acceso de esta app. Guardamos "premium"
-   * para mantener compatibilidad con el trigger existente.
-   * La reproducción real sigue validándose con Web Playback SDK.
-   */
   const { error } = await admin
     .from("spotify_connections")
     .upsert(
@@ -434,87 +496,75 @@ export async function upsertSpotifyConnection(
           me.account_id || me.id || "unknown",
         spotify_user_id: me.id || null,
         display_name: me.display_name || null,
-        product: "premium",
+        product,
         verified_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       },
-      {
-        onConflict: "user_id",
-      }
+      { onConflict: "user_id" }
     );
 
   if (error) {
-    const wrapped = new Error(
+    throw new Error(
       `No se pudo guardar la conexión Spotify: ${error.message}`
-    ) as Error & { code?: string };
-
-    wrapped.code = "SUPABASE_CONNECTION_SAVE";
-    throw wrapped;
+    );
   }
 }
 
-export async function deleteSpotifyConnection(
+export async function getSpotifyConnection(
   userId: string
 ) {
-  const admin = createSupabaseAdmin();
+  const admin = adminClient();
+
+  const { data, error } = await admin
+    .from("spotify_connections")
+    .select("*")
+    .eq("user_id", userId)
+    .maybeSingle();
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return data;
+}
+
+export async function setSpotifyPremiumStatus(
+  userId: string,
+  premium: boolean
+) {
+  const admin = adminClient();
 
   const { error } = await admin
     .from("spotify_connections")
-    .delete()
+    .update({
+      product: premium ? "premium" : "free",
+      verified_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    })
     .eq("user_id", userId);
 
   if (error) {
-    console.error(
-      "Spotify connection delete:",
-      error.message
-    );
+    throw new Error(error.message);
   }
 }
 
-export async function resolveSpotifyAccess(
-  cookieStore: CookieReader
+export async function deleteSpotifyAccountData(
+  userId: string
 ) {
-  const access =
-    cookieStore.get(SPOTIFY_COOKIES.access)?.value || "";
+  const admin = adminClient();
 
-  const refresh =
-    cookieStore.get(SPOTIFY_COOKIES.refresh)?.value || "";
-
-  const expiresAt = Number(
-    cookieStore.get(SPOTIFY_COOKIES.expiresAt)?.value || 0
-  );
-
-  if (
-    access &&
-    expiresAt > Date.now() + 60_000
-  ) {
-    return {
-      accessToken: access,
-      refreshToken: refresh,
-      expiresAt,
-      refreshed: null as SpotifyTokenPayload | null,
-    };
-  }
-
-  if (!refresh) {
-    throw new Error("Spotify no está conectado.");
-  }
-
-  const refreshed = await refreshSpotifyToken(refresh);
-
-  const nextExpiresAt =
-    Date.now() +
-    Math.max(
-      60,
-      Number(refreshed.expires_in || 3600)
-    ) *
-      1000;
-
-  return {
-    accessToken: refreshed.access_token,
-    refreshToken:
-      refreshed.refresh_token || refresh,
-    expiresAt: nextExpiresAt,
-    refreshed,
-  };
+  await Promise.all([
+    admin
+      .from("spotify_oauth_tokens")
+      .delete()
+      .eq("user_id", userId),
+    admin
+      .from("spotify_oauth_states")
+      .delete()
+      .eq("user_id", userId),
+    admin
+      .from("spotify_connections")
+      .delete()
+      .eq("user_id", userId),
+  ]);
 }

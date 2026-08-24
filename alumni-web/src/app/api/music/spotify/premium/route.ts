@@ -1,10 +1,10 @@
 import { NextResponse } from "next/server";
 import {
-  resolveSpotifyAccessForUser,
+  setSpotifyPremiumStatus,
   verifyAlumniUser,
 } from "@/lib/spotifyServer";
 
-export async function GET(request: Request) {
+export async function POST(request: Request) {
   const user = await verifyAlumniUser(
     request.headers.get("authorization")
   );
@@ -16,25 +16,31 @@ export async function GET(request: Request) {
     );
   }
 
+  const body = await request
+    .json()
+    .catch(() => ({}));
+
+  const premium =
+    body?.premium === true;
+
   try {
-    const resolved =
-      await resolveSpotifyAccessForUser(
-        user.id
-      );
+    await setSpotifyPremiumStatus(
+      user.id,
+      premium
+    );
 
     return NextResponse.json({
-      access_token:
-        resolved.accessToken,
-      expires_at:
-        resolved.expiresAt,
+      ok: true,
+      premium,
     });
-  } catch {
+  } catch (error: any) {
     return NextResponse.json(
       {
         error:
-          "Vuelve a conectar Spotify.",
+          error?.message ||
+          "No se pudo validar Spotify.",
       },
-      { status: 401 }
+      { status: 500 }
     );
   }
 }

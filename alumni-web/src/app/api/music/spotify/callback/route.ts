@@ -1,26 +1,20 @@
-import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import {
-  SPOTIFY_COOKIES,
-  cookieOptions,
+  consumeOAuthState,
   exchangeSpotifyCode,
   getSpotifyMe,
-  safeSpotifyReturnPath,
-  signOwner,
+  saveSpotifyTokens,
   upsertSpotifyConnection,
-  verifyPendingUser,
 } from "@/lib/spotifyServer";
 
 function redirectTo(
   request: Request,
-  status: string,
-  returnTo?: string | null
+  returnTo: string,
+  status: string
 ) {
-  const origin = new URL(request.url).origin;
-
   const destination = new URL(
-    safeSpotifyReturnPath(returnTo),
-    origin
+    returnTo,
+    new URL(request.url).origin
   );
 
   destination.searchParams.set(
@@ -31,42 +25,7 @@ function redirectTo(
   return NextResponse.redirect(destination);
 }
 
-function clearPending(
-  response: NextResponse
-) {
-  for (const name of [
-    SPOTIFY_COOKIES.state,
-    SPOTIFY_COOKIES.pendingUser,
-    SPOTIFY_COOKIES.returnTo,
-  ]) {
-    response.cookies.set(
-      name,
-      "",
-      cookieOptions(0)
-    );
-  }
-}
-
-function clearSession(
-  response: NextResponse
-) {
-  for (const name of [
-    SPOTIFY_COOKIES.owner,
-    SPOTIFY_COOKIES.access,
-    SPOTIFY_COOKIES.refresh,
-    SPOTIFY_COOKIES.expiresAt,
-  ]) {
-    response.cookies.set(
-      name,
-      "",
-      cookieOptions(0)
-    );
-  }
-}
-
-export async function GET(
-  request: Request
-) {
+export async function GET(request: Request) {
   const url = new URL(request.url);
 
   const code =
@@ -78,62 +37,56 @@ export async function GET(
   const spotifyError =
     url.searchParams.get("error") || "";
 
-  const cookieStore = await cookies();
-
-  const expectedState =
-    cookieStore.get(
-      SPOTIFY_COOKIES.state
-    )?.value || "";
-
-  const returnTo =
-    cookieStore.get(
-      SPOTIFY_COOKIES.returnTo
-    )?.value || null;
-
-  if (
-    spotifyError ||
-    !code ||
-    !state ||
-    !expectedState ||
-    state !== expectedState
-  ) {
-    const response = redirectTo(
-      request,
-      spotifyError === "access_denied"
-        ? "cancelled"
-        : "oauth-state",
-      returnTo
+  if (!state) {
+    return NextResponse.redirect(
+      new URL(
+        "/settings?section=music&spotify=oauth-state",
+        url.origin
+      )
     );
-
-    clearPending(response);
-    return response;
   }
 
-  const userId =
-    verifyPendingUser(
-      cookieStore.get(
-        SPOTIFY_COOKIES.pendingUser
-      )?.value,
-      state
+  let oauthState;
+
+  try {
+    oauthState =
+      await consumeOAuthState(state);
+  } catch (error: any) {
+    console.error(
+      "Spotify OAuth state DB:",
+      error?.message || error
     );
 
-  if (!userId) {
-    const response = redirectTo(
+    return NextResponse.redirect(
+      new URL(
+        "/settings?section=music&spotify=database-error",
+        url.origin
+      )
+    );
+  }
+
+  if (!oauthState) {
+    return NextResponse.redirect(
+      new URL(
+        "/settings?section=music&spotify=oauth-state",
+        url.origin
+      )
+    );
+  }
+
+  if (spotifyError || !code) {
+    return redirectTo(
       request,
-      "oauth-state",
-      returnTo
+      oauthState.returnTo,
+      spotifyError === "access_denied"
+        ? "cancelled"
+        : "error"
     );
-
-    clearPending(response);
-    return response;
   }
 
   try {
-    const origin =
-      new URL(request.url).origin;
-
     const redirectUri =
-      `${origin}/api/music/spotify/callback`;
+      `${url.origin}/api/music/spotify/callback`;
 
     const token =
       await exchangeSpotifyCode(
@@ -141,118 +94,39 @@ export async function GET(
         redirectUri
       );
 
-    let me;
-
-    try {
-      me = await getSpotifyMe(
+    const me =
+      await getSpotifyMe(
         token.access_token
       );
-    } catch (error: any) {
-      console.error(
-        "Spotify callback profile:",
-        {
-          code: error?.code || null,
-          status: error?.status || null,
-          message:
-            error?.message ||
-            String(error),
-        }
-      );
 
-      const response = redirectTo(
-        request,
-        error?.status === 403
-          ? "not-authorized"
-          : "profile-error",
-        returnTo
-      );
+    await saveSpotifyTokens(
+      oauthState.userId,
+      token
+    );
 
-      clearPending(response);
-      clearSession(response);
-      return response;
-    }
-
-    /*
-     * NO usamos me.product.
-     * Spotify lo eliminó de GET /me para Dev Mode en 2026.
-     */
     await upsertSpotifyConnection(
-      userId,
-      me
+      oauthState.userId,
+      me,
+      "pending"
     );
 
-    const response = redirectTo(
+    return redirectTo(
       request,
-      "connected",
-      returnTo
+      oauthState.returnTo,
+      "connected"
     );
-
-    clearPending(response);
-
-    response.cookies.set(
-      SPOTIFY_COOKIES.owner,
-      signOwner(userId),
-      cookieOptions(
-        180 * 24 * 60 * 60
-      )
-    );
-
-    response.cookies.set(
-      SPOTIFY_COOKIES.access,
-      token.access_token,
-      cookieOptions(
-        Math.max(
-          60,
-          Number(
-            token.expires_in || 3600
-          )
-        )
-      )
-    );
-
-    if (token.refresh_token) {
-      response.cookies.set(
-        SPOTIFY_COOKIES.refresh,
-        token.refresh_token,
-        cookieOptions(
-          180 * 24 * 60 * 60
-        )
-      );
-    }
-
-    response.cookies.set(
-      SPOTIFY_COOKIES.expiresAt,
-      String(
-        Date.now() +
-          Math.max(
-            60,
-            Number(
-              token.expires_in || 3600
-            )
-          ) *
-            1000
-      ),
-      cookieOptions(
-        180 * 24 * 60 * 60
-      )
-    );
-
-    return response;
   } catch (error: any) {
     console.error(
       "Spotify callback:",
       error?.message || error
     );
 
-    const response = redirectTo(
+    return redirectTo(
       request,
-      "error",
-      returnTo
+      oauthState.returnTo,
+      error?.status === 403
+        ? "not-authorized"
+        : "error"
     );
-
-    clearPending(response);
-    clearSession(response);
-
-    return response;
   }
 }

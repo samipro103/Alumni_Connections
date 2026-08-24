@@ -1,11 +1,9 @@
 import { randomBytes } from "crypto";
 import { NextResponse } from "next/server";
 import {
-  SPOTIFY_COOKIES,
-  cookieOptions,
   getSpotifyClientId,
   safeSpotifyReturnPath,
-  signPendingUser,
+  saveOAuthState,
   verifyAlumniUser,
 } from "@/lib/spotifyServer";
 
@@ -19,45 +17,35 @@ const SCOPES = [
 
 export async function POST(request: Request) {
   try {
-    const user =
-      await verifyAlumniUser(
-        request.headers.get(
-          "authorization"
-        )
-      );
+    const user = await verifyAlumniUser(
+      request.headers.get("authorization")
+    );
 
     if (!user) {
       return NextResponse.json(
-        {
-          error:
-            "Inicia sesión en Alumni para conectar Spotify.",
-        },
+        { error: "Inicia sesión en Alumni." },
         { status: 401 }
       );
     }
 
-    const body = await request
-      .json()
-      .catch(() => ({}));
+    const body = await request.json().catch(() => ({}));
+    const returnTo = safeSpotifyReturnPath(
+      typeof body?.return_to === "string"
+        ? body.return_to
+        : null
+    );
 
-    const returnTo =
-      safeSpotifyReturnPath(
-        typeof body?.return_to ===
-          "string"
-          ? body.return_to
-          : null
-      );
-
-    const origin =
-      new URL(request.url).origin;
-
+    const origin = new URL(request.url).origin;
     const redirectUri =
       `${origin}/api/music/spotify/callback`;
 
-    const state =
-      randomBytes(24).toString(
-        "hex"
-      );
+    const state = randomBytes(24).toString("hex");
+
+    await saveOAuthState(
+      user.id,
+      state,
+      returnTo
+    );
 
     const authorize = new URL(
       "https://accounts.spotify.com/authorize"
@@ -67,59 +55,30 @@ export async function POST(request: Request) {
       "client_id",
       getSpotifyClientId()
     );
-
     authorize.searchParams.set(
       "response_type",
       "code"
     );
-
     authorize.searchParams.set(
       "redirect_uri",
       redirectUri
     );
-
     authorize.searchParams.set(
       "scope",
       SCOPES.join(" ")
     );
-
     authorize.searchParams.set(
       "state",
       state
     );
-
     authorize.searchParams.set(
       "show_dialog",
       "true"
     );
 
-    const response =
-      NextResponse.json({
-        url: authorize.toString(),
-      });
-
-    response.cookies.set(
-      SPOTIFY_COOKIES.state,
-      state,
-      cookieOptions(10 * 60)
-    );
-
-    response.cookies.set(
-      SPOTIFY_COOKIES.pendingUser,
-      signPendingUser(
-        user.id,
-        state
-      ),
-      cookieOptions(10 * 60)
-    );
-
-    response.cookies.set(
-      SPOTIFY_COOKIES.returnTo,
-      returnTo,
-      cookieOptions(10 * 60)
-    );
-
-    return response;
+    return NextResponse.json({
+      url: authorize.toString(),
+    });
   } catch (error: any) {
     console.error(
       "Spotify connect:",

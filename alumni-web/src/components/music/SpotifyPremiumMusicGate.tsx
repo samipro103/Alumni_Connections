@@ -15,6 +15,7 @@ import SpotifyConnectModal, {
   type SpotifyConnectState,
 } from "@/components/music/SpotifyConnectModal";
 import SpotifyLogo from "@/components/music/SpotifyLogo";
+import SpotifyPremiumVerifier from "@/components/music/SpotifyPremiumVerifier";
 import {
   disconnectSpotify,
   getSpotifyPremiumSession,
@@ -68,6 +69,9 @@ export default function SpotifyPremiumMusicGate({
   const [premium, setPremium] =
     useState(false);
 
+  const [verificationRequired, setVerificationRequired] =
+    useState(false);
+
   const [displayName, setDisplayName] =
     useState<string | null>(null);
 
@@ -105,6 +109,14 @@ export default function SpotifyPremiumMusicGate({
         Boolean(
           session.connected &&
             session.premium
+        )
+      );
+
+      setVerificationRequired(
+        Boolean(
+          session.connected &&
+          session.reason ===
+            "verification_required"
         )
       );
 
@@ -213,7 +225,27 @@ export default function SpotifyPremiumMusicGate({
 
   return (
     <>
-      {premium ? (
+      {verificationRequired ? (
+        <SpotifyPremiumVerifier
+          onVerified={() => {
+            setVerificationRequired(false);
+            setPremium(true);
+            setModalOpen(false);
+          }}
+          onRejected={() => {
+            setVerificationRequired(false);
+            setPremium(false);
+            setModalState("not_premium");
+            setModalOpen(true);
+          }}
+          onError={() => {
+            setVerificationRequired(false);
+            setPremium(false);
+            setModalState("error");
+            setModalOpen(true);
+          }}
+        />
+      ) : premium ? (
         <div>
           <div className="mb-6 flex flex-wrap items-center justify-between gap-3 border-b border-white/[0.06] pb-5">
             <div className="flex items-center gap-3">

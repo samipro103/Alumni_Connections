@@ -1,8 +1,6 @@
 import { NextResponse } from "next/server";
 import {
-  SPOTIFY_COOKIES,
-  cookieOptions,
-  deleteSpotifyConnection,
+  deleteSpotifyAccountData,
   verifyAlumniUser,
 } from "@/lib/spotifyServer";
 
@@ -18,30 +16,11 @@ export async function POST(request: Request) {
     );
   }
 
-  try {
-    await deleteSpotifyConnection(
-      user.id
-    );
-  } catch (error) {
-    console.error(
-      "Spotify disconnect DB:",
-      error
-    );
-  }
+  await deleteSpotifyAccountData(
+    user.id
+  );
 
-  const response = NextResponse.json({
+  return NextResponse.json({
     ok: true,
   });
-
-  for (const name of Object.values(
-    SPOTIFY_COOKIES
-  )) {
-    response.cookies.set(
-      name,
-      "",
-      cookieOptions(0)
-    );
-  }
-
-  return response;
 }

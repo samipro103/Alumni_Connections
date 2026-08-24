@@ -17,6 +17,7 @@ import {
 } from "react";
 import ProfileMusicSettings from "@/components/settings/ProfileMusicSettings";
 import SpotifyLogo from "@/components/music/SpotifyLogo";
+import SpotifyPremiumVerifier from "@/components/music/SpotifyPremiumVerifier";
 import {
   disconnectSpotify,
   getSpotifyPremiumSession,
@@ -27,6 +28,7 @@ type ViewState =
   | "checking"
   | "intro"
   | "premium"
+  | "verifying"
   | "not_premium"
   | "not_authorized"
   | "cancelled"
@@ -251,6 +253,17 @@ export default function ProfileSpotifyAction({
 
         setView("premium");
       } else if (
+        session.connected &&
+        session.reason ===
+          "verification_required"
+      ) {
+        setDisplayName(
+          session.display_name ||
+            null
+        );
+
+        setView("verifying");
+      } else if (
         session.reason ===
         "not_premium"
       ) {
@@ -355,6 +368,19 @@ export default function ProfileSpotifyAction({
               {view ===
               "checking" ? (
                 <Checking />
+              ) : view ===
+                "verifying" ? (
+                <SpotifyPremiumVerifier
+                  onVerified={() => {
+                    setView("premium");
+                  }}
+                  onRejected={() => {
+                    setView("not_premium");
+                  }}
+                  onError={() => {
+                    setView("error");
+                  }}
+                />
               ) : view ===
                 "premium" ? (
                 <PremiumView
