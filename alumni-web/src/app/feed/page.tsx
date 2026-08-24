@@ -267,16 +267,38 @@ function FeedContent() {
       if (!imageUrl) return;
     }
 
-    const { error } = await supabase.from("posts").insert({
-      user_id: user.id,
-      content: content.trim(),
-      image_url: imageUrl,
-    });
+    const {
+      data: insertedPost,
+      error,
+    } = await supabase
+      .from("posts")
+      .insert({
+        user_id: user.id,
+        content: content.trim(),
+        image_url: imageUrl,
+      })
+      .select("id")
+      .single();
 
-    if (error) {
-      alert(error.message);
+    if (error || !insertedPost) {
+      alert(
+        error?.message ||
+          "No se pudo crear la publicación."
+      );
       return;
     }
+
+    void fetch("/api/moderation/post", {
+      method: "POST",
+      headers: {
+        Authorization:
+          `Bearer ${session.access_token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        post_id: insertedPost.id,
+      }),
+    }).catch(() => {});
 
     setContent("");
     setImage(null);
