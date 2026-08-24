@@ -5,45 +5,14 @@ import {
   verifyAlumniUser,
 } from "@/lib/spotifyServer";
 
-function sleep(ms: number) {
-  return new Promise((resolve) =>
-    setTimeout(resolve, ms)
+export async function POST(request: Request) {
+  const user = await verifyAlumniUser(
+    request.headers.get("authorization")
   );
-}
-
-async function readSpotifyError(
-  response: Response
-) {
-  try {
-    const data =
-      await response.json();
-
-    return (
-      data?.error?.message ||
-      data?.message ||
-      null
-    );
-  } catch {
-    return null;
-  }
-}
-
-export async function POST(
-  request: Request
-) {
-  const user =
-    await verifyAlumniUser(
-      request.headers.get(
-        "authorization"
-      )
-    );
 
   if (!user) {
     return NextResponse.json(
-      {
-        error:
-          "Sesión Alumni no válida.",
-      },
+      { error: "Sesión Alumni no válida." },
       { status: 401 }
     );
   }
@@ -67,10 +36,9 @@ export async function POST(
     );
   }
 
-  const body =
-    await request
-      .json()
-      .catch(() => ({}));
+  const body = await request
+    .json()
+    .catch(() => ({}));
 
   const trackId =
     String(
@@ -92,10 +60,7 @@ export async function POST(
       )
     );
 
-  if (
-    !trackId ||
-    !deviceId
-  ) {
+  if (!trackId || !deviceId) {
     return NextResponse.json(
       {
         error:
@@ -111,106 +76,46 @@ export async function POST(
         user.id
       );
 
-    async function startPlayback() {
-      const endpoint =
-        new URL(
-          "https://api.spotify.com/v1/me/player/play"
-        );
+    const endpoint = new URL(
+      "https://api.spotify.com/v1/me/player/play"
+    );
 
-      endpoint.searchParams.set(
-        "device_id",
-        deviceId
-      );
+    endpoint.searchParams.set(
+      "device_id",
+      deviceId
+    );
 
-      return fetch(
-        endpoint,
-        {
-          method: "PUT",
-          headers: {
-            Authorization:
-              `Bearer ${resolved.accessToken}`,
-            "Content-Type":
-              "application/json",
-          },
-          body:
-            JSON.stringify({
-              uris: [
-                `spotify:track:${trackId}`,
-              ],
-              position_ms:
-                startSeconds *
-                1000,
-            }),
-          cache:
-            "no-store",
-        }
-      );
-    }
+    const spotifyResponse =
+      await fetch(endpoint, {
+        method: "PUT",
+        headers: {
+          Authorization:
+            `Bearer ${resolved.accessToken}`,
+          "Content-Type":
+            "application/json",
+        },
+        body: JSON.stringify({
+          uris: [
+            `spotify:track:${trackId}`,
+          ],
+          position_ms:
+            startSeconds * 1000,
+        }),
+        cache: "no-store",
+      });
 
-    /*
-     * Volvemos al comportamiento que ya funcionaba:
-     * reproducir directamente sobre el device_id del Web Playback SDK.
-     *
-     * Solo añadimos dos reintentos cortos si Spotify devuelve 404
-     * inmediatamente después de ready. No hacemos transfer playback,
-     * no esperamos device lists y no bloqueamos el arranque.
-     */
-    let response =
-      await startPlayback();
-
-    if (
-      !response.ok &&
-      response.status ===
-        404
-    ) {
-      await sleep(220);
-
-      response =
-        await startPlayback();
-    }
-
-    if (
-      !response.ok &&
-      response.status ===
-        404
-    ) {
-      await sleep(380);
-
-      response =
-        await startPlayback();
-    }
-
-    if (!response.ok) {
-      const message =
-        await readSpotifyError(
-          response
-        );
-
-      console.error(
-        "Spotify play error",
-        {
-          status:
-            response.status,
-          message,
-        }
-      );
-
+    if (!spotifyResponse.ok) {
       return NextResponse.json(
         {
           error:
-            response.status ===
+            spotifyResponse.status ===
             403
-              ? "Spotify Premium no permitió la reproducción."
-              : response.status ===
-                429
-              ? "Spotify está limitando temporalmente la reproducción."
-              : message ||
-                "Spotify no pudo iniciar la canción.",
+              ? "Spotify Premium es obligatorio para reproducir dentro de Alumni."
+              : "Spotify no pudo iniciar la canción.",
         },
         {
           status:
-            response.status ||
-            502,
+            spotifyResponse.status,
         }
       );
     }
@@ -218,16 +123,14 @@ export async function POST(
     return NextResponse.json({
       ok: true,
     });
-  } catch (
-    error: any
-  ) {
+  } catch (error: any) {
     return NextResponse.json(
       {
         error:
           error?.message ||
           "Vuelve a conectar Spotify.",
       },
-      { status: 500 }
+      { status: 401 }
     );
   }
 }
