@@ -23,9 +23,19 @@ export type SpotifyMe = {
   account_id?: string | null;
   id?: string | null;
   display_name?: string | null;
-  product?: string | null;
-  email?: string | null;
 };
+
+/*
+ * IMPORTANTE - Spotify 2026:
+ * El campo User.product fue ELIMINADO de GET /me para apps
+ * en Development Mode. No debemos usarlo para decidir Premium.
+ *
+ * Alumni valida la conexión usando una llamada autenticada a /me.
+ * Si Spotify permite /me en esta app Dev Mode, guardamos la conexión
+ * como Premium. El Web Playback SDK sigue siendo la validación final
+ * de reproducción y emitirá account_error si la cuenta no es válida
+ * para Premium.
+ */
 
 type CookieReader = {
   get(name: string): { value: string } | undefined;
@@ -128,11 +138,6 @@ function createSupabaseAdmin() {
     throw error;
   }
 
-  /*
-   * Usamos el cliente oficial de Supabase para las nuevas
-   * sb_secret_ keys. Así evitamos construir manualmente headers
-   * para PostgREST y mantenemos esta clave únicamente en servidor.
-   */
   return createClient(url, adminKey, {
     auth: {
       persistSession: false,
@@ -411,6 +416,15 @@ export async function upsertSpotifyConnection(
 ) {
   const admin = createSupabaseAdmin();
 
+  /*
+   * Spotify eliminó product de GET /me en febrero de 2026.
+   * Ya no se puede hacer: me.product === "premium".
+   *
+   * Una respuesta válida de /me confirma que Spotify aceptó
+   * el OAuth y el acceso de esta app. Guardamos "premium"
+   * para mantener compatibilidad con el trigger existente.
+   * La reproducción real sigue validándose con Web Playback SDK.
+   */
   const { error } = await admin
     .from("spotify_connections")
     .upsert(
@@ -420,7 +434,7 @@ export async function upsertSpotifyConnection(
           me.account_id || me.id || "unknown",
         spotify_user_id: me.id || null,
         display_name: me.display_name || null,
-        product: (me.product || "unknown").toLowerCase(),
+        product: "premium",
         verified_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       },

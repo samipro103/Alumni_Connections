@@ -135,34 +135,11 @@ export async function GET(
     const redirectUri =
       `${origin}/api/music/spotify/callback`;
 
-    let token;
-
-    try {
-      token =
-        await exchangeSpotifyCode(
-          code,
-          redirectUri
-        );
-    } catch (error: any) {
-      console.error(
-        "Spotify callback token:",
-        {
-          code: error?.code || null,
-          status: error?.status || null,
-          message: error?.message || String(error),
-        }
+    const token =
+      await exchangeSpotifyCode(
+        code,
+        redirectUri
       );
-
-      const response = redirectTo(
-        request,
-        "token-error",
-        returnTo
-      );
-
-      clearPending(response);
-      clearSession(response);
-      return response;
-    }
 
     let me;
 
@@ -176,7 +153,9 @@ export async function GET(
         {
           code: error?.code || null,
           status: error?.status || null,
-          message: error?.message || String(error),
+          message:
+            error?.message ||
+            String(error),
         }
       );
 
@@ -193,50 +172,14 @@ export async function GET(
       return response;
     }
 
-    try {
-      await upsertSpotifyConnection(
-        userId,
-        me
-      );
-    } catch (error: any) {
-      console.error(
-        "Spotify callback Supabase:",
-        {
-          code: error?.code || null,
-          message: error?.message || String(error),
-        }
-      );
-
-      const response = redirectTo(
-        request,
-        error?.code ===
-          "SUPABASE_ADMIN_MISSING"
-          ? "server-config"
-          : "database-error",
-        returnTo
-      );
-
-      clearPending(response);
-      clearSession(response);
-      return response;
-    }
-
-    const product =
-      (
-        me.product || ""
-      ).toLowerCase();
-
-    if (product !== "premium") {
-      const response = redirectTo(
-        request,
-        "not-premium",
-        returnTo
-      );
-
-      clearPending(response);
-      clearSession(response);
-      return response;
-    }
+    /*
+     * NO usamos me.product.
+     * Spotify lo eliminó de GET /me para Dev Mode en 2026.
+     */
+    await upsertSpotifyConnection(
+      userId,
+      me
+    );
 
     const response = redirectTo(
       request,
@@ -297,7 +240,7 @@ export async function GET(
     return response;
   } catch (error: any) {
     console.error(
-      "Spotify callback unexpected:",
+      "Spotify callback:",
       error?.message || error
     );
 

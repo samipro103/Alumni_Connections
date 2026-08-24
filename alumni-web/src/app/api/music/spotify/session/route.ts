@@ -28,10 +28,15 @@ function clearSpotifySession(
   }
 }
 
-export async function GET(request: Request) {
-  const user = await verifyAlumniUser(
-    request.headers.get("authorization")
-  );
+export async function GET(
+  request: Request
+) {
+  const user =
+    await verifyAlumniUser(
+      request.headers.get(
+        "authorization"
+      )
+    );
 
   if (!user) {
     return NextResponse.json(
@@ -44,15 +49,20 @@ export async function GET(request: Request) {
     );
   }
 
-  const cookieStore = await cookies();
+  const cookieStore =
+    await cookies();
 
-  const ownerId = verifyOwner(
-    cookieStore.get(
-      SPOTIFY_COOKIES.owner
-    )?.value
-  );
+  const ownerId =
+    verifyOwner(
+      cookieStore.get(
+        SPOTIFY_COOKIES.owner
+      )?.value
+    );
 
-  if (!ownerId || ownerId !== user.id) {
+  if (
+    !ownerId ||
+    ownerId !== user.id
+  ) {
     return NextResponse.json(
       {
         connected: false,
@@ -69,44 +79,38 @@ export async function GET(request: Request) {
         cookieStore
       );
 
-    const me = await getSpotifyMe(
-      resolved.accessToken
-    );
+    /*
+     * GET /me ya no devuelve product desde febrero 2026.
+     * Si esta llamada autenticada funciona, mantenemos la
+     * conexión como válida. El SDK valida reproducción Premium.
+     */
+    const me =
+      await getSpotifyMe(
+        resolved.accessToken
+      );
 
     await upsertSpotifyConnection(
       user.id,
       me
     );
 
-    const premium =
-      (me.product || "").toLowerCase() ===
-      "premium";
-
-    const response = NextResponse.json(
-      {
-        connected: premium,
-        premium,
+    const response =
+      NextResponse.json({
+        connected: true,
+        premium: true,
         display_name:
           me.display_name || null,
-        product: me.product || null,
-        reason: premium
-          ? null
-          : "not_premium",
-      },
-      {
-        status: premium ? 200 : 402,
-      }
-    );
+        product: "premium",
+        reason: null,
+      });
 
-    if (premium) {
-      response.cookies.set(
-        SPOTIFY_COOKIES.owner,
-        signOwner(user.id),
-        cookieOptions(
-          180 * 24 * 60 * 60
-        )
-      );
-    }
+    response.cookies.set(
+      SPOTIFY_COOKIES.owner,
+      signOwner(user.id),
+      cookieOptions(
+        180 * 24 * 60 * 60
+      )
+    );
 
     if (resolved.refreshed) {
       response.cookies.set(
@@ -116,7 +120,8 @@ export async function GET(request: Request) {
           Math.max(
             60,
             Number(
-              resolved.refreshed.expires_in ||
+              resolved.refreshed
+                .expires_in ||
                 3600
             )
           )
@@ -127,21 +132,25 @@ export async function GET(request: Request) {
         SPOTIFY_COOKIES.refresh,
         resolved.refreshToken,
         cookieOptions(
-          180 * 24 * 60 * 60
+          180 *
+            24 *
+            60 *
+            60
         )
       );
 
       response.cookies.set(
         SPOTIFY_COOKIES.expiresAt,
-        String(resolved.expiresAt),
+        String(
+          resolved.expiresAt
+        ),
         cookieOptions(
-          180 * 24 * 60 * 60
+          180 *
+            24 *
+            60 *
+            60
         )
       );
-    }
-
-    if (!premium) {
-      clearSpotifySession(response);
     }
 
     return response;
@@ -151,16 +160,28 @@ export async function GET(request: Request) {
       error?.message || error
     );
 
-    const response = NextResponse.json(
-      {
-        connected: false,
-        premium: false,
-        reason: "disconnected",
-      },
-      { status: 401 }
+    const response =
+      NextResponse.json(
+        {
+          connected: false,
+          premium: false,
+          reason:
+            error?.status === 403
+              ? "not_authorized"
+              : "disconnected",
+        },
+        {
+          status:
+            error?.status === 403
+              ? 403
+              : 401,
+        }
+      );
+
+    clearSpotifySession(
+      response
     );
 
-    clearSpotifySession(response);
     return response;
   }
 }
