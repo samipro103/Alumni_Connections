@@ -5,6 +5,7 @@ import {
   cookieOptions,
   exchangeSpotifyCode,
   getSpotifyMe,
+  safeSpotifyReturnPath,
   signOwner,
   upsertSpotifyConnection,
   verifyPendingUser,
@@ -12,32 +13,49 @@ import {
 
 function redirectTo(
   request: Request,
-  status: string
+  status: string,
+  returnTo?: string | null
 ) {
-  const origin = new URL(request.url).origin;
+  const origin =
+    new URL(request.url).origin;
+
+  const destination =
+    new URL(
+      safeSpotifyReturnPath(
+        returnTo
+      ),
+      origin
+    );
+
+  destination.searchParams.set(
+    "spotify",
+    status
+  );
 
   return NextResponse.redirect(
-    `${origin}/settings?section=music&spotify=${encodeURIComponent(
-      status
-    )}`
+    destination
   );
 }
 
-function clearPending(response: NextResponse) {
-  response.cookies.set(
+function clearPending(
+  response: NextResponse
+) {
+  for (const name of [
     SPOTIFY_COOKIES.state,
-    "",
-    cookieOptions(0)
-  );
-
-  response.cookies.set(
     SPOTIFY_COOKIES.pendingUser,
-    "",
-    cookieOptions(0)
-  );
+    SPOTIFY_COOKIES.returnTo,
+  ]) {
+    response.cookies.set(
+      name,
+      "",
+      cookieOptions(0)
+    );
+  }
 }
 
-function clearSession(response: NextResponse) {
+function clearSession(
+  response: NextResponse
+) {
   for (const name of [
     SPOTIFY_COOKIES.owner,
     SPOTIFY_COOKIES.access,
@@ -52,16 +70,39 @@ function clearSession(response: NextResponse) {
   }
 }
 
-export async function GET(request: Request) {
-  const url = new URL(request.url);
-  const code = url.searchParams.get("code") || "";
-  const state = url.searchParams.get("state") || "";
-  const spotifyError =
-    url.searchParams.get("error") || "";
+export async function GET(
+  request: Request
+) {
+  const url =
+    new URL(request.url);
 
-  const cookieStore = await cookies();
+  const code =
+    url.searchParams.get(
+      "code"
+    ) || "";
+
+  const state =
+    url.searchParams.get(
+      "state"
+    ) || "";
+
+  const spotifyError =
+    url.searchParams.get(
+      "error"
+    ) || "";
+
+  const cookieStore =
+    await cookies();
+
   const expectedState =
-    cookieStore.get(SPOTIFY_COOKIES.state)?.value || "";
+    cookieStore.get(
+      SPOTIFY_COOKIES.state
+    )?.value || "";
+
+  const returnTo =
+    cookieStore.get(
+      SPOTIFY_COOKIES.returnTo
+    )?.value || null;
 
   if (
     spotifyError ||
@@ -72,26 +113,30 @@ export async function GET(request: Request) {
   ) {
     const response = redirectTo(
       request,
-      spotifyError === "access_denied"
+      spotifyError ===
+        "access_denied"
         ? "cancelled"
-        : "error"
+        : "error",
+      returnTo
     );
 
     clearPending(response);
     return response;
   }
 
-  const userId = verifyPendingUser(
-    cookieStore.get(
-      SPOTIFY_COOKIES.pendingUser
-    )?.value,
-    state
-  );
+  const userId =
+    verifyPendingUser(
+      cookieStore.get(
+        SPOTIFY_COOKIES.pendingUser
+      )?.value,
+      state
+    );
 
   if (!userId) {
     const response = redirectTo(
       request,
-      "error"
+      "error",
+      returnTo
     );
 
     clearPending(response);
@@ -99,31 +144,46 @@ export async function GET(request: Request) {
   }
 
   try {
-    const origin = new URL(request.url).origin;
+    const origin =
+      new URL(request.url).origin;
+
     const redirectUri =
       `${origin}/api/music/spotify/callback`;
 
-    const token = await exchangeSpotifyCode(
-      code,
-      redirectUri
-    );
+    const token =
+      await exchangeSpotifyCode(
+        code,
+        redirectUri
+      );
 
     let me;
 
     try {
-      me = await getSpotifyMe(
-        token.access_token
-      );
-    } catch (profileError: any) {
-      const response = redirectTo(
-        request,
-        profileError?.status === 403
-          ? "not-authorized"
-          : "error"
+      me =
+        await getSpotifyMe(
+          token.access_token
+        );
+    } catch (
+      profileError: any
+    ) {
+      const response =
+        redirectTo(
+          request,
+          profileError?.status ===
+            403
+            ? "not-authorized"
+            : "error",
+          returnTo
+        );
+
+      clearPending(
+        response
       );
 
-      clearPending(response);
-      clearSession(response);
+      clearSession(
+        response
+      );
+
       return response;
     }
 
@@ -133,30 +193,49 @@ export async function GET(request: Request) {
     );
 
     const product =
-      (me.product || "").toLowerCase();
+      (
+        me.product || ""
+      ).toLowerCase();
 
-    if (product !== "premium") {
-      const response = redirectTo(
-        request,
-        "not-premium"
+    if (
+      product !== "premium"
+    ) {
+      const response =
+        redirectTo(
+          request,
+          "not-premium",
+          returnTo
+        );
+
+      clearPending(
+        response
       );
 
-      clearPending(response);
-      clearSession(response);
+      clearSession(
+        response
+      );
+
       return response;
     }
 
-    const response = redirectTo(
-      request,
-      "connected"
-    );
+    const response =
+      redirectTo(
+        request,
+        "connected",
+        returnTo
+      );
 
     clearPending(response);
 
     response.cookies.set(
       SPOTIFY_COOKIES.owner,
       signOwner(userId),
-      cookieOptions(180 * 24 * 60 * 60)
+      cookieOptions(
+        180 *
+          24 *
+          60 *
+          60
+      )
     );
 
     response.cookies.set(
@@ -165,17 +244,25 @@ export async function GET(request: Request) {
       cookieOptions(
         Math.max(
           60,
-          Number(token.expires_in || 3600)
+          Number(
+            token.expires_in ||
+              3600
+          )
         )
       )
     );
 
-    if (token.refresh_token) {
+    if (
+      token.refresh_token
+    ) {
       response.cookies.set(
         SPOTIFY_COOKIES.refresh,
         token.refresh_token,
         cookieOptions(
-          180 * 24 * 60 * 60
+          180 *
+            24 *
+            60 *
+            60
         )
       );
     }
@@ -186,12 +273,18 @@ export async function GET(request: Request) {
         Date.now() +
           Math.max(
             60,
-            Number(token.expires_in || 3600)
+            Number(
+              token.expires_in ||
+                3600
+            )
           ) *
             1000
       ),
       cookieOptions(
-        180 * 24 * 60 * 60
+        180 *
+          24 *
+          60 *
+          60
       )
     );
 
@@ -202,13 +295,16 @@ export async function GET(request: Request) {
       error?.message || error
     );
 
-    const response = redirectTo(
-      request,
-      "error"
-    );
+    const response =
+      redirectTo(
+        request,
+        "error",
+        returnTo
+      );
 
     clearPending(response);
     clearSession(response);
+
     return response;
   }
 }

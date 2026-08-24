@@ -16,11 +16,14 @@ async function authHeader() {
   } = await supabase.auth.getSession();
 
   if (!session?.access_token) {
-    throw new Error("Tu sesión de Alumni no está activa.");
+    throw new Error(
+      "Tu sesión de Alumni no está activa."
+    );
   }
 
   return {
-    Authorization: `Bearer ${session.access_token}`,
+    Authorization:
+      `Bearer ${session.access_token}`,
   };
 }
 
@@ -35,7 +38,9 @@ export async function getSpotifyPremiumSession() {
     }
   );
 
-  const data = await response.json().catch(() => ({}));
+  const data = await response
+    .json()
+    .catch(() => ({}));
 
   if (response.status === 402) {
     return {
@@ -50,14 +55,18 @@ export async function getSpotifyPremiumSession() {
     return {
       connected: false,
       premium: false,
-      reason: data?.reason || "disconnected",
+      reason:
+        data?.reason ||
+        "disconnected",
     } as SpotifyPremiumSession;
   }
 
   return data as SpotifyPremiumSession;
 }
 
-export async function startSpotifyConnect() {
+export async function startSpotifyConnect(
+  returnTo = "/settings?section=music"
+) {
   const headers = await authHeader();
 
   const response = await fetch(
@@ -66,24 +75,32 @@ export async function startSpotifyConnect() {
       method: "POST",
       headers: {
         ...headers,
-        "Content-Type": "application/json",
+        "Content-Type":
+          "application/json",
       },
       body: JSON.stringify({
-        return_to: "/settings?section=music",
+        return_to: returnTo,
       }),
     }
   );
 
-  const data = await response.json().catch(() => ({}));
+  const data = await response
+    .json()
+    .catch(() => ({}));
 
-  if (!response.ok || !data?.url) {
+  if (
+    !response.ok ||
+    !data?.url
+  ) {
     throw new Error(
       data?.error ||
         "No se pudo iniciar la conexión con Spotify."
     );
   }
 
-  window.location.assign(data.url);
+  window.location.assign(
+    data.url
+  );
 }
 
 export async function disconnectSpotify() {
@@ -98,7 +115,9 @@ export async function disconnectSpotify() {
   );
 
   if (!response.ok) {
-    const data = await response.json().catch(() => ({}));
+    const data = await response
+      .json()
+      .catch(() => ({}));
 
     throw new Error(
       data?.error ||

@@ -7,6 +7,7 @@ export const SPOTIFY_COOKIES = {
   access: "alumni_spotify_access",
   refresh: "alumni_spotify_refresh",
   expiresAt: "alumni_spotify_expires_at",
+  returnTo: "alumni_spotify_return_to",
 } as const;
 
 export type SpotifyTokenPayload = {
@@ -150,6 +151,38 @@ export function cookieOptions(maxAge: number) {
     path: "/",
     maxAge,
   };
+}
+
+export function safeSpotifyReturnPath(
+  value: string | null | undefined
+) {
+  const fallback = "/settings?section=music";
+  const raw = (value || "").trim();
+
+  if (
+    !raw.startsWith("/") ||
+    raw.startsWith("//")
+  ) {
+    return fallback;
+  }
+
+  try {
+    const parsed = new URL(
+      raw,
+      "https://alumni.local"
+    );
+
+    if (
+      parsed.origin !==
+      "https://alumni.local"
+    ) {
+      return fallback;
+    }
+
+    return `${parsed.pathname}${parsed.search}`;
+  } catch {
+    return fallback;
+  }
 }
 
 function hmac(value: string) {

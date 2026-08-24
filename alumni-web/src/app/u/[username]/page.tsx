@@ -10,6 +10,7 @@ import {
   MapPin,
   MessageCircle,
   Send,
+  Share2,
   UserCheck,
   UserPlus,
 } from "lucide-react";
@@ -19,7 +20,7 @@ import { useAuth } from "@/components/auth/AuthProvider";
 import { supabase } from "@/lib/supabase";
 import AppShell from "@/components/layout/AppShell";
 import ProfileMusicCard from "@/components/profile/ProfileMusicCard";
-import ProfileSpotifyCorner from "@/components/music/ProfileSpotifyCorner";
+import ProfileSpotifyAction from "@/components/music/ProfileSpotifyAction";
 import HDProfileImage from "@/components/profile/HDProfileImage";
 import ProfileSocialLinks from "@/components/profile/ProfileSocialLinks";
 import CommentLikeButton from "@/components/social/CommentLikeButton";
@@ -302,6 +303,43 @@ export default function UserProfilePage() {
     await getProfile();
   }
 
+  async function shareProfile() {
+    if (!profile) return;
+
+    const url =
+      `${window.location.origin}/u/${profile.username}`;
+
+    try {
+      if (navigator.share) {
+        await navigator.share({
+          title:
+            `@${profile.username} en Alumni`,
+          url,
+        });
+
+        return;
+      }
+
+      await navigator.clipboard.writeText(
+        url
+      );
+
+      alert(
+        "Enlace del perfil copiado."
+      );
+    } catch (error: any) {
+      if (
+        error?.name !==
+        "AbortError"
+      ) {
+        console.error(
+          "Error compartiendo perfil:",
+          error
+        );
+      }
+    }
+  }
+
   const links = useMemo(
     () =>
       [
@@ -347,11 +385,7 @@ export default function UserProfilePage() {
     <AppShell>
       <div className="mx-auto w-full max-w-[900px]">
         <section className="relative rounded-[28px] border border-white/[0.07] bg-[#101318]/95">
-          <ProfileSpotifyCorner
-            ownProfile={ownProfile}
-            trackUrl={profileMusic?.track_url || null}
-          />
-          <div className="overflow-hidden rounded-t-[27px]">
+<div className="overflow-hidden rounded-t-[27px]">
             <div className="h-48 bg-[#151a23] sm:h-60">
               {profile.banner_url ? (
                 <HDProfileImage
@@ -394,12 +428,29 @@ export default function UserProfilePage() {
               </div>
 
               {ownProfile ? (
-                <button
-                  onClick={() => router.push("/settings")}
-                  className="h-10 shrink-0 rounded-xl bg-[#6d7cff] px-4 text-xs font-black text-white"
-                >
-                  Editar perfil
-                </button>
+                <div className="flex shrink-0 items-center gap-2">
+                  <button
+                    onClick={() => router.push("/settings")}
+                    className="h-10 shrink-0 rounded-xl bg-[#6d7cff] px-4 text-xs font-black text-white"
+                  >
+                    Editar perfil
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={shareProfile}
+                    className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-white/[0.08] bg-white/[0.035] text-zinc-500 transition hover:bg-white/[0.07] hover:text-zinc-200"
+                    aria-label="Compartir perfil"
+                    title="Compartir perfil"
+                  >
+                    <Share2 size={17} />
+                  </button>
+
+                  <ProfileSpotifyAction
+                    userId={user?.id || ""}
+                    username={profile.username}
+                  />
+                </div>
               ) : (
                 <div className="flex shrink-0 gap-2">
                   <button

@@ -4,6 +4,7 @@ import {
   SPOTIFY_COOKIES,
   cookieOptions,
   getSpotifyClientId,
+  safeSpotifyReturnPath,
   signPendingUser,
   verifyAlumniUser,
 } from "@/lib/spotifyServer";
@@ -18,22 +19,45 @@ const SCOPES = [
 
 export async function POST(request: Request) {
   try {
-    const user = await verifyAlumniUser(
-      request.headers.get("authorization")
-    );
+    const user =
+      await verifyAlumniUser(
+        request.headers.get(
+          "authorization"
+        )
+      );
 
     if (!user) {
       return NextResponse.json(
-        { error: "Inicia sesión en Alumni para conectar Spotify." },
+        {
+          error:
+            "Inicia sesión en Alumni para conectar Spotify.",
+        },
         { status: 401 }
       );
     }
 
-    const origin = new URL(request.url).origin;
+    const body = await request
+      .json()
+      .catch(() => ({}));
+
+    const returnTo =
+      safeSpotifyReturnPath(
+        typeof body?.return_to ===
+          "string"
+          ? body.return_to
+          : null
+      );
+
+    const origin =
+      new URL(request.url).origin;
+
     const redirectUri =
       `${origin}/api/music/spotify/callback`;
 
-    const state = randomBytes(24).toString("hex");
+    const state =
+      randomBytes(24).toString(
+        "hex"
+      );
 
     const authorize = new URL(
       "https://accounts.spotify.com/authorize"
@@ -69,9 +93,10 @@ export async function POST(request: Request) {
       "true"
     );
 
-    const response = NextResponse.json({
-      url: authorize.toString(),
-    });
+    const response =
+      NextResponse.json({
+        url: authorize.toString(),
+      });
 
     response.cookies.set(
       SPOTIFY_COOKIES.state,
@@ -81,7 +106,16 @@ export async function POST(request: Request) {
 
     response.cookies.set(
       SPOTIFY_COOKIES.pendingUser,
-      signPendingUser(user.id, state),
+      signPendingUser(
+        user.id,
+        state
+      ),
+      cookieOptions(10 * 60)
+    );
+
+    response.cookies.set(
+      SPOTIFY_COOKIES.returnTo,
+      returnTo,
       cookieOptions(10 * 60)
     );
 
