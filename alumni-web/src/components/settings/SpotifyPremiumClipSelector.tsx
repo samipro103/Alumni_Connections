@@ -2,8 +2,6 @@
 
 import {
   Loader2,
-  Scissors,
-  Volume2,
 } from "lucide-react";
 import {
   useEffect,
@@ -56,6 +54,15 @@ export default function SpotifyPremiumClipSelector({
   const lastAutoTrackRef =
     useRef("");
 
+  const dragRef =
+    useRef<{
+      active: boolean;
+      pointerId: number | null;
+    }>({
+      active: false,
+      pointerId: null,
+    });
+
   const safeClipDuration =
     Math.max(
       1,
@@ -96,7 +103,6 @@ export default function SpotifyPremiumClipSelector({
 
   const {
     ready,
-    isPlaying,
     error,
     activateElement,
     startContinuousFragment,
@@ -108,11 +114,6 @@ export default function SpotifyPremiumClipSelector({
       ),
     });
 
-  /*
-   * Intentamos empezar automáticamente apenas el SDK está listo.
-   * En escritorio normalmente arranca de inmediato.
-   * En iPhone, el primer toque/arrastre sobre la onda activa el audio.
-   */
   useEffect(() => {
     const trackId =
       track.provider_track_id;
@@ -217,16 +218,8 @@ export default function SpotifyPremiumClipSelector({
     const next =
       clampStart(value);
 
-    /*
-     * UI inmediata: el cuadro verde y los tiempos cambian
-     * en cada movimiento del dedo.
-     */
     onStartChange(next);
 
-    /*
-     * Audio fluido: máximo ~10 seeks por segundo.
-     * Suficiente para sentirse instantáneo sin saturar el SDK.
-     */
     if (
       seekTimerRef.current !==
       null
@@ -264,65 +257,140 @@ export default function SpotifyPremiumClipSelector({
             });
           }
         },
-        95
+        85
       );
   }
 
-  function handlePointerDown() {
-    /*
-     * Debe ocurrir dentro del gesto real del usuario.
-     * Esto es lo que hace confiable el audio en Safari/iPhone.
-     */
-    activateElement();
+  function valueFromPointer(
+    element: HTMLDivElement,
+    clientX: number
+  ) {
+    const rect =
+      element.getBoundingClientRect();
 
     if (
-      track.provider_track_id
+      rect.width <= 0 ||
+      maxStart <= 0
     ) {
-      void startContinuousFragment({
-        trackId:
-          track.provider_track_id,
-        startSeconds:
-          clampStart(
-            startSeconds
-          ),
-        durationSeconds:
-          safeClipDuration,
-      });
+      return 0;
     }
+
+    const x =
+      Math.max(
+        0,
+        Math.min(
+          rect.width,
+          clientX - rect.left
+        )
+      );
+
+    const ratio =
+      x / rect.width;
+
+    /*
+     * El gesto representa el CENTRO visual del cuadro de 30 s.
+     * Así el cuadro se siente pegado al dedo, tipo IG.
+     */
+    const halfWindow =
+      (windowWidth / 100) / 2;
+
+    const normalized =
+      Math.max(
+        0,
+        Math.min(
+          1,
+          (ratio - halfWindow) /
+            Math.max(
+              0.001,
+              1 -
+                windowWidth / 100
+            )
+        )
+      );
+
+    return Math.round(
+      normalized * maxStart
+    );
+  }
+
+  function handlePointerDown(
+    event: React.PointerEvent<HTMLDivElement>
+  ) {
+    if (!ready) {
+      return;
+    }
+
+    activateElement();
+
+    dragRef.current = {
+      active: true,
+      pointerId:
+        event.pointerId,
+    };
+
+    event.currentTarget
+      .setPointerCapture?.(
+        event.pointerId
+      );
+
+    const next =
+      valueFromPointer(
+        event.currentTarget,
+        event.clientX
+      );
+
+    queueSeek(next);
+  }
+
+  function handlePointerMove(
+    event: React.PointerEvent<HTMLDivElement>
+  ) {
+    if (
+      !dragRef.current
+        .active ||
+      dragRef.current
+        .pointerId !==
+        event.pointerId
+    ) {
+      return;
+    }
+
+    const next =
+      valueFromPointer(
+        event.currentTarget,
+        event.clientX
+      );
+
+    queueSeek(next);
+  }
+
+  function stopDragging(
+    event: React.PointerEvent<HTMLDivElement>
+  ) {
+    if (
+      dragRef.current
+        .pointerId !==
+        event.pointerId
+    ) {
+      return;
+    }
+
+    dragRef.current = {
+      active: false,
+      pointerId: null,
+    };
+
+    try {
+      event.currentTarget
+        .releasePointerCapture?.(
+          event.pointerId
+        );
+    } catch {}
   }
 
   return (
     <div className="relative overflow-hidden rounded-[22px] border border-white/[0.07] bg-[#0b0e13] p-4 sm:p-5">
-      <div className="flex items-center justify-between gap-3">
-        <div className="flex items-center gap-2 text-[#1ed760]">
-          <Scissors size={14} />
-
-          <p className="text-xs font-black">
-            Tu fragmento
-          </p>
-        </div>
-
-        <div className="flex items-center gap-2">
-          <span
-            className={`h-1.5 w-1.5 rounded-full ${
-              ready &&
-              isPlaying
-                ? "bg-[#1ed760] shadow-[0_0_10px_rgba(30,215,96,.7)]"
-                : "bg-zinc-700"
-            }`}
-          />
-
-          <span className="text-[9px] font-black uppercase tracking-[0.11em] text-zinc-700">
-            {!ready
-              ? "Preparando"
-              : isPlaying
-              ? "En vivo"
-              : "Toca la onda"}
-          </span>
-        </div>
-      </div>
-
-      <div className="mt-4 grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-2 gap-3">
         <div className="border-l-2 border-[#1ed760]/35 pl-3">
           <p className="text-[9px] font-black uppercase tracking-[0.12em] text-zinc-700">
             Inicio
@@ -349,17 +417,26 @@ export default function SpotifyPremiumClipSelector({
         </div>
       </div>
 
-      <p className="mt-4 text-[11px] leading-5 text-zinc-700">
-        Arrastra sobre la onda. El fragmento cambia mientras mueves el dedo y los mismos 30 segundos se repiten automáticamente.
-      </p>
-
       <div
-        className="relative mt-5 h-28 overflow-hidden rounded-[18px] border border-white/[0.045] bg-black/20 px-3 touch-pan-y"
+        className="relative mt-5 h-28 select-none overflow-hidden rounded-[18px] border border-white/[0.045] bg-black/20 px-3"
+        style={{
+          touchAction:
+            "none",
+        }}
         onPointerDown={
           handlePointerDown
         }
+        onPointerMove={
+          handlePointerMove
+        }
+        onPointerUp={
+          stopDragging
+        }
+        onPointerCancel={
+          stopDragging
+        }
       >
-        <div className="absolute inset-x-3 top-1/2 flex h-14 -translate-y-1/2 items-center justify-between gap-[2px] overflow-hidden">
+        <div className="pointer-events-none absolute inset-x-3 top-1/2 flex h-14 -translate-y-1/2 items-center justify-between gap-[2px] overflow-hidden">
           {WAVE.map(
             (
               height,
@@ -402,9 +479,6 @@ export default function SpotifyPremiumClipSelector({
             startSeconds,
             maxStart
           )}
-          onPointerDown={
-            handlePointerDown
-          }
           onChange={(event) =>
             queueSeek(
               Number(
@@ -413,7 +487,7 @@ export default function SpotifyPremiumClipSelector({
               )
             )
           }
-          className="absolute inset-0 z-10 h-full w-full cursor-ew-resize opacity-0"
+          className="sr-only"
           aria-label="Mover fragmento de 30 segundos"
         />
 
@@ -439,23 +513,6 @@ export default function SpotifyPremiumClipSelector({
             effectiveDuration
           )}
         </span>
-      </div>
-
-      <div className="mt-5 flex items-center gap-2 border-t border-white/[0.05] pt-4">
-        <Volume2
-          size={13}
-          className={
-            isPlaying
-              ? "text-[#1ed760]"
-              : "text-zinc-700"
-          }
-        />
-
-        <p className="text-[10px] font-bold leading-5 text-zinc-700">
-          {isPlaying
-            ? "Reproducción continua activa. Mueve el selector y escucha el cambio al instante."
-            : "Toca o arrastra la onda para activar la reproducción continua."}
-        </p>
       </div>
 
       {error && (
