@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
+  ArrowLeft,
   AtSign,
   Camera,
   ChevronRight,
@@ -351,9 +352,7 @@ export default function SettingsPage() {
                   <button
                     key={item.id}
                     type="button"
-                    onClick={() =>
-                      setActiveSection(item.id)
-                    }
+                    onClick={() => openSettingsSection(item.id)}
                     className={`group flex w-full items-center gap-3 px-1 py-4 text-left transition lg:rounded-2xl lg:px-3 lg:py-3 ${
                       active
                         ? "bg-white/[0.06]"
@@ -400,8 +399,16 @@ export default function SettingsPage() {
             </nav>
           </aside>
 
-          <section className="min-w-0">
+          <section className={`${mobileSectionOpen ? "block" : "hidden lg:block"} min-w-0`}>
             <div className="mb-4 flex items-start justify-between gap-4">
+              <button
+                type="button"
+                onClick={closeMobileSettingsSection}
+                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-zinc-500 transition active:bg-white/[0.06] lg:hidden"
+                aria-label="Volver a Ajustes"
+              >
+                <ArrowLeft size={20} />
+              </button>
               <div>
                 <h2 className="text-xl font-black tracking-[-0.03em] text-zinc-100">
                   {activeItem.label}
