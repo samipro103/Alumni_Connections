@@ -276,13 +276,14 @@ export default function ProfileSpotifyAction({
         onClick={() =>
           void inspectSession()
         }
-        className="group flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-white/[0.08] bg-white/[0.035] text-[#1ed760] transition hover:border-[#1ed760]/25 hover:bg-[#1ed760]/[0.08]"
+        className="group relative flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-[#1ed760]/45 bg-[#1ed760]/[0.10] text-[#1ed760] shadow-[0_0_0_1px_rgba(30,215,96,.05),0_8px_22px_rgba(30,215,96,.10)] transition hover:border-[#1ed760]/70 hover:bg-[#1ed760]/[0.16] active:scale-[0.96]"
         aria-label="Música con Spotify"
         title="Alumni × Spotify"
       >
+        <span className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_35%_25%,rgba(30,215,96,.13),transparent_55%)]" />
         <SpotifyLogo
-          size={21}
-          className="transition group-hover:scale-105"
+          size={24}
+          className="relative z-10 drop-shadow-[0_2px_8px_rgba(30,215,96,.20)] transition group-hover:scale-105"
         />
       </button>
 
