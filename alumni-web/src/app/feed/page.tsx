@@ -513,13 +513,6 @@ function FeedContent() {
   return (
     <AppShell>
       <div className="mx-auto w-full max-w-[760px]">
-        <div className="mb-4 flex items-center justify-between px-1 pt-2">
-          <div>
-            <h1 className="text-[26px] font-black tracking-[-0.04em] text-white">Inicio</h1>
-            <p className="mt-1 text-sm text-zinc-600">Tu comunidad académica y profesional.</p>
-          </div>
-        </div>
-
         <StoriesRail focusStoryId={searchParams.get("story")} />
 
         <PostComposer

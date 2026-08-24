@@ -186,7 +186,7 @@ export default function MessagesPage() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Buscar conversación..."
-            className="h-full flex-1 bg-transparent px-3 text-sm text-zinc-200 outline-none placeholder:text-zinc-700"
+            className="h-full flex-1 bg-transparent px-3 text-[16px] text-zinc-200 outline-none placeholder:text-zinc-700 sm:text-sm"
           />
         </div>
 

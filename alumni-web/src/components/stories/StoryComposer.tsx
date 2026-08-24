@@ -299,11 +299,6 @@ export default function StoryComposer({
   async function publishStory() {
     if (!user || !file || publishing) return;
 
-    if (music && !musicClipConfirmed) {
-      alert("Confirma primero desde dónde debe empezar la canción.");
-      return;
-    }
-
     setPublishing(true);
 
     try {
@@ -344,19 +339,16 @@ export default function StoryComposer({
           media_type: preparedFile.type.startsWith("video/")
             ? "video"
             : "image",
-          music_provider: music?.provider || null,
-          music_track_id:
-            music?.provider_track_id || null,
-          music_title: music?.track_title || null,
-          music_artist: music?.artist_name || null,
-          music_artwork_url: music?.artwork_url || null,
-          music_track_url: music?.track_url || null,
-          music_embed_url: music?.embed_url || null,
-          music_preview_url: music?.preview_url || null,
-          music_duration_ms: music?.duration_ms || null,
-          music_clip_start_seconds: music
-            ? Math.max(0, Math.floor(musicClipStart))
-            : 0,
+          music_provider: null,
+          music_track_id: null,
+          music_title: null,
+          music_artist: null,
+          music_artwork_url: null,
+          music_track_url: null,
+          music_embed_url: null,
+          music_preview_url: null,
+          music_duration_ms: null,
+          music_clip_start_seconds: 0,
           music_clip_duration_seconds: 15,
         });
 
@@ -525,137 +517,6 @@ export default function StoryComposer({
             }}
           />
 
-          {file && (
-            <section className="mt-5 border-t border-white/[0.06] pt-5">
-              <div className="flex items-center gap-2">
-                <Music2
-                  size={15}
-                  className="text-[#8d98ff]"
-                />
-                <div>
-                  <p className="text-xs font-black text-zinc-300">
-                    Música
-                  </p>
-                  <p className="mt-0.5 text-[10px] text-zinc-700">
-                    Busca una canción o artista y elige un tramo de 15 segundos.
-                  </p>
-                </div>
-              </div>
-
-              {!music && (
-                <div className="relative mt-3">
-                  <Search
-                    size={14}
-                    className="pointer-events-none absolute left-3 top-[19px] -translate-y-1/2 text-zinc-700"
-                  />
-
-                  <input
-                    value={musicQuery}
-                    onChange={(event) => {
-                      setMusicQuery(event.target.value);
-                      setMusicSearchError("");
-                    }}
-                    placeholder="Buscar canción o artista..."
-                    autoComplete="off"
-                    className="h-10 w-full rounded-xl border border-white/[0.07] bg-white/[0.025] pl-9 pr-10 text-xs text-zinc-300 outline-none placeholder:text-zinc-800 focus:border-[#6d7cff]/40"
-                  />
-
-                  {musicSearching && (
-                    <Loader2
-                      size={14}
-                      className="absolute right-3 top-[19px] -translate-y-1/2 animate-spin text-zinc-600"
-                    />
-                  )}
-
-                  {hasSearch && (
-                    <div className="mt-2 overflow-hidden rounded-[16px] border border-white/[0.07] bg-[#0e1117]">
-                      {musicSearchError ? (
-                        <p className="px-4 py-4 text-[11px] font-bold text-red-300/80">
-                          {musicSearchError}
-                        </p>
-                      ) : !musicSearching &&
-                        musicResults.length === 0 ? (
-                        <p className="px-4 py-4 text-[11px] text-zinc-700">
-                          No encontré canciones con esa búsqueda.
-                        </p>
-                      ) : (
-                        <div className="max-h-[280px] overflow-y-auto">
-                          {musicResults.map((track) => (
-                            <button
-                              key={track.provider_track_id}
-                              type="button"
-                              onClick={() =>
-                                selectTrack(track)
-                              }
-                              className="flex w-full items-center gap-3 border-b border-white/[0.045] px-3 py-3 text-left transition last:border-b-0 hover:bg-white/[0.035]"
-                            >
-                              {track.artwork_url ? (
-                                <img
-                                  src={track.artwork_url}
-                                  alt=""
-                                  className="h-11 w-11 shrink-0 rounded-xl object-cover"
-                                />
-                              ) : (
-                                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-white/[0.05] text-zinc-600">
-                                  <Music2 size={15} />
-                                </div>
-                              )}
-
-                              <div className="min-w-0 flex-1">
-                                <p className="truncate text-xs font-black text-zinc-200">
-                                  {track.track_title}
-                                </p>
-                                <p className="mt-1 truncate text-[10px] text-zinc-600">
-                                  {track.artist_name}
-                                  {track.album_name
-                                    ? ` · ${track.album_name}`
-                                    : ""}
-                                </p>
-                              </div>
-
-                              <div className="flex shrink-0 items-center gap-2">
-                                {track.preview_url && (
-                                  <span className="rounded-full bg-white/[0.05] px-2 py-1 text-[8px] font-black uppercase tracking-[0.08em] text-zinc-600">
-                                    15s
-                                  </span>
-                                )}
-                                <Check
-                                  size={14}
-                                  className="text-zinc-700"
-                                />
-                              </div>
-                            </button>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </div>
-              )}
-
-
-              {music && (
-                <div className="mt-4">
-                  <StoryMusicStartPicker
-                    startSeconds={musicClipStart}
-                    durationSeconds={
-                      musicTrackDuration ||
-                      (typeof music.duration_ms === "number" && music.duration_ms > 0
-                        ? Math.floor(music.duration_ms / 1000)
-                        : 240)
-                    }
-                    confirmed={musicClipConfirmed}
-                    onStartChange={(value) => {
-                      setMusicClipStart(value);
-                      setMusicClipConfirmed(false);
-                    }}
-                    onConfirm={() => setMusicClipConfirmed(true)}
-                  />
-                </div>
-              )}
-            </section>
-          )}
-
           <div className="mt-5 flex items-center justify-between gap-3">
             <button
               type="button"
@@ -673,7 +534,7 @@ export default function StoryComposer({
             <button
               type="button"
               onClick={publishStory}
-              disabled={!file || publishing || Boolean(music && !musicClipConfirmed)}
+              disabled={!file || publishing}
               className="flex h-10 items-center gap-2 rounded-xl bg-[#6d7cff] px-4 text-xs font-black text-white transition hover:bg-[#7b87ff] disabled:cursor-not-allowed disabled:bg-white/[0.05] disabled:text-zinc-700"
             >
               {publishing ? (

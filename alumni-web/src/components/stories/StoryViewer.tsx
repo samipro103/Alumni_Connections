@@ -70,6 +70,10 @@ type Props = {
 
 const STORY_DURATION_MS = 15000;
 
+// Spotify sigue disponible para Música de Perfil.
+// No usamos pistas Spotify como soundtrack sincronizado de Stories.
+const STORY_SPOTIFY_SOUNDTRACKS_ENABLED = false;
+
 function SpotifyGlyph() {
   return (
     <svg
@@ -476,7 +480,7 @@ export default function StoryViewer({
       const target =
         group.stories[storyIndex + 1];
 
-      if (target?.music_track_url) {
+      if (STORY_SPOTIFY_SOUNDTRACKS_ENABLED && target?.music_track_url) {
         startStoryMusicNow(target.id);
       } else {
         stopAllStoryMusic();
@@ -495,7 +499,7 @@ export default function StoryViewer({
       const target =
         groups[groupIndex + 1]?.stories[0];
 
-      if (target?.music_track_url) {
+      if (STORY_SPOTIFY_SOUNDTRACKS_ENABLED && target?.music_track_url) {
         startStoryMusicNow(target.id);
       } else {
         stopAllStoryMusic();
@@ -522,7 +526,7 @@ export default function StoryViewer({
       const target =
         group.stories[storyIndex - 1];
 
-      if (target?.music_track_url) {
+      if (STORY_SPOTIFY_SOUNDTRACKS_ENABLED && target?.music_track_url) {
         startStoryMusicNow(target.id);
       } else {
         stopAllStoryMusic();
@@ -546,7 +550,7 @@ export default function StoryViewer({
       const target =
         previousGroup.stories[targetIndex];
 
-      if (target?.music_track_url) {
+      if (STORY_SPOTIFY_SOUNDTRACKS_ENABLED && target?.music_track_url) {
         startStoryMusicNow(target.id);
       } else {
         stopAllStoryMusic();
@@ -848,7 +852,7 @@ export default function StoryViewer({
           <ChevronRight size={20} />
         </button>
 
-        {story.music_track_url && (
+        {STORY_SPOTIFY_SOUNDTRACKS_ENABLED && story.music_track_url && (
           <div
             className={`absolute left-4 z-40 flex max-w-[78%] items-center gap-2.5 rounded-[17px] border border-white/10 bg-black/45 p-2.5 backdrop-blur-2xl ${
               ownStory

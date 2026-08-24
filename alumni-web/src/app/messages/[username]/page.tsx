@@ -41,6 +41,7 @@ export default function ChatPage() {
   const [mediaFile, setMediaFile] = useState<File | null>(null);
   const [mediaPreview, setMediaPreview] = useState("");
   const [visualHeight, setVisualHeight] = useState<number | null>(null);
+  const [visualOffsetTop, setVisualOffsetTop] = useState(0);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -86,16 +87,55 @@ export default function ChatPage() {
   }, [user?.id, username]);
 
   useEffect(() => {
+    if (window.innerWidth >= 1024) return;
+
+    const body = document.body;
+    const scrollY = window.scrollY;
+
+    const previousBodyPosition = body.style.position;
+    const previousBodyTop = body.style.top;
+    const previousBodyWidth = body.style.width;
+    const previousBodyOverflow = body.style.overflow;
+    const previousHtmlOverscroll =
+      document.documentElement.style.overscrollBehavior;
+
+    body.style.position = "fixed";
+    body.style.top = `-${scrollY}px`;
+    body.style.width = "100%";
+    body.style.overflow = "hidden";
+    document.documentElement.style.overscrollBehavior = "none";
+
+    return () => {
+      body.style.position = previousBodyPosition;
+      body.style.top = previousBodyTop;
+      body.style.width = previousBodyWidth;
+      body.style.overflow = previousBodyOverflow;
+      document.documentElement.style.overscrollBehavior =
+        previousHtmlOverscroll;
+      window.scrollTo(0, scrollY);
+    };
+  }, []);
+
+  useEffect(() => {
     function updateViewport() {
       const height =
         window.visualViewport?.height ||
         window.innerHeight;
 
       setVisualHeight(Math.max(320, Math.round(height)));
+      setVisualOffsetTop(
+        Math.max(
+          0,
+          Math.round(window.visualViewport?.offsetTop || 0)
+        )
+      );
 
-      window.setTimeout(() => {
-        scrollToBottom("auto");
-      }, 40);
+      // iOS puede terminar de acomodar el teclado en varios frames.
+      [20, 90, 220].forEach((delay) => {
+        window.setTimeout(() => {
+          scrollToBottom("auto");
+        }, delay);
+      });
     }
 
     updateViewport();
@@ -371,13 +411,14 @@ export default function ChatPage() {
     "--chat-vh": visualHeight
       ? `${visualHeight}px`
       : "100dvh",
+    "--chat-top": `${visualOffsetTop}px`,
   } as CSSProperties;
 
   return (
     <AppShell immersiveMobile>
       <div
         style={chatStyle}
-        className="fixed inset-x-0 top-0 z-[80] mx-auto flex h-[var(--chat-vh)] w-full max-w-[820px] flex-col overflow-hidden bg-[var(--app-bg)] lg:static lg:h-[calc(100vh-112px)] lg:min-h-[620px] lg:rounded-[26px] lg:border lg:border-[var(--app-border)] lg:bg-[var(--app-surface)] lg:shadow-[0_30px_100px_var(--app-shadow)]"
+        className="fixed inset-x-0 top-[var(--chat-top)] z-[80] mx-auto flex h-[var(--chat-vh)] w-full max-w-[820px] flex-col overflow-hidden overscroll-none bg-[var(--app-bg)] lg:static lg:h-[calc(100vh-112px)] lg:min-h-[620px] lg:rounded-[26px] lg:border lg:border-[var(--app-border)] lg:bg-[var(--app-surface)] lg:shadow-[0_30px_100px_var(--app-shadow)]"
       >
         <header className="shrink-0 border-b border-[var(--app-border)] bg-[color-mix(in_srgb,var(--app-surface)_94%,transparent)] pt-[env(safe-area-inset-top)] backdrop-blur-xl">
           <div className="flex min-h-[62px] items-center gap-2.5 px-3 sm:px-5">
@@ -658,11 +699,17 @@ export default function ChatPage() {
                 resizeTextarea(event.target);
               }}
               onFocus={() => {
-                window.setTimeout(
-                  () => scrollToBottom("smooth"),
-                  120
-                );
+                [80, 180, 320].forEach((delay) => {
+                  window.setTimeout(
+                    () => scrollToBottom("auto"),
+                    delay
+                  );
+                });
               }}
+              autoComplete="off"
+              autoCorrect="on"
+              spellCheck
+              enterKeyHint="send"
               onKeyDown={(event) => {
                 if (
                   event.key === "Enter" &&
@@ -677,7 +724,7 @@ export default function ChatPage() {
                   ? "Añade un mensaje..."
                   : "Mensaje..."
               }
-              className="min-h-10 min-w-0 flex-1 resize-none overflow-y-auto bg-transparent px-1.5 py-2.5 text-[14px] leading-5 text-[var(--app-text)] outline-none placeholder:text-[var(--app-muted-2)]"
+              className="min-h-10 min-w-0 flex-1 resize-none overflow-y-auto bg-transparent px-1.5 py-2.5 text-[16px] leading-5 text-[var(--app-text)] outline-none placeholder:text-[var(--app-muted-2)] sm:text-[14px]"
             />
 
             <button

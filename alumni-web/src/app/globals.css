@@ -709,3 +709,20 @@ input[type="datetime-local"] {
     height: 128px;
   }
 }
+
+
+/* ALUMNI MOBILE CHAT 11.1 */
+.alumni-chat-composer textarea {
+  touch-action: manipulation;
+}
+
+@media (max-width: 767px) {
+  .alumni-chat-composer textarea,
+  .alumni-chat-composer input {
+    font-size: 16px !important;
+  }
+
+  .alumni-stories-section {
+    margin-top: 2px;
+  }
+}
