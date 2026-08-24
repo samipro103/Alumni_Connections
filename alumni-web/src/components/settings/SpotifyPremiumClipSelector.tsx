@@ -51,13 +51,11 @@ export default function SpotifyPremiumClipSelector({
   const seekTimerRef =
     useRef<number | null>(null);
 
-  const lastAutoTrackRef =
-    useRef("");
-
   const dragRef =
     useRef<{
       active: boolean;
-      pointerId: number | null;
+      pointerId:
+        number | null;
     }>({
       active: false,
       pointerId: null,
@@ -114,40 +112,14 @@ export default function SpotifyPremiumClipSelector({
       ),
     });
 
-  useEffect(() => {
-    const trackId =
-      track.provider_track_id;
-
-    if (
-      !ready ||
-      !trackId ||
-      lastAutoTrackRef.current ===
-        trackId
-    ) {
-      return;
-    }
-
-    lastAutoTrackRef.current =
-      trackId;
-
-    void startContinuousFragment({
-      trackId,
-      startSeconds:
-        Math.min(
-          startSeconds,
-          maxStart
-        ),
-      durationSeconds:
-        safeClipDuration,
-    });
-  }, [
-    ready,
-    track.provider_track_id,
-    maxStart,
-    safeClipDuration,
-    startSeconds,
-    startContinuousFragment,
-  ]);
+  /*
+   * IMPORTANTE:
+   * Ya NO intentamos reproducir automáticamente al llegar ready.
+   *
+   * Safari/iPhone exige interacción real del usuario para audio.
+   * El primer toque/arrastre de la onda es esa interacción.
+   * A partir de ahí el audio queda continuo y los movimientos usan seek().
+   */
 
   useEffect(() => {
     return () => {
@@ -212,14 +184,49 @@ export default function SpotifyPremiumClipSelector({
     );
   }
 
+  async function seekNow(
+    value: number
+  ) {
+    const next =
+      clampStart(value);
+
+    const moved =
+      await seekContinuousFragment({
+        startSeconds:
+          next,
+        durationSeconds:
+          safeClipDuration,
+      });
+
+    if (
+      !moved &&
+      track.provider_track_id
+    ) {
+      await startContinuousFragment({
+        trackId:
+          track.provider_track_id,
+        startSeconds:
+          next,
+        durationSeconds:
+          safeClipDuration,
+      });
+    }
+  }
+
   function queueSeek(
     value: number
   ) {
     const next =
       clampStart(value);
 
+    /*
+     * Lo visual responde inmediatamente.
+     */
     onStartChange(next);
 
+    /*
+     * Mientras arrastras hacemos seek local con un debounce corto.
+     */
     if (
       seekTimerRef.current !==
       null
@@ -231,42 +238,26 @@ export default function SpotifyPremiumClipSelector({
 
     seekTimerRef.current =
       window.setTimeout(
-        async () => {
+        () => {
           seekTimerRef.current =
             null;
 
-          const moved =
-            await seekContinuousFragment({
-              startSeconds:
-                next,
-              durationSeconds:
-                safeClipDuration,
-            });
-
-          if (
-            !moved &&
-            track.provider_track_id
-          ) {
-            await startContinuousFragment({
-              trackId:
-                track.provider_track_id,
-              startSeconds:
-                next,
-              durationSeconds:
-                safeClipDuration,
-            });
-          }
+          void seekNow(
+            next
+          );
         },
-        85
+        80
       );
   }
 
   function valueFromPointer(
-    element: HTMLDivElement,
+    element:
+      HTMLDivElement,
     clientX: number
   ) {
     const rect =
-      element.getBoundingClientRect();
+      element
+        .getBoundingClientRect();
 
     if (
       rect.width <= 0 ||
@@ -280,46 +271,52 @@ export default function SpotifyPremiumClipSelector({
         0,
         Math.min(
           rect.width,
-          clientX - rect.left
+          clientX -
+            rect.left
         )
       );
 
     const ratio =
       x / rect.width;
 
-    /*
-     * El gesto representa el CENTRO visual del cuadro de 30 s.
-     * Así el cuadro se siente pegado al dedo, tipo IG.
-     */
     const halfWindow =
-      (windowWidth / 100) / 2;
+      (windowWidth / 100) /
+      2;
 
     const normalized =
       Math.max(
         0,
         Math.min(
           1,
-          (ratio - halfWindow) /
+          (ratio -
+            halfWindow) /
             Math.max(
               0.001,
               1 -
-                windowWidth / 100
+                windowWidth /
+                  100
             )
         )
       );
 
     return Math.round(
-      normalized * maxStart
+      normalized *
+        maxStart
     );
   }
 
   function handlePointerDown(
-    event: React.PointerEvent<HTMLDivElement>
+    event:
+      React.PointerEvent<HTMLDivElement>
   ) {
     if (!ready) {
       return;
     }
 
+    /*
+     * Esto ocurre SINCRÓNICAMENTE dentro del gesto.
+     * Es la parte que iOS necesita para autorizar audio.
+     */
     activateElement();
 
     dragRef.current = {
@@ -339,11 +336,18 @@ export default function SpotifyPremiumClipSelector({
         event.clientX
       );
 
-    queueSeek(next);
+    onStartChange(next);
+
+    /*
+     * Primer arranque: no esperamos al debounce.
+     * Empezamos desde este mismo gesto del usuario.
+     */
+    void seekNow(next);
   }
 
   function handlePointerMove(
-    event: React.PointerEvent<HTMLDivElement>
+    event:
+      React.PointerEvent<HTMLDivElement>
   ) {
     if (
       !dragRef.current
@@ -355,17 +359,17 @@ export default function SpotifyPremiumClipSelector({
       return;
     }
 
-    const next =
+    queueSeek(
       valueFromPointer(
         event.currentTarget,
         event.clientX
-      );
-
-    queueSeek(next);
+      )
+    );
   }
 
   function stopDragging(
-    event: React.PointerEvent<HTMLDivElement>
+    event:
+      React.PointerEvent<HTMLDivElement>
   ) {
     if (
       dragRef.current
@@ -446,10 +450,12 @@ export default function SpotifyPremiumClipSelector({
                 key={`${height}-${index}`}
                 className="w-[3px] shrink-0 rounded-full bg-white/[0.11]"
                 style={{
-                  height: `${Math.max(
-                    5,
-                    height * 0.9
-                  )}px`,
+                  height:
+                    `${Math.max(
+                      5,
+                      height *
+                        0.9
+                    )}px`,
                 }}
               />
             )
@@ -479,7 +485,9 @@ export default function SpotifyPremiumClipSelector({
             startSeconds,
             maxStart
           )}
-          onChange={(event) =>
+          onChange={(
+            event
+          ) =>
             queueSeek(
               Number(
                 event.target

@@ -11,27 +11,20 @@ function sleep(ms: number) {
   );
 }
 
-async function readSpotifyError(
+type SpotifyDevice = {
+  id?: string | null;
+  is_active?: boolean;
+  is_restricted?: boolean;
+  name?: string;
+};
+
+async function readJson(
   response: Response
 ) {
   try {
-    const data =
-      await response.json();
-
-    return {
-      message:
-        data?.error?.message ||
-        data?.message ||
-        null,
-      reason:
-        data?.error?.reason ||
-        null,
-    };
+    return await response.json();
   } catch {
-    return {
-      message: null,
-      reason: null,
-    };
+    return null;
   }
 }
 
@@ -123,21 +116,154 @@ export async function POST(
         `Bearer ${resolved.accessToken}`,
       "Content-Type":
         "application/json",
+      Accept:
+        "application/json",
     };
 
-    async function startPlayback() {
-      const endpoint =
-        new URL(
-          "https://api.spotify.com/v1/me/player/play"
+    async function getDevices() {
+      const response =
+        await fetch(
+          "https://api.spotify.com/v1/me/player/devices",
+          {
+            headers,
+            cache:
+              "no-store",
+          }
         );
 
-      endpoint.searchParams.set(
-        "device_id",
+      if (!response.ok) {
+        return [];
+      }
+
+      const data =
+        await readJson(
+          response
+        );
+
+      return (
+        data?.devices || []
+      ) as SpotifyDevice[];
+    }
+
+    async function waitForDevice() {
+      for (
+        let attempt = 0;
+        attempt < 8;
+        attempt += 1
+      ) {
+        const devices =
+          await getDevices();
+
+        const target =
+          devices.find(
+            (device) =>
+              device.id ===
+              deviceId
+          );
+
+        if (
+          target &&
+          !target.is_restricted
+        ) {
+          return true;
+        }
+
+        await sleep(
+          180 +
+            attempt * 70
+        );
+      }
+
+      return false;
+    }
+
+    async function transferToAlumni() {
+      return fetch(
+        "https://api.spotify.com/v1/me/player",
+        {
+          method: "PUT",
+          headers,
+          body:
+            JSON.stringify({
+              device_ids: [
+                deviceId,
+              ],
+
+              /*
+               * En iPhone activateElement() se llama desde el gesto
+               * antes de llegar a este endpoint. play:true hace que
+               * Spotify deje Alumni como dispositivo realmente activo.
+               */
+              play: true,
+            }),
+          cache:
+            "no-store",
+        }
+      );
+    }
+
+    async function isAlumniActive() {
+      const response =
+        await fetch(
+          "https://api.spotify.com/v1/me/player",
+          {
+            headers,
+            cache:
+              "no-store",
+          }
+        );
+
+      if (
+        response.status ===
+        204
+      ) {
+        return false;
+      }
+
+      if (!response.ok) {
+        return false;
+      }
+
+      const data =
+        await readJson(
+          response
+        );
+
+      return (
+        data?.device?.id ===
         deviceId
       );
+    }
 
+    async function waitUntilActive() {
+      for (
+        let attempt = 0;
+        attempt < 8;
+        attempt += 1
+      ) {
+        if (
+          await isAlumniActive()
+        ) {
+          return true;
+        }
+
+        await sleep(
+          180 +
+            attempt * 60
+        );
+      }
+
+      return false;
+    }
+
+    async function playSelectedTrack() {
+      /*
+       * Ya transferimos y confirmamos el dispositivo activo.
+       * No enviamos device_id otra vez para evitar la carrera
+       * de Spotify Connect en iOS.
+       */
       return fetch(
-        endpoint,
+        "https://api.spotify.com/v1/me/player/play",
         {
           method: "PUT",
           headers,
@@ -150,191 +276,160 @@ export async function POST(
                 startSeconds *
                 1000,
             }),
-          cache: "no-store",
-        }
-      );
-    }
-
-    async function transferPlayback() {
-      return fetch(
-        "https://api.spotify.com/v1/me/player",
-        {
-          method: "PUT",
-          headers,
-          body:
-            JSON.stringify({
-              device_ids: [
-                deviceId,
-              ],
-              play: false,
-            }),
-          cache: "no-store",
+          cache:
+            "no-store",
         }
       );
     }
 
     /*
-     * Primer intento directo.
-     * Normalmente funciona si el Web Playback SDK ya es
-     * el dispositivo activo.
+     * 1) El SDK ya emitió ready, pero en iOS Spotify Connect
+     * puede tardar un poco en publicar el device en Web API.
      */
-    let spotifyResponse =
-      await startPlayback();
+    const deviceVisible =
+      await waitForDevice();
 
-    if (
-      spotifyResponse.ok
-    ) {
-      return NextResponse.json({
-        ok: true,
-      });
-    }
-
-    const firstStatus =
-      spotifyResponse.status;
-
-    const firstError =
-      await readSpotifyError(
-        spotifyResponse
-      );
-
-    /*
-     * En móvil el SDK puede emitir "ready" unos instantes antes
-     * de que Spotify Connect reconozca el device_id como activo.
-     *
-     * Cuando pasa eso /play suele responder 404.
-     * Transferimos el playback a Alumni, esperamos un instante
-     * y reintentamos. Esto ocurre solo al cargar la canción;
-     * después el selector usa player.seek() local.
-     */
-    if (
-      firstStatus === 404
-    ) {
-      const transfer =
-        await transferPlayback();
-
-      if (
-        transfer.ok
-      ) {
-        for (
-          let attempt = 0;
-          attempt < 3;
-          attempt += 1
-        ) {
-          await sleep(
-            260 +
-              attempt * 180
-          );
-
-          spotifyResponse =
-            await startPlayback();
-
-          if (
-            spotifyResponse.ok
-          ) {
-            return NextResponse.json(
-              {
-                ok: true,
-                recovered:
-                  true,
-              }
-            );
-          }
-
-          if (
-            spotifyResponse.status !==
-            404
-          ) {
-            break;
-          }
-        }
-      }
-    }
-
-    const finalError =
-      await readSpotifyError(
-        spotifyResponse
-      );
-
-    console.error(
-      "Spotify playback error",
-      {
-        status:
-          spotifyResponse.status,
-        first_status:
-          firstStatus,
-        reason:
-          finalError.reason ||
-          firstError.reason ||
-          null,
-        message:
-          finalError.message ||
-          firstError.message ||
-          null,
-      }
-    );
-
-    if (
-      spotifyResponse.status ===
-      403
-    ) {
+    if (!deviceVisible) {
       return NextResponse.json(
         {
           error:
-            "Spotify no permitió controlar la reproducción. Verifica que la cuenta siga conectada como Premium.",
-        },
-        { status: 403 }
-      );
-    }
-
-    if (
-      spotifyResponse.status ===
-      404
-    ) {
-      return NextResponse.json(
-        {
-          error:
-            "El reproductor de Spotify tardó en activarse. Toca la onda una vez más.",
+            "Spotify todavía está preparando el reproductor.",
         },
         { status: 409 }
       );
     }
 
-    if (
-      spotifyResponse.status ===
-      429
-    ) {
+    /*
+     * 2) Transferimos Alumni y pedimos play:true.
+     * Spotify recomienda activateElement() antes de esta transferencia
+     * en navegadores móviles; eso ya ocurre en el pointer down.
+     */
+    const transfer =
+      await transferToAlumni();
+
+    if (!transfer.ok) {
+      const detail =
+        await readJson(
+          transfer
+        );
+
+      console.error(
+        "Spotify transfer error",
+        {
+          status:
+            transfer.status,
+          message:
+            detail?.error
+              ?.message ||
+            null,
+        }
+      );
+
       return NextResponse.json(
         {
           error:
-            "Spotify está limitando temporalmente la reproducción. Espera unos segundos.",
+            transfer.status ===
+            403
+              ? "Spotify Premium no permitió activar el reproductor."
+              : "Spotify no pudo activar el reproductor.",
         },
-        { status: 429 }
+        {
+          status:
+            transfer.status ||
+            502,
+        }
       );
     }
 
-    return NextResponse.json(
-      {
-        error:
-          finalError.message ||
-          firstError.message ||
-          "Spotify no pudo iniciar la canción.",
-      },
-      {
-        status:
-          spotifyResponse.status ||
-          502,
-      }
-    );
+    /*
+     * 3) Spotify documenta que el orden entre Transfer Playback
+     * y otros Player endpoints no está garantizado.
+     * Por eso esperamos a VER el device como activo.
+     */
+    await waitUntilActive();
+
+    /*
+     * 4) Recién ahora cargamos la canción elegida.
+     */
+    let playback =
+      await playSelectedTrack();
+
+    for (
+      let attempt = 0;
+      !playback.ok &&
+      playback.status ===
+        404 &&
+      attempt < 3;
+      attempt += 1
+    ) {
+      await sleep(
+        260 +
+          attempt * 180
+      );
+
+      playback =
+        await playSelectedTrack();
+    }
+
+    if (!playback.ok) {
+      const detail =
+        await readJson(
+          playback
+        );
+
+      console.error(
+        "Spotify play error",
+        {
+          status:
+            playback.status,
+          message:
+            detail?.error
+              ?.message ||
+            null,
+          reason:
+            detail?.error
+              ?.reason ||
+            null,
+        }
+      );
+
+      return NextResponse.json(
+        {
+          error:
+            playback.status ===
+            403
+              ? "Spotify no permitió reproducir esta canción."
+              : playback.status ===
+                429
+              ? "Spotify está limitando temporalmente la reproducción."
+              : "Spotify no pudo iniciar la canción.",
+        },
+        {
+          status:
+            playback.status ||
+            502,
+        }
+      );
+    }
+
+    return NextResponse.json({
+      ok: true,
+    });
   } catch (
     error: any
   ) {
+    console.error(
+      "Spotify play unexpected:",
+      error?.message || error
+    );
+
     return NextResponse.json(
       {
         error:
           error?.message ||
           "Vuelve a conectar Spotify.",
       },
-      { status: 401 }
+      { status: 500 }
     );
   }
 }
