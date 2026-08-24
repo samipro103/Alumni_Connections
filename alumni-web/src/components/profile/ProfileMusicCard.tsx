@@ -137,11 +137,16 @@ export default function ProfileMusicCard({
             </p>
           </div>
 
+          {/*
+            Desktop mantiene el control custom.
+            En móvil usamos el control NATIVO del Embed porque Safari/iOS
+            puede bloquear play() programático desde el padre.
+          */}
           <button
             type="button"
             onClick={handleMainAction}
             disabled={!ready && !failed}
-            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-white/[0.07] bg-white/[0.055] text-zinc-200 transition hover:bg-white/[0.09] disabled:cursor-wait disabled:text-zinc-700"
+            className="hidden h-10 w-10 shrink-0 items-center justify-center rounded-full border border-white/[0.07] bg-white/[0.055] text-zinc-200 transition hover:bg-white/[0.09] disabled:cursor-wait disabled:text-zinc-700 md:flex"
             aria-label={
               failed
                 ? "Abrir canción en Spotify"
@@ -199,10 +204,36 @@ export default function ProfileMusicCard({
           </span>
         </div>
 
+        {/*
+          En teléfono el Embed deja de estar escondido en 1px.
+          El usuario toca Play directamente dentro del reproductor Spotify.
+          En escritorio se mantiene fuera de pantalla con tamaño real.
+        */}
+        <div className="relative z-20 mt-4 h-[80px] w-full overflow-hidden rounded-xl md:absolute md:-left-[10000px] md:top-0 md:mt-0 md:h-[80px] md:w-[300px] md:overflow-visible md:opacity-[0.01]">
+          <div
+            ref={spotifyMountRef}
+            className="h-[80px] w-full"
+          />
+        </div>
+
+        <p className="mt-2 text-[10px] leading-4 text-zinc-700 md:hidden">
+          Toca Play directamente en Spotify para escuchar desde el teléfono.
+        </p>
+
         {failed && (
-          <p className="mt-2 text-[10px] font-bold text-zinc-700">
-            Spotify no respondió dentro de Alumni. Toca el botón para abrir la canción.
-          </p>
+          <button
+            type="button"
+            onClick={() =>
+              window.open(
+                track.track_url,
+                "_blank",
+                "noopener,noreferrer"
+              )
+            }
+            className="mt-2 text-[10px] font-bold text-[#8d98ff] md:hidden"
+          >
+            Abrir en Spotify
+          </button>
         )}
 
         {error && !failed && (
@@ -210,15 +241,6 @@ export default function ProfileMusicCard({
             {error}
           </p>
         )}
-
-        <div
-          aria-hidden="true"
-          className="pointer-events-none absolute bottom-0 right-0 h-px w-px overflow-hidden opacity-[0.01]"
-        >
-          <div className="h-[80px] w-[300px]">
-            <div ref={spotifyMountRef} />
-          </div>
-        </div>
       </div>
 
       <style jsx>{`

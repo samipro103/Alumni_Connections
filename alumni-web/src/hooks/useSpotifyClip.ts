@@ -25,22 +25,22 @@ export function useSpotifyClip({
   clipDurationSeconds = 30,
 }: Options) {
   const controllerRef = useRef<any>(null);
+  const readyRef = useRef(false);
+  const playingRef = useRef(false);
+
   const startRef = useRef(
     Math.max(0, Math.floor(startSeconds))
   );
+
   const clipDurationRef = useRef(
     Math.max(1, clipDurationSeconds)
   );
 
-  const playingRef = useRef(false);
-  const readyRef = useRef(false);
-
-  /*
-   * null = el Embed necesita volver a cargar la entidad
-   * antes del siguiente Play.
-   */
   const loadedStartRef =
     useRef<number | null>(0);
+
+  const prepareTimerRef =
+    useRef<number | null>(null);
 
   const [ready, setReady] =
     useState(false);
@@ -60,17 +60,85 @@ export function useSpotifyClip({
   const [error, setError] =
     useState("");
 
-  /*
-   * CAMBIO CLAVE 6.1:
-   * mover el selector YA NO llama loadEntity() ni seek().
-   *
-   * En la versión anterior el evento ready llamaba loadEntity(),
-   * loadEntity volvía a provocar ready y se podía formar un ciclo:
-   *
-   * ready -> loadEntity -> ready -> loadEntity...
-   *
-   * Ese ciclo era lo que dejaba el selector/reproductor trabado.
-   */
+  const ensureIframeCapabilities =
+    useCallback(() => {
+      const iframe =
+        mountRef.current?.querySelector(
+          "iframe"
+        );
+
+      if (!iframe) return;
+
+      /*
+       * Spotify necesita encrypted-media para reproducir
+       * correctamente dentro del Embed.
+       */
+      iframe.setAttribute(
+        "allow",
+        "autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+      );
+
+      iframe.setAttribute(
+        "allowfullscreen",
+        ""
+      );
+    }, [mountRef]);
+
+  const prepareStart =
+    useCallback(
+      (selectedStart: number) => {
+        const controller =
+          controllerRef.current;
+
+        if (
+          !controller ||
+          !readyRef.current ||
+          !trackUrl
+        ) {
+          return;
+        }
+
+        if (
+          loadedStartRef.current ===
+          selectedStart
+        ) {
+          return;
+        }
+
+        try {
+          /*
+           * Solo preparamos la entidad.
+           * NO hacemos play() aquí.
+           *
+           * En móvil el usuario podrá tocar el botón Play
+           * directamente en el Embed oficial de Spotify.
+           */
+          controller.loadEntity?.(
+            trackUrl,
+            false,
+            selectedStart
+          );
+
+          loadedStartRef.current =
+            selectedStart;
+
+          window.setTimeout(
+            ensureIframeCapabilities,
+            0
+          );
+        } catch (prepareError) {
+          console.warn(
+            "Spotify prepare start failed:",
+            prepareError
+          );
+        }
+      },
+      [
+        ensureIframeCapabilities,
+        trackUrl,
+      ]
+    );
+
   useEffect(() => {
     const nextStart = Math.max(
       0,
@@ -80,12 +148,21 @@ export function useSpotifyClip({
     startRef.current = nextStart;
     setPositionMs(nextStart * 1000);
 
-    /*
-     * El inicio cambió. Marcamos la entidad como pendiente,
-     * pero no tocamos Spotify hasta que el usuario pulse Play.
-     */
-    loadedStartRef.current = null;
+    if (
+      prepareTimerRef.current !== null
+    ) {
+      window.clearTimeout(
+        prepareTimerRef.current
+      );
 
+      prepareTimerRef.current = null;
+    }
+
+    /*
+     * Si estaba sonando y el usuario mueve el selector,
+     * pausamos primero. Después esperamos a que termine
+     * de moverlo y hacemos UNA sola preparación.
+     */
     if (playingRef.current) {
       try {
         controllerRef.current?.pause?.();
@@ -94,7 +171,22 @@ export function useSpotifyClip({
       playingRef.current = false;
       setIsPlaying(false);
     }
-  }, [startSeconds]);
+
+    loadedStartRef.current = null;
+
+    if (!readyRef.current) {
+      return;
+    }
+
+    prepareTimerRef.current =
+      window.setTimeout(() => {
+        prepareTimerRef.current = null;
+        prepareStart(nextStart);
+      }, 260);
+  }, [
+    startSeconds,
+    prepareStart,
+  ]);
 
   useEffect(() => {
     clipDurationRef.current = Math.max(
@@ -107,6 +199,7 @@ export function useSpotifyClip({
     let cancelled = false;
     let timeoutId: number | null =
       null;
+
     let fallbackReadyId:
       | number
       | null = null;
@@ -120,7 +213,10 @@ export function useSpotifyClip({
     playingRef.current = false;
     loadedStartRef.current = 0;
 
-    if (!mountRef.current || !trackUrl) {
+    if (
+      !mountRef.current ||
+      !trackUrl
+    ) {
       return;
     }
 
@@ -151,11 +247,24 @@ export function useSpotifyClip({
             );
           }, 7000);
 
+        /*
+         * En móvil usamos el tamaño REAL del contenedor.
+         * Antes siempre eran 300px dentro de un contenedor
+         * prácticamente invisible.
+         */
+        const measuredWidth =
+          mountRef.current.clientWidth;
+
+        const embedWidth =
+          measuredWidth >= 260
+            ? Math.floor(measuredWidth)
+            : 300;
+
         api.createController(
           mountRef.current,
           {
             url: trackUrl,
-            width: 300,
+            width: embedWidth,
             height: 80,
           },
           (controller: any) => {
@@ -175,22 +284,38 @@ export function useSpotifyClip({
               controller;
 
             const markReady = () => {
-              if (
-                cancelled ||
-                readyRef.current
-              ) {
-                return;
+              if (cancelled) return;
+
+              if (!readyRef.current) {
+                readyRef.current = true;
+                setReady(true);
+                setFailed(false);
+                setError("");
               }
 
+              window.setTimeout(
+                ensureIframeCapabilities,
+                0
+              );
+
               /*
-               * IMPORTANTE:
-               * aquí NO llamamos loadEntity().
-               * Solo marcamos el controlador listo.
+               * Si el perfil ya tenía guardado un inicio avanzado,
+               * lo preparamos una sola vez. El handler ready está
+               * protegido, así que loadEntity no crea un loop.
                */
-              readyRef.current = true;
-              setReady(true);
-              setFailed(false);
-              setError("");
+              if (
+                startRef.current > 0 &&
+                loadedStartRef.current !==
+                  startRef.current
+              ) {
+                window.setTimeout(
+                  () =>
+                    prepareStart(
+                      startRef.current
+                    ),
+                  40
+                );
+              }
             };
 
             controller.addListener?.(
@@ -246,6 +371,7 @@ export function useSpotifyClip({
 
                 playingRef.current =
                   !paused;
+
                 setIsPlaying(
                   !paused
                 );
@@ -255,10 +381,6 @@ export function useSpotifyClip({
                     clipDurationRef.current) *
                   1000;
 
-                /*
-                 * Al terminar el fragmento pausamos.
-                 * El próximo Play vuelve a preparar el inicio seleccionado.
-                 */
                 if (
                   !paused &&
                   nextPosition >=
@@ -270,6 +392,7 @@ export function useSpotifyClip({
 
                   playingRef.current =
                     false;
+
                   setIsPlaying(false);
 
                   setPositionMs(
@@ -279,25 +402,29 @@ export function useSpotifyClip({
 
                   loadedStartRef.current =
                     null;
+
+                  window.setTimeout(
+                    () =>
+                      prepareStart(
+                        startRef.current
+                      ),
+                    40
+                  );
                 }
               }
             );
 
-            /*
-             * Algunos navegadores entregan el controller cuando
-             * ya ocurrió ready. Este fallback SOLO marca ready;
-             * nunca recarga la entidad.
-             */
             fallbackReadyId =
               window.setTimeout(
                 markReady,
-                220
+                260
               );
           }
         );
       } catch (setupError: any) {
         if (!cancelled) {
           setFailed(true);
+
           setError(
             setupError?.message ||
               "No se pudo inicializar Spotify."
@@ -325,6 +452,17 @@ export function useSpotifyClip({
         );
       }
 
+      if (
+        prepareTimerRef.current !==
+        null
+      ) {
+        window.clearTimeout(
+          prepareTimerRef.current
+        );
+
+        prepareTimerRef.current = null;
+      }
+
       readyRef.current = false;
       playingRef.current = false;
       loadedStartRef.current = null;
@@ -339,6 +477,8 @@ export function useSpotifyClip({
     mountRef,
     trackId,
     trackUrl,
+    ensureIframeCapabilities,
+    prepareStart,
   ]);
 
   const play = useCallback(() => {
@@ -359,9 +499,12 @@ export function useSpotifyClip({
 
     try {
       /*
-       * Solo al tocar Play hacemos UNA preparación del punto elegido.
-       * Se ejecuta dentro del gesto del usuario para evitar romper
-       * las políticas de reproducción del navegador.
+       * Desktop:
+       * el botón custom sigue usando la API.
+       *
+       * Móvil:
+       * el usuario dispone además del reproductor oficial visible,
+       * por lo que puede tocar Play directamente dentro del iframe.
        */
       if (
         loadedStartRef.current !==
@@ -377,10 +520,6 @@ export function useSpotifyClip({
           selectedStart;
       }
 
-      /*
-       * play() se llama en el mismo click.
-       * No esperamos un setTimeout ni otro evento para iniciarlo.
-       */
       controller.play?.();
     } catch (playError: any) {
       console.error(

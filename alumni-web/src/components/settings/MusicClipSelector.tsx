@@ -59,6 +59,7 @@ export default function MusicClipSelector({
   });
 
   const spotifyDurationSeconds = Math.floor(durationMs / 1000);
+
   const durationSeconds =
     spotifyDurationSeconds > 0
       ? spotifyDurationSeconds
@@ -76,7 +77,10 @@ export default function MusicClipSelector({
 
     onDurationKnown(durationSeconds);
 
-    const realMax = Math.max(0, durationSeconds - safeClipDuration);
+    const realMax = Math.max(
+      0,
+      durationSeconds - safeClipDuration
+    );
 
     if (startSeconds > realMax) {
       onStartChange(realMax);
@@ -94,7 +98,10 @@ export default function MusicClipSelector({
 
     return Math.max(
       8,
-      Math.min(34, (safeClipDuration / effectiveDuration) * 100)
+      Math.min(
+        34,
+        (safeClipDuration / effectiveDuration) * 100
+      )
     );
   }, [effectiveDuration, safeClipDuration]);
 
@@ -102,11 +109,20 @@ export default function MusicClipSelector({
     if (maxStart <= 0) return 0;
 
     const travel = 100 - windowWidth;
-    return (Math.min(startSeconds, maxStart) / maxStart) * travel;
+
+    return (
+      (Math.min(startSeconds, maxStart) / maxStart) *
+      travel
+    );
   }, [maxStart, startSeconds, windowWidth]);
 
   function updateStart(value: number) {
-    onStartChange(Math.max(0, Math.min(maxStart, value)));
+    onStartChange(
+      Math.max(
+        0,
+        Math.min(maxStart, value)
+      )
+    );
   }
 
   function nudge(value: number) {
@@ -115,7 +131,12 @@ export default function MusicClipSelector({
 
   function handlePreview() {
     if (failed) {
-      window.open(track.track_url, "_blank", "noopener,noreferrer");
+      window.open(
+        track.track_url,
+        "_blank",
+        "noopener,noreferrer"
+      );
+
       return;
     }
 
@@ -127,18 +148,20 @@ export default function MusicClipSelector({
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-2 text-[#8d98ff]">
           <Scissors size={14} />
+
           <p className="text-xs font-black">
             Elige tus {safeClipDuration} segundos
           </p>
         </div>
 
         <span className="rounded-full border border-white/[0.07] bg-white/[0.025] px-2.5 py-1 text-[10px] font-black tabular-nums text-zinc-600">
-          {formatTime(startSeconds)} → {formatTime(startSeconds + safeClipDuration)}
+          {formatTime(startSeconds)} →{" "}
+          {formatTime(startSeconds + safeClipDuration)}
         </span>
       </div>
 
       <p className="mt-2 text-[11px] leading-5 text-zinc-700">
-        Mueve la selección. Si estaba sonando, se pausa y reanuda en el nuevo tramo sin lanzar varios seeks a la vez.
+        Mueve la selección. Spotify se prepara cuando terminas de moverla, sin hacer múltiples seeks.
       </p>
 
       <div className="relative mt-5 h-20 overflow-hidden rounded-[14px] border border-white/[0.045] bg-black/10 px-3">
@@ -148,7 +171,10 @@ export default function MusicClipSelector({
               key={`${height}-${index}`}
               className="w-[3px] shrink-0 rounded-full bg-white/[0.12]"
               style={{
-                height: `${Math.max(5, height * 0.78)}px`,
+                height: `${Math.max(
+                  5,
+                  height * 0.78
+                )}px`,
               }}
             />
           ))}
@@ -168,7 +194,11 @@ export default function MusicClipSelector({
           max={maxStart}
           step={1}
           value={Math.min(startSeconds, maxStart)}
-          onChange={(event) => updateStart(Number(event.target.value))}
+          onChange={(event) =>
+            updateStart(
+              Number(event.target.value)
+            )
+          }
           className="absolute inset-0 z-10 h-full w-full cursor-ew-resize opacity-0"
           aria-label="Seleccionar inicio del fragmento"
         />
@@ -176,6 +206,7 @@ export default function MusicClipSelector({
 
       <div className="mt-2 flex justify-between text-[9px] font-bold tabular-nums text-zinc-800">
         <span>0:00</span>
+
         <span>
           {durationSeconds > 0
             ? formatTime(durationSeconds)
@@ -194,11 +225,15 @@ export default function MusicClipSelector({
           5s
         </button>
 
+        {/*
+          El Play custom queda para escritorio.
+          En móvil usamos el Play dentro del Embed oficial.
+        */}
         <button
           type="button"
           onClick={handlePreview}
           disabled={!ready && !failed}
-          className="flex h-11 w-14 items-center justify-center rounded-2xl bg-[#6d7cff] text-white shadow-[0_8px_24px_rgba(109,124,255,.18)] transition hover:bg-[#7b87ff] disabled:cursor-wait disabled:opacity-55"
+          className="hidden h-11 w-14 items-center justify-center rounded-2xl bg-[#6d7cff] text-white shadow-[0_8px_24px_rgba(109,124,255,.18)] transition hover:bg-[#7b87ff] disabled:cursor-wait disabled:opacity-55 md:flex"
           aria-label={
             failed
               ? "Abrir en Spotify"
@@ -208,13 +243,23 @@ export default function MusicClipSelector({
           }
         >
           {!ready && !failed ? (
-            <Loader2 size={17} className="animate-spin" />
+            <Loader2
+              size={17}
+              className="animate-spin"
+            />
           ) : failed ? (
             <ExternalLink size={17} />
           ) : isPlaying ? (
-            <Pause size={17} fill="currentColor" />
+            <Pause
+              size={17}
+              fill="currentColor"
+            />
           ) : (
-            <Play size={18} fill="currentColor" className="ml-0.5" />
+            <Play
+              size={18}
+              fill="currentColor"
+              className="ml-0.5"
+            />
           )}
         </button>
 
@@ -229,14 +274,37 @@ export default function MusicClipSelector({
         </button>
       </div>
 
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute bottom-0 right-0 h-px w-px overflow-hidden opacity-[0.01]"
-      >
-        <div className="h-[80px] w-[300px]">
-          <div ref={spotifyMountRef} />
-        </div>
+      {/*
+        En móvil este es un Spotify Embed REAL y visible.
+        Tocar su propio Play es un gesto directo dentro del iframe,
+        que es mucho más fiable en iOS/Android.
+      */}
+      <div className="relative z-20 mt-4 h-[80px] w-full overflow-hidden rounded-xl md:absolute md:-left-[10000px] md:top-0 md:mt-0 md:h-[80px] md:w-[300px] md:overflow-visible md:opacity-[0.01]">
+        <div
+          ref={spotifyMountRef}
+          className="h-[80px] w-full"
+        />
       </div>
+
+      <p className="mt-2 text-center text-[10px] leading-4 text-zinc-700 md:hidden">
+        En teléfono, toca Play directamente en Spotify.
+      </p>
+
+      {failed && (
+        <button
+          type="button"
+          onClick={() =>
+            window.open(
+              track.track_url,
+              "_blank",
+              "noopener,noreferrer"
+            )
+          }
+          className="mx-auto mt-2 block text-[10px] font-bold text-[#8d98ff] md:hidden"
+        >
+          Abrir en Spotify
+        </button>
+      )}
     </div>
   );
 }
