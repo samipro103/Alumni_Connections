@@ -6,19 +6,17 @@ import {
   useState,
 } from "react";
 import {
-  Check,
   Film,
   ImagePlus,
   Loader2,
   Music2,
-  Search,
   Send,
   Trash2,
+  Upload,
   X,
 } from "lucide-react";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { supabase } from "@/lib/supabase";
-import type { StoryMusicTrack } from "@/lib/musicCatalog";
 import StoryMusicStartPicker from "@/components/stories/StoryMusicStartPicker";
 
 type Props = {
@@ -30,18 +28,21 @@ type Props = {
 const MAX_WIDTH = 1080;
 const MAX_HEIGHT = 1920;
 const MAX_VIDEO_BYTES = 50 * 1024 * 1024;
+const MAX_AUDIO_BYTES = 20 * 1024 * 1024;
+const AUDIO_BUCKET = "story-audio";
 
-function getMarketFromLocale() {
-  if (typeof navigator === "undefined") return "SV";
+function cleanName(name: string) {
+  return name
+    .normalize("NFKD")
+    .replace(/[^\w.\-]+/g, "_")
+    .slice(-140);
+}
 
-  const locale =
-    navigator.languages?.[0] ||
-    navigator.language ||
-    "es-SV";
-
-  const match = locale.match(/[-_]([A-Za-z]{2})$/);
-
-  return match?.[1]?.toUpperCase() || "SV";
+function displaySongName(name: string) {
+  return name
+    .replace(/\.[^.]+$/, "")
+    .replace(/[_-]+/g, " ")
+    .trim();
 }
 
 export default function StoryComposer({
@@ -50,23 +51,20 @@ export default function StoryComposer({
   onPublished,
 }: Props) {
   const { user } = useAuth();
-  const inputRef = useRef<HTMLInputElement>(null);
-  const searchTimerRef = useRef<number | null>(null);
+
+  const mediaInputRef = useRef<HTMLInputElement>(null);
+  const audioInputRef = useRef<HTMLInputElement>(null);
+  const audioPreviewRef = useRef<HTMLAudioElement>(null);
 
   const [file, setFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState("");
   const [publishing, setPublishing] = useState(false);
 
-  const [musicQuery, setMusicQuery] = useState("");
-  const [musicResults, setMusicResults] = useState<
-    StoryMusicTrack[]
-  >([]);
-  const [musicSearching, setMusicSearching] = useState(false);
-  const [musicSearchError, setMusicSearchError] = useState("");
-  const [music, setMusic] = useState<StoryMusicTrack | null>(null);
-  const [musicClipStart, setMusicClipStart] = useState(0);
-  const [musicClipConfirmed, setMusicClipConfirmed] = useState(false);
-  const [musicTrackDuration, setMusicTrackDuration] = useState<number | null>(null);
+  const [audioFile, setAudioFile] = useState<File | null>(null);
+  const [audioPreviewUrl, setAudioPreviewUrl] = useState("");
+  const [audioDuration, setAudioDuration] = useState(0);
+  const [audioClipStart, setAudioClipStart] = useState(0);
+  const [audioClipConfirmed, setAudioClipConfirmed] = useState(false);
 
   useEffect(() => {
     if (!file) {
@@ -81,89 +79,57 @@ export default function StoryComposer({
   }, [file]);
 
   useEffect(() => {
-    return () => {
-      if (searchTimerRef.current !== null) {
-        window.clearTimeout(searchTimerRef.current);
-      }
+    if (!audioFile) {
+      setAudioPreviewUrl("");
+      setAudioDuration(0);
+      setAudioClipStart(0);
+      setAudioClipConfirmed(false);
+      return;
+    }
+
+    const url = URL.createObjectURL(audioFile);
+    setAudioPreviewUrl(url);
+
+    const probe = new Audio(url);
+
+    const onMetadata = () => {
+      const duration = Number.isFinite(probe.duration)
+        ? Math.max(15, Math.floor(probe.duration))
+        : 240;
+
+      setAudioDuration(duration);
     };
-  }, []);
+
+    probe.addEventListener("loadedmetadata", onMetadata);
+
+    return () => {
+      probe.pause();
+      probe.removeEventListener("loadedmetadata", onMetadata);
+      URL.revokeObjectURL(url);
+    };
+  }, [audioFile]);
 
   useEffect(() => {
     if (!open) {
       setFile(null);
       setPreviewUrl("");
       setPublishing(false);
-      setMusicQuery("");
-      setMusicResults([]);
-      setMusicSearching(false);
-      setMusicSearchError("");
-      setMusic(null);
-      setMusicClipStart(0);
-      setMusicClipConfirmed(false);
-      setMusicTrackDuration(null);
+      setAudioFile(null);
+      setAudioPreviewUrl("");
+      setAudioDuration(0);
+      setAudioClipStart(0);
+      setAudioClipConfirmed(false);
     }
   }, [open]);
 
-  const hasSearch = musicQuery.trim().length >= 2;
-
   useEffect(() => {
-    if (!open || !file) return;
+    const audio = audioPreviewRef.current;
+    if (!audio || !audioPreviewUrl) return;
 
-    const query = musicQuery.trim();
-
-    if (searchTimerRef.current !== null) {
-      window.clearTimeout(searchTimerRef.current);
-    }
-
-    if (query.length < 2) {
-      setMusicResults([]);
-      setMusicSearching(false);
-      setMusicSearchError("");
-      return;
-    }
-
-    searchTimerRef.current = window.setTimeout(() => {
-      void searchMusic(query);
-    }, 350);
-
-    return () => {
-      if (searchTimerRef.current !== null) {
-        window.clearTimeout(searchTimerRef.current);
-      }
-    };
-  }, [musicQuery, open, file]);
+    audio.currentTime = Math.max(0, audioClipStart);
+  }, [audioClipStart, audioPreviewUrl]);
 
   if (!open) return null;
-
-  async function searchMusic(query: string) {
-    setMusicSearching(true);
-    setMusicSearchError("");
-
-    try {
-      const response = await fetch(
-        `/api/music/search?q=${encodeURIComponent(
-          query
-        )}&market=${encodeURIComponent(getMarketFromLocale())}`
-      );
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(
-          data?.error || "No se pudo buscar en Spotify."
-        );
-      }
-
-      setMusicResults((data?.tracks || []) as StoryMusicTrack[]);
-    } catch (error: any) {
-      setMusicResults([]);
-      setMusicSearchError(
-        error?.message || "No se pudo buscar música."
-      );
-    } finally {
-      setMusicSearching(false);
-    }
-  }
 
   async function optimizeImageForStory(originalFile: File) {
     if (!originalFile.type.startsWith("image/")) {
@@ -174,7 +140,7 @@ export default function StoryComposer({
       const image = new Image();
       const objectUrl = URL.createObjectURL(originalFile);
 
-      image.onload = async () => {
+      image.onload = () => {
         try {
           const width = image.naturalWidth;
           const height = image.naturalHeight;
@@ -237,10 +203,14 @@ export default function StoryComposer({
               );
 
               resolve(
-                new File([blob], `${nextName}-story.jpg`, {
-                  type: "image/jpeg",
-                  lastModified: Date.now(),
-                })
+                new File(
+                  [blob],
+                  `${nextName}-story.jpg`,
+                  {
+                    type: "image/jpeg",
+                    lastModified: Date.now(),
+                  }
+                )
               );
             },
             "image/jpeg",
@@ -254,14 +224,16 @@ export default function StoryComposer({
 
       image.onerror = () => {
         URL.revokeObjectURL(objectUrl);
-        reject(new Error("No se pudo leer la imagen."));
+        reject(
+          new Error("No se pudo leer la imagen.")
+        );
       };
 
       image.src = objectUrl;
     });
   }
 
-  function chooseFile(selected: File) {
+  function chooseMedia(selected: File) {
     const valid =
       selected.type.startsWith("image/") ||
       selected.type.startsWith("video/");
@@ -282,85 +254,196 @@ export default function StoryComposer({
     setFile(selected);
   }
 
-  function selectTrack(track: StoryMusicTrack) {
-    setMusic(track);
-    setMusicClipStart(0);
-    setMusicClipConfirmed(false);
-    setMusicTrackDuration(
-      typeof track.duration_ms === "number" && track.duration_ms > 0
-        ? Math.floor(track.duration_ms / 1000)
-        : null
-    );
-    setMusicQuery("");
-    setMusicResults([]);
-    setMusicSearchError("");
+  function chooseAudio(selected: File) {
+    if (!selected.type.startsWith("audio/")) {
+      alert("Selecciona un archivo de audio.");
+      return;
+    }
+
+    if (selected.size > MAX_AUDIO_BYTES) {
+      alert("La canción no puede superar 20 MB.");
+      return;
+    }
+
+    setAudioFile(selected);
+    setAudioClipStart(0);
+    setAudioClipConfirmed(false);
+  }
+
+  function clearAudio() {
+    audioPreviewRef.current?.pause();
+    setAudioFile(null);
+    setAudioPreviewUrl("");
+    setAudioDuration(0);
+    setAudioClipStart(0);
+    setAudioClipConfirmed(false);
+
+    if (audioInputRef.current) {
+      audioInputRef.current.value = "";
+    }
+  }
+
+  function previewSelectedClip() {
+    const audio = audioPreviewRef.current;
+    if (!audio) return;
+
+    audio.currentTime = Math.max(0, audioClipStart);
+
+    void audio.play().catch(() => {});
+
+    window.setTimeout(() => {
+      if (!audio.paused) {
+        audio.pause();
+      }
+    }, 15000);
   }
 
   async function publishStory() {
     if (!user || !file || publishing) return;
 
+    if (audioFile && !audioClipConfirmed) {
+      alert(
+        "Confirma primero desde dónde debe empezar la canción."
+      );
+      return;
+    }
+
     setPublishing(true);
+
+    let storyPath: string | null = null;
+    let audioPath: string | null = null;
 
     try {
       const preparedFile =
         await optimizeImageForStory(file);
 
-      const cleanName = preparedFile.name.replace(
-        /[^a-zA-Z0-9._-]/g,
-        "_"
-      );
+      storyPath =
+        `${user.id}/${Date.now()}-${cleanName(
+          preparedFile.name
+        )}`;
 
-      const path = `${user.id}/${Date.now()}-${cleanName}`;
-
-      const { error: uploadError } = await supabase.storage
-        .from("stories")
-        .upload(path, preparedFile, {
-          cacheControl: "3600",
-          upsert: false,
-          contentType:
-            preparedFile.type ||
-            (preparedFile.type.startsWith("video/")
-              ? "video/mp4"
-              : "image/jpeg"),
-        });
+      const { error: uploadError } =
+        await supabase.storage
+          .from("stories")
+          .upload(storyPath, preparedFile, {
+            cacheControl: "3600",
+            upsert: false,
+            contentType:
+              preparedFile.type ||
+              (preparedFile.type.startsWith("video/")
+                ? "video/mp4"
+                : "image/jpeg"),
+          });
 
       if (uploadError) throw uploadError;
 
-      const { data: publicUrlData } = supabase.storage
-        .from("stories")
-        .getPublicUrl(path);
+      const { data: storyUrlData } =
+        supabase.storage
+          .from("stories")
+          .getPublicUrl(storyPath);
 
-      const { error: insertError } = await supabase
-        .from("stories")
-        .insert({
-          user_id: user.id,
-          media_url: publicUrlData.publicUrl,
-          media_path: path,
-          media_type: preparedFile.type.startsWith("video/")
-            ? "video"
-            : "image",
-          music_provider: null,
-          music_track_id: null,
-          music_title: null,
-          music_artist: null,
-          music_artwork_url: null,
-          music_track_url: null,
-          music_embed_url: null,
-          music_preview_url: null,
-          music_duration_ms: null,
-          music_clip_start_seconds: 0,
-          music_clip_duration_seconds: 15,
-        });
+      let audioPublicUrl: string | null = null;
+
+      if (audioFile) {
+        audioPath =
+          `${user.id}/${Date.now()}-${cleanName(
+            audioFile.name
+          )}`;
+
+        const { error: audioUploadError } =
+          await supabase.storage
+            .from(AUDIO_BUCKET)
+            .upload(audioPath, audioFile, {
+              cacheControl: "3600",
+              upsert: false,
+              contentType:
+                audioFile.type || "audio/mpeg",
+            });
+
+        if (audioUploadError) {
+          throw audioUploadError;
+        }
+
+        const { data: audioUrlData } =
+          supabase.storage
+            .from(AUDIO_BUCKET)
+            .getPublicUrl(audioPath);
+
+        audioPublicUrl =
+          audioUrlData.publicUrl;
+      }
+
+      const { error: insertError } =
+        await supabase
+          .from("stories")
+          .insert({
+            user_id: user.id,
+            media_url:
+              storyUrlData.publicUrl,
+            media_path: storyPath,
+            media_type:
+              preparedFile.type.startsWith("video/")
+                ? "video"
+                : "image",
+
+            music_provider:
+              audioFile ? "upload" : null,
+            music_track_id: null,
+            music_title:
+              audioFile
+                ? displaySongName(
+                    audioFile.name
+                  )
+                : null,
+            music_artist:
+              audioFile
+                ? "Audio de la historia"
+                : null,
+            music_artwork_url: null,
+            music_track_url:
+              audioPublicUrl,
+            music_embed_url: null,
+            music_preview_url: null,
+            music_duration_ms:
+              audioFile
+                ? Math.max(
+                    15000,
+                    Math.floor(
+                      (audioDuration || 15) *
+                        1000
+                    )
+                  )
+                : null,
+            music_clip_start_seconds:
+              audioFile
+                ? Math.max(
+                    0,
+                    Math.floor(audioClipStart)
+                  )
+                : 0,
+            music_clip_duration_seconds: 15,
+            music_storage_path:
+              audioPath,
+          });
 
       if (insertError) {
-        await supabase.storage
-          .from("stories")
-          .remove([path]);
         throw insertError;
       }
 
       await onPublished();
     } catch (error: any) {
+      if (storyPath) {
+        await supabase.storage
+          .from("stories")
+          .remove([storyPath]);
+      }
+
+      if (audioPath) {
+        await supabase.storage
+          .from(AUDIO_BUCKET)
+          .remove([audioPath]);
+      }
+
       console.error(error);
       alert(
         error?.message ||
@@ -385,7 +468,7 @@ export default function StoryComposer({
               Nueva historia
             </p>
             <p className="mt-0.5 text-[10px] text-zinc-600">
-              Foto o video · 15 segundos · visible durante 24 horas
+              Foto o video · 15 segundos
             </p>
           </div>
 
@@ -408,13 +491,13 @@ export default function StoryComposer({
                   src={previewUrl}
                   controls
                   playsInline
-                  className="aspect-[9/16] max-h-[58vh] w-full object-contain"
+                  className="aspect-[9/16] max-h-[54vh] w-full object-contain"
                 />
               ) : (
                 <img
                   src={previewUrl}
                   alt="Vista previa de historia"
-                  className="aspect-[9/16] max-h-[58vh] w-full object-contain"
+                  className="aspect-[9/16] max-h-[54vh] w-full object-contain"
                 />
               )}
 
@@ -439,53 +522,32 @@ export default function StoryComposer({
                 <X size={17} />
               </button>
 
-              {music && (
-                <div className="absolute bottom-4 left-4 right-4 flex items-center gap-3 rounded-[18px] border border-white/10 bg-black/55 p-3 backdrop-blur-2xl">
-                  {music.artwork_url ? (
-                    <img
-                      src={music.artwork_url}
-                      alt=""
-                      className="h-11 w-11 rounded-xl object-cover"
-                    />
-                  ) : (
-                    <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-white/10">
-                      <Music2 size={16} />
-                    </div>
-                  )}
+              {audioFile && (
+                <div className="absolute bottom-4 left-4 right-4 flex items-center gap-3 rounded-[18px] border border-white/10 bg-black/60 p-3 backdrop-blur-2xl">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/10 text-white">
+                    <Music2 size={17} />
+                  </div>
 
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-xs font-black text-white">
-                      {music.track_title}
+                      {displaySongName(
+                        audioFile.name
+                      )}
                     </p>
-                    <p className="mt-0.5 truncate text-[10px] text-white/50">
-                      {music.artist_name}
+                    <p className="mt-0.5 text-[9px] text-white/45">
+                      Desde {Math.floor(audioClipStart / 60)}:
+                      {String(audioClipStart % 60).padStart(2, "0")} · 15s
                     </p>
                   </div>
-
-                  <span className="rounded-full border border-white/10 bg-white/[0.06] px-2 py-1 text-[9px] font-black tabular-nums text-white/55">
-                    {Math.floor(musicClipStart / 60)}:{String(musicClipStart % 60).padStart(2, "0")} · 15s
-                  </span>
-
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setMusic(null);
-                      setMusicClipStart(0);
-                      setMusicClipConfirmed(false);
-                      setMusicTrackDuration(null);
-                    }}
-                    className="flex h-8 w-8 items-center justify-center rounded-full text-white/45 transition hover:bg-white/10 hover:text-white"
-                    aria-label="Quitar música"
-                  >
-                    <Trash2 size={14} />
-                  </button>
                 </div>
               )}
             </div>
           ) : (
             <button
               type="button"
-              onClick={() => inputRef.current?.click()}
+              onClick={() =>
+                mediaInputRef.current?.click()
+              }
               className="flex aspect-[9/12] w-full flex-col items-center justify-center rounded-[24px] border border-dashed border-white/[0.10] bg-white/[0.018] px-8 text-center transition hover:border-[#7f8cff]/35 hover:bg-white/[0.03]"
             >
               <div className="flex gap-2">
@@ -504,7 +566,7 @@ export default function StoryComposer({
           )}
 
           <input
-            ref={inputRef}
+            ref={mediaInputRef}
             type="file"
             accept="image/*,video/mp4,video/webm,video/quicktime"
             hidden
@@ -512,16 +574,135 @@ export default function StoryComposer({
               const selected =
                 event.target.files?.[0];
 
-              if (selected) chooseFile(selected);
+              if (selected) {
+                chooseMedia(selected);
+              }
+
               event.currentTarget.value = "";
             }}
           />
+
+          <input
+            ref={audioInputRef}
+            type="file"
+            accept="audio/mpeg,audio/mp4,audio/aac,audio/wav,audio/x-wav,audio/ogg,audio/webm"
+            hidden
+            onChange={(event) => {
+              const selected =
+                event.target.files?.[0];
+
+              if (selected) {
+                chooseAudio(selected);
+              }
+            }}
+          />
+
+          {file && (
+            <section className="mt-5 border-t border-white/[0.06] pt-5">
+              <div className="flex items-center gap-2">
+                <Music2
+                  size={16}
+                  className="text-[#8d98ff]"
+                />
+
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs font-black text-zinc-300">
+                    Canción
+                  </p>
+                  <p className="mt-0.5 text-[10px] text-zinc-700">
+                    Agrega audio propio o con licencia a tu historia.
+                  </p>
+                </div>
+              </div>
+
+              {!audioFile ? (
+                <button
+                  type="button"
+                  onClick={() =>
+                    audioInputRef.current?.click()
+                  }
+                  className="mt-3 flex h-12 w-full items-center justify-center gap-2 rounded-[15px] border border-white/[0.08] bg-white/[0.035] text-xs font-black text-zinc-300 transition hover:bg-white/[0.06]"
+                >
+                  <Upload size={16} />
+                  Elegir canción
+                </button>
+              ) : (
+                <div className="mt-3 rounded-[18px] border border-white/[0.08] bg-white/[0.025] p-3">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#6d7cff]/12 text-[#9ba5ff]">
+                      <Music2 size={18} />
+                    </div>
+
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-xs font-black text-zinc-200">
+                        {displaySongName(
+                          audioFile.name
+                        )}
+                      </p>
+                      <p className="mt-1 text-[9px] text-zinc-600">
+                        {(audioFile.size / 1024 / 1024).toFixed(1)} MB
+                        {audioDuration > 0
+                          ? ` · ${Math.floor(audioDuration / 60)}:${String(
+                              audioDuration % 60
+                            ).padStart(2, "0")}`
+                          : ""}
+                      </p>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={clearAudio}
+                      className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-zinc-600 transition hover:bg-white/[0.06] hover:text-red-300"
+                      aria-label="Quitar canción"
+                    >
+                      <Trash2 size={15} />
+                    </button>
+                  </div>
+
+                  <audio
+                    ref={audioPreviewRef}
+                    src={audioPreviewUrl}
+                    preload="metadata"
+                    className="hidden"
+                  />
+
+                  <div className="mt-4">
+                    <StoryMusicStartPicker
+                      startSeconds={audioClipStart}
+                      durationSeconds={
+                        audioDuration || 240
+                      }
+                      confirmed={
+                        audioClipConfirmed
+                      }
+                      onStartChange={(value) => {
+                        setAudioClipStart(value);
+                        setAudioClipConfirmed(false);
+                      }}
+                      onConfirm={() => {
+                        setAudioClipConfirmed(true);
+                        previewSelectedClip();
+                      }}
+                    />
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={previewSelectedClip}
+                    className="mt-2 h-9 w-full rounded-xl bg-white/[0.045] text-[10px] font-black text-zinc-400 transition hover:bg-white/[0.07] hover:text-zinc-200"
+                  >
+                    Escuchar fragmento
+                  </button>
+                </div>
+              )}
+            </section>
+          )}
 
           <div className="mt-5 flex items-center justify-between gap-3">
             <button
               type="button"
               onClick={() =>
-                inputRef.current?.click()
+                mediaInputRef.current?.click()
               }
               disabled={publishing}
               className="h-10 rounded-xl px-3 text-xs font-bold text-zinc-600 transition hover:bg-white/[0.04] hover:text-zinc-200"
@@ -534,7 +715,14 @@ export default function StoryComposer({
             <button
               type="button"
               onClick={publishStory}
-              disabled={!file || publishing}
+              disabled={
+                !file ||
+                publishing ||
+                Boolean(
+                  audioFile &&
+                    !audioClipConfirmed
+                )
+              }
               className="flex h-10 items-center gap-2 rounded-xl bg-[#6d7cff] px-4 text-xs font-black text-white transition hover:bg-[#7b87ff] disabled:cursor-not-allowed disabled:bg-white/[0.05] disabled:text-zinc-700"
             >
               {publishing ? (
@@ -545,6 +733,7 @@ export default function StoryComposer({
               ) : (
                 <Send size={15} />
               )}
+
               {publishing
                 ? "Publicando..."
                 : "Publicar"}

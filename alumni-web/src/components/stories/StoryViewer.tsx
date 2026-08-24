@@ -24,6 +24,7 @@ import {
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import StoryMusicPlayer from "@/components/stories/StoryMusicPlayer";
+import StoryUploadedAudioPlayer from "@/components/stories/StoryUploadedAudioPlayer";
 import {
   startStoryMusicNow,
   stopAllStoryMusic,
@@ -49,6 +50,7 @@ export type StoryItem = {
   music_duration_ms?: number | null;
   music_clip_start_seconds?: number | null;
   music_clip_duration_seconds?: number | null;
+  music_storage_path?: string | null;
 };
 
 export type StoryGroup = {
@@ -159,6 +161,10 @@ export default function StoryViewer({
   const story = group?.stories[storyIndex];
   const ownStory =
     story?.user_id === currentUserId;
+
+  const hasUploadedStoryAudio =
+    story?.music_provider === "upload" &&
+    Boolean(story?.music_track_url);
 
   useEffect(() => {
     if (!open || !story) return;
@@ -585,7 +591,7 @@ export default function StoryViewer({
       const { data: fullStory } =
         await supabase
           .from("stories")
-          .select("media_path")
+          .select("media_path, music_storage_path")
           .eq("id", story.id)
           .maybeSingle();
 
@@ -604,6 +610,14 @@ export default function StoryViewer({
           .from("stories")
           .remove([
             fullStory.media_path,
+          ]);
+      }
+
+      if (fullStory?.music_storage_path) {
+        await supabase.storage
+          .from("story-audio")
+          .remove([
+            fullStory.music_storage_path,
           ]);
       }
 
@@ -851,6 +865,54 @@ export default function StoryViewer({
         >
           <ChevronRight size={20} />
         </button>
+
+        {hasUploadedStoryAudio && story.music_track_url && (
+          <>
+            <StoryUploadedAudioPlayer
+              key={`uploaded-audio-${story.id}`}
+              src={story.music_track_url}
+              startSeconds={Math.max(
+                0,
+                Number(
+                  story.music_clip_start_seconds || 0
+                )
+              )}
+              clipDurationSeconds={Math.max(
+                1,
+                Number(
+                  story.music_clip_duration_seconds || 15
+                )
+              )}
+              paused={paused || replyFocused}
+              onPlayingChange={setStoryMusicPlaying}
+            />
+
+            <div
+              className={`absolute left-4 z-40 flex max-w-[78%] items-center gap-2.5 rounded-[17px] border border-white/10 bg-black/45 p-2.5 backdrop-blur-2xl ${
+                ownStory
+                  ? "bottom-20"
+                  : "bottom-[92px]"
+              }`}
+              onClick={(event) =>
+                event.stopPropagation()
+              }
+            >
+              <span className="flex h-10 w-10 items-center justify-center rounded-[10px] bg-white/10 text-white/75">
+                <Music2 size={16} />
+              </span>
+
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-[11px] font-black text-white/90">
+                  {story.music_title ||
+                    "Canción"}
+                </p>
+                <p className="mt-0.5 truncate text-[9px] text-white/45">
+                  15 segundos
+                </p>
+              </div>
+            </div>
+          </>
+        )}
 
         {STORY_SPOTIFY_SOUNDTRACKS_ENABLED && story.music_track_url && (
           <div

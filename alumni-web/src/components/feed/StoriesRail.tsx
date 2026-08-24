@@ -144,7 +144,8 @@ export default function StoriesRail({
           music_preview_url,
           music_duration_ms,
           music_clip_start_seconds,
-          music_clip_duration_seconds
+          music_clip_duration_seconds,
+          music_storage_path
         `)
         .in("user_id", candidateIds)
         .gt(
