@@ -199,7 +199,7 @@ export default function ProfilePage() {
                   className="h-full w-full object-cover"
 />
               ) : (
-                <div className="h-full w-full bg-[radial-gradient(circle_at_20%_10%,rgba(109,124,255,.28),transparent_38%),radial-gradient(circle_at_85%_20%,rgba(124,58,237,.18),transparent_34%),#11151c]" />
+                <div className="profile-banner-fallback h-full w-full" />
               )}
             </div>
           </div>
@@ -316,7 +316,7 @@ export default function ProfilePage() {
                 {posts.map((post: any) => (
                   <article
                     key={post.id}
-                    className="overflow-hidden rounded-[24px] border border-white/[0.07] bg-[#101318]/95"
+                    className="alumni-post-card overflow-hidden rounded-[24px] border border-white/[0.07] bg-[#101318]/95"
                   >
                     <div className="p-5">
                       <div className="flex items-center gap-3">

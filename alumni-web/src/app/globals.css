@@ -374,3 +374,338 @@ html[data-theme="pride"] [class~="bg-[#6d7cff]"],
 html[data-theme="pride"] [class~="bg-[#7b87ff]"] {
   box-shadow: 0 8px 30px rgba(255,77,109,.10);
 }
+
+/* ==================================================================
+   ALUMNI VISUAL + THEME AUDIT 11.0
+   Capa global para que Dark, Light, Chill, Pride, Midnight, Emerald
+   y Executive mantengan contraste, superficies y estados coherentes.
+   ================================================================== */
+
+:root {
+  --app-danger: #ef5b68;
+  --app-success: #3dbb7f;
+  --app-warning: #d6a340;
+}
+
+.alumni-accent-button {
+  background: var(--app-accent-fill);
+  color: var(--app-on-accent);
+  box-shadow: 0 10px 28px color-mix(in srgb, var(--app-accent) 18%, transparent);
+}
+
+.alumni-accent-button:hover {
+  filter: brightness(1.045);
+}
+
+.alumni-composer {
+  border-color: var(--app-border);
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--app-surface) 97%, transparent),
+      color-mix(in srgb, var(--app-surface) 91%, transparent)
+    );
+  box-shadow: 0 18px 55px var(--app-shadow);
+}
+
+.alumni-post-card {
+  border-color: var(--app-border) !important;
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--app-surface) 98%, transparent),
+      color-mix(in srgb, var(--app-surface) 94%, transparent)
+    ) !important;
+  box-shadow:
+    0 1px 0 color-mix(in srgb, var(--app-text) 2%, transparent),
+    0 18px 55px var(--app-shadow);
+}
+
+.alumni-post-card:hover {
+  border-color: color-mix(in srgb, var(--app-accent) 18%, var(--app-border)) !important;
+}
+
+.alumni-post-avatar {
+  box-shadow:
+    0 0 0 1px var(--app-border),
+    0 7px 20px var(--app-shadow);
+}
+
+.alumni-post-copy {
+  color: var(--app-text-soft) !important;
+  letter-spacing: -0.006em;
+}
+
+.alumni-post-media {
+  padding: 0 12px;
+  background: transparent !important;
+}
+
+.alumni-post-media img {
+  border-radius: 18px;
+  background: var(--app-bg-2);
+  box-shadow: 0 10px 36px var(--app-shadow);
+}
+
+.alumni-post-footer {
+  padding-top: 12px;
+}
+
+.alumni-post-stats {
+  color: var(--app-muted-2);
+}
+
+.alumni-post-actions {
+  display: grid !important;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 4px !important;
+  border-color: var(--app-border) !important;
+}
+
+.alumni-post-actions > button {
+  width: 100%;
+  justify-content: center;
+  margin-left: 0 !important;
+}
+
+.alumni-comment-bubble {
+  background: var(--app-soft) !important;
+  border: 1px solid color-mix(in srgb, var(--app-border) 75%, transparent);
+}
+
+.alumni-comment-input {
+  border-color: var(--app-border) !important;
+  background: var(--app-soft) !important;
+}
+
+.alumni-story-tile {
+  border: 1px solid var(--app-border);
+  background: var(--app-surface-2);
+  box-shadow: 0 12px 28px var(--app-shadow);
+  isolation: isolate;
+}
+
+.alumni-story-unseen {
+  border-color: color-mix(in srgb, var(--app-accent) 72%, white 12%);
+  box-shadow:
+    0 0 0 2px color-mix(in srgb, var(--app-accent) 14%, transparent),
+    0 12px 28px var(--app-shadow);
+}
+
+.alumni-story-viewed {
+  border-color: var(--app-border);
+  filter: saturate(.78);
+}
+
+.alumni-story-tile:active {
+  transform: scale(.985);
+}
+
+.alumni-chat-composer {
+  border-color: var(--app-border);
+  background: color-mix(in srgb, var(--app-soft-strong) 78%, transparent);
+  box-shadow:
+    0 8px 30px var(--app-shadow),
+    inset 0 1px 0 color-mix(in srgb, var(--app-text) 3%, transparent);
+}
+
+.alumni-chat-composer:focus-within {
+  border-color: color-mix(in srgb, var(--app-accent) 42%, transparent);
+  background: color-mix(in srgb, var(--app-surface-2) 52%, var(--app-soft));
+}
+
+.alumni-message-mine {
+  background: var(--app-accent-fill);
+  color: var(--app-on-accent);
+  box-shadow: 0 8px 20px color-mix(in srgb, var(--app-accent) 13%, transparent);
+}
+
+.alumni-message-other {
+  background: var(--app-soft-strong);
+  color: var(--app-text-soft);
+}
+
+.alumni-message-media-mine {
+  border-color: color-mix(in srgb, var(--app-accent) 28%, transparent);
+  background: var(--app-accent-soft);
+}
+
+.profile-banner-fallback {
+  background:
+    radial-gradient(
+      circle at 18% 10%,
+      color-mix(in srgb, var(--app-accent) 30%, transparent),
+      transparent 40%
+    ),
+    radial-gradient(
+      circle at 85% 20%,
+      color-mix(in srgb, var(--app-accent-2) 19%, transparent),
+      transparent 36%
+    ),
+    var(--app-bg-2);
+}
+
+/* Los visores multimedia deben conservar controles oscuros aunque
+   la aplicación esté en Light o Chill. */
+[data-theme-lock="dark"] {
+  --app-bg: #050506;
+  --app-bg-2: #090b0f;
+  --app-surface: #101318;
+  --app-surface-2: #191e27;
+  --app-soft: rgba(255,255,255,.04);
+  --app-soft-strong: rgba(255,255,255,.075);
+  --app-border: rgba(255,255,255,.10);
+  --app-text: #ffffff;
+  --app-text-soft: #e5e7eb;
+  --app-muted: #a1a1aa;
+  --app-muted-2: #71717a;
+  --app-muted-3: #52525b;
+  --app-accent: #8d98ff;
+  --app-accent-2: #6d7cff;
+  --app-accent-fill: linear-gradient(135deg,#6d7cff,#7f8cff);
+  --app-accent-soft: rgba(109,124,255,.14);
+  --app-on-accent: #ffffff;
+  --app-topbar: rgba(5,5,6,.90);
+  --app-shadow: rgba(0,0,0,.40);
+  color-scheme: dark;
+}
+
+/* Superficies hardcodeadas que existían antes del sistema de temas. */
+html[data-theme] [class~="bg-[#0d1015]"],
+html[data-theme] [class~="bg-[#0d1015]/96"],
+html[data-theme] [class~="bg-[#181d27]"],
+html[data-theme] [class~="bg-[#151a23]"],
+html[data-theme] [class~="bg-[#11151c]"] {
+  background-color: var(--app-surface) !important;
+}
+
+html[data-theme] [class~="bg-[#181d27]"],
+html[data-theme] [class~="bg-[#151a23]"] {
+  background-color: var(--app-surface-2) !important;
+}
+
+html[data-theme] [class~="bg-[#6d7cff]/12"],
+html[data-theme] [class~="bg-[#6d7cff]/[0.06]"],
+html[data-theme] [class~="bg-[#6d7cff]/[0.07]"],
+html[data-theme] [class~="bg-[#7f8cff]/[0.07]"] {
+  background-color: var(--app-accent-soft) !important;
+}
+
+html[data-theme] [class~="bg-white/[0.018]"],
+html[data-theme] [class~="bg-white/[0.08]"],
+html[data-theme] [class~="bg-white/[0.09]"],
+html[data-theme] [class~="bg-white/[0.10]"],
+html[data-theme] [class~="bg-white/[0.1]"],
+html[data-theme] [class~="bg-white/10"] {
+  background-color: var(--app-soft) !important;
+}
+
+html[data-theme] [class~="hover:bg-white/[0.025]"]:hover,
+html[data-theme] [class~="hover:bg-white/[0.03]"]:hover,
+html[data-theme] [class~="hover:bg-white/[0.035]"]:hover,
+html[data-theme] [class~="hover:bg-white/[0.04]"]:hover,
+html[data-theme] [class~="hover:bg-white/[0.05]"]:hover,
+html[data-theme] [class~="hover:bg-white/[0.055]"]:hover,
+html[data-theme] [class~="hover:bg-white/[0.06]"]:hover,
+html[data-theme] [class~="hover:bg-white/[0.07]"]:hover,
+html[data-theme] [class~="hover:bg-white/[0.08]"]:hover,
+html[data-theme] [class~="hover:bg-white/[0.1]"]:hover,
+html[data-theme] [class~="hover:bg-white/10"]:hover {
+  background-color: var(--app-soft-strong) !important;
+}
+
+html[data-theme] [class~="disabled:bg-white/[0.06]"]:disabled {
+  background: var(--app-soft) !important;
+}
+
+html[data-theme] [class~="hover:text-white"]:hover {
+  color: var(--app-text) !important;
+}
+
+html[data-theme] [class~="hover:text-zinc-100"]:hover,
+html[data-theme] [class~="hover:text-zinc-200"]:hover,
+html[data-theme] [class~="hover:text-zinc-300"]:hover {
+  color: var(--app-text-soft) !important;
+}
+
+html[data-theme] [class~="hover:text-zinc-400"]:hover,
+html[data-theme] [class~="hover:text-zinc-500"]:hover {
+  color: var(--app-muted) !important;
+}
+
+html[data-theme] [class~="text-[#9da6ff]"],
+html[data-theme] [class~="text-[#9ba5ff]"] {
+  color: var(--app-accent) !important;
+}
+
+html[data-theme] [class~="border-white/[0.10]"],
+html[data-theme] [class~="border-white/[0.1]"],
+html[data-theme] [class~="border-white/15"] {
+  border-color: var(--app-border) !important;
+}
+
+html[data-theme] [class~="border-[#6d7cff]/25"],
+html[data-theme] [class~="border-[#6d7cff]/30"],
+html[data-theme] [class~="border-[#7f8cff]/20"],
+html[data-theme] [class~="border-[#7f8cff]/35"] {
+  border-color: color-mix(in srgb, var(--app-accent) 34%, transparent) !important;
+}
+
+html[data-theme] [class~="ring-[#090b0f]"],
+html[data-theme] [class~="ring-[#0b0e13]"] {
+  --tw-ring-color: var(--app-bg) !important;
+}
+
+html[data-theme] [class~="divide-white/[0.06]"] > :not(:last-child),
+html[data-theme] [class~="divide-white/[0.07]"] > :not(:last-child),
+html[data-theme] [class~="divide-white/[0.08]"] > :not(:last-child) {
+  border-color: var(--app-border) !important;
+}
+
+html[data-theme] [class~="placeholder:text-zinc-500"]::placeholder {
+  color: var(--app-muted) !important;
+}
+
+html[data-theme] [class~="placeholder:text-zinc-600"]::placeholder {
+  color: var(--app-muted-2) !important;
+}
+
+html[data-theme] [class~="placeholder:text-zinc-700"]::placeholder {
+  color: var(--app-muted-3) !important;
+}
+
+html[data-theme] [class~="focus-within:border-[#6d7cff]/50"]:focus-within,
+html[data-theme] [class~="focus:border-[#6d7cff]/50"]:focus {
+  border-color: color-mix(in srgb, var(--app-accent) 50%, transparent) !important;
+}
+
+select,
+option {
+  color: var(--app-text);
+  background-color: var(--app-surface);
+}
+
+input[type="date"],
+input[type="time"],
+input[type="datetime-local"] {
+  color-scheme: inherit;
+}
+
+@media (max-width: 640px) {
+  .alumni-post-card {
+    border-radius: 20px !important;
+  }
+
+  .alumni-post-media {
+    padding-inline: 10px;
+  }
+
+  .alumni-post-media img {
+    border-radius: 16px;
+  }
+
+  .alumni-story-tile {
+    width: 88px;
+    height: 128px;
+  }
+}

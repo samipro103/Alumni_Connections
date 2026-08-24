@@ -650,9 +650,9 @@ export default function StoryViewer({
   }
 
   return (
-    <div className="fixed inset-0 z-[110] bg-black">
-      <div className="relative mx-auto flex h-dvh w-full max-w-[560px] items-center justify-center overflow-hidden bg-[#050506] sm:border-x sm:border-white/[0.08]">
-        <div className="absolute left-3 right-3 top-3 z-40 px-1">
+    <div data-theme-lock="dark" className="alumni-story-viewer fixed inset-0 z-[110] flex items-center justify-center bg-black">
+      <div className="relative flex h-[100dvh] w-full max-w-[560px] items-center justify-center overflow-hidden bg-[#050506] sm:h-[calc(100dvh-24px)] sm:rounded-[30px] sm:border sm:border-white/[0.08] sm:shadow-[0_30px_100px_rgba(0,0,0,.5)]">
+        <div className="absolute left-3 right-3 top-[max(10px,env(safe-area-inset-top))] z-40 px-1">
           <div className="flex gap-1">
             {group.stories.map(
               (item, index) => (
@@ -679,7 +679,7 @@ export default function StoryViewer({
           </div>
         </div>
 
-        <div className="absolute left-4 right-4 top-7 z-40 flex items-center gap-3">
+        <div className="absolute left-4 right-4 top-[max(28px,calc(env(safe-area-inset-top)+18px))] z-40 flex items-center gap-3">
           <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-full bg-white/10 text-xs font-black text-white ring-1 ring-white/15">
             {group.avatar_url ? (
               <img
@@ -774,14 +774,14 @@ export default function StoryViewer({
               storyMusicPlaying
             }
             loop
-            className="h-full w-full object-contain"
+            className="h-full w-full object-cover sm:object-contain"
           />
         ) : (
           <img
             key={story.id}
             src={story.media_url}
             alt={`Historia de @${group.username}`}
-            className="h-full w-full object-contain"
+            className="h-full w-full object-cover sm:object-contain"
             loading="eager"
           />
         )}

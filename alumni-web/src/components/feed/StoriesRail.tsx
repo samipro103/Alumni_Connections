@@ -436,6 +436,16 @@ export default function StoriesRail({
 
   if (!user) return null;
 
+  const ownPreviewStory =
+    ownGroupIndex >= 0
+      ? groups[ownGroupIndex]?.stories[
+          Math.max(
+            (groups[ownGroupIndex]?.stories.length || 1) - 1,
+            0
+          )
+        ]
+      : null;
+
   return (
     <>
       {groups.flatMap((group) =>
@@ -455,137 +465,173 @@ export default function StoriesRail({
           ))
       )}
 
-      <section className="mb-5 border-b border-white/[0.07] pb-5">
-        <div className="scrollbar-thin flex items-start gap-4 overflow-x-auto overflow-y-visible px-1 pb-2 pt-1">
-          <div className="w-[82px] shrink-0 text-center">
-            <div className="relative mx-auto flex h-[72px] w-[72px] items-center justify-center overflow-visible">
-              <button
-                type="button"
-                onClick={
-                  handleOwnStoryClick
-                }
-                className={`relative flex h-16 w-16 items-center justify-center overflow-hidden rounded-full bg-[#171b23] text-sm font-bold shadow-[0_10px_28px_rgba(0,0,0,.18)] transition-transform duration-200 hover:scale-[1.02] ${
-                  ownGroupIndex >= 0
-                    ? "ring-2 ring-[#7f8cff] ring-offset-2 ring-offset-[var(--app-bg)]"
-                    : "border border-white/10"
-                }`}
-                aria-label={
-                  ownGroupIndex >= 0
-                    ? "Ver tu historia"
-                    : "Crear historia"
-                }
-              >
-                {me?.avatar_url ? (
-                  <img
-                    src={me.avatar_url}
-                    alt="Tu historia"
-                    className="h-full w-full object-cover"
-                    loading="eager"
-                  />
-                ) : (
-                  me?.username
-                    ?.charAt(0)
-                    ?.toUpperCase() ||
-                  "T"
-                )}
-              </button>
-
-              <button
-                type="button"
-                onClick={() =>
-                  setComposerOpen(
-                    true
-                  )
-                }
-                className="absolute bottom-[2px] right-[1px] z-10 flex h-6 w-6 items-center justify-center rounded-full border-[2px] border-[var(--app-bg)] bg-[var(--app-accent-2)] text-[var(--app-on-accent)] shadow-[0_6px_18px_rgba(0,0,0,.28)] transition-transform duration-200 hover:scale-105"
-                aria-label="Agregar historia"
-              >
-                <Camera
-                  size={11}
-                  strokeWidth={2.4}
-                />
-              </button>
-            </div>
-
-            <p className="mt-2 truncate text-[11px] font-semibold text-zinc-300">
-              Tu historia
+      <section className="alumni-stories-section mb-6">
+        <div className="mb-3 flex items-end justify-between px-1">
+          <div>
+            <p className="text-sm font-black tracking-[-0.02em] text-[var(--app-text)]">
+              Historias
+            </p>
+            <p className="mt-0.5 text-[10px] text-[var(--app-muted-2)]">
+              Momentos de tu comunidad
             </p>
           </div>
+        </div>
+
+        <div className="scrollbar-thin flex gap-3 overflow-x-auto px-1 pb-2">
+          <button
+            type="button"
+            onClick={handleOwnStoryClick}
+            className="alumni-story-tile group relative h-[132px] w-[92px] shrink-0 overflow-hidden rounded-[20px] text-left"
+            aria-label={
+              ownGroupIndex >= 0
+                ? "Ver tu historia"
+                : "Crear historia"
+            }
+          >
+            <div className="absolute inset-0 bg-[var(--app-surface-2)]">
+              {ownPreviewStory?.media_type === "image" ? (
+                <img
+                  src={ownPreviewStory.media_url}
+                  alt=""
+                  className="h-full w-full object-cover transition duration-300 group-active:scale-[1.02]"
+                  loading="eager"
+                />
+              ) : ownPreviewStory?.media_type === "video" ? (
+                <video
+                  src={ownPreviewStory.media_url}
+                  muted
+                  playsInline
+                  preload="metadata"
+                  className="h-full w-full object-cover"
+                />
+              ) : me?.avatar_url ? (
+                <img
+                  src={me.avatar_url}
+                  alt=""
+                  className="h-full w-full scale-110 object-cover opacity-55 blur-[1px]"
+                />
+              ) : (
+                <div className="flex h-full w-full items-center justify-center text-2xl font-black text-[var(--app-muted)]">
+                  {me?.username?.charAt(0)?.toUpperCase() || "T"}
+                </div>
+              )}
+            </div>
+
+            <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/10 to-black/5" />
+
+            <div className="absolute left-2.5 top-2.5 flex h-8 w-8 items-center justify-center overflow-hidden rounded-full border-2 border-white/70 bg-black/20 text-[10px] font-black text-white shadow-lg">
+              {me?.avatar_url ? (
+                <img
+                  src={me.avatar_url}
+                  alt="Tu historia"
+                  className="h-full w-full object-cover"
+                />
+              ) : (
+                me?.username?.charAt(0)?.toUpperCase() || "T"
+              )}
+            </div>
+
+            <span className="absolute right-2.5 top-2.5 flex h-7 w-7 items-center justify-center rounded-full border-2 border-white/80 bg-[var(--app-accent-2)] text-white shadow-lg">
+              <Camera size={12} strokeWidth={2.5} />
+            </span>
+
+            <div className="absolute inset-x-2.5 bottom-2.5">
+              <p className="truncate text-[11px] font-black text-white">
+                Tu historia
+              </p>
+              <p className="mt-0.5 truncate text-[9px] text-white/55">
+                {ownGroupIndex >= 0 ? "Ver ahora" : "Agregar"}
+              </p>
+            </div>
+          </button>
 
           {!loading &&
-            groups.map(
-              (
-                group,
-                index
-              ) => {
-                if (
-                  group.user_id ===
-                  user.id
-                ) {
-                  return null;
-                }
-
-                const allViewed =
-                  group.stories.every(
-                    (story) =>
-                      story.viewed
-                  );
-
-                return (
-                  <button
-                    key={
-                      group.user_id
-                    }
-                    type="button"
-                    onClick={() =>
-                      openGroup(
-                        index
-                      )
-                    }
-                    className="w-[82px] shrink-0 text-center"
-                  >
-                    <div className="mx-auto flex h-[72px] w-[72px] items-center justify-center overflow-visible">
-                      <div
-                        className={`rounded-full p-[2px] ${
-                          allViewed
-                            ? "bg-white/[0.10]"
-                            : "bg-[var(--app-accent-fill)]"
-                        }`}
-                      >
-                        <div className="flex h-[58px] w-[58px] items-center justify-center overflow-hidden rounded-full border-[2px] border-[var(--app-bg)] bg-[#171b23] text-sm font-bold">
-                          {group.avatar_url ? (
-                            <img
-                              src={
-                                group.avatar_url
-                              }
-                              alt={
-                                group.username
-                              }
-                              className="h-full w-full object-cover"
-                              loading="lazy"
-                            />
-                          ) : (
-                            group.username
-                              ?.charAt(
-                                0
-                              )
-                              ?.toUpperCase() ||
-                            "U"
-                          )}
-                        </div>
-                      </div>
-                    </div>
-
-                    <p className="mt-2 truncate text-[11px] text-zinc-500">
-                      @
-                      {
-                        group.username
-                      }
-                    </p>
-                  </button>
-                );
+            groups.map((group, index) => {
+              if (group.user_id === user.id) {
+                return null;
               }
-            )}
+
+              const allViewed = group.stories.every(
+                (story) => story.viewed
+              );
+              const previewStory =
+                group.stories[group.stories.length - 1];
+
+              return (
+                <button
+                  key={group.user_id}
+                  type="button"
+                  onClick={() => openGroup(index)}
+                  className={`alumni-story-tile group relative h-[132px] w-[92px] shrink-0 overflow-hidden rounded-[20px] text-left ${
+                    allViewed
+                      ? "alumni-story-viewed"
+                      : "alumni-story-unseen"
+                  }`}
+                >
+                  <div className="absolute inset-0 bg-[var(--app-surface-2)]">
+                    {previewStory?.media_type === "image" ? (
+                      <img
+                        src={previewStory.media_url}
+                        alt=""
+                        className="h-full w-full object-cover transition duration-300 group-active:scale-[1.02]"
+                        loading="lazy"
+                      />
+                    ) : previewStory?.media_type === "video" ? (
+                      <video
+                        src={previewStory.media_url}
+                        muted
+                        playsInline
+                        preload="metadata"
+                        className="h-full w-full object-cover"
+                      />
+                    ) : group.avatar_url ? (
+                      <img
+                        src={group.avatar_url}
+                        alt=""
+                        className="h-full w-full scale-110 object-cover opacity-55 blur-[1px]"
+                        loading="lazy"
+                      />
+                    ) : (
+                      <div className="flex h-full w-full items-center justify-center text-2xl font-black text-[var(--app-muted)]">
+                        {group.username?.charAt(0)?.toUpperCase() || "U"}
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/10 to-black/5" />
+
+                  <div
+                    className={`absolute left-2.5 top-2.5 flex h-8 w-8 items-center justify-center overflow-hidden rounded-full border-2 bg-black/20 text-[10px] font-black text-white shadow-lg ${
+                      allViewed
+                        ? "border-white/35"
+                        : "border-white/90"
+                    }`}
+                  >
+                    {group.avatar_url ? (
+                      <img
+                        src={group.avatar_url}
+                        alt={group.username}
+                        className="h-full w-full object-cover"
+                        loading="lazy"
+                      />
+                    ) : (
+                      group.username?.charAt(0)?.toUpperCase() || "U"
+                    )}
+                  </div>
+
+                  <div className="absolute inset-x-2.5 bottom-2.5">
+                    <p className="truncate text-[11px] font-black text-white">
+                      @{group.username}
+                    </p>
+                    <p className="mt-0.5 truncate text-[9px] text-white/55">
+                      {group.stories.length > 1
+                        ? `${group.stories.length} historias`
+                        : "Nueva historia"}
+                    </p>
+                  </div>
+                </button>
+              );
+            })}
         </div>
       </section>
 

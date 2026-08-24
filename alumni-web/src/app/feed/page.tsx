@@ -480,7 +480,7 @@ function FeedContent() {
   }
 
   async function sharePost(post: any) {
-    const url = `${window.location.origin}/u/${post.profiles?.username || ""}`;
+    const url = `${window.location.origin}/feed?post=${post.id}`;
 
     try {
       if (navigator.share) {
@@ -565,7 +565,7 @@ function FeedContent() {
                 <article
                   id={`post-${post.id}`}
                   key={post.id}
-                  className={`overflow-hidden rounded-[24px] border bg-[#101318]/95 transition-[border-color,box-shadow,background-color] duration-500 ${focusedPostId === post.id
+                  className={`alumni-post-card overflow-hidden rounded-[24px] border transition-[border-color,box-shadow,background-color] duration-500 ${focusedPostId === post.id
                       ? "border-[#8d98ff]/70 bg-[#6d7cff]/[0.06] shadow-[0_0_0_3px_rgba(109,124,255,.10),0_16px_45px_rgba(0,0,0,.18)]"
                       : "border-white/[0.07]"
                     }`}
@@ -574,7 +574,7 @@ function FeedContent() {
                     <div className="flex items-start gap-3">
                       <a
                         href={`/u/${post.profiles?.username}`}
-                        className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[#1a1f29] text-sm font-bold text-white"
+                        className="alumni-post-avatar flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[#1a1f29] text-sm font-bold text-white"
                       >
                         {post.profiles?.avatar_url ? (
                           <img
@@ -622,7 +622,7 @@ function FeedContent() {
                     </div>
 
                     {post.content && (
-                      <p className="mt-4 whitespace-pre-wrap text-[15px] leading-6 text-zinc-200">
+                      <p className="alumni-post-copy mt-4 whitespace-pre-wrap text-[15px] leading-6 text-zinc-200">
                         {post.content}
                       </p>
                     )}
@@ -631,18 +631,33 @@ function FeedContent() {
                   {post.image_url && (
                     <button
                       onClick={() => setSelectedImage(post.image_url)}
-                      className="block w-full bg-black/20"
+                      className="alumni-post-media block w-full"
                     >
                       <img
                         src={post.image_url}
                         alt="Publicación"
-                        className="max-h-[650px] w-full object-cover"
+                        className="max-h-[680px] w-full object-contain"
                       />
                     </button>
                   )}
 
-                  <div className="px-4 pb-4 pt-3 sm:px-5">
-                    <div className="flex items-center gap-1 border-b border-white/[0.06] pb-3">
+                  <div className="alumni-post-footer px-4 pb-4 pt-3 sm:px-5">
+                    {(post.likesCount > 0 || (post.comments?.length || 0) > 0) && (
+                      <div className="alumni-post-stats mb-2 flex items-center gap-3 px-1 text-[11px] font-semibold">
+                        {post.likesCount > 0 && (
+                          <span>
+                            {post.likesCount} {post.likesCount === 1 ? "me gusta" : "me gusta"}
+                          </span>
+                        )}
+                        {(post.comments?.length || 0) > 0 && (
+                          <span className="ml-auto">
+                            {post.comments.length} {post.comments.length === 1 ? "comentario" : "comentarios"}
+                          </span>
+                        )}
+                      </div>
+                    )}
+
+                    <div className="alumni-post-actions flex items-center gap-1 border-b border-white/[0.06] pb-3">
                       <button
                         onClick={() => toggleLike(post.id, post.liked)}
                         className={`flex h-9 items-center gap-2 rounded-xl px-3 text-sm font-semibold transition ${post.liked
@@ -702,7 +717,7 @@ function FeedContent() {
                                 </div>
 
                                 <div className="min-w-0 flex-1">
-                                  <div className="rounded-2xl bg-white/[0.035] px-3.5 py-2.5">
+                                  <div className="alumni-comment-bubble rounded-2xl bg-white/[0.035] px-3.5 py-2.5">
                                     <p className="text-xs font-bold text-zinc-300">
                                       @{comment.profile?.username || "usuario"}
                                     </p>
@@ -739,7 +754,7 @@ function FeedContent() {
                             onKeyDown={(e) => {
                               if (e.key === "Enter") addComment(post.id);
                             }}
-                            className="h-10 flex-1 rounded-xl border border-white/[0.07] bg-white/[0.035] px-3 text-sm text-zinc-200 outline-none placeholder:text-zinc-700 focus:border-[#6d7cff]/40 disabled:opacity-50"
+                            className="alumni-comment-input h-10 flex-1 rounded-xl border border-white/[0.07] bg-white/[0.035] px-3 text-sm text-zinc-200 outline-none placeholder:text-zinc-700 focus:border-[#6d7cff]/40 disabled:opacity-50"
                           />
 
                           <button

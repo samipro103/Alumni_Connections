@@ -9,15 +9,37 @@ import AppUtilities from "./AppUtilities";
 
 interface Props {
   children: ReactNode;
+  /**
+   * Para pantallas que ya tienen su propio header/footer móvil,
+   * como una conversación. En escritorio conserva el shell normal.
+   */
+  immersiveMobile?: boolean;
 }
 
-export default function AppShell({ children }: Props) {
+export default function AppShell({
+  children,
+  immersiveMobile = false,
+}: Props) {
   return (
-    <div className="min-h-screen text-white">
-      <TopBar />
+    <div className={immersiveMobile ? "min-h-[100dvh] text-[var(--app-text)]" : "min-h-screen text-[var(--app-text)]"}>
+      <div className={immersiveMobile ? "hidden lg:block" : ""}>
+        <TopBar />
+      </div>
 
-      <div className="mx-auto w-full max-w-[1500px] px-4 pb-24 pt-[84px] sm:px-6 lg:px-8 lg:pb-10">
-        <div className="grid grid-cols-1 gap-7 lg:grid-cols-[220px_minmax(0,1fr)] xl:grid-cols-[220px_minmax(0,1fr)_310px]">
+      <div
+        className={
+          immersiveMobile
+            ? "mx-auto w-full max-w-[1500px] px-0 pb-0 pt-0 lg:px-8 lg:pb-10 lg:pt-[84px]"
+            : "mx-auto w-full max-w-[1500px] px-4 pb-24 pt-[84px] sm:px-6 lg:px-8 lg:pb-10"
+        }
+      >
+        <div
+          className={
+            immersiveMobile
+              ? "grid grid-cols-1 gap-0 lg:gap-7 lg:grid-cols-[220px_minmax(0,1fr)] xl:grid-cols-[220px_minmax(0,1fr)_310px]"
+              : "grid grid-cols-1 gap-7 lg:grid-cols-[220px_minmax(0,1fr)] xl:grid-cols-[220px_minmax(0,1fr)_310px]"
+          }
+        >
           <aside className="hidden lg:block">
             <LeftSidebar />
           </aside>
@@ -30,8 +52,16 @@ export default function AppShell({ children }: Props) {
         </div>
       </div>
 
-      <AppUtilities />
-      <MobileNav />
+      {immersiveMobile ? (
+        <div className="hidden lg:block">
+          <AppUtilities />
+        </div>
+      ) : (
+        <>
+          <AppUtilities />
+          <MobileNav />
+        </>
+      )}
     </div>
   );
 }

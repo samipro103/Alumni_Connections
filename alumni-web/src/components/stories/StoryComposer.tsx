@@ -381,12 +381,13 @@ export default function StoryComposer({
 
   return (
     <div
-      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/85 p-3 backdrop-blur-xl sm:p-6"
+      data-theme-lock="dark"
+      className="alumni-story-composer fixed inset-0 z-[100] flex items-center justify-center bg-black/85 p-0 backdrop-blur-xl sm:p-6"
       role="dialog"
       aria-modal="true"
     >
-      <div className="w-full max-w-[500px] overflow-hidden rounded-[30px] border border-white/[0.09] bg-[#0b0e13] shadow-[0_30px_90px_rgba(0,0,0,.5)]">
-        <div className="flex h-16 items-center justify-between border-b border-white/[0.06] px-5">
+      <div className="flex h-[100dvh] w-full max-w-[500px] flex-col overflow-hidden bg-[#0b0e13] shadow-[0_30px_90px_rgba(0,0,0,.5)] sm:h-auto sm:max-h-[calc(100dvh-48px)] sm:rounded-[30px] sm:border sm:border-white/[0.09]">
+        <div className="flex h-16 shrink-0 items-center justify-between border-b border-white/[0.06] px-5 pt-[env(safe-area-inset-top)] sm:pt-0">
           <div>
             <p className="text-sm font-black text-white">
               Nueva historia
@@ -407,7 +408,7 @@ export default function StoryComposer({
           </button>
         </div>
 
-        <div className="max-h-[calc(100dvh-110px)] overflow-y-auto p-4 sm:p-5">
+        <div className="min-h-0 flex-1 overflow-y-auto p-4 pb-[max(16px,env(safe-area-inset-bottom))] sm:p-5">
           {previewUrl ? (
             <div className="relative overflow-hidden rounded-[24px] bg-black">
               {file?.type.startsWith("video/") ? (
