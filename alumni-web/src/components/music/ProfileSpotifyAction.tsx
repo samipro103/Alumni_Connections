@@ -30,7 +30,11 @@ type ViewState =
   | "not_premium"
   | "not_authorized"
   | "cancelled"
-  | "error";
+  | "error"
+  | "server_config"
+  | "database_error"
+  | "token_error"
+  | "oauth_state";
 
 type Props = {
   userId: string;
@@ -180,6 +184,38 @@ export default function ProfileSpotifyAction({
       status === "error"
     ) {
       setView("error");
+      clearSpotifyStatus();
+      return;
+    }
+
+    if (
+      status === "server-config"
+    ) {
+      setView("server_config");
+      clearSpotifyStatus();
+      return;
+    }
+
+    if (
+      status === "database-error"
+    ) {
+      setView("database_error");
+      clearSpotifyStatus();
+      return;
+    }
+
+    if (
+      status === "token-error"
+    ) {
+      setView("token_error");
+      clearSpotifyStatus();
+      return;
+    }
+
+    if (
+      status === "oauth-state"
+    ) {
+      setView("oauth_state");
       clearSpotifyStatus();
       return;
     }
@@ -344,6 +380,54 @@ export default function ProfileSpotifyAction({
                 <RetryState
                   title="Conexión cancelada."
                   description="No se hizo ningún cambio. Puedes conectar Spotify cuando quieras."
+                  connecting={
+                    connecting
+                  }
+                  onConnect={
+                    connect
+                  }
+                />
+              ) : view ===
+                "server_config" ? (
+                <RetryState
+                  title="Falta terminar la configuración del servidor."
+                  description="Alumni llegó correctamente desde Spotify, pero el servidor no encontró SUPABASE_SECRET_KEY. Revisa que la Shared Variable esté vinculada al proyecto Alumni y a Production."
+                  connecting={
+                    connecting
+                  }
+                  onConnect={
+                    connect
+                  }
+                />
+              ) : view ===
+                "database_error" ? (
+                <RetryState
+                  title="Spotify autorizó la cuenta, pero Alumni no pudo guardarla."
+                  description="La autorización de Spotify fue correcta. El problema está al registrar la conexión en Supabase. Este fix cambia ese registro para usar el cliente oficial de Supabase."
+                  connecting={
+                    connecting
+                  }
+                  onConnect={
+                    connect
+                  }
+                />
+              ) : view ===
+                "token_error" ? (
+                <RetryState
+                  title="Spotify no pudo entregar el acceso."
+                  description="Revisa que el Redirect URI y las credenciales de Spotify pertenezcan a la misma aplicación."
+                  connecting={
+                    connecting
+                  }
+                  onConnect={
+                    connect
+                  }
+                />
+              ) : view ===
+                "oauth_state" ? (
+                <RetryState
+                  title="La conexión expiró antes de terminar."
+                  description="Cierra este mensaje y vuelve a conectar Spotify. No se guardó ningún acceso incompleto."
                   connecting={
                     connecting
                   }

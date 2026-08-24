@@ -1,4 +1,5 @@
 import { createHmac, timingSafeEqual } from "crypto";
+import { createClient } from "@supabase/supabase-js";
 
 export const SPOTIFY_COOKIES = {
   state: "alumni_spotify_state",
@@ -100,11 +101,7 @@ function getSupabaseConfig() {
     "SUPABASE_SERVICE_ROLE_KEY"
   );
 
-  const adminKey =
-    secret || legacyService;
-
-  const adminIsLegacy =
-    !secret && Boolean(legacyService);
+  const adminKey = secret || legacyService;
 
   if (!url || !anon) {
     throw new Error(
@@ -116,41 +113,33 @@ function getSupabaseConfig() {
     url,
     anon,
     adminKey,
-    adminIsLegacy,
   };
 }
 
-function getAdminHeaders() {
-  const {
-    adminKey,
-    adminIsLegacy,
-  } = getSupabaseConfig();
+function createSupabaseAdmin() {
+  const { url, adminKey } = getSupabaseConfig();
 
   if (!adminKey) {
-    throw new Error(
-      "Configura SUPABASE_SECRET_KEY en Vercel."
-    );
+    const error = new Error(
+      "SUPABASE_SECRET_KEY no está disponible en el servidor."
+    ) as Error & { code?: string };
+
+    error.code = "SUPABASE_ADMIN_MISSING";
+    throw error;
   }
 
-  return {
-    apikey: adminKey,
-    ...(adminIsLegacy
-      ? {
-          Authorization:
-            `Bearer ${adminKey}`,
-        }
-      : {}),
-  };
-}
-
-export function cookieOptions(maxAge: number) {
-  return {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax" as const,
-    path: "/",
-    maxAge,
-  };
+  /*
+   * Usamos el cliente oficial de Supabase para las nuevas
+   * sb_secret_ keys. Así evitamos construir manualmente headers
+   * para PostgREST y mantenemos esta clave únicamente en servidor.
+   */
+  return createClient(url, adminKey, {
+    auth: {
+      persistSession: false,
+      autoRefreshToken: false,
+      detectSessionInUrl: false,
+    },
+  });
 }
 
 export function safeSpotifyReturnPath(
@@ -183,6 +172,16 @@ export function safeSpotifyReturnPath(
   } catch {
     return fallback;
   }
+}
+
+export function cookieOptions(maxAge: number) {
+  return {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax" as const,
+    path: "/",
+    maxAge,
+  };
 }
 
 function hmac(value: string) {
@@ -318,11 +317,15 @@ export async function exchangeSpotifyCode(
   const data = await response.json().catch(() => ({}));
 
   if (!response.ok || !data?.access_token) {
-    throw new Error(
+    const error = new Error(
       data?.error_description ||
         data?.error ||
         "Spotify no pudo completar la conexión."
-    );
+    ) as Error & { code?: string; status?: number };
+
+    error.code = "SPOTIFY_TOKEN_EXCHANGE";
+    error.status = response.status;
+    throw error;
   }
 
   return data as SpotifyTokenPayload;
@@ -385,9 +388,17 @@ export async function getSpotifyMe(
     const error = new Error(
       data?.error?.message ||
         "Spotify no permitió leer la cuenta."
-    ) as Error & { status?: number };
+    ) as Error & {
+      status?: number;
+      code?: string;
+    };
 
     error.status = response.status;
+
+    if (response.status === 403) {
+      error.code = "SPOTIFY_NOT_ALLOWLISTED";
+    }
+
     throw error;
   }
 
@@ -398,19 +409,12 @@ export async function upsertSpotifyConnection(
   userId: string,
   me: SpotifyMe
 ) {
-  const { url } = getSupabaseConfig();
-  const adminHeaders = getAdminHeaders();
+  const admin = createSupabaseAdmin();
 
-  const response = await fetch(
-    `${url}/rest/v1/spotify_connections?on_conflict=user_id`,
-    {
-      method: "POST",
-      headers: {
-        ...adminHeaders,
-        "Content-Type": "application/json",
-        Prefer: "resolution=merge-duplicates,return=minimal",
-      },
-      body: JSON.stringify({
+  const { error } = await admin
+    .from("spotify_connections")
+    .upsert(
+      {
         user_id: userId,
         spotify_account_id:
           me.account_id || me.id || "unknown",
@@ -419,38 +423,38 @@ export async function upsertSpotifyConnection(
         product: (me.product || "unknown").toLowerCase(),
         verified_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
-      }),
-      cache: "no-store",
-    }
-  );
-
-  if (!response.ok) {
-    const detail = await response.text().catch(() => "");
-    throw new Error(
-      detail ||
-        "No se pudo guardar la conexión Spotify."
+      },
+      {
+        onConflict: "user_id",
+      }
     );
+
+  if (error) {
+    const wrapped = new Error(
+      `No se pudo guardar la conexión Spotify: ${error.message}`
+    ) as Error & { code?: string };
+
+    wrapped.code = "SUPABASE_CONNECTION_SAVE";
+    throw wrapped;
   }
 }
 
 export async function deleteSpotifyConnection(
   userId: string
 ) {
-  const { url } = getSupabaseConfig();
-  const adminHeaders = getAdminHeaders();
+  const admin = createSupabaseAdmin();
 
-  await fetch(
-    `${url}/rest/v1/spotify_connections?user_id=eq.${encodeURIComponent(
-      userId
-    )}`,
-    {
-      method: "DELETE",
-      headers: {
-        ...adminHeaders,
-      },
-      cache: "no-store",
-    }
-  );
+  const { error } = await admin
+    .from("spotify_connections")
+    .delete()
+    .eq("user_id", userId);
+
+  if (error) {
+    console.error(
+      "Spotify connection delete:",
+      error.message
+    );
+  }
 }
 
 export async function resolveSpotifyAccess(
@@ -483,9 +487,13 @@ export async function resolveSpotifyAccess(
   }
 
   const refreshed = await refreshSpotifyToken(refresh);
+
   const nextExpiresAt =
     Date.now() +
-    Math.max(60, Number(refreshed.expires_in || 3600)) *
+    Math.max(
+      60,
+      Number(refreshed.expires_in || 3600)
+    ) *
       1000;
 
   return {

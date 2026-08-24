@@ -16,25 +16,19 @@ function redirectTo(
   status: string,
   returnTo?: string | null
 ) {
-  const origin =
-    new URL(request.url).origin;
+  const origin = new URL(request.url).origin;
 
-  const destination =
-    new URL(
-      safeSpotifyReturnPath(
-        returnTo
-      ),
-      origin
-    );
+  const destination = new URL(
+    safeSpotifyReturnPath(returnTo),
+    origin
+  );
 
   destination.searchParams.set(
     "spotify",
     status
   );
 
-  return NextResponse.redirect(
-    destination
-  );
+  return NextResponse.redirect(destination);
 }
 
 function clearPending(
@@ -73,26 +67,18 @@ function clearSession(
 export async function GET(
   request: Request
 ) {
-  const url =
-    new URL(request.url);
+  const url = new URL(request.url);
 
   const code =
-    url.searchParams.get(
-      "code"
-    ) || "";
+    url.searchParams.get("code") || "";
 
   const state =
-    url.searchParams.get(
-      "state"
-    ) || "";
+    url.searchParams.get("state") || "";
 
   const spotifyError =
-    url.searchParams.get(
-      "error"
-    ) || "";
+    url.searchParams.get("error") || "";
 
-  const cookieStore =
-    await cookies();
+  const cookieStore = await cookies();
 
   const expectedState =
     cookieStore.get(
@@ -113,10 +99,9 @@ export async function GET(
   ) {
     const response = redirectTo(
       request,
-      spotifyError ===
-        "access_denied"
+      spotifyError === "access_denied"
         ? "cancelled"
-        : "error",
+        : "oauth-state",
       returnTo
     );
 
@@ -135,7 +120,7 @@ export async function GET(
   if (!userId) {
     const response = redirectTo(
       request,
-      "error",
+      "oauth-state",
       returnTo
     );
 
@@ -150,80 +135,114 @@ export async function GET(
     const redirectUri =
       `${origin}/api/music/spotify/callback`;
 
-    const token =
-      await exchangeSpotifyCode(
-        code,
-        redirectUri
+    let token;
+
+    try {
+      token =
+        await exchangeSpotifyCode(
+          code,
+          redirectUri
+        );
+    } catch (error: any) {
+      console.error(
+        "Spotify callback token:",
+        {
+          code: error?.code || null,
+          status: error?.status || null,
+          message: error?.message || String(error),
+        }
       );
+
+      const response = redirectTo(
+        request,
+        "token-error",
+        returnTo
+      );
+
+      clearPending(response);
+      clearSession(response);
+      return response;
+    }
 
     let me;
 
     try {
-      me =
-        await getSpotifyMe(
-          token.access_token
-        );
-    } catch (
-      profileError: any
-    ) {
-      const response =
-        redirectTo(
-          request,
-          profileError?.status ===
-            403
-            ? "not-authorized"
-            : "error",
-          returnTo
-        );
-
-      clearPending(
-        response
+      me = await getSpotifyMe(
+        token.access_token
+      );
+    } catch (error: any) {
+      console.error(
+        "Spotify callback profile:",
+        {
+          code: error?.code || null,
+          status: error?.status || null,
+          message: error?.message || String(error),
+        }
       );
 
-      clearSession(
-        response
+      const response = redirectTo(
+        request,
+        error?.status === 403
+          ? "not-authorized"
+          : "profile-error",
+        returnTo
       );
 
+      clearPending(response);
+      clearSession(response);
       return response;
     }
 
-    await upsertSpotifyConnection(
-      userId,
-      me
-    );
+    try {
+      await upsertSpotifyConnection(
+        userId,
+        me
+      );
+    } catch (error: any) {
+      console.error(
+        "Spotify callback Supabase:",
+        {
+          code: error?.code || null,
+          message: error?.message || String(error),
+        }
+      );
+
+      const response = redirectTo(
+        request,
+        error?.code ===
+          "SUPABASE_ADMIN_MISSING"
+          ? "server-config"
+          : "database-error",
+        returnTo
+      );
+
+      clearPending(response);
+      clearSession(response);
+      return response;
+    }
 
     const product =
       (
         me.product || ""
       ).toLowerCase();
 
-    if (
-      product !== "premium"
-    ) {
-      const response =
-        redirectTo(
-          request,
-          "not-premium",
-          returnTo
-        );
-
-      clearPending(
-        response
+    if (product !== "premium") {
+      const response = redirectTo(
+        request,
+        "not-premium",
+        returnTo
       );
 
-      clearSession(
-        response
-      );
-
+      clearPending(response);
+      clearSession(response);
       return response;
     }
 
-    const response =
-      redirectTo(
-        request,
-        "connected",
-        returnTo
-      );
+    const response = redirectTo(
+      request,
+      "connected",
+      returnTo
+    );
 
     clearPending(response);
 
@@ -231,10 +250,7 @@ export async function GET(
       SPOTIFY_COOKIES.owner,
       signOwner(userId),
       cookieOptions(
-        180 *
-          24 *
-          60 *
-          60
+        180 * 24 * 60 * 60
       )
     );
 
@@ -245,24 +261,18 @@ export async function GET(
         Math.max(
           60,
           Number(
-            token.expires_in ||
-              3600
+            token.expires_in || 3600
           )
         )
       )
     );
 
-    if (
-      token.refresh_token
-    ) {
+    if (token.refresh_token) {
       response.cookies.set(
         SPOTIFY_COOKIES.refresh,
         token.refresh_token,
         cookieOptions(
-          180 *
-            24 *
-            60 *
-            60
+          180 * 24 * 60 * 60
         )
       );
     }
@@ -274,33 +284,28 @@ export async function GET(
           Math.max(
             60,
             Number(
-              token.expires_in ||
-                3600
+              token.expires_in || 3600
             )
           ) *
             1000
       ),
       cookieOptions(
-        180 *
-          24 *
-          60 *
-          60
+        180 * 24 * 60 * 60
       )
     );
 
     return response;
   } catch (error: any) {
     console.error(
-      "Spotify callback:",
+      "Spotify callback unexpected:",
       error?.message || error
     );
 
-    const response =
-      redirectTo(
-        request,
-        "error",
-        returnTo
-      );
+    const response = redirectTo(
+      request,
+      "error",
+      returnTo
+    );
 
     clearPending(response);
     clearSession(response);
