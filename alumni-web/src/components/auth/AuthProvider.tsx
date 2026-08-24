@@ -12,6 +12,7 @@ import {
 } from "@supabase/supabase-js";
 import { supabase } from "@/lib/supabase";
 import NativePushNotifications from "@/components/mobile/NativePushNotifications";
+import WebPushBootstrap from "@/components/pwa/WebPushBootstrap";
 
 interface AuthContextType {
   user: User | null;
@@ -74,6 +75,9 @@ export const AuthProvider = ({
   return (
     <AuthContext.Provider value={value}>
       <NativePushNotifications
+        userId={user?.id ?? null}
+      />
+      <WebPushBootstrap
         userId={user?.id ?? null}
       />
       {children}
