@@ -108,7 +108,7 @@ export async function POST(request: Request) {
           post_id: post.id,
           user_id: post.user_id,
           provider: "alumni_shield",
-          model: "rules-1.0+nsfwjs",
+          model: "rules-1.1+nsfwjs",
           status: "completed",
           flagged: combined.flagged,
           suggested_action: combined.suggestedAction,
@@ -119,7 +119,7 @@ export async function POST(request: Request) {
           category_applied_input_types: categoryAppliedInputTypes,
           raw_response: {
             engine: "Alumni Shield",
-            version: "8.1",
+            version: "8.2",
             text: textResult,
             image: imageSignal,
             coverage: {
@@ -172,7 +172,7 @@ export async function POST(request: Request) {
           post_id: post.id,
           user_id: post.user_id,
           provider: "alumni_shield",
-          model: "rules-1.0+nsfwjs",
+          model: "rules-1.1+nsfwjs",
           status: "error",
           error_message: error?.message || "Error de moderación.",
           updated_at: new Date().toISOString(),

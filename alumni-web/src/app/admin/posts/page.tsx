@@ -156,7 +156,9 @@ export default function AdminPostsPage() {
 
     return {
       analyzed: completed.length,
-      flagged: completed.filter((item) => item.flagged).length,
+      flagged: completed.filter(
+        (item) => item.suggested_action === "review"
+      ).length,
       reviewed: moderation.filter((item) => Boolean(item.human_label)).length,
       shield: completed.filter((item) => item.provider === "alumni_shield").length,
     };
@@ -173,7 +175,7 @@ export default function AdminPostsPage() {
           <p className="mt-1 text-xl font-black text-zinc-200">{totals.analyzed}</p>
         </div>
         <div>
-          <p className="text-[10px] font-black uppercase tracking-[0.12em] text-zinc-700">Marcadas</p>
+          <p className="text-[10px] font-black uppercase tracking-[0.12em] text-zinc-700">A revisar</p>
           <p className="mt-1 text-xl font-black text-amber-300">{totals.flagged}</p>
         </div>
         <div>
@@ -251,6 +253,11 @@ export default function AdminPostsPage() {
                     <>
                       <div className="flex flex-wrap items-center gap-3">
                         {result.flagged ? (
+                          <span className="flex items-center gap-1.5 text-xs font-black text-red-300">
+                            <ShieldAlert size={15} />
+                            RIESGO ALTO
+                          </span>
+                        ) : result.suggested_action === "review" ? (
                           <span className="flex items-center gap-1.5 text-xs font-black text-amber-300">
                             <ShieldAlert size={15} />
                             REVISAR
@@ -263,7 +270,7 @@ export default function AdminPostsPage() {
                         )}
 
                         <span className="text-xs text-zinc-600">
-                          Riesgo mayor: <strong className="text-zinc-400">{labelCategory(result.top_category)}</strong>
+                          Señal mayor: <strong className="text-zinc-400">{labelCategory(result.top_category)}</strong>
                           {" · "}{percent(result.top_score)}
                         </span>
 
