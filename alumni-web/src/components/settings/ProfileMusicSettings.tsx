@@ -212,13 +212,36 @@ export default function ProfileMusicSettings({
     setError("");
 
     try {
+      const {
+        data: {
+          session,
+        },
+      } =
+        await supabase.auth.getSession();
+
+      if (
+        !session?.access_token
+      ) {
+        throw new Error(
+          "Tu sesión de Alumni no está activa."
+        );
+      }
+
       const response =
         await fetch(
           `/api/music/search?q=${encodeURIComponent(
             query
           )}&market=${encodeURIComponent(
             getMarketFromLocale()
-          )}`
+          )}`,
+          {
+            headers: {
+              Authorization:
+                `Bearer ${session.access_token}`,
+            },
+            cache:
+              "no-store",
+          }
         );
 
       const data =

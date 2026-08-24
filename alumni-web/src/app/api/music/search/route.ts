@@ -1,4 +1,8 @@
 import { NextResponse } from "next/server";
+import {
+  resolveSpotifyAccessForUser,
+  verifyAlumniUser,
+} from "@/lib/spotifyServer";
 
 type SpotifyToken = {
   access_token: string;
@@ -43,16 +47,12 @@ function cleanCredential(
 ) {
   let value = (rawValue || "").trim();
 
-  // Permite corregir el error común de pegar:
-  // SPOTIFY_CLIENT_ID=xxxx
-  // como VALUE completo dentro de Vercel.
   const prefix = `${variableName}=`;
 
   if (value.startsWith(prefix)) {
     value = value.slice(prefix.length).trim();
   }
 
-  // También tolera valores pegados con comillas.
   if (
     value.length >= 2 &&
     ((value.startsWith('"') && value.endsWith('"')) ||
@@ -64,7 +64,7 @@ function cleanCredential(
   return value;
 }
 
-async function getSpotifyToken() {
+async function getClientCredentialsToken() {
   const clientId = cleanCredential(
     process.env.SPOTIFY_CLIENT_ID,
     "SPOTIFY_CLIENT_ID"
@@ -77,7 +77,7 @@ async function getSpotifyToken() {
 
   if (!clientId || !clientSecret) {
     throw new Error(
-      "Spotify Search no está configurado. Revisa SPOTIFY_CLIENT_ID y SPOTIFY_CLIENT_SECRET en Vercel."
+      "Spotify Search no está configurado."
     );
   }
 
@@ -112,7 +112,8 @@ async function getSpotifyToken() {
     let authError: SpotifyAuthError | null = null;
 
     try {
-      authError = (await response.json()) as SpotifyAuthError;
+      authError =
+        (await response.json()) as SpotifyAuthError;
     } catch {
       authError = null;
     }
@@ -120,96 +121,199 @@ async function getSpotifyToken() {
     console.error("Spotify token error", {
       status: response.status,
       error: authError?.error || "unknown",
-      description: authError?.error_description || "none",
-      // Nunca loguear Client ID ni Client Secret.
+      description:
+        authError?.error_description || "none",
     });
 
-    if (
-      response.status === 400 ||
-      response.status === 401 ||
-      authError?.error === "invalid_client"
-    ) {
-      throw new Error(
-        "Spotify no pudo autenticar Alumni. Revisa que el Client ID y Client Secret sean de la misma app, que en Vercel hayas pegado SOLO el valor (sin SPOTIFY_CLIENT_ID= ni comillas), que las variables estén habilitadas para Production y después haz Redeploy. Las apps nuevas de Spotify en Development Mode también requieren que el dueño de la app tenga Spotify Premium."
-      );
-    }
-
     throw new Error(
-      "Spotify no pudo autenticar la aplicación en este momento."
+      "Spotify no pudo autenticar la aplicación."
     );
   }
 
-  const token = (await response.json()) as SpotifyToken;
+  const token =
+    (await response.json()) as SpotifyToken;
 
   cachedToken = {
     value: token.access_token,
-    expiresAt: Date.now() + token.expires_in * 1000,
+    expiresAt:
+      Date.now() +
+      token.expires_in * 1000,
   };
 
   return cachedToken.value;
 }
 
-export async function GET(request: Request) {
+async function getSearchToken(
+  request: Request
+) {
+  /*
+   * IMPORTANTE:
+   * Para un usuario que ya conectó Spotify usamos SU token OAuth.
+   *
+   * Esto evita depender de Client Credentials para la búsqueda
+   * en Development Mode y hace que el catálogo se consulte dentro
+   * de la misma sesión Spotify que Alumni ya verificó.
+   *
+   * Dejamos Client Credentials solo como fallback para otros
+   * módulos que todavía llamen este endpoint sin sesión de usuario.
+   */
+  const authorization =
+    request.headers.get("authorization");
+
+  if (authorization) {
+    const user =
+      await verifyAlumniUser(
+        authorization
+      );
+
+    if (user) {
+      const resolved =
+        await resolveSpotifyAccessForUser(
+          user.id
+        );
+
+      return {
+        token:
+          resolved.accessToken,
+        source:
+          "user" as const,
+      };
+    }
+  }
+
+  const token =
+    await getClientCredentialsToken();
+
+  return {
+    token,
+    source:
+      "client_credentials" as const,
+  };
+}
+
+export async function GET(
+  request: Request
+) {
   const url = new URL(request.url);
-  const query = url.searchParams.get("q")?.trim() || "";
+
+  const query =
+    url.searchParams
+      .get("q")
+      ?.trim() || "";
 
   if (query.length < 2) {
-    return NextResponse.json({ tracks: [] });
+    return NextResponse.json({
+      tracks: [],
+    });
   }
 
   const rawMarket =
-    url.searchParams.get("market")?.toUpperCase() ||
-    cleanCredential(process.env.SPOTIFY_MARKET, "SPOTIFY_MARKET").toUpperCase() ||
+    url.searchParams
+      .get("market")
+      ?.toUpperCase() ||
+    cleanCredential(
+      process.env.SPOTIFY_MARKET,
+      "SPOTIFY_MARKET"
+    ).toUpperCase() ||
     "SV";
 
-  const market = /^[A-Z]{2}$/.test(rawMarket)
-    ? rawMarket
-    : "SV";
+  const market =
+    /^[A-Z]{2}$/.test(rawMarket)
+      ? rawMarket
+      : "SV";
 
   try {
-    const token = await getSpotifyToken();
+    const auth =
+      await getSearchToken(
+        request
+      );
 
     const endpoint = new URL(
       "https://api.spotify.com/v1/search"
     );
 
-    endpoint.searchParams.set("q", query);
-    endpoint.searchParams.set("type", "track");
-    endpoint.searchParams.set("limit", "10");
-    endpoint.searchParams.set("market", market);
+    endpoint.searchParams.set(
+      "q",
+      query
+    );
 
-    const response = await fetch(endpoint, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-        Accept: "application/json",
-      },
-      cache: "no-store",
-    });
+    endpoint.searchParams.set(
+      "type",
+      "track"
+    );
+
+    endpoint.searchParams.set(
+      "limit",
+      "10"
+    );
+
+    endpoint.searchParams.set(
+      "market",
+      market
+    );
+
+    const response =
+      await fetch(endpoint, {
+        headers: {
+          Authorization:
+            `Bearer ${auth.token}`,
+          Accept:
+            "application/json",
+        },
+        cache: "no-store",
+      });
 
     if (!response.ok) {
       let detail: any = null;
 
       try {
-        detail = await response.json();
+        detail =
+          await response.json();
       } catch {
         detail = null;
       }
 
-      console.error("Spotify search error", {
-        status: response.status,
-        reason: detail?.error?.reason || null,
-        message: detail?.error?.message || null,
-      });
+      console.error(
+        "Spotify search error",
+        {
+          status:
+            response.status,
+          source:
+            auth.source,
+          reason:
+            detail?.error
+              ?.reason || null,
+          message:
+            detail?.error
+              ?.message || null,
+        }
+      );
 
-      if (response.status === 429) {
-        const reason = detail?.error?.reason;
+      if (
+        response.status === 403
+      ) {
+        return NextResponse.json(
+          {
+            error:
+              "Spotify no permitió buscar con esta cuenta. Si la app está en Development Mode, confirma que esta cuenta esté agregada en Users Management.",
+          },
+          { status: 403 }
+        );
+      }
+
+      if (
+        response.status === 429
+      ) {
+        const reason =
+          detail?.error?.reason;
 
         return NextResponse.json(
           {
             error:
-              reason === "QUOTA_EXCEEDED"
-                ? "Se alcanzó temporalmente la cuota de Spotify para esta app. Intenta más tarde."
-                : "Spotify está limitando temporalmente las búsquedas. Intenta de nuevo en unos segundos.",
+              reason ===
+              "QUOTA_EXCEEDED"
+                ? "Se alcanzó temporalmente la cuota de Spotify. Intenta de nuevo más tarde."
+                : "Spotify está limitando temporalmente las búsquedas. Espera unos segundos e intenta otra vez.",
           },
           { status: 429 }
         );
@@ -218,54 +322,96 @@ export async function GET(request: Request) {
       return NextResponse.json(
         {
           error:
-            detail?.error?.message ||
+            detail?.error
+              ?.message ||
             "No se pudo buscar en Spotify.",
         },
         { status: 502 }
       );
     }
 
-    const data = await response.json();
-    const items = (data?.tracks?.items || []) as SpotifyTrack[];
+    const data =
+      await response.json();
 
-    const tracks = items.map((track) => {
-      const trackUrl =
-        track.external_urls?.spotify ||
-        `https://open.spotify.com/track/${track.id}`;
+    const items =
+      (data?.tracks?.items ||
+        []) as SpotifyTrack[];
 
-      return {
-        provider: "spotify" as const,
-        provider_track_id: track.id,
-        track_title: track.name,
-        artist_name:
-          (track.artists || [])
-            .map((artist) => artist.name)
-            .filter(Boolean)
-            .join(", ") || "Spotify",
-        album_name: track.album?.name || null,
-        artwork_url: track.album?.images?.[0]?.url || null,
-        track_url: trackUrl,
-        embed_url: `https://open.spotify.com/embed/track/${track.id}`,
-        preview_url: track.preview_url || null,
-        duration_ms:
-          typeof track.duration_ms === "number"
-            ? track.duration_ms
-            : null,
-      };
-    });
+    const tracks =
+      items.map((track) => {
+        const trackUrl =
+          track.external_urls
+            ?.spotify ||
+          `https://open.spotify.com/track/${track.id}`;
+
+        return {
+          provider:
+            "spotify" as const,
+          provider_track_id:
+            track.id,
+          track_title:
+            track.name,
+          artist_name:
+            (track.artists || [])
+              .map(
+                (artist) =>
+                  artist.name
+              )
+              .filter(Boolean)
+              .join(", ") ||
+            "Spotify",
+          album_name:
+            track.album?.name ||
+            null,
+          artwork_url:
+            track.album
+              ?.images?.[0]
+              ?.url || null,
+          track_url:
+            trackUrl,
+          embed_url:
+            `https://open.spotify.com/embed/track/${track.id}`,
+          preview_url:
+            track.preview_url ||
+            null,
+          duration_ms:
+            typeof track
+              .duration_ms ===
+            "number"
+              ? track.duration_ms
+              : null,
+        };
+      });
 
     return NextResponse.json({
       tracks,
       market,
+      auth_source:
+        auth.source,
     });
   } catch (error: any) {
-    console.error("Spotify catalog search:", error?.message || error);
+    console.error(
+      "Spotify catalog search:",
+      error?.message || error
+    );
+
+    const message =
+      String(
+        error?.message || ""
+      );
 
     return NextResponse.json(
       {
         error:
-          error?.message ||
-          "No se pudo inicializar la búsqueda de Spotify.",
+          message.includes(
+            "Spotify no está conectado"
+          ) ||
+          message.includes(
+            "reconexión"
+          )
+            ? "Tu sesión de Spotify necesita reconectarse."
+            : message ||
+              "No se pudo inicializar la búsqueda de Spotify.",
       },
       { status: 500 }
     );
