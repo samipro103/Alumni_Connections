@@ -87,6 +87,9 @@ export default function SettingsPage() {
   const [activeSection, setActiveSection] =
     useState<SettingsSectionId>("profile");
 
+  const [mobileSectionOpen, setMobileSectionOpen] =
+    useState(false);
+
   const [form, setForm] = useState({
     full_name: "",
     username: "",
@@ -129,6 +132,7 @@ export default function SettingsPage() {
       SETTINGS_ITEMS.some((item) => item.id === section)
     ) {
       setActiveSection(section as SettingsSectionId);
+      setMobileSectionOpen(true);
     }
   }, []);
 
@@ -274,6 +278,27 @@ export default function SettingsPage() {
     }
   }
 
+  function openSettingsSection(id: SettingsSectionId) {
+    setActiveSection(id);
+
+    if (typeof window !== "undefined" && window.innerWidth < 1024) {
+      setMobileSectionOpen(true);
+      const url = new URL(window.location.href);
+      url.searchParams.set("section", id);
+      window.history.replaceState({}, "", url.pathname + url.search);
+    }
+  }
+
+  function closeMobileSettingsSection() {
+    setMobileSectionOpen(false);
+
+    if (typeof window !== "undefined") {
+      const url = new URL(window.location.href);
+      url.searchParams.delete("section");
+      window.history.replaceState({}, "", url.pathname + url.search);
+    }
+  }
+
   async function logout() {
     await supabase.auth.signOut();
     window.location.href = "/login";
@@ -300,7 +325,7 @@ export default function SettingsPage() {
   return (
     <AppShell>
       <div className="mx-auto w-full max-w-[1050px]">
-        <div className="mb-6 pt-2">
+        <div className={`${mobileSectionOpen ? "hidden lg:block" : "block"} mb-6 pt-2`}>
           <h1 className="text-[30px] font-black tracking-[-0.04em]">
             Configuración
           </h1>
@@ -310,14 +335,14 @@ export default function SettingsPage() {
         </div>
 
         <div className="grid gap-5 lg:grid-cols-[280px_minmax(0,1fr)]">
-          <aside className="h-fit overflow-hidden rounded-[24px] border border-white/[0.07] bg-[#101318]/95 lg:sticky lg:top-[88px]">
-            <div className="border-b border-white/[0.06] px-5 py-4">
+          <aside className={`${mobileSectionOpen ? "hidden lg:block" : "block"} h-fit lg:sticky lg:top-[88px] lg:overflow-hidden lg:rounded-[24px] lg:border lg:border-white/[0.07] lg:bg-[#101318]/95`}>
+            <div className="border-b border-white/[0.06] px-1 py-4 lg:px-5">
               <p className="text-[11px] font-black uppercase tracking-[0.14em] text-zinc-700">
                 Ajustes
               </p>
             </div>
 
-            <nav className="p-2">
+            <nav className="divide-y divide-white/[0.06] lg:divide-y-0 lg:p-2">
               {SETTINGS_ITEMS.map((item) => {
                 const Icon = item.icon;
                 const active = activeSection === item.id;
@@ -329,7 +354,7 @@ export default function SettingsPage() {
                     onClick={() =>
                       setActiveSection(item.id)
                     }
-                    className={`group flex w-full items-center gap-3 rounded-2xl px-3 py-3 text-left transition ${
+                    className={`group flex w-full items-center gap-3 px-1 py-4 text-left transition lg:rounded-2xl lg:px-3 lg:py-3 ${
                       active
                         ? "bg-white/[0.06]"
                         : "hover:bg-white/[0.035]"

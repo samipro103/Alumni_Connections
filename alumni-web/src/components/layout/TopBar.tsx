@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Bell, Search, MessageCircle, Plus } from "lucide-react";
+import { Bell, Search, Plus } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/components/auth/AuthProvider";
@@ -14,13 +14,11 @@ export default function TopBar() {
   const [profile, setProfile] = useState<any>(null);
   const [search, setSearch] = useState("");
   const [unreadNotifications, setUnreadNotifications] = useState(0);
-  const [unreadMessages, setUnreadMessages] = useState(0);
 
   useEffect(() => {
     if (!user) {
       setProfile(null);
       setUnreadNotifications(0);
-      setUnreadMessages(0);
       return;
     }
 
@@ -28,51 +26,38 @@ export default function TopBar() {
     let active = true;
 
     async function refresh() {
-      const [
-        { data: profileData },
-        { count: nCount },
-        { count: mCount },
-      ] = await Promise.all([
-        supabase.from("profiles")
+      const [{ data: profileData }, { count: nCount }] = await Promise.all([
+        supabase
+          .from("profiles")
           .select("username, avatar_url")
           .eq("id", currentUser.id)
           .maybeSingle(),
-
-        supabase.from("notifications")
+        supabase
+          .from("notifications")
           .select("id", { count: "exact", head: true })
           .eq("user_id", currentUser.id)
-          .is("read_at", null),
-
-        supabase.from("messages")
-          .select("id", { count: "exact", head: true })
-          .eq("receiver_id", currentUser.id)
           .is("read_at", null),
       ]);
 
       if (!active) return;
       setProfile(profileData);
       setUnreadNotifications(nCount || 0);
-      setUnreadMessages(mCount || 0);
     }
 
     refresh();
 
-    const nc = supabase.channel(`top-n:${currentUser.id}`)
-      .on("postgres_changes", {
-        event: "*",
-        schema: "public",
-        table: "notifications",
-        filter: `user_id=eq.${currentUser.id}`,
-      }, refresh)
-      .subscribe();
-
-    const mc = supabase.channel(`top-m:${currentUser.id}`)
-      .on("postgres_changes", {
-        event: "*",
-        schema: "public",
-        table: "messages",
-        filter: `receiver_id=eq.${currentUser.id}`,
-      }, refresh)
+    const nc = supabase
+      .channel(`top-n:${currentUser.id}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "notifications",
+          filter: `user_id=eq.${currentUser.id}`,
+        },
+        refresh
+      )
       .subscribe();
 
     window.addEventListener("focus", refresh);
@@ -80,7 +65,6 @@ export default function TopBar() {
     return () => {
       active = false;
       supabase.removeChannel(nc);
-      supabase.removeChannel(mc);
       window.removeEventListener("focus", refresh);
     };
   }, [user?.id]);
@@ -91,17 +75,13 @@ export default function TopBar() {
     router.push(q ? `/explore?q=${encodeURIComponent(q)}` : "/explore");
   }
 
-  const badge = (value: number) =>
-    value > 0 ? (
-      <span className="absolute right-0.5 top-0.5 flex min-h-4 min-w-4 items-center justify-center rounded-full bg-[#6d7cff] px-1 text-[9px] font-black leading-none text-white ring-2 ring-[#090b0f]">
-        {value > 99 ? "99+" : value}
-      </span>
-    ) : null;
-
   return (
     <header className="fixed inset-x-0 top-0 z-50 h-[68px] border-b border-white/[0.07] bg-[#090b0f]/90 backdrop-blur-xl">
       <div className="mx-auto flex h-full w-full max-w-[1500px] items-center gap-5 px-4 sm:px-6 lg:px-8">
-        <Link href="/feed" className="shrink-0 text-[21px] font-black tracking-[-0.04em] text-white">
+        <Link
+          href="/feed"
+          className="shrink-0 text-[21px] font-black tracking-[-0.04em] text-white"
+        >
           <span className="hidden sm:inline">AlumniConnections</span>
           <span className="sm:hidden">Alumni</span>
           <span className="text-[#7f8cff]">.</span>
@@ -120,22 +100,33 @@ export default function TopBar() {
         </form>
 
         <div className="ml-auto flex items-center gap-1.5 sm:gap-2">
-          <Link href="/notifications" className="relative flex h-10 w-10 items-center justify-center rounded-xl text-zinc-400 transition hover:bg-white/[0.06] hover:text-white">
+          <Link
+            href="/notifications"
+            className="relative flex h-10 w-10 items-center justify-center rounded-xl text-zinc-400 transition hover:bg-white/[0.06] hover:text-white"
+            aria-label="Notificaciones"
+          >
             <Bell size={20} />
-            {badge(unreadNotifications)}
+            {unreadNotifications > 0 && (
+              <span className="absolute right-0.5 top-0.5 flex min-h-4 min-w-4 items-center justify-center rounded-full bg-[#6d7cff] px-1 text-[9px] font-black leading-none text-white ring-2 ring-[#090b0f]">
+                {unreadNotifications > 99 ? "99+" : unreadNotifications}
+              </span>
+            )}
           </Link>
 
-          <Link href="/messages" className="relative flex h-10 w-10 items-center justify-center rounded-xl text-zinc-400 transition hover:bg-white/[0.06] hover:text-white">
-            <MessageCircle size={20} />
-            {badge(unreadMessages)}
-          </Link>
-
-          <Link href="/feed#composer" className="hidden h-10 items-center gap-2 rounded-xl bg-[#6d7cff] px-4 text-sm font-bold text-white transition hover:bg-[#7b87ff] sm:flex">
+          <Link
+            href="/feed#composer"
+            className="hidden h-10 items-center gap-2 rounded-xl bg-[#6d7cff] px-4 text-sm font-bold text-white transition hover:bg-[#7b87ff] sm:flex"
+          >
             <Plus size={18} />
             Crear
           </Link>
 
-          <Link href={user ? "/profile" : "/login"} className="ml-1 flex h-10 w-10 items-center justify-center overflow-hidden rounded-full border border-white/10 bg-[#181c24] text-sm font-bold text-white">
+          <Link
+            href={user ? "/profile" : "/login"}
+            className="ml-1 flex h-10 w-10 items-center justify-center overflow-hidden rounded-full border border-white/10 bg-[#181c24] text-sm font-bold text-white transition hover:ring-2 hover:ring-[#6d7cff]/30"
+            aria-label="Ver mi perfil"
+            title="Ver mi perfil"
+          >
             {profile?.avatar_url ? (
               <img src={profile.avatar_url} alt="Perfil" className="h-full w-full object-cover" />
             ) : (

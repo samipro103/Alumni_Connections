@@ -157,6 +157,14 @@ export default function MessagesPage() {
         : `Respondió a tu historia: ${message.content}`;
     }
 
+    if (message.media_type === "image" || message.message_type === "image") {
+      return `${mine ? "Tú: " : ""}📷 Foto${message.content ? ` · ${message.content}` : ""}`;
+    }
+
+    if (message.media_type === "video" || message.message_type === "video") {
+      return `${mine ? "Tú: " : ""}🎥 Video${message.content ? ` · ${message.content}` : ""}`;
+    }
+
     return `${mine ? "Tú: " : ""}${message.content || ""}`;
   }
 
