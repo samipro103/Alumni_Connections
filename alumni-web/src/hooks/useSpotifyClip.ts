@@ -25,101 +25,179 @@ export function useSpotifyClip({
   clipDurationSeconds = 30,
 }: Options) {
   const controllerRef = useRef<any>(null);
-  const startRef = useRef(Math.max(0, Math.floor(startSeconds)));
-  const clipDurationRef = useRef(clipDurationSeconds);
+  const startRef = useRef(
+    Math.max(0, Math.floor(startSeconds))
+  );
+  const clipDurationRef = useRef(
+    Math.max(1, clipDurationSeconds)
+  );
   const playingRef = useRef(false);
-  const preparedRef = useRef(false);
-  const correctionDoneRef = useRef(false);
-  const startChangeTimerRef = useRef<number | null>(null);
-  const restartAfterSeekRef = useRef(false);
-  const transitionUntilRef = useRef(0);
-  const correctionWindowUntilRef = useRef(0);
+  const hasStartedRef = useRef(false);
+  const preparedStartRef =
+    useRef<number | null>(null);
+  const prepareTimerRef =
+    useRef<number | null>(null);
+  const recoveryTriedRef = useRef(false);
 
-  const [ready, setReady] = useState(false);
-  const [failed, setFailed] = useState(false);
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [positionMs, setPositionMs] = useState(startSeconds * 1000);
-  const [durationMs, setDurationMs] = useState(0);
-  const [error, setError] = useState("");
+  const [ready, setReady] =
+    useState(false);
+  const [failed, setFailed] =
+    useState(false);
+  const [isPlaying, setIsPlaying] =
+    useState(false);
+  const [positionMs, setPositionMs] =
+    useState(
+      Math.max(
+        0,
+        Math.floor(startSeconds)
+      ) * 1000
+    );
+  const [durationMs, setDurationMs] =
+    useState(0);
+  const [error, setError] =
+    useState("");
+
+  const prepareSelectedStart =
+    useCallback(() => {
+      const controller =
+        controllerRef.current;
+
+      if (!controller) return;
+
+      const selectedStart =
+        startRef.current;
+
+      try {
+        /*
+         * IMPORTANTE:
+         * Spotify documenta startAt en loadEntity como el punto
+         * desde el que debe comenzar cuando luego se llama play().
+         *
+         * Antes Alumni hacía seek(start) justo antes de play().
+         * Para fragmentos avanzados eso podía dejar el Embed en
+         * buffering/pausa. Ahora preparamos la entidad con startAt
+         * y dejamos que play() arranque desde ese punto.
+         */
+        controller.loadEntity?.(
+          trackUrl,
+          false,
+          selectedStart
+        );
+
+        preparedStartRef.current =
+          selectedStart;
+      } catch (prepareError) {
+        console.warn(
+          "Spotify loadEntity(startAt) failed:",
+          prepareError
+        );
+        preparedStartRef.current =
+          null;
+      }
+    }, [trackUrl]);
 
   useEffect(() => {
-    const nextStart = Math.max(0, Math.floor(startSeconds));
+    const nextStart = Math.max(
+      0,
+      Math.floor(startSeconds)
+    );
+
     startRef.current = nextStart;
-    correctionDoneRef.current = false;
     setPositionMs(nextStart * 1000);
+    hasStartedRef.current = false;
+    recoveryTriedRef.current = false;
 
-    const controller = controllerRef.current;
-    if (!controller || !ready) return;
-
-    if (startChangeTimerRef.current !== null) {
-      window.clearTimeout(startChangeTimerRef.current);
-      startChangeTimerRef.current = null;
+    if (prepareTimerRef.current !== null) {
+      window.clearTimeout(
+        prepareTimerRef.current
+      );
+      prepareTimerRef.current = null;
     }
 
-    // Si el usuario mueve el selector mientras suena, pausamos una sola vez.
-    // Después esperamos a que deje de moverlo para hacer UN seek y reanudar.
-    // Esto evita una lluvia de seek/play que era la causa principal del bug.
+    const controller =
+      controllerRef.current;
+
+    if (!controller || !ready) {
+      preparedStartRef.current = null;
+      return;
+    }
+
     if (playingRef.current) {
-      restartAfterSeekRef.current = true;
       try {
         controller.pause?.();
       } catch {}
+
       playingRef.current = false;
       setIsPlaying(false);
     }
 
-    startChangeTimerRef.current = window.setTimeout(() => {
-      startChangeTimerRef.current = null;
-      const latestController = controllerRef.current;
-      if (!latestController) return;
-
-      transitionUntilRef.current = Date.now() + 900;
-      correctionWindowUntilRef.current = Date.now() + 1800;
-      correctionDoneRef.current = false;
-
-      try {
-        latestController.seek?.(startRef.current);
-      } catch {}
-
-      if (restartAfterSeekRef.current) {
-        restartAfterSeekRef.current = false;
-        window.setTimeout(() => {
-          const activeController = controllerRef.current;
-          if (!activeController) return;
-          try {
-            activeController.play?.();
-          } catch {}
-        }, 90);
-      }
-    }, 220);
-  }, [startSeconds, ready]);
+    /*
+     * Esperamos a que el usuario termine de mover el selector.
+     * Solo hacemos un loadEntity con el inicio definitivo.
+     */
+    prepareTimerRef.current =
+      window.setTimeout(() => {
+        prepareTimerRef.current = null;
+        prepareSelectedStart();
+      }, 220);
+  }, [
+    startSeconds,
+    ready,
+    prepareSelectedStart,
+  ]);
 
   useEffect(() => {
-    clipDurationRef.current = Math.max(1, clipDurationSeconds);
+    clipDurationRef.current = Math.max(
+      1,
+      clipDurationSeconds
+    );
   }, [clipDurationSeconds]);
 
   useEffect(() => {
     let cancelled = false;
-    let timeoutId: number | null = null;
+    let timeoutId: number | null =
+      null;
 
     setReady(false);
     setFailed(false);
     setError("");
-    preparedRef.current = false;
+    setDurationMs(0);
 
-    if (!mountRef.current || !trackUrl) return;
+    playingRef.current = false;
+    hasStartedRef.current = false;
+    preparedStartRef.current = null;
+    recoveryTriedRef.current = false;
+
+    if (!mountRef.current || !trackUrl) {
+      return;
+    }
 
     async function setup() {
       try {
-        const api = await loadSpotifyIframeApi();
+        const api =
+          await loadSpotifyIframeApi();
 
-        if (cancelled || !mountRef.current) return;
+        if (
+          cancelled ||
+          !mountRef.current
+        ) {
+          return;
+        }
 
-        timeoutId = window.setTimeout(() => {
-          if (cancelled || controllerRef.current) return;
-          setFailed(true);
-          setError("Spotify tardó demasiado en iniciar.");
-        }, 7000);
+        timeoutId =
+          window.setTimeout(() => {
+            if (
+              cancelled ||
+              controllerRef.current
+            ) {
+              return;
+            }
+
+            setFailed(true);
+            setError(
+              "Spotify tardó demasiado en iniciar."
+            );
+          }, 7000);
 
         api.createController(
           mountRef.current,
@@ -135,107 +213,189 @@ export function useSpotifyClip({
             }
 
             if (timeoutId !== null) {
-              window.clearTimeout(timeoutId);
+              window.clearTimeout(
+                timeoutId
+              );
               timeoutId = null;
             }
 
-            controllerRef.current = controller;
+            controllerRef.current =
+              controller;
 
-            const prepareSelectedStart = () => {
-              if (preparedRef.current) return;
-              preparedRef.current = true;
+            const onReady = () => {
+              if (cancelled) return;
 
-              if (startRef.current > 0) {
-                try {
-                  controller.loadEntity?.(
-                    trackUrl,
-                    false,
-                    startRef.current
+              /*
+               * Preparamos el inicio guardado ANTES de que el usuario
+               * pulse Play. Esto es clave cuando el tramo empieza,
+               * por ejemplo, en 2:00.
+               */
+              prepareSelectedStart();
+
+              window.setTimeout(() => {
+                if (cancelled) return;
+
+                setReady(true);
+                setFailed(false);
+                setError("");
+              }, 180);
+            };
+
+            controller.addListener?.(
+              "ready",
+              onReady
+            );
+
+            controller.addListener?.(
+              "playback_started",
+              () => {
+                playingRef.current =
+                  true;
+                hasStartedRef.current =
+                  true;
+                setIsPlaying(true);
+              }
+            );
+
+            controller.addListener?.(
+              "playback_update",
+              (event: any) => {
+                const state =
+                  event?.data || {};
+
+                const nextDuration =
+                  Number(
+                    state.duration || 0
                   );
-                } catch {
+
+                const nextPosition =
+                  Number(
+                    state.position || 0
+                  );
+
+                const paused =
+                  Boolean(
+                    state.isPaused
+                  );
+
+                if (
+                  nextDuration > 0
+                ) {
+                  setDurationMs(
+                    nextDuration
+                  );
+                }
+
+                if (
+                  nextPosition >= 0
+                ) {
+                  setPositionMs(
+                    nextPosition
+                  );
+                }
+
+                playingRef.current =
+                  !paused;
+
+                setIsPlaying(
+                  !paused
+                );
+
+                const startMs =
+                  startRef.current *
+                  1000;
+
+                const endMs =
+                  (startRef.current +
+                    clipDurationRef.current) *
+                  1000;
+
+                /*
+                 * Recuperación única:
+                 * si Spotify empieza desde 0 aunque el fragmento
+                 * guardado sea avanzado, volvemos a cargar la misma
+                 * entidad con startAt. NO hacemos una lluvia de seek().
+                 */
+                if (
+                  !paused &&
+                  startRef.current > 0 &&
+                  nextPosition <
+                    startMs - 1800 &&
+                  !recoveryTriedRef.current
+                ) {
+                  recoveryTriedRef.current =
+                    true;
+
                   try {
-                    controller.seek?.(startRef.current);
+                    controller.loadEntity?.(
+                      trackUrl,
+                      false,
+                      startRef.current
+                    );
+                    preparedStartRef.current =
+                      startRef.current;
+                    controller.play?.();
+                  } catch {}
+
+                  return;
+                }
+
+                if (
+                  !paused &&
+                  nextPosition >=
+                    endMs - 180
+                ) {
+                  try {
+                    controller.pause?.();
+                  } catch {}
+
+                  playingRef.current =
+                    false;
+                  hasStartedRef.current =
+                    false;
+                  setIsPlaying(false);
+                  setPositionMs(startMs);
+
+                  /*
+                   * Dejamos el fragmento preparado para que el
+                   * siguiente Play vuelva a comenzar exactamente
+                   * desde el inicio seleccionado.
+                   */
+                  try {
+                    controller.loadEntity?.(
+                      trackUrl,
+                      false,
+                      startRef.current
+                    );
+                    preparedStartRef.current =
+                      startRef.current;
                   } catch {}
                 }
               }
+            );
 
-              window.setTimeout(() => {
-                if (!cancelled) {
-                  setReady(true);
-                  setFailed(false);
-                  setError("");
-                }
-              }, startRef.current > 0 ? 220 : 0);
-            };
-
-            controller.addListener?.("ready", prepareSelectedStart);
-            prepareSelectedStart();
-
-            controller.addListener?.("playback_started", () => {
-              // Ignora un playback_started viejo mientras el usuario todavía
-              // está moviendo el fragmento. El nuevo play llegará después.
-              if (startChangeTimerRef.current !== null) return;
-
-              playingRef.current = true;
-              correctionDoneRef.current = false;
-              correctionWindowUntilRef.current = Date.now() + 1800;
-              setIsPlaying(true);
-            });
-
-            controller.addListener?.("playback_update", (event: any) => {
-              const state = event?.data || {};
-              const nextDuration = Number(state.duration || 0);
-              const nextPosition = Number(state.position || 0);
-              const paused = Boolean(state.isPaused);
-
-              if (nextDuration > 0) setDurationMs(nextDuration);
-
-              // Durante un cambio de fragmento pueden llegar eventos viejos.
-              // Los ignoramos por un instante para que no salte el UI ni se pause
-              // usando la posición anterior.
-              if (Date.now() < transitionUntilRef.current) return;
-
-              if (nextPosition >= 0) setPositionMs(nextPosition);
-
-              playingRef.current = !paused;
-              setIsPlaying(!paused);
-
-              const startMs = startRef.current * 1000;
-              const endMs =
-                (startRef.current + clipDurationRef.current) * 1000;
-
-              // Corrección única justo al iniciar/reanudar el fragmento.
-              // Sirve tanto si Spotify quedó antes como después del nuevo inicio.
+            /*
+             * Algunos builds del Embed entregan el controlador cuando
+             * ya está listo y el evento ready puede haber ocurrido.
+             */
+            window.setTimeout(() => {
               if (
-                !paused &&
-                Date.now() < correctionWindowUntilRef.current &&
-                Math.abs(nextPosition - startMs) > 2200 &&
-                !correctionDoneRef.current
+                cancelled ||
+                ready
               ) {
-                correctionDoneRef.current = true;
-                transitionUntilRef.current = Date.now() + 600;
-
-                try {
-                  controller.seek?.(startRef.current);
-                } catch {}
                 return;
               }
 
-              if (!paused && nextPosition >= endMs - 180) {
-                try {
-                  controller.pause?.();
-                } catch {}
-                playingRef.current = false;
-                setIsPlaying(false);
-              }
-            });
+              onReady();
+            }, 140);
           }
         );
       } catch (setupError: any) {
         if (!cancelled) {
           setFailed(true);
           setError(
-            setupError?.message || "No se pudo inicializar Spotify."
+            setupError?.message ||
+              "No se pudo inicializar Spotify."
           );
         }
       }
@@ -247,59 +407,114 @@ export function useSpotifyClip({
       cancelled = true;
 
       if (timeoutId !== null) {
-        window.clearTimeout(timeoutId);
+        window.clearTimeout(
+          timeoutId
+        );
       }
 
-      if (startChangeTimerRef.current !== null) {
-        window.clearTimeout(startChangeTimerRef.current);
-        startChangeTimerRef.current = null;
+      if (
+        prepareTimerRef.current !==
+        null
+      ) {
+        window.clearTimeout(
+          prepareTimerRef.current
+        );
+        prepareTimerRef.current =
+          null;
       }
 
       playingRef.current = false;
-      preparedRef.current = false;
-      correctionDoneRef.current = false;
-      restartAfterSeekRef.current = false;
-      transitionUntilRef.current = 0;
-      correctionWindowUntilRef.current = 0;
+      hasStartedRef.current = false;
+      preparedStartRef.current = null;
+      recoveryTriedRef.current = false;
+
       setIsPlaying(false);
       setReady(false);
 
       controllerRef.current?.destroy?.();
       controllerRef.current = null;
     };
-  }, [mountRef, trackId, trackUrl]);
+  }, [
+    mountRef,
+    trackId,
+    trackUrl,
+    prepareSelectedStart,
+  ]);
 
   const play = useCallback(() => {
-    const controller = controllerRef.current;
-    if (!controller || !ready) return;
+    const controller =
+      controllerRef.current;
 
-    transitionUntilRef.current = Date.now() + 650;
-    correctionWindowUntilRef.current = Date.now() + 1800;
-    correctionDoneRef.current = false;
+    if (!controller || !ready) {
+      return;
+    }
+
+    recoveryTriedRef.current = false;
 
     try {
-      controller.seek?.(startRef.current);
-    } catch {}
+      /*
+       * Si todavía no ha comenzado este fragmento, garantizamos que
+       * loadEntity tenga el startAt correcto y llamamos play().
+       *
+       * Ya NO hacemos seek() antes de play(), que era el conflicto
+       * que bloqueaba fragmentos avanzados.
+       */
+      if (!hasStartedRef.current) {
+        if (
+          preparedStartRef.current !==
+          startRef.current
+        ) {
+          controller.loadEntity?.(
+            trackUrl,
+            false,
+            startRef.current
+          );
 
-    window.setTimeout(() => {
-      try {
-        controllerRef.current?.play?.();
-      } catch {}
-    }, 70);
-  }, [ready]);
+          preparedStartRef.current =
+            startRef.current;
+        }
+
+        controller.play?.();
+        return;
+      }
+
+      /*
+       * Si solo estaba pausado dentro del mismo fragmento,
+       * continuamos donde quedó.
+       */
+      if (controller.resume) {
+        controller.resume();
+      } else {
+        controller.play?.();
+      }
+    } catch (playError: any) {
+      console.error(
+        "Spotify play failed:",
+        playError
+      );
+
+      setError(
+        playError?.message ||
+          "Spotify no pudo iniciar el fragmento."
+      );
+    }
+  }, [ready, trackUrl]);
 
   const pause = useCallback(() => {
-    restartAfterSeekRef.current = false;
     try {
       controllerRef.current?.pause?.();
     } catch {}
+
     playingRef.current = false;
     setIsPlaying(false);
   }, []);
 
   const toggle = useCallback(() => {
-    if (playingRef.current) pause();
-    else play();
+    if (playingRef.current) {
+      pause();
+    } else {
+      play();
+    }
   }, [pause, play]);
 
   return {
