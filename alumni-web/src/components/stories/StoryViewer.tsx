@@ -8,8 +8,12 @@ import {
   useState,
 } from "react";
 import {
+  Award,
+  Bookmark,
+  Briefcase,
   ChevronLeft,
   ChevronRight,
+  ExternalLink,
   Eye,
   Heart,
   Loader2,
@@ -24,7 +28,6 @@ import {
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import StoryMusicPlayer from "@/components/stories/StoryMusicPlayer";
-import StoryUploadedAudioPlayer from "@/components/stories/StoryUploadedAudioPlayer";
 import {
   startStoryMusicNow,
   stopAllStoryMusic,
@@ -50,7 +53,14 @@ export type StoryItem = {
   music_duration_ms?: number | null;
   music_clip_start_seconds?: number | null;
   music_clip_duration_seconds?: number | null;
-  music_storage_path?: string | null;
+  story_kind?: "standard" | "achievement" | "opportunity";
+  headline?: string | null;
+  achievement_type?: string | null;
+  organization?: string | null;
+  opportunity_type?: string | null;
+  work_mode?: string | null;
+  location_text?: string | null;
+  action_url?: string | null;
 };
 
 export type StoryGroup = {
@@ -128,6 +138,8 @@ export default function StoryViewer({
   const [sendingReply, setSendingReply] =
     useState(false);
   const [likeBusy, setLikeBusy] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const [saveBusy, setSaveBusy] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [paused, setPaused] = useState(false);
   const [videoMuted, setVideoMuted] = useState(false);
@@ -162,10 +174,6 @@ export default function StoryViewer({
   const ownStory =
     story?.user_id === currentUserId;
 
-  const hasUploadedStoryAudio =
-    story?.music_provider === "upload" &&
-    Boolean(story?.music_track_url);
-
   useEffect(() => {
     if (!open || !story) return;
 
@@ -180,6 +188,7 @@ export default function StoryViewer({
 
     void recordView();
     void loadStoryLikes();
+    void loadStorySave();
 
     cancelAnimation();
 
@@ -409,6 +418,86 @@ export default function StoryViewer({
     }
   }
 
+  async function loadStorySave() {
+    if (
+      !story ||
+      story.story_kind !== "opportunity"
+    ) {
+      setSaved(false);
+      return;
+    }
+
+    const { data } = await supabase
+      .from("story_saves")
+      .select("id")
+      .eq("story_id", story.id)
+      .eq("user_id", currentUserId)
+      .maybeSingle();
+
+    setSaved(Boolean(data));
+  }
+
+  async function toggleStorySave() {
+    if (
+      !story ||
+      story.story_kind !== "opportunity" ||
+      saveBusy
+    ) {
+      return;
+    }
+
+    setSaveBusy(true);
+
+    try {
+      if (saved) {
+        const { error } =
+          await supabase
+            .from("story_saves")
+            .delete()
+            .eq("story_id", story.id)
+            .eq("user_id", currentUserId);
+
+        if (error) throw error;
+        setSaved(false);
+      } else {
+        const { error } =
+          await supabase
+            .from("story_saves")
+            .insert({
+              story_id: story.id,
+              user_id: currentUserId,
+            });
+
+        if (error) throw error;
+        setSaved(true);
+      }
+    } catch (error: any) {
+      console.error(error);
+      alert(
+        error?.message ||
+          "No se pudo guardar la oportunidad."
+      );
+    } finally {
+      setSaveBusy(false);
+    }
+  }
+
+  function openOpportunity() {
+    if (!story?.action_url) return;
+
+    const url = /^https?:\/\//i.test(
+      story.action_url
+    )
+      ? story.action_url
+      : `https://${story.action_url}`;
+
+    window.open(
+      url,
+      "_blank",
+      "noopener,noreferrer"
+    );
+  }
+
   async function sendStoryReply() {
     if (
       !story ||
@@ -591,7 +680,7 @@ export default function StoryViewer({
       const { data: fullStory } =
         await supabase
           .from("stories")
-          .select("media_path, music_storage_path")
+          .select("media_path")
           .eq("id", story.id)
           .maybeSingle();
 
@@ -610,14 +699,6 @@ export default function StoryViewer({
           .from("stories")
           .remove([
             fullStory.media_path,
-          ]);
-      }
-
-      if (fullStory?.music_storage_path) {
-        await supabase.storage
-          .from("story-audio")
-          .remove([
-            fullStory.music_storage_path,
           ]);
       }
 
@@ -776,6 +857,24 @@ export default function StoryViewer({
           </button>
         </div>
 
+        {story.story_kind === "achievement" && (
+          <div className="absolute left-4 top-[82px] z-40">
+            <span className="story-kind-badge story-kind-achievement">
+              <Award size={11} />
+              {story.achievement_type || "Logro"}
+            </span>
+          </div>
+        )}
+
+        {story.story_kind === "opportunity" && (
+          <div className="absolute left-4 top-[82px] z-40">
+            <span className="story-kind-badge story-kind-opportunity">
+              <Briefcase size={11} />
+              {story.opportunity_type || "Oportunidad"}
+            </span>
+          </div>
+        )}
+
         <div className="absolute inset-x-0 top-0 z-20 h-36 bg-gradient-to-b from-black/70 to-transparent" />
         <div className="absolute inset-x-0 bottom-0 z-20 h-64 bg-gradient-to-t from-black/85 via-black/30 to-transparent" />
 
@@ -866,54 +965,6 @@ export default function StoryViewer({
           <ChevronRight size={20} />
         </button>
 
-        {hasUploadedStoryAudio && story.music_track_url && (
-          <>
-            <StoryUploadedAudioPlayer
-              key={`uploaded-audio-${story.id}`}
-              src={story.music_track_url}
-              startSeconds={Math.max(
-                0,
-                Number(
-                  story.music_clip_start_seconds || 0
-                )
-              )}
-              clipDurationSeconds={Math.max(
-                1,
-                Number(
-                  story.music_clip_duration_seconds || 15
-                )
-              )}
-              paused={paused || replyFocused}
-              onPlayingChange={setStoryMusicPlaying}
-            />
-
-            <div
-              className={`absolute left-4 z-40 flex max-w-[78%] items-center gap-2.5 rounded-[17px] border border-white/10 bg-black/45 p-2.5 backdrop-blur-2xl ${
-                ownStory
-                  ? "bottom-20"
-                  : "bottom-[92px]"
-              }`}
-              onClick={(event) =>
-                event.stopPropagation()
-              }
-            >
-              <span className="flex h-10 w-10 items-center justify-center rounded-[10px] bg-white/10 text-white/75">
-                <Music2 size={16} />
-              </span>
-
-              <div className="min-w-0 flex-1">
-                <p className="truncate text-[11px] font-black text-white/90">
-                  {story.music_title ||
-                    "Canción"}
-                </p>
-                <p className="mt-0.5 truncate text-[9px] text-white/45">
-                  15 segundos
-                </p>
-              </div>
-            </div>
-          </>
-        )}
-
         {STORY_SPOTIFY_SOUNDTRACKS_ENABLED && story.music_track_url && (
           <div
             className={`absolute left-4 z-40 flex max-w-[78%] items-center gap-2.5 rounded-[17px] border border-white/10 bg-black/45 p-2.5 backdrop-blur-2xl ${
@@ -962,6 +1013,53 @@ export default function StoryViewer({
             </span>
           </div>
         )}
+
+        {!ownStory &&
+          story.story_kind === "opportunity" && (
+            <div
+              className="absolute bottom-[82px] left-4 right-4 z-40 flex items-center gap-2"
+              onClick={(event) =>
+                event.stopPropagation()
+              }
+            >
+              <button
+                type="button"
+                onClick={() =>
+                  void toggleStorySave()
+                }
+                disabled={saveBusy}
+                className={`flex h-11 items-center gap-2 rounded-[15px] border px-4 text-xs font-black backdrop-blur-xl transition ${
+                  saved
+                    ? "border-emerald-300/25 bg-emerald-400/15 text-emerald-200"
+                    : "border-white/10 bg-black/45 text-white/75"
+                }`}
+                aria-label="Guardar oportunidad"
+              >
+                <Bookmark
+                  size={15}
+                  fill={
+                    saved
+                      ? "currentColor"
+                      : "none"
+                  }
+                />
+                {saved
+                  ? "Guardada"
+                  : "Guardar"}
+              </button>
+
+              {story.action_url && (
+                <button
+                  type="button"
+                  onClick={openOpportunity}
+                  className="ml-auto flex h-11 items-center gap-2 rounded-[15px] bg-white px-4 text-xs font-black text-black transition hover:bg-zinc-200"
+                >
+                  Ver oportunidad
+                  <ExternalLink size={14} />
+                </button>
+              )}
+            </div>
+          )}
 
         {ownStory ? (
           <div className="absolute bottom-5 left-5 z-40 flex items-center gap-2">
@@ -1066,25 +1164,40 @@ export default function StoryViewer({
                     : "border-white/10 bg-black/35 text-white/70 hover:bg-black/55 hover:text-white"
                 }`}
                 aria-label={
-                  liked
+                  story.story_kind === "achievement"
+                    ? liked
+                      ? "Quitar felicitación"
+                      : "Felicitar"
+                    : liked
                     ? "Quitar me gusta"
                     : "Me gusta"
                 }
               >
-                <Heart
-                  size={18}
-                  fill={
-                    liked
-                      ? "currentColor"
-                      : "none"
-                  }
-                />
+                {story.story_kind === "achievement" ? (
+                  <Award
+                    size={18}
+                    fill={
+                      liked
+                        ? "currentColor"
+                        : "none"
+                    }
+                  />
+                ) : (
+                  <Heart
+                    size={18}
+                    fill={
+                      liked
+                        ? "currentColor"
+                        : "none"
+                    }
+                  />
+                )}
               </button>
             </div>
 
             {likeCount > 0 && (
               <p className="mt-2 pl-3 text-[9px] font-bold text-white/30">
-                {likeCount} me gusta
+                {likeCount} {story.story_kind === "achievement" ? "felicitaciones" : "me gusta"}
               </p>
             )}
           </div>

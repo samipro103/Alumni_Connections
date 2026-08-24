@@ -145,7 +145,14 @@ export default function StoriesRail({
           music_duration_ms,
           music_clip_start_seconds,
           music_clip_duration_seconds,
-          music_storage_path
+          story_kind,
+          headline,
+          achievement_type,
+          organization,
+          opportunity_type,
+          work_mode,
+          location_text,
+          action_url
         `)
         .in("user_id", candidateIds)
         .gt(
@@ -484,6 +491,16 @@ export default function StoriesRail({
               </div>
 
               <div className="absolute inset-x-2.5 bottom-2.5">
+                {ownPreviewStory?.story_kind === "achievement" && (
+                  <span className="mb-1 inline-flex rounded-full bg-indigo-500/40 px-2 py-0.5 text-[7px] font-black uppercase tracking-wide text-white">
+                    Logro
+                  </span>
+                )}
+                {ownPreviewStory?.story_kind === "opportunity" && (
+                  <span className="mb-1 inline-flex rounded-full bg-emerald-500/40 px-2 py-0.5 text-[7px] font-black uppercase tracking-wide text-white">
+                    Empleo
+                  </span>
+                )}
                 <p className="truncate text-[11px] font-black text-white">
                   Tu historia
                 </p>
@@ -579,6 +596,16 @@ export default function StoriesRail({
                   </div>
 
                   <div className="absolute inset-x-2.5 bottom-2.5">
+                    {previewStory?.story_kind === "achievement" && (
+                      <span className="mb-1 inline-flex rounded-full bg-indigo-500/40 px-2 py-0.5 text-[7px] font-black uppercase tracking-wide text-white">
+                        Logro
+                      </span>
+                    )}
+                    {previewStory?.story_kind === "opportunity" && (
+                      <span className="mb-1 inline-flex rounded-full bg-emerald-500/40 px-2 py-0.5 text-[7px] font-black uppercase tracking-wide text-white">
+                        Oportunidad
+                      </span>
+                    )}
                     <p className="truncate text-[11px] font-black text-white">
                       @{group.username}
                     </p>
