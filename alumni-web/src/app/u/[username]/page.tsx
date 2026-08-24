@@ -19,6 +19,7 @@ import { useAuth } from "@/components/auth/AuthProvider";
 import { supabase } from "@/lib/supabase";
 import AppShell from "@/components/layout/AppShell";
 import ProfileMusicCard from "@/components/profile/ProfileMusicCard";
+import ProfileSpotifyCorner from "@/components/music/ProfileSpotifyCorner";
 import HDProfileImage from "@/components/profile/HDProfileImage";
 import ProfileSocialLinks from "@/components/profile/ProfileSocialLinks";
 import CommentLikeButton from "@/components/social/CommentLikeButton";
@@ -345,7 +346,11 @@ export default function UserProfilePage() {
   return (
     <AppShell>
       <div className="mx-auto w-full max-w-[900px]">
-        <section className="rounded-[28px] border border-white/[0.07] bg-[#101318]/95">
+        <section className="relative rounded-[28px] border border-white/[0.07] bg-[#101318]/95">
+          <ProfileSpotifyCorner
+            ownProfile={ownProfile}
+            trackUrl={profileMusic?.track_url || null}
+          />
           <div className="overflow-hidden rounded-t-[27px]">
             <div className="h-48 bg-[#151a23] sm:h-60">
               {profile.banner_url ? (

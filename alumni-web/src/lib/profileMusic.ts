@@ -23,4 +23,5 @@ export type SpotifyTrackImport = {
   artwork_url: string | null;
   track_url: string;
   embed_url: string;
+  duration_ms?: number | null;
 };

@@ -25,7 +25,7 @@ import {
 import { supabase } from "@/lib/supabase";
 import { uploadImage } from "@/lib/storage";
 import AppShell from "@/components/layout/AppShell";
-import ProfileMusicSettings from "@/components/settings/ProfileMusicSettings";
+import SpotifyPremiumMusicGate from "@/components/music/SpotifyPremiumMusicGate";
 
 type SettingsSectionId =
   | "appearance"
@@ -117,6 +117,20 @@ export default function SettingsPage() {
   useEffect(() => {
     if (user) getProfile();
   }, [user?.id]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const section =
+      new URLSearchParams(window.location.search).get("section");
+
+    if (
+      section &&
+      SETTINGS_ITEMS.some((item) => item.id === section)
+    ) {
+      setActiveSection(section as SettingsSectionId);
+    }
+  }, []);
 
   useEffect(() => {
     return () => {
@@ -421,7 +435,7 @@ export default function SettingsPage() {
             )}
 
             {activeSection === "music" && (
-              <ProfileMusicSettings userId={user?.id || ""} />
+              <SpotifyPremiumMusicGate userId={user?.id || ""} />
             )}
 
             {activeSection === "account" && (

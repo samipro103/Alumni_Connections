@@ -1,12 +1,6 @@
 "use client";
 
 import {
-  useCallback,
-  useEffect,
-  useRef,
-  useState,
-} from "react";
-import {
   Check,
   Loader2,
   Music2,
@@ -14,6 +8,12 @@ import {
   Search,
   Trash2,
 } from "lucide-react";
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import { supabase } from "@/lib/supabase";
 import type {
   ProfileMusic,
@@ -21,66 +21,108 @@ import type {
 } from "@/lib/profileMusic";
 import type { StoryMusicTrack } from "@/lib/musicCatalog";
 import ProfileMusicCard from "@/components/profile/ProfileMusicCard";
-import MusicClipSelector from "@/components/settings/MusicClipSelector";
+import SpotifyPremiumClipSelector from "@/components/settings/SpotifyPremiumClipSelector";
 
-type Props = { userId: string };
+type Props = {
+  userId: string;
+};
 
 function getMarketFromLocale() {
-  if (typeof navigator === "undefined") return "SV";
+  if (
+    typeof navigator ===
+    "undefined"
+  ) {
+    return "SV";
+  }
 
   const locale =
     navigator.languages?.[0] ||
     navigator.language ||
     "es-SV";
 
-  const match = locale.match(/[-_]([A-Za-z]{2})$/);
+  const match =
+    locale.match(
+      /[-_]([A-Za-z]{2})$/
+    );
 
-  return match?.[1]?.toUpperCase() || "SV";
+  return (
+    match?.[1]?.toUpperCase() ||
+    "SV"
+  );
 }
 
 export default function ProfileMusicSettings({
   userId,
 }: Props) {
-  const searchTimerRef = useRef<number | null>(null);
+  const searchTimerRef =
+    useRef<number | null>(
+      null
+    );
 
   const [current, setCurrent] =
-    useState<ProfileMusic | null>(null);
+    useState<ProfileMusic | null>(
+      null
+    );
 
   const [candidate, setCandidate] =
-    useState<SpotifyTrackImport | null>(null);
+    useState<SpotifyTrackImport | null>(
+      null
+    );
 
-  const [searchQuery, setSearchQuery] = useState("");
-  const [searchResults, setSearchResults] = useState<
+  const [
+    searchQuery,
+    setSearchQuery,
+  ] = useState("");
+
+  const [
+    searchResults,
+    setSearchResults,
+  ] = useState<
     StoryMusicTrack[]
   >([]);
-  const [searching, setSearching] = useState(false);
 
-  const [clipStart, setClipStart] = useState(0);
-  const [trackDuration, setTrackDuration] =
-    useState<number | null>(null);
+  const [searching, setSearching] =
+    useState(false);
 
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [removing, setRemoving] = useState(false);
-  const [error, setError] = useState("");
+  const [clipStart, setClipStart] =
+    useState(0);
+
+  const [
+    trackDuration,
+    setTrackDuration,
+  ] = useState<number | null>(
+    null
+  );
+
+  const [loading, setLoading] =
+    useState(true);
+
+  const [saving, setSaving] =
+    useState(false);
+
+  const [removing, setRemoving] =
+    useState(false);
+
+  const [error, setError] =
+    useState("");
 
   useEffect(() => {
-    if (userId) void loadMusic();
+    if (userId) {
+      void loadMusic();
+    }
   }, [userId]);
 
   useEffect(() => {
-    return () => {
-      if (searchTimerRef.current !== null) {
-        window.clearTimeout(searchTimerRef.current);
-      }
-    };
-  }, []);
+    const query =
+      searchQuery.trim();
 
-  useEffect(() => {
-    const query = searchQuery.trim();
-
-    if (searchTimerRef.current !== null) {
-      window.clearTimeout(searchTimerRef.current);
+    if (
+      searchTimerRef.current !==
+      null
+    ) {
+      window.clearTimeout(
+        searchTimerRef.current
+      );
     }
 
     if (query.length < 2) {
@@ -89,70 +131,113 @@ export default function ProfileMusicSettings({
       return;
     }
 
-    searchTimerRef.current = window.setTimeout(() => {
-      void searchSpotify(query);
-    }, 320);
+    searchTimerRef.current =
+      window.setTimeout(
+        () => {
+          void searchSpotify(
+            query
+          );
+        },
+        320
+      );
 
     return () => {
-      if (searchTimerRef.current !== null) {
-        window.clearTimeout(searchTimerRef.current);
+      if (
+        searchTimerRef.current !==
+        null
+      ) {
+        window.clearTimeout(
+          searchTimerRef.current
+        );
       }
     };
   }, [searchQuery]);
 
-  const handleDurationKnown = useCallback(
-    (value: number) => {
-      setTrackDuration(value);
-    },
-    []
-  );
+  useEffect(() => {
+    return () => {
+      if (
+        searchTimerRef.current !==
+        null
+      ) {
+        window.clearTimeout(
+          searchTimerRef.current
+        );
+      }
+    };
+  }, []);
+
+  const handleDurationKnown =
+    useCallback(
+      (value: number) => {
+        setTrackDuration(value);
+      },
+      []
+    );
 
   async function loadMusic() {
     setLoading(true);
     setError("");
 
-    const { data, error: queryError } = await supabase
+    const {
+      data,
+      error: queryError,
+    } = await supabase
       .from("profile_music")
       .select("*")
       .eq("user_id", userId)
       .maybeSingle();
 
     if (queryError) {
-      console.error(queryError);
+      console.error(
+        queryError
+      );
+
       setError(
-        "No se pudo cargar tu canción. Verifica que ejecutaste el SQL de Música Premium."
+        "No se pudo cargar tu canción."
       );
     } else {
-      setCurrent((data as ProfileMusic | null) || null);
+      setCurrent(
+        (data as ProfileMusic | null) ||
+          null
+      );
     }
 
     setLoading(false);
   }
 
-  async function searchSpotify(query: string) {
+  async function searchSpotify(
+    query: string
+  ) {
     setSearching(true);
     setError("");
 
     try {
-      const response = await fetch(
-        `/api/music/search?q=${encodeURIComponent(
-          query
-        )}&market=${encodeURIComponent(getMarketFromLocale())}`
-      );
+      const response =
+        await fetch(
+          `/api/music/search?q=${encodeURIComponent(
+            query
+          )}&market=${encodeURIComponent(
+            getMarketFromLocale()
+          )}`
+        );
 
-      const data = await response.json();
+      const data =
+        await response.json();
 
       if (!response.ok) {
         throw new Error(
-          data?.error || "No se pudo buscar en Spotify."
+          data?.error ||
+            "No se pudo buscar en Spotify."
         );
       }
 
       setSearchResults(
-        (data?.tracks || []) as StoryMusicTrack[]
+        (data?.tracks ||
+          []) as StoryMusicTrack[]
       );
     } catch (searchError: any) {
       setSearchResults([]);
+
       setError(
         searchError?.message ||
           "No se pudo buscar música."
@@ -162,25 +247,44 @@ export default function ProfileMusicSettings({
     }
   }
 
-  function chooseTrack(track: StoryMusicTrack) {
-    const nextCandidate: SpotifyTrackImport = {
-      provider: "spotify",
-      provider_track_id: track.provider_track_id,
-      track_title: track.track_title,
-      artist_name: track.artist_name,
-      album_name: track.album_name,
-      artwork_url: track.artwork_url,
-      track_url: track.track_url,
-      embed_url: track.embed_url,
-    };
+  function chooseTrack(
+    track: StoryMusicTrack
+  ) {
+    const nextCandidate: SpotifyTrackImport =
+      {
+        provider: "spotify",
+        provider_track_id:
+          track.provider_track_id,
+        track_title:
+          track.track_title,
+        artist_name:
+          track.artist_name,
+        album_name:
+          track.album_name,
+        artwork_url:
+          track.artwork_url,
+        track_url:
+          track.track_url,
+        embed_url:
+          track.embed_url,
+        duration_ms:
+          track.duration_ms,
+      };
 
-    setCandidate(nextCandidate);
+    setCandidate(
+      nextCandidate
+    );
+
     setClipStart(0);
 
     setTrackDuration(
-      typeof track.duration_ms === "number" &&
+      typeof track.duration_ms ===
+        "number" &&
         track.duration_ms > 0
-        ? Math.floor(track.duration_ms / 1000)
+        ? Math.floor(
+            track.duration_ms /
+              1000
+          )
         : null
     );
 
@@ -190,7 +294,9 @@ export default function ProfileMusicSettings({
 
     window.setTimeout(() => {
       document
-        .getElementById("alumni-music-clip-editor")
+        .getElementById(
+          "alumni-music-clip-editor"
+        )
         ?.scrollIntoView({
           behavior: "smooth",
           block: "center",
@@ -203,31 +309,51 @@ export default function ProfileMusicSettings({
 
     setCandidate({
       provider: "spotify",
-      provider_track_id: current.provider_track_id,
-      track_title: current.track_title,
-      artist_name: current.artist_name,
-      album_name: current.album_name,
-      artwork_url: current.artwork_url,
-      track_url: current.track_url,
-      embed_url: current.embed_url,
+      provider_track_id:
+        current.provider_track_id,
+      track_title:
+        current.track_title,
+      artist_name:
+        current.artist_name,
+      album_name:
+        current.album_name,
+      artwork_url:
+        current.artwork_url,
+      track_url:
+        current.track_url,
+      embed_url:
+        current.embed_url,
+      duration_ms:
+        current.track_duration_seconds
+          ? Number(
+              current.track_duration_seconds
+            ) * 1000
+          : null,
     });
 
     setSearchQuery("");
     setSearchResults([]);
 
     setClipStart(
-      Number(current.clip_start_seconds ?? 0)
+      Number(
+        current.clip_start_seconds ??
+          0
+      )
     );
 
     setTrackDuration(
       current.track_duration_seconds
-        ? Number(current.track_duration_seconds)
+        ? Number(
+            current.track_duration_seconds
+          )
         : null
     );
 
     window.setTimeout(() => {
       document
-        .getElementById("alumni-music-clip-editor")
+        .getElementById(
+          "alumni-music-clip-editor"
+        )
         ?.scrollIntoView({
           behavior: "smooth",
           block: "center",
@@ -236,34 +362,66 @@ export default function ProfileMusicSettings({
   }
 
   async function saveMusic() {
-    if (!candidate || !userId || saving) return;
+    if (
+      !candidate ||
+      !userId ||
+      saving
+    ) {
+      return;
+    }
 
     setSaving(true);
     setError("");
 
-    const { data, error: saveError } = await supabase
+    const {
+      data,
+      error: saveError,
+    } = await supabase
       .from("profile_music")
       .upsert(
         {
           user_id: userId,
           ...candidate,
-          clip_start_seconds: Math.max(
-            0,
-            Math.floor(clipStart)
-          ),
-          clip_duration_seconds: 30,
-          track_duration_seconds: trackDuration,
-          updated_at: new Date().toISOString(),
+          clip_start_seconds:
+            Math.max(
+              0,
+              Math.floor(
+                clipStart
+              )
+            ),
+          clip_duration_seconds:
+            30,
+          track_duration_seconds:
+            trackDuration,
+          updated_at:
+            new Date().toISOString(),
         },
-        { onConflict: "user_id" }
+        {
+          onConflict: "user_id",
+        }
       )
       .select("*")
       .single();
 
     if (saveError) {
-      setError(saveError.message);
+      const message =
+        String(
+          saveError.message ||
+            ""
+        );
+
+      setError(
+        message.includes(
+          "SPOTIFY_PREMIUM_REQUIRED"
+        )
+          ? "Necesitas una conexión Spotify Premium verificada para guardar música."
+          : message
+      );
     } else {
-      setCurrent(data as ProfileMusic);
+      setCurrent(
+        data as ProfileMusic
+      );
+
       setCandidate(null);
       setSearchQuery("");
       setSearchResults([]);
@@ -275,7 +433,12 @@ export default function ProfileMusicSettings({
   }
 
   async function removeMusic() {
-    if (!userId || removing) return;
+    if (
+      !userId ||
+      removing
+    ) {
+      return;
+    }
 
     if (
       !window.confirm(
@@ -288,13 +451,20 @@ export default function ProfileMusicSettings({
     setRemoving(true);
     setError("");
 
-    const { error: removeError } = await supabase
+    const {
+      error: removeError,
+    } = await supabase
       .from("profile_music")
       .delete()
-      .eq("user_id", userId);
+      .eq(
+        "user_id",
+        userId
+      );
 
     if (removeError) {
-      setError(removeError.message);
+      setError(
+        removeError.message
+      );
     } else {
       setCurrent(null);
       setCandidate(null);
@@ -321,7 +491,7 @@ export default function ProfileMusicSettings({
     <div className="space-y-7">
       <section className="border-b border-white/[0.07] pb-7">
         <div className="flex items-start gap-3">
-          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-[#6d7cff]/10 text-[#8d98ff]">
+          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-[#1ed760]/10 text-[#1ed760]">
             <Music2 size={18} />
           </span>
 
@@ -329,21 +499,26 @@ export default function ProfileMusicSettings({
             <p className="text-sm font-black text-zinc-200">
               Tu canción del momento
             </p>
+
             <p className="mt-1 max-w-2xl text-xs leading-5 text-zinc-600">
-              Busca una canción o artista y elige el tramo
-              de 30 segundos que quieres mostrar.
+              Elige una canción y marca los 30 segundos que quieres mostrar en tu perfil.
             </p>
           </div>
         </div>
 
         {current ? (
           <div className="mt-5">
-            <ProfileMusicCard track={current} />
+            <ProfileMusicCard
+              track={current}
+              enablePlayback={false}
+            />
 
             <div className="mt-3 flex items-center justify-end gap-4">
               <button
                 type="button"
-                onClick={editCurrentClip}
+                onClick={
+                  editCurrentClip
+                }
                 className="flex items-center gap-1.5 text-xs font-bold text-zinc-600 transition hover:text-zinc-300"
               >
                 <Pencil size={13} />
@@ -369,7 +544,7 @@ export default function ProfileMusicSettings({
             </div>
           </div>
         ) : (
-          <div className="mt-5 border-l-2 border-[#6d7cff]/35 pl-4">
+          <div className="mt-5 border-l-2 border-[#1ed760]/30 pl-4">
             <p className="text-sm font-bold text-zinc-400">
               Aún no tienes una canción.
             </p>
@@ -378,14 +553,13 @@ export default function ProfileMusicSettings({
       </section>
 
       <section>
-        <div>
-          <p className="text-sm font-black text-zinc-200">
-            Elegir canción
-          </p>
-          <p className="mt-1 text-xs text-zinc-700">
-            Busca directamente por canción, artista o ambos.
-          </p>
-        </div>
+        <p className="text-sm font-black text-zinc-200">
+          Elegir canción
+        </p>
+
+        <p className="mt-1 text-xs text-zinc-700">
+          Busca directamente por canción, artista o ambos.
+        </p>
 
         <div className="relative mt-4">
           <Search
@@ -396,14 +570,17 @@ export default function ProfileMusicSettings({
           <input
             value={searchQuery}
             onChange={(event) => {
-              setSearchQuery(event.target.value);
+              setSearchQuery(
+                event.target.value
+              );
+
               setCandidate(null);
               setError("");
             }}
             placeholder="Buscar canción o artista..."
             autoComplete="off"
             spellCheck={false}
-            className="h-11 w-full rounded-xl border border-white/[0.07] bg-white/[0.025] pl-10 pr-10 text-sm text-zinc-300 outline-none transition placeholder:text-zinc-800 focus:border-[#6d7cff]/45"
+            className="h-11 w-full rounded-xl border border-white/[0.07] bg-white/[0.025] pl-10 pr-10 text-sm text-zinc-300 outline-none transition placeholder:text-zinc-800 focus:border-[#1ed760]/35"
           />
 
           {searching && (
@@ -413,63 +590,88 @@ export default function ProfileMusicSettings({
             />
           )}
 
-          {searchQuery.trim().length >= 2 && (
+          {searchQuery
+            .trim()
+            .length >= 2 && (
             <div className="mt-2 overflow-hidden rounded-[18px] border border-white/[0.07] bg-[#0e1117]">
               {error ? (
                 <p className="px-4 py-4 text-[11px] font-bold leading-5 text-red-300/80">
                   {error}
                 </p>
               ) : !searching &&
-                searchResults.length === 0 ? (
+                searchResults.length ===
+                  0 ? (
                 <p className="px-4 py-4 text-[11px] text-zinc-700">
                   No encontré canciones con esa búsqueda.
                 </p>
               ) : (
                 <div className="max-h-[330px] overflow-y-auto">
-                  {searchResults.map((track) => (
-                    <button
-                      key={track.provider_track_id}
-                      type="button"
-                      onClick={() => chooseTrack(track)}
-                      className="flex w-full items-center gap-3 border-b border-white/[0.045] px-3 py-3 text-left transition last:border-b-0 hover:bg-white/[0.035]"
-                    >
-                      {track.artwork_url ? (
-                        <img
-                          src={track.artwork_url}
-                          alt=""
-                          className="h-12 w-12 shrink-0 rounded-xl object-cover"
+                  {searchResults.map(
+                    (track) => (
+                      <button
+                        key={
+                          track.provider_track_id
+                        }
+                        type="button"
+                        onClick={() =>
+                          chooseTrack(
+                            track
+                          )
+                        }
+                        className="flex w-full items-center gap-3 border-b border-white/[0.045] px-3 py-3 text-left transition last:border-b-0 hover:bg-white/[0.035]"
+                      >
+                        {track.artwork_url ? (
+                          <img
+                            src={
+                              track.artwork_url
+                            }
+                            alt=""
+                            className="h-12 w-12 shrink-0 rounded-xl object-cover"
+                          />
+                        ) : (
+                          <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-white/[0.05] text-zinc-600">
+                            <Music2
+                              size={
+                                16
+                              }
+                            />
+                          </span>
+                        )}
+
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate text-xs font-black text-zinc-200">
+                            {
+                              track.track_title
+                            }
+                          </p>
+
+                          <p className="mt-1 truncate text-[10px] text-zinc-600">
+                            {
+                              track.artist_name
+                            }
+                            {track.album_name
+                              ? ` · ${track.album_name}`
+                              : ""}
+                          </p>
+                        </div>
+
+                        <Check
+                          size={14}
+                          className="shrink-0 text-zinc-700"
                         />
-                      ) : (
-                        <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-white/[0.05] text-zinc-600">
-                          <Music2 size={16} />
-                        </span>
-                      )}
-
-                      <div className="min-w-0 flex-1">
-                        <p className="truncate text-xs font-black text-zinc-200">
-                          {track.track_title}
-                        </p>
-                        <p className="mt-1 truncate text-[10px] text-zinc-600">
-                          {track.artist_name}
-                          {track.album_name
-                            ? ` · ${track.album_name}`
-                            : ""}
-                        </p>
-                      </div>
-
-                      <Check
-                        size={14}
-                        className="shrink-0 text-zinc-700"
-                      />
-                    </button>
-                  ))}
+                      </button>
+                    )
+                  )}
                 </div>
               )}
             </div>
           )}
         </div>
 
-        {error && searchQuery.trim().length < 2 && (
+        {error &&
+          searchQuery
+            .trim()
+            .length < 2 && (
           <p className="mt-3 text-xs font-bold text-red-300/80">
             {error}
           </p>
@@ -483,7 +685,9 @@ export default function ProfileMusicSettings({
             <div className="flex items-center gap-3">
               {candidate.artwork_url && (
                 <img
-                  src={candidate.artwork_url}
+                  src={
+                    candidate.artwork_url
+                  }
                   alt=""
                   className="h-11 w-11 rounded-xl object-cover"
                 />
@@ -491,29 +695,40 @@ export default function ProfileMusicSettings({
 
               <div className="min-w-0">
                 <p className="truncate text-sm font-black text-zinc-200">
-                  {candidate.track_title}
+                  {
+                    candidate.track_title
+                  }
                 </p>
+
                 <p className="mt-0.5 truncate text-[11px] text-zinc-700">
-                  {candidate.artist_name || "Spotify"}
+                  {candidate.artist_name ||
+                    "Spotify"}
                 </p>
               </div>
             </div>
 
-            <MusicClipSelector
+            <SpotifyPremiumClipSelector
               track={candidate}
-              startSeconds={clipStart}
-              onStartChange={setClipStart}
-              onDurationKnown={handleDurationKnown}
-              knownDurationSeconds={trackDuration}
+              startSeconds={
+                clipStart
+              }
+              onStartChange={
+                setClipStart
+              }
+              knownDurationSeconds={
+                trackDuration
+              }
             />
 
             <button
               type="button"
               onClick={saveMusic}
               disabled={saving}
-              className="flex h-11 w-full items-center justify-center rounded-xl bg-[#6d7cff] text-xs font-black text-white transition hover:bg-[#7b87ff] disabled:opacity-50"
+              className="flex h-11 w-full items-center justify-center rounded-xl bg-[#1ed760] text-xs font-black text-[#07110a] transition hover:brightness-105 disabled:opacity-50"
             >
-              {saving ? "Guardando..." : "Guardar"}
+              {saving
+                ? "Guardando..."
+                : "Guardar en mi perfil"}
             </button>
           </div>
         )}
