@@ -404,7 +404,22 @@ export default function ProfileMusicSettings({
       .upsert(
         {
           user_id: userId,
-          ...candidate,
+          provider:
+            candidate.provider,
+          provider_track_id:
+            candidate.provider_track_id,
+          track_title:
+            candidate.track_title,
+          artist_name:
+            candidate.artist_name,
+          album_name:
+            candidate.album_name,
+          artwork_url:
+            candidate.artwork_url,
+          track_url:
+            candidate.track_url,
+          embed_url:
+            candidate.embed_url,
           clip_start_seconds:
             Math.max(
               0,
