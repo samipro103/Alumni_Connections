@@ -16,7 +16,8 @@ import {
 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/lib/supabase";
-import { uploadImage } from "@/lib/storage";
+import { uploadProfileImage } from "@/lib/storage";
+import { prepareProfileImage } from "@/lib/profileImagePipeline";
 import { COUNTRIES, flagEmoji, type CountryOption } from "@/lib/profileCatalog";
 import { careersForUniversity } from "@/data/academicCatalog";
 import OriginalMonochromeLogo from "@/components/profile/OriginalMonochromeLogo";
@@ -46,6 +47,8 @@ export default function ProfileEditorPro({
 }: Props) {
   const avatarInput = useRef<HTMLInputElement>(null);
   const bannerInput = useRef<HTMLInputElement>(null);
+  const avatarProcessToken = useRef(0);
+  const bannerProcessToken = useRef(0);
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -54,6 +57,8 @@ export default function ProfileEditorPro({
   const [bannerFile, setBannerFile] = useState<File | null>(null);
   const [avatarPreview, setAvatarPreview] = useState("");
   const [bannerPreview, setBannerPreview] = useState("");
+  const [avatarProcessing, setAvatarProcessing] = useState(false);
+  const [bannerProcessing, setBannerProcessing] = useState(false);
   const [profile, setProfile] = useState<any>(null);
 
   const [institution, setInstitution] = useState<Institution | null>(null);
@@ -66,10 +71,19 @@ export default function ProfileEditorPro({
 
   useEffect(() => {
     return () => {
-      if (avatarPreview.startsWith("blob:")) URL.revokeObjectURL(avatarPreview);
-      if (bannerPreview.startsWith("blob:")) URL.revokeObjectURL(bannerPreview);
+      if (avatarPreview.startsWith("blob:")) {
+        URL.revokeObjectURL(avatarPreview);
+      }
     };
-  }, [avatarPreview, bannerPreview]);
+  }, [avatarPreview]);
+
+  useEffect(() => {
+    return () => {
+      if (bannerPreview.startsWith("blob:")) {
+        URL.revokeObjectURL(bannerPreview);
+      }
+    };
+  }, [bannerPreview]);
 
   async function load() {
     setLoading(true);
@@ -129,17 +143,84 @@ export default function ProfileEditorPro({
     }));
   }
 
-  function setPhoto(file: File, type: "avatar" | "banner") {
-    const url = URL.createObjectURL(file);
+  async function setPhoto(file: File, type: "avatar" | "banner") {
+    const isAvatar = type === "avatar";
+    const tokenRef = isAvatar
+      ? avatarProcessToken
+      : bannerProcessToken;
 
-    if (type === "avatar") {
-      if (avatarPreview.startsWith("blob:")) URL.revokeObjectURL(avatarPreview);
-      setAvatarFile(file);
-      setAvatarPreview(url);
+    const token = ++tokenRef.current;
+    const initialUrl = URL.createObjectURL(file);
+
+    if (isAvatar) {
+      setAvatarProcessing(true);
+      setAvatarPreview((current) => {
+        if (current.startsWith("blob:")) {
+          URL.revokeObjectURL(current);
+        }
+        return initialUrl;
+      });
     } else {
-      if (bannerPreview.startsWith("blob:")) URL.revokeObjectURL(bannerPreview);
-      setBannerFile(file);
-      setBannerPreview(url);
+      setBannerProcessing(true);
+      setBannerPreview((current) => {
+        if (current.startsWith("blob:")) {
+          URL.revokeObjectURL(current);
+        }
+        return initialUrl;
+      });
+    }
+
+    try {
+      const prepared = await prepareProfileImage(file, type);
+
+      if (tokenRef.current !== token) {
+        return;
+      }
+
+      const finalUrl = URL.createObjectURL(prepared.file);
+
+      if (isAvatar) {
+        setAvatarFile(prepared.file);
+        setAvatarPreview((current) => {
+          if (current.startsWith("blob:")) {
+            URL.revokeObjectURL(current);
+          }
+          return finalUrl;
+        });
+      } else {
+        setBannerFile(prepared.file);
+        setBannerPreview((current) => {
+          if (current.startsWith("blob:")) {
+            URL.revokeObjectURL(current);
+          }
+          return finalUrl;
+        });
+      }
+    } catch (error: any) {
+      console.error(error);
+
+      if (tokenRef.current === token) {
+        alert(
+          error?.message ||
+            "No se pudo preparar la imagen."
+        );
+
+        if (isAvatar) {
+          setAvatarFile(null);
+          setAvatarPreview(profile?.avatar_url || "");
+        } else {
+          setBannerFile(null);
+          setBannerPreview(profile?.banner_url || "");
+        }
+      }
+    } finally {
+      if (tokenRef.current === token) {
+        if (isAvatar) {
+          setAvatarProcessing(false);
+        } else {
+          setBannerProcessing(false);
+        }
+      }
     }
   }
 
@@ -148,7 +229,14 @@ export default function ProfileEditorPro({
   }
 
   async function save() {
-    if (!profile || saving) return;
+    if (
+      !profile ||
+      saving ||
+      avatarProcessing ||
+      bannerProcessing
+    ) {
+      return;
+    }
 
     setSaving(true);
 
@@ -157,11 +245,19 @@ export default function ProfileEditorPro({
       let bannerUrl = profile.banner_url || "";
 
       if (avatarFile) {
-        avatarUrl = await uploadImage(avatarFile, "avatars", userId);
+        avatarUrl = await uploadProfileImage(
+          avatarFile,
+          "avatars",
+          userId
+        );
       }
 
       if (bannerFile) {
-        bannerUrl = await uploadImage(bannerFile, "banners", userId);
+        bannerUrl = await uploadProfileImage(
+          bannerFile,
+          "banners",
+          userId
+        );
       }
 
       const residence = countryByCode(profile.residence_country_code);
@@ -263,16 +359,32 @@ export default function ProfileEditorPro({
         <button
           type="button"
           onClick={() => void save()}
-          disabled={saving}
+          disabled={
+            saving ||
+            avatarProcessing ||
+            bannerProcessing
+          }
           className="alumni-profile-editor-save"
-          aria-label={saving ? "Guardando cambios" : "Guardar cambios"}
+          aria-label={
+            avatarProcessing || bannerProcessing
+              ? "Procesando imagen"
+              : saving
+              ? "Guardando cambios"
+              : "Guardar cambios"
+          }
         >
-          {saving ? (
+          {saving || avatarProcessing || bannerProcessing ? (
             <Loader2 size={15} className="animate-spin" />
           ) : (
             <Check size={15} strokeWidth={2.2} />
           )}
-          <span>{saving ? "Guardando" : "Guardar cambios"}</span>
+          <span>
+            {avatarProcessing || bannerProcessing
+              ? "Preparando imagen"
+              : saving
+              ? "Guardando"
+              : "Guardar cambios"}
+          </span>
         </button>
       </div>
 
@@ -284,7 +396,7 @@ export default function ProfileEditorPro({
           accept="image/*"
           onChange={(event) => {
             const file = event.target.files?.[0];
-            if (file) setPhoto(file, "banner");
+            if (file) void setPhoto(file, "banner");
             event.currentTarget.value = "";
           }}
         />
@@ -295,7 +407,7 @@ export default function ProfileEditorPro({
           accept="image/*"
           onChange={(event) => {
             const file = event.target.files?.[0];
-            if (file) setPhoto(file, "avatar");
+            if (file) void setPhoto(file, "avatar");
             event.currentTarget.value = "";
           }}
         />
