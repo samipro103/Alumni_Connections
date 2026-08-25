@@ -5,13 +5,9 @@ import {
   useRef,
   useState,
 } from "react";
-import {
-  Loader2,
-  RefreshCw,
-} from "lucide-react";
 
-const TRIGGER_DISTANCE = 74;
-const MAX_PULL = 112;
+const TRIGGER_DISTANCE = 78;
+const MAX_PULL = 116;
 
 function blockedTarget(
   target: EventTarget | null
@@ -38,6 +34,59 @@ function blockedTarget(
       ].join(",")
     )
   );
+}
+
+function brandStage(
+  progress: number
+) {
+  if (progress < 0.14) {
+    return "Alumni.";
+  }
+
+  if (progress < 0.28) {
+    return "lumni.";
+  }
+
+  if (progress < 0.42) {
+    return "umni.";
+  }
+
+  if (progress < 0.56) {
+    return "mni.";
+  }
+
+  if (progress < 0.70) {
+    return "ni.";
+  }
+
+  if (progress < 0.84) {
+    return "i.";
+  }
+
+  return ".";
+}
+
+function setShellOffset(
+  value: number,
+  animate = false
+) {
+  const shell =
+    document.getElementById(
+      "alumni-global-shell"
+    );
+
+  if (!shell) return;
+
+  shell.style.transition =
+    animate
+      ? "transform 220ms cubic-bezier(.22,.8,.24,1)"
+      : "none";
+
+  shell.style.transform =
+    `translate3d(0, ${Math.max(
+      0,
+      value
+    )}px, 0)`;
 }
 
 export default function GlobalPullToRefresh() {
@@ -84,21 +133,26 @@ export default function GlobalPullToRefresh() {
       body.style
         .overscrollBehaviorY;
 
-    /*
-      Desactiva el pull-to-refresh nativo
-      del navegador para usar solamente
-      la interacción visual de Alumni.
-    */
     html.style.overscrollBehaviorY =
       "none";
 
     body.style.overscrollBehaviorY =
       "none";
 
-    function reset() {
-      activeRef.current = false;
+    function reset(
+      animate = true
+    ) {
+      activeRef.current =
+        false;
+
       pullRef.current = 0;
+
       setPull(0);
+
+      setShellOffset(
+        0,
+        animate
+      );
     }
 
     function onTouchStart(
@@ -131,6 +185,11 @@ export default function GlobalPullToRefresh() {
 
       activeRef.current = true;
       pullRef.current = 0;
+
+      setShellOffset(
+        0,
+        false
+      );
     }
 
     function onTouchMove(
@@ -154,11 +213,6 @@ export default function GlobalPullToRefresh() {
         touch.clientX -
         startXRef.current;
 
-      /*
-        Si el gesto es horizontal,
-        no interferimos con carruseles,
-        historias o navegación.
-      */
       if (
         Math.abs(deltaX) >
         Math.abs(deltaY) * 0.8
@@ -178,20 +232,25 @@ export default function GlobalPullToRefresh() {
       event.preventDefault();
 
       /*
-        Resistencia progresiva:
-        se siente como una app nativa
-        y evita que el contenido "salte".
+        Resistencia:
+        el contenido sí baja, pero menos
+        que el movimiento del dedo.
       */
       const distance =
         Math.min(
           MAX_PULL,
-          deltaY * 0.48
+          deltaY * 0.5
         );
 
       pullRef.current =
         distance;
 
       setPull(distance);
+
+      setShellOffset(
+        distance,
+        false
+      );
     }
 
     function onTouchEnd() {
@@ -213,30 +272,33 @@ export default function GlobalPullToRefresh() {
 
         setRefreshing(true);
 
-        pullRef.current = 62;
-        setPull(62);
+        pullRef.current = 68;
+        setPull(68);
+
+        setShellOffset(
+          68,
+          true
+        );
 
         /*
-          Recarga real:
-          vuelve a consultar toda la
-          pantalla actual y sus providers.
+          Deja ver la animación del punto
+          antes de ejecutar la recarga real.
         */
         window.setTimeout(
           () => {
             window.location.reload();
           },
-          260
+          650
         );
 
         return;
       }
 
-      pullRef.current = 0;
-      setPull(0);
+      reset(true);
     }
 
     function onTouchCancel() {
-      reset();
+      reset(true);
     }
 
     window.addEventListener(
@@ -282,6 +344,11 @@ export default function GlobalPullToRefresh() {
       body.style.overscrollBehaviorY =
         previousBody;
 
+      setShellOffset(
+        0,
+        false
+      );
+
       window.removeEventListener(
         "touchstart",
         onTouchStart,
@@ -315,110 +382,121 @@ export default function GlobalPullToRefresh() {
         TRIGGER_DISTANCE
     );
 
-  const armed =
-    progress >= 1;
-
   const visible =
     refreshing ||
-    pull > 4;
+    pull > 3;
+
+  const stage =
+    brandStage(progress);
 
   return (
     <div
       aria-live="polite"
-      className={`pointer-events-none fixed left-1/2 z-[99990] flex -translate-x-1/2 items-center gap-2.5 transition-[opacity,transform] duration-150 ${
+      aria-hidden={
+        visible
+          ? undefined
+          : true
+      }
+      className={`pointer-events-none fixed inset-x-0 top-0 z-[40] flex justify-center overflow-hidden transition-opacity duration-150 ${
         visible
           ? "opacity-100"
           : "opacity-0"
       }`}
       style={{
-        top:
-          "max(8px, env(safe-area-inset-top))",
-        transform: `translate3d(-50%, ${
-          visible
-            ? Math.max(
-                0,
-                pull * 0.12
-              )
-            : -16
-        }px, 0)`,
+        height: `${Math.max(
+          0,
+          pull
+        )}px`,
+        paddingTop:
+          "max(10px, env(safe-area-inset-top))",
       }}
     >
-      <span className="relative flex h-8 w-8 items-center justify-center">
+      <div
+        className="flex min-h-12 items-center justify-center"
+        style={{
+          opacity:
+            Math.min(
+              1,
+              pull / 24
+            ),
+        }}
+      >
         {refreshing ? (
-          <Loader2
-            size={19}
-            className="animate-spin text-[var(--app-accent)]"
-          />
-        ) : (
-          <>
-            <svg
-              viewBox="0 0 36 36"
-              className="absolute inset-0 h-8 w-8 -rotate-90"
-              aria-hidden="true"
-            >
-              <circle
-                cx="18"
-                cy="18"
-                r="14"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                className="text-[var(--app-border)]"
-              />
-
-              <circle
-                cx="18"
-                cy="18"
-                r="14"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2.4"
-                strokeLinecap="round"
-                strokeDasharray="87.96"
-                strokeDashoffset={
-                  87.96 *
-                  (1 -
-                    progress)
-                }
-                className="text-[var(--app-accent)] transition-[stroke-dashoffset] duration-75"
-              />
-            </svg>
-
-            <RefreshCw
-              size={12}
-              className={`text-[var(--app-text)] transition-transform duration-150 ${
-                armed
-                  ? "rotate-180"
-                  : ""
-              }`}
-            />
-          </>
-        )}
-      </span>
-
-      <div className="min-w-0">
-        <p className="whitespace-nowrap text-[9px] font-black uppercase tracking-[0.16em] text-[var(--app-text)]">
-          {refreshing
-            ? "Actualizando Alumni"
-            : armed
-            ? "Suelta para actualizar"
-            : "Desliza para actualizar"}
-        </p>
-
-        <span className="mt-1 block h-px w-full overflow-hidden bg-[var(--app-border)]">
           <span
-            className="block h-full bg-[var(--app-accent)] transition-[width] duration-75"
+            className="alumni-refresh-dot-spinner"
+            aria-label="Actualizando Alumni"
+          >
+            <span className="alumni-refresh-dot-core" />
+          </span>
+        ) : (
+          <span
+            className="select-none whitespace-pre text-[17px] font-black tracking-[-0.045em] text-[var(--app-text)]"
             style={{
-              width: `${
-                refreshing
-                  ? 100
-                  : progress *
-                    100
-              }%`,
+              transform:
+                `translateY(${Math.max(
+                  0,
+                  8 -
+                    progress * 8
+                )}px)`,
+              opacity:
+                0.55 +
+                progress * 0.45,
             }}
-          />
-        </span>
+          >
+            {stage}
+          </span>
+        )}
       </div>
+
+      <style jsx>{`
+        .alumni-refresh-dot-spinner {
+          position: relative;
+          display: inline-flex;
+          width: 22px;
+          height: 22px;
+          align-items: center;
+          justify-content: center;
+          animation:
+            alumni-refresh-spin 0.78s linear infinite;
+        }
+
+        .alumni-refresh-dot-spinner::before {
+          content: "";
+          position: absolute;
+          inset: 1px;
+          border-radius: 999px;
+          border: 2px solid
+            var(--app-border);
+          border-top-color:
+            var(--app-accent);
+          border-right-color:
+            var(--app-accent);
+        }
+
+        .alumni-refresh-dot-core {
+          width: 4px;
+          height: 4px;
+          border-radius: 999px;
+          background:
+            var(--app-text);
+        }
+
+        @keyframes alumni-refresh-spin {
+          to {
+            transform:
+              rotate(360deg);
+          }
+        }
+
+        @media
+          (prefers-reduced-motion:
+            reduce) {
+          .alumni-refresh-dot-spinner {
+            animation-duration:
+              1.6s;
+          }
+        }
+      `}</style>
     </div>
   );
 }

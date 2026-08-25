@@ -22,9 +22,13 @@ export default function AppShell({
   immersiveMobile = false,
 }: Props) {
   return (
-    <div className={immersiveMobile ? "min-h-[100dvh] overflow-x-clip text-[var(--app-text)]" : "min-h-[100dvh] overflow-x-clip text-[var(--app-text)]"}>
+    <>
       <GlobalPullToRefresh />
 
+      <div
+        id="alumni-global-shell"
+        className={immersiveMobile ? "relative z-[41] min-h-[100dvh] overflow-x-clip bg-[var(--app-bg)] text-[var(--app-text)] will-change-transform" : "relative z-[41] min-h-[100dvh] overflow-x-clip bg-[var(--app-bg)] text-[var(--app-text)] will-change-transform"}
+      >
       <div className={immersiveMobile ? "hidden lg:block" : ""}>
         <TopBar />
       </div>
@@ -65,6 +69,7 @@ export default function AppShell({
           <MobileNav />
         </>
       )}
-    </div>
+      </div>
+    </>
   );
 }
