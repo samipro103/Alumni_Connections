@@ -88,7 +88,7 @@ export default function EventsPage() {
 
   return (
     <AppShell>
-      <div className="mx-auto w-full max-w-[920px]">
+      <div className="alumni-events-page mx-auto w-full max-w-[940px]">
         <div className="mb-6 pt-2">
           <h1 className="text-[30px] font-black tracking-[-0.04em]">
             Eventos
@@ -99,7 +99,7 @@ export default function EventsPage() {
         </div>
 
         {nextEvent && filter !== "past" && (
-          <article className="mb-6 overflow-hidden rounded-[28px] border border-white/[0.07] bg-[#101318]/95">
+          <article className="alumni-event-hero mb-6 overflow-hidden rounded-[28px] border border-white/[0.07] bg-[#101318]/95">
             <div className="relative min-h-[250px]">
               {nextEvent.image_url ? (
                 <img
@@ -164,7 +164,7 @@ export default function EventsPage() {
           </article>
         )}
 
-        <div className="mb-5 flex gap-2 border-b border-white/[0.07] pb-3">
+        <div className="alumni-section-tabs mb-5 flex gap-2 border-b border-white/[0.07] pb-3">
           {[
             ["upcoming", "Próximos"],
             ["all", "Todos"],
@@ -189,7 +189,7 @@ export default function EventsPage() {
             Cargando eventos...
           </div>
         ) : filteredEvents.length === 0 ? (
-          <div className="rounded-[24px] border border-dashed border-white/[0.09] px-6 py-16 text-center">
+          <div className="alumni-empty-state rounded-[24px] border border-dashed border-white/[0.09] px-6 py-16 text-center">
             <Calendar size={26} className="mx-auto text-zinc-700" />
             <p className="mt-4 font-bold text-zinc-300">
               No hay eventos en esta sección
@@ -199,14 +199,14 @@ export default function EventsPage() {
             </p>
           </div>
         ) : (
-          <div className="space-y-3">
+          <div className="alumni-event-list space-y-3">
             {filteredEvents.map((event: any) => {
               const date = new Date(event.event_date);
 
               return (
                 <article
                   key={event.id}
-                  className="group flex flex-col gap-4 rounded-[24px] border border-white/[0.07] bg-[#101318]/95 p-4 transition hover:border-[#6d7cff]/20 sm:flex-row sm:items-center sm:p-5"
+                  className="alumni-event-row group flex flex-col gap-4 rounded-[24px] border border-white/[0.07] bg-[#101318]/95 p-4 transition hover:border-[#6d7cff]/20 sm:flex-row sm:items-center sm:p-5"
                 >
                   <div className="flex h-16 w-16 shrink-0 flex-col items-center justify-center rounded-2xl bg-[#6d7cff]/10 text-[#9ba5ff]">
                     <span className="text-[10px] font-black uppercase">
@@ -246,7 +246,7 @@ export default function EventsPage() {
 
                   <button
                     onClick={() => shareEvent(event)}
-                    className="flex h-10 shrink-0 items-center justify-center gap-2 rounded-xl border border-white/[0.07] bg-white/[0.025] px-3 text-xs font-bold text-zinc-600 transition hover:bg-white/[0.05] hover:text-zinc-300"
+                    className="alumni-event-share flex h-10 shrink-0 items-center justify-center gap-2 rounded-xl border border-white/[0.07] bg-white/[0.025] px-3 text-xs font-bold text-zinc-600 transition hover:bg-white/[0.05] hover:text-zinc-300"
                   >
                     <Share2 size={15} />
                     Compartir

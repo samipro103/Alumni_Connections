@@ -486,7 +486,7 @@ function FeedContent() {
       if (navigator.share) {
         await navigator.share({
           title: `Publicación de @${post.profiles?.username || "Alumni"}`,
-          text: post.content || "Mira esta publicación en AlumniConnections",
+          text: post.content || "Mira esta publicación en Alumni.",
           url,
         });
       } else {
@@ -512,7 +512,7 @@ function FeedContent() {
 
   return (
     <AppShell>
-      <div className="mx-auto w-full max-w-[760px]">
+      <div className="alumni-feed-page mx-auto w-full max-w-[780px]">
         <StoriesRail focusStoryId={searchParams.get("story")} />
 
         <PostComposer
@@ -523,7 +523,7 @@ function FeedContent() {
           createPost={createPost}
         />
 
-        <div className="mb-4 flex items-center border-b border-white/[0.07]">
+        <div className="alumni-section-tabs alumni-feed-tabs mb-4 flex items-center border-b border-white/[0.07]">
           {(["for-you", "following"] as FeedMode[]).map((mode) => (
             <button
               key={mode}
@@ -542,7 +542,7 @@ function FeedContent() {
         {loading ? (
           <div className="py-16 text-center text-sm text-zinc-600">Cargando publicaciones...</div>
         ) : visiblePosts.length === 0 ? (
-          <div className="rounded-2xl border border-dashed border-white/[0.09] px-6 py-12 text-center">
+          <div className="alumni-empty-state rounded-2xl border border-dashed border-white/[0.09] px-6 py-12 text-center">
             <p className="font-semibold text-zinc-300">
               {feedMode === "following"
                 ? "Todavía no hay publicaciones de las personas que sigues."
@@ -771,7 +771,7 @@ function FeedContent() {
       {selectedImage && (
         <div
           onClick={() => setSelectedImage(null)}
-          className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/90 p-4 sm:p-8"
+          className="alumni-media-viewer fixed inset-0 z-[9999] flex items-center justify-center bg-black/90 p-4 sm:p-8"
         >
           <button
             onClick={() => setSelectedImage(null)}

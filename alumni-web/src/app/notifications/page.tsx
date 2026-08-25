@@ -328,17 +328,17 @@ export default function NotificationsPage() {
 
   return (
     <AppShell>
-      <div className="mx-auto w-full max-w-[780px]">
+      <div className="alumni-notifications-page mx-auto w-full max-w-[800px]">
         <div className="mb-6 pt-2">
           <h1 className="text-[30px] font-black tracking-[-0.04em]">
             Notificaciones
           </h1>
           <p className="mt-1 text-sm text-zinc-600">
-            Likes, comentarios y nuevas conexiones en un solo lugar.
+            Me gusta, comentarios y nuevas conexiones en un solo lugar.
           </p>
         </div>
 
-        <div className="mb-5 flex gap-2 border-b border-white/[0.07] pb-3">
+        <div className="alumni-section-tabs mb-5 flex gap-2 border-b border-white/[0.07] pb-3">
           {[
             ["all", "Todas"],
             ["connections", "Conexiones"],
@@ -363,7 +363,7 @@ export default function NotificationsPage() {
             Cargando actividad...
           </div>
         ) : filtered.length === 0 ? (
-          <div className="rounded-[24px] border border-dashed border-white/[0.09] px-6 py-16 text-center">
+          <div className="alumni-empty-state rounded-[24px] border border-dashed border-white/[0.09] px-6 py-16 text-center">
             <Bell size={26} className="mx-auto text-zinc-700" />
             <p className="mt-4 font-bold text-zinc-300">
               Todo está tranquilo por aquí
@@ -383,19 +383,22 @@ export default function NotificationsPage() {
                     {label}
                   </p>
 
-                  <div className="overflow-hidden rounded-[24px] border border-white/[0.07] bg-[#101318]/95">
+                  <div className="alumni-open-list overflow-hidden rounded-[24px] border border-white/[0.07] bg-[#101318]/95">
                     <div className="divide-y divide-white/[0.06]">
                       {groups.map((group) => {
                         const meta = notificationMeta(group);
                         const Icon = meta.icon;
                         const visibleActors = group.actors.slice(0, 3);
+                        const unread = group.items.some(
+                          (item: any) => !item.read_at
+                        );
 
                         return (
                           <button
                             key={group.key}
                             type="button"
                             onClick={() => openNotification(group)}
-                            className="flex w-full gap-4 px-4 py-4 text-left transition hover:bg-white/[0.035] active:bg-white/[0.055] sm:px-5"
+                            className={`alumni-notification-row flex w-full gap-4 px-4 py-4 text-left transition hover:bg-white/[0.035] active:bg-white/[0.055] sm:px-5 ${unread ? "alumni-notification-unread" : ""}`}
                           >
                             <div className="relative h-12 w-[58px] shrink-0">
                               {visibleActors.map((actor, index) => (

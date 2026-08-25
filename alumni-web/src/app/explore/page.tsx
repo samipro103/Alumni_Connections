@@ -97,7 +97,7 @@ function ExploreContent() {
 
   return (
     <AppShell>
-      <div className="mx-auto w-full max-w-[920px]">
+      <div className="alumni-explore-page mx-auto w-full max-w-[940px]">
         <div className="mb-6 pt-2">
           <h1 className="text-[30px] font-black tracking-[-0.04em]">Explorar</h1>
           <p className="mt-1 text-sm text-zinc-600">
@@ -105,18 +105,18 @@ function ExploreContent() {
           </p>
         </div>
 
-        <div className="flex h-12 items-center rounded-2xl border border-white/[0.07] bg-white/[0.035] px-4 focus-within:border-[#6d7cff]/40">
+        <div className="alumni-search-line flex h-12 items-center rounded-2xl border border-white/[0.07] bg-white/[0.035] px-4 focus-within:border-[#6d7cff]/40">
           <Search size={18} className="text-zinc-600" />
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Buscar personas, carrera o universidad..."
-            className="h-full min-w-0 flex-1 bg-transparent px-3 text-sm text-zinc-200 outline-none placeholder:text-zinc-700"
+            className="alumni-mobile-input h-full min-w-0 flex-1 bg-transparent px-3 text-sm text-zinc-200 outline-none placeholder:text-zinc-700"
           />
           <span className="text-[11px] font-bold text-zinc-700">{filteredUsers.length}</span>
         </div>
 
-        <div className="scrollbar-thin mt-3 flex gap-2 overflow-x-auto pb-1">
+        <div className="alumni-filter-strip scrollbar-thin mt-3 flex gap-2 overflow-x-auto pb-1">
           {filters.map(([id, label, icon]) => (
             <button
               key={id}
@@ -140,9 +140,9 @@ function ExploreContent() {
               Según universidad, carrera, conexiones y actividad.
             </p>
 
-            <div className="mt-4 grid gap-3 sm:grid-cols-2">
+            <div className="alumni-recommended-grid mt-4 grid gap-3 sm:grid-cols-2">
               {recommended.slice(0, 6).map((person) => (
-                <div key={person.id} className="flex items-center gap-3 rounded-[22px] border border-white/[0.07] bg-[#101318]/95 p-4">
+                <div key={person.id} className="alumni-profile-suggestion flex items-center gap-3 rounded-[22px] border border-white/[0.07] bg-[#101318]/95 p-4">
                   <Link href={`/u/${person.username}`} className="flex min-w-0 flex-1 items-center gap-3">
                     <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[#1a1f29] text-sm font-bold ring-1 ring-white/10">
                       {person.avatar_url ? (
@@ -174,24 +174,24 @@ function ExploreContent() {
         <section className="mt-7">
           <h2 className="text-lg font-black tracking-[-0.025em]">Comunidad</h2>
           <p className="mt-1 text-xs text-zinc-700">
-            {search ? `Resultados para “${search}”` : "Explora todos los perfiles de AlumniConnections."}
+            {search ? `Resultados para “${search}”` : "Explora todos los perfiles de Alumni."}
           </p>
 
           {loading ? (
             <div className="py-16 text-center text-sm text-zinc-600">Buscando personas...</div>
           ) : filteredUsers.length === 0 ? (
-            <div className="mt-4 rounded-[24px] border border-dashed border-white/[0.09] px-6 py-16 text-center">
+            <div className="alumni-empty-state mt-4 rounded-[24px] border border-dashed border-white/[0.09] px-6 py-16 text-center">
               <Users size={25} className="mx-auto text-zinc-700" />
               <p className="mt-4 font-bold text-zinc-300">No encontramos coincidencias</p>
             </div>
           ) : (
-            <div className="mt-4 overflow-hidden rounded-[24px] border border-white/[0.07] bg-[#101318]/95">
+            <div className="alumni-open-list mt-4 overflow-hidden rounded-[24px] border border-white/[0.07] bg-[#101318]/95">
               <div className="divide-y divide-white/[0.06]">
                 {filteredUsers.map((person: any) => (
                   <Link
                     key={person.id}
                     href={`/u/${person.username}`}
-                    className="flex gap-4 px-4 py-5 transition hover:bg-white/[0.035] sm:px-5"
+                    className="alumni-directory-row flex gap-4 px-4 py-5 transition hover:bg-white/[0.035] sm:px-5"
                   >
                     <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[#1a1f29] text-sm font-bold ring-1 ring-white/10">
                       {person.avatar_url ? (

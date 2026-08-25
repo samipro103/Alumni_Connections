@@ -138,6 +138,33 @@ export default function SettingsPage() {
   }, []);
 
   useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    function syncMobileSectionFromUrl() {
+      if (window.innerWidth >= 1024) return;
+
+      const section =
+        new URLSearchParams(window.location.search).get("section");
+
+      if (
+        section &&
+        SETTINGS_ITEMS.some((item) => item.id === section)
+      ) {
+        setActiveSection(section as SettingsSectionId);
+        setMobileSectionOpen(true);
+      } else {
+        setMobileSectionOpen(false);
+      }
+    }
+
+    window.addEventListener("popstate", syncMobileSectionFromUrl);
+
+    return () => {
+      window.removeEventListener("popstate", syncMobileSectionFromUrl);
+    };
+  }, []);
+
+  useEffect(() => {
     return () => {
       if (avatarPreview.startsWith("blob:")) {
         URL.revokeObjectURL(avatarPreview);
@@ -286,18 +313,30 @@ export default function SettingsPage() {
       setMobileSectionOpen(true);
       const url = new URL(window.location.href);
       url.searchParams.set("section", id);
-      window.history.replaceState({}, "", url.pathname + url.search);
+      window.history.pushState(
+        { alumniSettings: true, section: id },
+        "",
+        url.pathname + url.search
+      );
     }
   }
 
   function closeMobileSettingsSection() {
+    if (typeof window === "undefined") {
+      setMobileSectionOpen(false);
+      return;
+    }
+
+    if (window.history.state?.alumniSettings) {
+      window.history.back();
+      return;
+    }
+
     setMobileSectionOpen(false);
 
-    if (typeof window !== "undefined") {
-      const url = new URL(window.location.href);
-      url.searchParams.delete("section");
-      window.history.replaceState({}, "", url.pathname + url.search);
-    }
+    const url = new URL(window.location.href);
+    url.searchParams.delete("section");
+    window.history.replaceState({}, "", url.pathname + url.search);
   }
 
   async function logout() {
@@ -325,7 +364,7 @@ export default function SettingsPage() {
 
   return (
     <AppShell>
-      <div className="mx-auto w-full max-w-[1050px]">
+      <div className="alumni-settings-page mx-auto w-full max-w-[1080px]">
         <div className={`${mobileSectionOpen ? "hidden lg:block" : "block"} mb-6 pt-2`}>
           <h1 className="text-[30px] font-black tracking-[-0.04em]">
             Configuración
@@ -335,8 +374,8 @@ export default function SettingsPage() {
           </p>
         </div>
 
-        <div className="grid gap-5 lg:grid-cols-[280px_minmax(0,1fr)]">
-          <aside className={`${mobileSectionOpen ? "hidden lg:block" : "block"} h-fit lg:sticky lg:top-[88px] lg:overflow-hidden lg:rounded-[24px] lg:border lg:border-white/[0.07] lg:bg-[#101318]/95`}>
+        <div className="alumni-settings-layout grid gap-5 lg:grid-cols-[280px_minmax(0,1fr)]">
+          <aside className={`alumni-settings-nav ${mobileSectionOpen ? "hidden lg:block" : "block"} h-fit lg:sticky lg:top-[88px] lg:overflow-hidden lg:rounded-[24px] lg:border lg:border-white/[0.07] lg:bg-[#101318]/95`}>
             <div className="border-b border-white/[0.06] px-1 py-4 lg:px-5">
               <p className="text-[11px] font-black uppercase tracking-[0.14em] text-zinc-700">
                 Ajustes
@@ -399,7 +438,7 @@ export default function SettingsPage() {
             </nav>
           </aside>
 
-          <section className={`${mobileSectionOpen ? "block" : "hidden lg:block"} min-w-0`}>
+          <section className={`alumni-settings-detail ${mobileSectionOpen ? "block" : "hidden lg:block"} min-w-0`}>
             <div className="mb-4 flex items-start justify-between gap-4">
               <button
                 type="button"
@@ -489,7 +528,7 @@ function Panel({
   children: React.ReactNode;
 }) {
   return (
-    <div className="rounded-[24px] border border-white/[0.07] bg-[#101318]/95 p-5 sm:p-6">
+    <div className="alumni-settings-panel rounded-[24px] border border-white/[0.07] bg-[#101318]/95 p-5 sm:p-6">
       {children}
     </div>
   );

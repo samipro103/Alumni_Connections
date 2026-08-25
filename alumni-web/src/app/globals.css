@@ -1167,14 +1167,6 @@ a,
     font-size: 16px;
   }
 
-  button,
-  a,
-  input,
-  textarea,
-  select {
-    min-touch-target-size: 44px;
-  }
-
   body {
     overscroll-behavior-y: none;
   }
@@ -1200,5 +1192,398 @@ video {
 @media (prefers-reduced-motion: reduce) {
   .alumni-brand-dot-animated {
     animation: none !important;
+  }
+}
+
+/* ============================================================
+   ALUMNI v1.0.8 — PULIDO GLOBAL PRO
+   ============================================================ */
+
+.alumni-profile-page,
+.alumni-feed-page,
+.alumni-explore-page,
+.alumni-notifications-page,
+.alumni-events-page,
+.alumni-settings-page {
+  animation: alumniPageIn .28s ease both;
+}
+
+@keyframes alumniPageIn {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.alumni-section-tabs {
+  scrollbar-width: none;
+}
+
+.alumni-section-tabs::-webkit-scrollbar {
+  display: none;
+}
+
+.alumni-section-tabs > button {
+  min-height: 42px;
+}
+
+.alumni-empty-state {
+  background:
+    radial-gradient(
+      circle at 50% 0%,
+      color-mix(in srgb, var(--app-accent) 6%, transparent),
+      transparent 58%
+    );
+}
+
+/* ---------------- PROFILE ---------------- */
+
+.alumni-profile-hero {
+  overflow: visible !important;
+  background:
+    linear-gradient(
+      to bottom,
+      color-mix(in srgb, var(--app-surface) 98%, transparent),
+      var(--app-surface)
+    ) !important;
+  box-shadow:
+    0 22px 60px
+      color-mix(in srgb, var(--app-shadow) 54%, transparent);
+}
+
+.alumni-profile-banner {
+  position: relative;
+}
+
+.alumni-profile-banner::after {
+  content: "";
+  position: absolute;
+  inset: auto 0 0;
+  height: 72px;
+  pointer-events: none;
+  background:
+    linear-gradient(
+      to bottom,
+      transparent,
+      color-mix(in srgb, var(--app-surface) 76%, transparent)
+    );
+}
+
+.alumni-profile-avatar {
+  position: relative;
+  z-index: 4;
+  box-shadow:
+    0 0 0 5px var(--app-surface),
+    0 14px 38px var(--app-shadow) !important;
+}
+
+.alumni-profile-stats {
+  gap: clamp(20px, 6vw, 46px) !important;
+}
+
+.alumni-profile-stats > div p:first-child {
+  letter-spacing: -.03em;
+}
+
+.alumni-open-info {
+  background:
+    color-mix(
+      in srgb,
+      var(--app-surface) 76%,
+      transparent
+    ) !important;
+  box-shadow: none !important;
+}
+
+/* ---------------- FEED ---------------- */
+
+.alumni-feed-tabs {
+  position: sticky;
+  top: 68px;
+  z-index: 24;
+  margin-inline: -6px;
+  padding-inline: 6px;
+  padding-top: 8px;
+  background:
+    color-mix(
+      in srgb,
+      var(--app-bg) 91%,
+      transparent
+    );
+  backdrop-filter: blur(18px);
+}
+
+.alumni-media-viewer {
+  overscroll-behavior: none;
+  backdrop-filter: blur(10px);
+}
+
+/* ---------------- EXPLORE ---------------- */
+
+.alumni-search-line {
+  border-radius: 18px !important;
+  background:
+    color-mix(
+      in srgb,
+      var(--app-surface-2) 58%,
+      transparent
+    ) !important;
+  box-shadow:
+    inset 0 1px 0
+      color-mix(in srgb, var(--app-text) 2%, transparent);
+}
+
+.alumni-search-line:focus-within {
+  box-shadow:
+    0 0 0 3px
+      color-mix(in srgb, var(--app-accent) 7%, transparent);
+}
+
+.alumni-filter-strip {
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x proximity;
+}
+
+.alumni-filter-strip > button {
+  scroll-snap-align: start;
+}
+
+.alumni-profile-suggestion {
+  box-shadow:
+    0 10px 28px
+      color-mix(in srgb, var(--app-shadow) 38%, transparent);
+}
+
+.alumni-profile-suggestion:hover {
+  border-color:
+    color-mix(
+      in srgb,
+      var(--app-accent) 18%,
+      var(--app-border)
+    ) !important;
+}
+
+.alumni-open-list {
+  border-inline: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.alumni-directory-row {
+  border-radius: 18px;
+}
+
+.alumni-directory-row:hover {
+  background:
+    color-mix(
+      in srgb,
+      var(--app-soft-strong) 74%,
+      transparent
+    ) !important;
+}
+
+/* ---------------- NOTIFICATIONS ---------------- */
+
+.alumni-notification-row {
+  position: relative;
+  border-radius: 18px;
+}
+
+.alumni-notification-unread {
+  background:
+    linear-gradient(
+      90deg,
+      color-mix(in srgb, var(--app-accent) 8%, transparent),
+      transparent 72%
+    );
+}
+
+.alumni-notification-unread::before {
+  content: "";
+  position: absolute;
+  left: 4px;
+  top: 50%;
+  width: 5px;
+  height: 5px;
+  border-radius: 999px;
+  background: var(--app-accent);
+  transform: translateY(-50%);
+}
+
+/* ---------------- EVENTS ---------------- */
+
+.alumni-event-hero {
+  box-shadow:
+    0 24px 70px
+      color-mix(in srgb, var(--app-shadow) 58%, transparent);
+}
+
+.alumni-event-row {
+  background:
+    color-mix(
+      in srgb,
+      var(--app-surface) 74%,
+      transparent
+    ) !important;
+  box-shadow:
+    0 10px 28px
+      color-mix(in srgb, var(--app-shadow) 30%, transparent);
+}
+
+.alumni-event-row:hover {
+  transform: translateY(-1px);
+  box-shadow:
+    0 15px 36px
+      color-mix(in srgb, var(--app-shadow) 44%, transparent);
+}
+
+.alumni-event-share {
+  min-width: 104px;
+}
+
+/* ---------------- SETTINGS ---------------- */
+
+.alumni-settings-panel {
+  background:
+    color-mix(
+      in srgb,
+      var(--app-surface) 84%,
+      transparent
+    ) !important;
+  box-shadow:
+    0 12px 34px
+      color-mix(in srgb, var(--app-shadow) 30%, transparent);
+}
+
+.alumni-settings-detail {
+  min-height: 420px;
+}
+
+/* ---------------- QUALITY / MOBILE ---------------- */
+
+@media (max-width: 1023px) {
+  .alumni-settings-nav {
+    border-top: 1px solid var(--app-border);
+  }
+
+  .alumni-settings-detail {
+    min-height: calc(
+      100dvh -
+      84px -
+      env(safe-area-inset-bottom)
+    );
+  }
+}
+
+@media (max-width: 767px) {
+  .alumni-profile-hero {
+    margin-inline: -4px;
+    border-radius: 22px !important;
+  }
+
+  .alumni-profile-banner {
+    border-radius: 21px 21px 0 0 !important;
+  }
+
+  .alumni-profile-body {
+    padding-inline: 16px !important;
+  }
+
+  .alumni-profile-identity {
+    gap: 12px !important;
+  }
+
+  .alumni-profile-avatar {
+    width: 84px !important;
+    height: 84px !important;
+    margin-top: -48px;
+  }
+
+  .alumni-profile-stats {
+    justify-content: space-between;
+    gap: 12px !important;
+  }
+
+  .alumni-feed-tabs {
+    top: 68px;
+  }
+
+  .alumni-recommended-grid {
+    grid-auto-flow: column;
+    grid-auto-columns: minmax(280px, 84vw);
+    grid-template-columns: none !important;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scroll-snap-type: x mandatory;
+    padding-bottom: 4px;
+    scrollbar-width: none;
+  }
+
+  .alumni-recommended-grid::-webkit-scrollbar {
+    display: none;
+  }
+
+  .alumni-profile-suggestion {
+    scroll-snap-align: start;
+  }
+
+  .alumni-directory-row {
+    padding-inline: 4px !important;
+  }
+
+  .alumni-event-row {
+    border-inline: 0 !important;
+    border-radius: 18px !important;
+    box-shadow: none;
+  }
+
+  .alumni-event-share {
+    align-self: stretch;
+  }
+
+  .alumni-notification-row {
+    padding-inline: 6px !important;
+  }
+
+  .alumni-settings-panel {
+    margin-inline: -4px;
+    border-inline: 0 !important;
+    border-radius: 18px !important;
+    box-shadow: none;
+  }
+
+  .alumni-settings-detail > div:first-child {
+    position: sticky;
+    top: 0;
+    z-index: 25;
+    padding-block: 10px;
+    background:
+      color-mix(
+        in srgb,
+        var(--app-bg) 92%,
+        transparent
+      );
+    backdrop-filter: blur(18px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .alumni-profile-page,
+  .alumni-feed-page,
+  .alumni-explore-page,
+  .alumni-notifications-page,
+  .alumni-events-page,
+  .alumni-settings-page {
+    animation: none !important;
+  }
+
+  .alumni-event-row {
+    transition: none !important;
   }
 }
