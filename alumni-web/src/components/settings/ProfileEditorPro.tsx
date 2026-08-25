@@ -257,9 +257,10 @@ export default function ProfileEditorPro({
           <ArrowLeft size={19} />
         </button>
 
-        <h2 className="min-w-0 flex-1 text-lg font-black tracking-[-0.03em] text-[var(--app-text)]">
-          Editar perfil
-        </h2>
+        <div className="alumni-profile-editor-top-copy">
+          <p>Editar perfil</p>
+          <p>Actualiza tu identidad, trayectoria y ubicación en Alumni.</p>
+        </div>
 
         <button
           type="button"
@@ -296,6 +297,7 @@ export default function ProfileEditorPro({
           }}
         />
 
+        <div className="alumni-profile-editor-banner">
         <button
           type="button"
           onClick={() => bannerInput.current?.click()}
@@ -312,11 +314,13 @@ export default function ProfileEditorPro({
             Cambiar portada
           </span>
         </button>
+        </div>
 
-        <button
+        <div className="alumni-profile-editor-photo-row">
+          <button
           type="button"
           onClick={() => avatarInput.current?.click()}
-          className="relative -mt-12 ml-5 flex h-24 w-24 items-center justify-center overflow-hidden rounded-full border-[5px] border-[var(--app-bg)] bg-[var(--app-soft-strong)] text-xl font-black text-[var(--app-text)] sm:ml-7 sm:h-28 sm:w-28"
+          className="alumni-profile-editor-avatar flex items-center justify-center overflow-hidden rounded-full bg-[var(--app-soft-strong)] text-xl font-black text-[var(--app-text)]"
         >
           {avatarPreview ? (
             <img src={avatarPreview} alt="" className="h-full w-full object-cover" />
@@ -326,78 +330,140 @@ export default function ProfileEditorPro({
           <span className="absolute bottom-0 right-0 flex h-8 w-8 items-center justify-center rounded-full bg-[var(--app-accent)] text-[var(--app-on-accent)] ring-4 ring-[var(--app-bg)]">
             <Camera size={13} />
           </span>
-        </button>
+          </button>
+
+          <div className="alumni-profile-editor-photo-copy">
+            <strong>Foto de perfil</strong>
+            <span>
+              Esta imagen representa tu identidad en publicaciones, comentarios y conexiones.
+            </span>
+          </div>
+        </div>
       </div>
 
       <div className="alumni-profile-editor-fields">
-        <TextRow label="Nombre" value={profile.full_name || ""} onChange={(v) => update("full_name", v)} />
-        <TextRow label="Usuario" value={profile.username || ""} onChange={(v) => update("username", v)} prefix="@" />
-        <TextAreaRow label="Biografía" value={profile.bio || ""} onChange={(v) => update("bio", v)} />
+        <section className="alumni-editor-section">
+          <div className="alumni-editor-section-head">
+            <p>Identidad</p>
+            <p>
+              La información principal que otras personas verán al encontrarte en Alumni.
+            </p>
+          </div>
 
-        <PickerRow
-          icon={<GraduationCap size={17} />}
-          label="Institución educativa"
-          value={institution?.name || ""}
-          logo={institution?.logo_url}
-          brandKind="university"
-          onClick={() => setPicker("institution")}
-        />
+          <div className="alumni-editor-grid-2">
+            <TextRow
+              label="Nombre"
+              value={profile.full_name || ""}
+              onChange={(v) => update("full_name", v)}
+            />
+            <TextRow
+              label="Usuario"
+              value={profile.username || ""}
+              onChange={(v) => update("username", v)}
+              prefix="@"
+            />
+          </div>
 
-        <PickerRow
-          icon={<Sparkles size={17} />}
-          label="Programa / comunidad"
-          value={program?.name || ""}
-          logo={program?.logo_url}
-          brandKind="program"
-          onClick={() => setPicker("program")}
-          optional
-        />
-
-        {careersForUniversity(institution?.name).length > 0 ? (
-          <PickerRow
-            icon={<GraduationCap size={17} />}
-            label="Carrera / especialidad"
-            value={profile.career || ""}
-            onClick={() => setPicker("career")}
+          <TextAreaRow
+            label="Biografía"
+            value={profile.bio || ""}
+            onChange={(v) => update("bio", v)}
           />
-        ) : (
-          <TextRow
-            label="Carrera / especialidad"
-            value={profile.career || ""}
-            onChange={(v) => update("career", v)}
-          />
-        )}
-        <TextRow label="Ciudad" value={profile.city || ""} onChange={(v) => update("city", v)} />
+        </section>
 
-        <PickerRow
-          icon={<MapPin size={17} />}
-          label="País de residencia"
-          value={residence ? `${flagEmoji(residence.code)} ${residence.name}` : ""}
-          onClick={() => setPicker("residence")}
-        />
+        <section className="alumni-editor-section">
+          <div className="alumni-editor-section-head">
+            <p>Trayectoria académica</p>
+            <p>
+              Selecciona tu institución, carrera y las comunidades académicas de las que formas parte.
+            </p>
+          </div>
 
-        <PickerRow
-          icon={<Flag size={17} />}
-          label="Nacionalidad"
-          value={nationality1 ? `${flagEmoji(nationality1.code)} ${nationality1.name}` : ""}
-          onClick={() => setPicker("nationality1")}
-        />
+          <div className="alumni-editor-grid-2">
+            <PickerRow
+              icon={<GraduationCap size={17} />}
+              label="Institución educativa"
+              value={institution?.name || ""}
+              logo={institution?.logo_url}
+              brandKind="university"
+              onClick={() => setPicker("institution")}
+            />
 
-        <PickerRow
-          icon={<Flag size={17} />}
-          label="Segunda nacionalidad"
-          value={nationality2 ? `${flagEmoji(nationality2.code)} ${nationality2.name}` : ""}
-          onClick={() => setPicker("nationality2")}
-          optional
-          onClear={
-            nationality2
-              ? () => {
-                  update("nationality_secondary_code", null);
-                  update("nationality_secondary_name", null);
-                }
-              : undefined
-          }
-        />
+            <PickerRow
+              icon={<Sparkles size={17} />}
+              label="Programa / comunidad"
+              value={program?.name || ""}
+              logo={program?.logo_url}
+              brandKind="program"
+              onClick={() => setPicker("program")}
+              optional
+            />
+          </div>
+
+          {careersForUniversity(institution?.name).length > 0 ? (
+            <PickerRow
+              icon={<GraduationCap size={17} />}
+              label="Carrera / especialidad"
+              value={profile.career || ""}
+              onClick={() => setPicker("career")}
+            />
+          ) : (
+            <TextRow
+              label="Carrera / especialidad"
+              value={profile.career || ""}
+              onChange={(v) => update("career", v)}
+            />
+          )}
+        </section>
+
+        <section className="alumni-editor-section">
+          <div className="alumni-editor-section-head">
+            <p>Ubicación e identidad</p>
+            <p>
+              Estos datos ayudan a conectar con personas y comunidades cercanas a tu contexto.
+            </p>
+          </div>
+
+          <div className="alumni-editor-grid-2">
+            <TextRow
+              label="Ciudad"
+              value={profile.city || ""}
+              onChange={(v) => update("city", v)}
+            />
+
+            <PickerRow
+              icon={<MapPin size={17} />}
+              label="País de residencia"
+              value={residence ? `${flagEmoji(residence.code)} ${residence.name}` : ""}
+              onClick={() => setPicker("residence")}
+            />
+          </div>
+
+          <div className="alumni-editor-grid-2">
+            <PickerRow
+              icon={<Flag size={17} />}
+              label="Nacionalidad"
+              value={nationality1 ? `${flagEmoji(nationality1.code)} ${nationality1.name}` : ""}
+              onClick={() => setPicker("nationality1")}
+            />
+
+            <PickerRow
+              icon={<Flag size={17} />}
+              label="Segunda nacionalidad"
+              value={nationality2 ? `${flagEmoji(nationality2.code)} ${nationality2.name}` : ""}
+              onClick={() => setPicker("nationality2")}
+              optional
+              onClear={
+                nationality2
+                  ? () => {
+                      update("nationality_secondary_code", null);
+                      update("nationality_secondary_name", null);
+                    }
+                  : undefined
+              }
+            />
+          </div>
+        </section>
       </div>
 
       {picker === "institution" && (

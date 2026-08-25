@@ -2032,3 +2032,221 @@ html[data-theme="executive"] .alumni-original-logo-image {
   }
 }
 
+
+/* ================================================================
+   ALUMNI 1.0.15 — Editor de perfil premium
+   ================================================================ */
+
+.alumni-settings-page.is-profile-editing {
+  max-width: 980px !important;
+}
+
+.alumni-settings-page.is-profile-editing .alumni-settings-layout {
+  display: block !important;
+}
+
+.alumni-settings-page.is-profile-editing .alumni-settings-detail {
+  width: 100%;
+  max-width: none;
+}
+
+.alumni-profile-editor {
+  width: 100%;
+  max-width: 920px;
+  margin: 0 auto;
+}
+
+.alumni-profile-editor-top {
+  position: sticky;
+  top: 0;
+  z-index: 25;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 0 14px;
+  margin: 0;
+  background: color-mix(in srgb, var(--app-bg) 88%, transparent);
+  backdrop-filter: blur(22px);
+  border-bottom: 1px solid var(--app-border);
+}
+
+.alumni-profile-editor-top-copy {
+  min-width: 0;
+  flex: 1;
+}
+
+.alumni-profile-editor-top-copy p:first-child {
+  font-size: 18px;
+  line-height: 1.2;
+  font-weight: 900;
+  letter-spacing: -.035em;
+  color: var(--app-text);
+}
+
+.alumni-profile-editor-top-copy p:last-child {
+  margin-top: 3px;
+  font-size: 10px;
+  line-height: 1.4;
+  font-weight: 700;
+  color: var(--app-muted-2);
+}
+
+.alumni-profile-editor-media {
+  margin-top: 24px;
+  overflow: visible !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
+
+.alumni-profile-editor-banner {
+  overflow: hidden;
+  border-radius: 26px;
+  box-shadow:
+    0 0 0 1px var(--app-border),
+    0 20px 60px color-mix(in srgb, var(--app-shadow) 58%, transparent);
+}
+
+.alumni-profile-editor-photo-row {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 18px 4px 0;
+}
+
+.alumni-profile-editor-avatar {
+  position: relative;
+  margin: 0 !important;
+  width: 92px;
+  height: 92px;
+  flex: 0 0 92px;
+  border: 1px solid var(--app-border) !important;
+  box-shadow: 0 10px 28px color-mix(in srgb, var(--app-shadow) 62%, transparent);
+}
+
+.alumni-profile-editor-photo-copy {
+  min-width: 0;
+}
+
+.alumni-profile-editor-photo-copy strong {
+  display: block;
+  font-size: 13px;
+  color: var(--app-text);
+}
+
+.alumni-profile-editor-photo-copy span {
+  display: block;
+  margin-top: 4px;
+  max-width: 420px;
+  font-size: 11px;
+  line-height: 1.6;
+  color: var(--app-muted-2);
+}
+
+.alumni-profile-editor-fields {
+  margin-top: 34px !important;
+}
+
+.alumni-editor-section {
+  padding: 24px 0;
+  border-top: 1px solid var(--app-border);
+}
+
+.alumni-editor-section:first-child {
+  border-top: 0;
+  padding-top: 0;
+}
+
+.alumni-editor-section-head {
+  margin-bottom: 9px;
+}
+
+.alumni-editor-section-head p:first-child {
+  font-size: 9px;
+  font-weight: 900;
+  letter-spacing: .19em;
+  text-transform: uppercase;
+  color: var(--app-muted-3);
+}
+
+.alumni-editor-section-head p:last-child {
+  margin-top: 5px;
+  max-width: 620px;
+  font-size: 11px;
+  line-height: 1.6;
+  color: var(--app-muted-2);
+}
+
+.alumni-editor-grid-2 {
+  display: grid;
+  grid-template-columns: minmax(0,1fr) minmax(0,1fr);
+  column-gap: 34px;
+}
+
+.alumni-editor-grid-2 > * {
+  min-width: 0;
+}
+
+.alumni-profile-editor .alumni-edit-row {
+  min-height: 62px;
+  padding: 13px 0;
+  border-bottom: 1px solid var(--app-border);
+  background: transparent !important;
+}
+
+.alumni-profile-editor .alumni-edit-row:hover {
+  background: transparent !important;
+}
+
+.alumni-profile-editor input,
+.alumni-profile-editor textarea {
+  background: transparent !important;
+}
+
+@media (max-width: 1023px) {
+  .alumni-settings-page.is-profile-editing {
+    max-width: 820px !important;
+  }
+}
+
+@media (max-width: 639px) {
+  .alumni-profile-editor {
+    max-width: none;
+  }
+
+  .alumni-profile-editor-top {
+    padding-top: 8px;
+  }
+
+  .alumni-profile-editor-top-copy p:last-child {
+    display: none;
+  }
+
+  .alumni-profile-editor-media {
+    margin-top: 16px;
+  }
+
+  .alumni-profile-editor-banner {
+    border-radius: 20px;
+  }
+
+  .alumni-profile-editor-photo-row {
+    gap: 14px;
+    padding-inline: 2px;
+  }
+
+  .alumni-profile-editor-avatar {
+    width: 78px;
+    height: 78px;
+    flex-basis: 78px;
+  }
+
+  .alumni-editor-grid-2 {
+    grid-template-columns: 1fr;
+    column-gap: 0;
+  }
+
+  .alumni-editor-section {
+    padding-block: 22px;
+  }
+}
+

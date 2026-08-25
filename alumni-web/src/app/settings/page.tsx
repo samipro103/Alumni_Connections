@@ -519,15 +519,15 @@ export default function SettingsPage() {
 
   return (
     <AppShell>
-      <div className="alumni-settings-page mx-auto w-full max-w-[1080px]">
-        <div className={`${mobileSectionOpen ? "hidden lg:block" : "block"} mb-6 pt-2`}>
+      <div className={`alumni-settings-page mx-auto w-full max-w-[1080px] ${profileEditorOpen ? "is-profile-editing" : ""}`}>
+        <div className={`${profileEditorOpen ? "hidden" : mobileSectionOpen ? "hidden lg:block" : "block"} mb-6 pt-2`}>
           <h1 className="text-[30px] font-black tracking-[-0.04em]">
             Configuración
           </h1>
         </div>
 
         <div className="alumni-settings-layout grid gap-5 lg:grid-cols-[280px_minmax(0,1fr)]">
-          <aside className={`alumni-settings-nav ${mobileSectionOpen ? "hidden lg:block" : "block"} h-fit lg:sticky lg:top-[88px] lg:overflow-hidden lg:rounded-[24px] lg:border lg:border-white/[0.07] lg:bg-[#101318]/95`}>
+          <aside className={`alumni-settings-nav ${profileEditorOpen ? "hidden" : mobileSectionOpen ? "hidden lg:block" : "block"} h-fit lg:sticky lg:top-[88px] lg:overflow-hidden lg:rounded-[24px] lg:border lg:border-white/[0.07] lg:bg-[#101318]/95`}>
             <div className="border-b border-white/[0.06] px-1 py-4 lg:px-5">
               <p className="text-[11px] font-black uppercase tracking-[0.14em] text-zinc-700">
                 Ajustes
@@ -587,8 +587,8 @@ export default function SettingsPage() {
             </nav>
           </aside>
 
-          <section className={`alumni-settings-detail ${mobileSectionOpen ? "block" : "hidden lg:block"} min-w-0`}>
-            <div className="mb-4 flex items-start justify-between gap-4">
+          <section className={`alumni-settings-detail ${profileEditorOpen ? "block" : mobileSectionOpen ? "block" : "hidden lg:block"} min-w-0`}>
+            <div className={`${profileEditorOpen ? "hidden" : "flex"} mb-4 items-start justify-between gap-4`}>
               <button
                 type="button"
                 onClick={closeMobileSettingsSection}
