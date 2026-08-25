@@ -330,7 +330,13 @@ useEffect(() => {
 
     
 
-if (
+// ALUMNI_STABILITY_R1_2_1_CLEAN_USERNAME
+    const cleanUsername =
+      String(profile.username || "")
+        .trim()
+        .replace(/\s+/g, "");
+
+    if (
   !/^[a-zA-Z0-9._-]{3,30}$/.test(
     cleanUsername
   )
@@ -400,9 +406,7 @@ try {
       const nationality1 = countryByCode(profile.nationality_primary_code);
       const nationality2 = countryByCode(profile.nationality_secondary_code);
 
-      const cleanUsername = String(profile.username || "")
-        .trim()
-        .replace(/\s+/g, "");
+      
 
       const allowedCareers = careersForUniversity(institution?.name);
       const safeCareer =
