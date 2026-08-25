@@ -27,6 +27,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { supabase } from "@/lib/supabase";
+import { prepareStoryImage } from "@/lib/storyImagePipeline";
 import StoryDesignOverlay from "@/components/stories/StoryDesignOverlay";
 
 type Props = {
@@ -1190,6 +1191,26 @@ export default function StoryComposer({
       let prepared =
         file;
 
+      /*
+        ALUMNI 1.0.22:
+        Historia libre conserva el original si ya está optimizado.
+        Solo procesa fotos realmente grandes/pesadas.
+        Videos no pasan por este pipeline.
+      */
+      if (
+        kind === "standard" &&
+        prepared?.type.startsWith(
+          "image/"
+        )
+      ) {
+        prepared =
+          (
+            await prepareStoryImage(
+              prepared
+            )
+          ).file;
+      }
+
       if (
         kind ===
           "achievement" ||
@@ -1233,7 +1254,7 @@ export default function StoryComposer({
             prepared,
             {
               cacheControl:
-                "3600",
+                "31536000",
               upsert: false,
               contentType:
                 prepared.type ||
