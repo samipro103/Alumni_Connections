@@ -60,23 +60,17 @@ export async function getRecommendedProfiles(
   userId: string,
   limit = 8
 ) {
-  const { data: me } =
+  /* ALUMNI_1_1_0_C_HOTFIX_TYPESCRIPT */
+  const { data: meData } =
     await supabase
       .from("profiles")
       .select(
-        [
-          "id",
-          "university",
-          "education_institution_name",
-          "education_program_name",
-          "career",
-          "city",
-          "country",
-          "residence_country_code",
-        ].join(",")
+        "id, university, education_institution_name, education_program_name, career, city, country, residence_country_code"
       )
       .eq("id", userId)
       .maybeSingle();
+
+  const me = meData as any;
 
   const { data: mineRows } =
     await supabase
@@ -100,26 +94,16 @@ export async function getRecommendedProfiles(
   } = await supabase
     .from("profiles")
     .select(
-      [
-        "id",
-        "username",
-        "avatar_url",
-        "full_name",
-        "university",
-        "education_institution_name",
-        "education_program_name",
-        "career",
-        "city",
-        "country",
-        "residence_country_code",
-        "bio",
-      ].join(",")
+      "id, username, avatar_url, full_name, university, education_institution_name, education_program_name, career, city, country, residence_country_code, bio"
     )
     .neq("id", userId)
     .limit(140);
 
+  const candidateRows =
+    (candidatesData || []) as any[];
+
   const candidates =
-    (candidatesData || []).filter(
+    candidateRows.filter(
       (person: any) =>
         !mine.has(person.id)
     );

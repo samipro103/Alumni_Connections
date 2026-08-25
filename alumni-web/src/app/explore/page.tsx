@@ -429,23 +429,7 @@ function ExploreContent() {
         await supabase
           .from("profiles")
           .select(
-            [
-              "id",
-              "username",
-              "avatar_url",
-              "full_name",
-              "university",
-              "education_institution_name",
-              "education_institution_logo_url",
-              "education_program_name",
-              "education_program_logo_url",
-              "career",
-              "bio",
-              "city",
-              "country",
-              "residence_country_code",
-              "created_at",
-            ].join(",")
+            "id, username, avatar_url, full_name, university, education_institution_name, education_institution_logo_url, education_program_name, education_program_logo_url, career, bio, city, country, residence_country_code, created_at"
           )
           .order(
             "created_at",
@@ -458,7 +442,7 @@ function ExploreContent() {
       if (!active) return;
 
       setUsers(
-        data || []
+        (data || []) as any[]
       );
 
       setLoading(false);
@@ -490,16 +474,7 @@ function ExploreContent() {
         supabase
           .from("profiles")
           .select(
-            [
-              "id",
-              "university",
-              "education_institution_name",
-              "education_program_name",
-              "career",
-              "city",
-              "country",
-              "residence_country_code",
-            ].join(",")
+            "id, university, education_institution_name, education_program_name, career, city, country, residence_country_code"
           )
           .eq(
             "id",
@@ -526,7 +501,7 @@ function ExploreContent() {
       if (!active) return;
 
       setCurrentProfile(
-        me || null
+        (me as any) || null
       );
 
       setFollowingIds(
