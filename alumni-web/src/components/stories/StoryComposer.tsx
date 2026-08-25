@@ -1325,7 +1325,7 @@ export default function StoryComposer({
         subtitle="Logros, oportunidades y momentos"
         onClose={onClose}
       >
-        <div className="px-5 pb-7 pt-4">
+        <div className="alumni-story-kind-list px-5 pb-7 pt-4">
           <div className="mb-6">
             <p className="text-[28px] font-black leading-[1.02] tracking-[-0.045em] text-white">
               ¿Qué quieres compartir?
@@ -2345,11 +2345,11 @@ function Shell({
   return (
     <div
       data-theme-lock="dark"
-      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 p-0 backdrop-blur-xl sm:p-5"
+      className="alumni-story-composer-shell fixed inset-0 z-[100] flex items-center justify-center bg-black/90 p-0 backdrop-blur-xl sm:p-5"
       role="dialog"
       aria-modal="true"
     >
-      <div className="relative flex h-[100dvh] w-full max-w-[980px] flex-col overflow-hidden bg-[#0b0e13] shadow-[0_30px_100px_rgba(0,0,0,.55)] sm:h-[calc(100dvh-40px)] sm:rounded-[30px] sm:border sm:border-white/[0.09]">
+      <div className="alumni-story-composer-surface relative flex h-[100dvh] w-full max-w-[980px] flex-col overflow-hidden bg-[#0b0e13] shadow-[0_30px_100px_rgba(0,0,0,.55)] sm:h-[calc(100dvh-40px)] sm:rounded-[30px] sm:border sm:border-white/[0.09]">
         <header className="flex min-h-16 shrink-0 items-center gap-3 border-b border-white/[0.06] px-4 pt-[env(safe-area-inset-top)] sm:px-5 sm:pt-0">
           {onBack && (
             <button
