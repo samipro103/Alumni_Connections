@@ -199,6 +199,69 @@ export default function StoryViewer({
   const ownStory =
     story?.user_id === currentUserId;
 
+  /*
+    ALUMNI_1_1_0_A_PRELOAD
+    Calcula únicamente la siguiente historia para
+    adelantar su fotografía sin descargar medios
+    innecesarios.
+  */
+  const nextStoryToPreload =
+    useMemo(() => {
+      if (!group) return null;
+
+      if (
+        storyIndex <
+        group.stories.length - 1
+      ) {
+        return (
+          group.stories[
+            storyIndex + 1
+          ] || null
+        );
+      }
+
+      return (
+        groups[groupIndex + 1]
+          ?.stories?.[0] ||
+        null
+      );
+    }, [
+      group,
+      groupIndex,
+      groups,
+      storyIndex,
+    ]);
+
+  useEffect(() => {
+    if (
+      !open ||
+      !nextStoryToPreload ||
+      nextStoryToPreload.media_type !==
+        "image"
+    ) {
+      return;
+    }
+
+    const image = new Image();
+    image.decoding = "async";
+    image.src =
+      nextStoryToPreload.media_url;
+
+    if (
+      typeof image.decode ===
+      "function"
+    ) {
+      void image
+        .decode()
+        .catch(() => {});
+    }
+  }, [
+    open,
+    nextStoryToPreload?.id,
+    nextStoryToPreload?.media_url,
+    nextStoryToPreload?.media_type,
+  ]);
+
   useEffect(() => {
     if (!open || !story) return;
 

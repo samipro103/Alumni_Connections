@@ -168,6 +168,10 @@ export default function PostComposer({
                   <img
                     src={previewUrl}
                     alt="Vista previa"
+                    loading="eager"
+                    decoding="async"
+                    fetchPriority="high"
+                    draggable={false}
                     className="max-h-[520px] w-full object-contain"
                   />
 

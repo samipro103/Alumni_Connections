@@ -18,6 +18,7 @@ import StoriesRail from "@/components/feed/StoriesRail";
 import CommentLikeButton from "@/components/social/CommentLikeButton";
 import { rankForYouPosts } from "@/lib/feedRanking";
 import { analyzeImageLocally } from "@/lib/imageModerationClient";
+import { preparePostImage } from "@/lib/postImagePipeline";
 
 type FeedMode = "for-you" | "following";
 
@@ -229,25 +230,63 @@ function FeedContent() {
     }
   }
 
-  async function uploadImage() {
+  async function uploadPostImage() {
     if (!image) return null;
 
-    const fileName = `${Date.now()}-${image.name}`;
+    try {
+      const prepared =
+        await preparePostImage(
+          image
+        );
 
-    const { error } = await supabase.storage
-      .from("posts")
-      .upload(fileName, image);
+      const safeName =
+        prepared.file.name
+          .normalize("NFKD")
+          .replace(
+            /[^\w.\-]+/g,
+            "_"
+          )
+          .slice(-120);
 
-    if (error) {
-      alert(error.message);
+      const fileName =
+        `${currentUser?.id || "user"}/${Date.now()}-${safeName}`;
+
+      const { error } =
+        await supabase.storage
+          .from("posts")
+          .upload(
+            fileName,
+            prepared.file,
+            {
+              cacheControl:
+                "31536000",
+              upsert: false,
+              contentType:
+                prepared.file.type ||
+                undefined,
+            }
+          );
+
+      if (error) {
+        throw error;
+      }
+
+      const { data } =
+        supabase.storage
+          .from("posts")
+          .getPublicUrl(
+            fileName
+          );
+
+      return data.publicUrl;
+    } catch (error: any) {
+      console.error(error);
+      alert(
+        error?.message ||
+          "No se pudo preparar la fotografía."
+      );
       return null;
     }
-
-    const { data } = supabase.storage
-      .from("posts")
-      .getPublicUrl(fileName);
-
-    return data.publicUrl;
   }
 
   async function createPost() {
@@ -264,7 +303,7 @@ function FeedContent() {
     let imageUrl = null;
 
     if (image) {
-      imageUrl = await uploadImage();
+      imageUrl = await uploadPostImage();
       if (!imageUrl) return;
     }
 
@@ -551,7 +590,7 @@ function FeedContent() {
           </div>
         ) : (
           <div className="space-y-4">
-            {visiblePosts.map((post: any) => {
+            {visiblePosts.map((post: any, postIndex: number) => {
               const commentsOpen = Boolean(openComments[post.id]);
 
               return (
@@ -629,6 +668,18 @@ function FeedContent() {
                       <img
                         src={post.image_url}
                         alt="Publicación"
+                        loading={
+                          postIndex < 2
+                            ? "eager"
+                            : "lazy"
+                        }
+                        decoding="async"
+                        fetchPriority={
+                          postIndex === 0
+                            ? "high"
+                            : "auto"
+                        }
+                        draggable={false}
                         className="max-h-[680px] w-full object-contain"
                       />
                     </button>
@@ -783,6 +834,10 @@ function FeedContent() {
           <img
             src={selectedImage}
             alt="Publicación ampliada"
+            loading="eager"
+            decoding="async"
+            fetchPriority="high"
+            draggable={false}
             className="max-h-[92vh] max-w-[94vw] rounded-2xl object-contain"
           />
         </div>
