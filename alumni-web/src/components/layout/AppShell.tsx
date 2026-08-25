@@ -6,7 +6,6 @@ import RightSidebar from "./RightSidebar";
 import TopBar from "./TopBar";
 import MobileNav from "./MobileNav";
 import AppUtilities from "./AppUtilities";
-import GlobalPullToRefresh from "./GlobalPullToRefresh";
 
 interface Props {
   children: ReactNode;
@@ -23,8 +22,6 @@ export default function AppShell({
 }: Props) {
   return (
     <>
-      <GlobalPullToRefresh />
-
       {/*
         Este bloque es el que baja durante Pull-to-Refresh.
         Los elementos fixed globales NO deben vivir aquí dentro,

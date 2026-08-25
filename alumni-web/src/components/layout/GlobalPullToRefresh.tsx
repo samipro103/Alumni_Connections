@@ -7,8 +7,8 @@ import {
 } from "react";
 
 const TRIGGER_DISTANCE = 80;
-const MAX_PULL = 120;
-const HOLD_OFFSET = 72;
+const MAX_PULL = 122;
+const HOLD_OFFSET = 76;
 
 function clamp(
   value: number,
@@ -56,38 +56,52 @@ function blockedTarget(
   );
 }
 
-function clearShellStyles(
-  shell: HTMLElement
-) {
-  shell.style.transition = "";
-  shell.style.transform = "";
+function refreshTarget() {
+  return (
+    document.getElementById(
+      "alumni-global-shell"
+    ) ||
+    document.getElementById(
+      "alumni-root-content"
+    )
+  );
 }
 
-function setShellOffset(
+function clearTargetStyles(
+  target: HTMLElement
+) {
+  target.style.transition = "";
+  target.style.transform = "";
+}
+
+function setContentOffset(
   value: number,
   animate = false
 ) {
-  const shell =
-    document.getElementById(
-      "alumni-global-shell"
-    );
+  const target =
+    refreshTarget();
 
-  if (!shell) return;
+  if (!target) return;
 
   const next =
     Math.max(0, value);
 
-  if (next === 0 && !animate) {
-    clearShellStyles(shell);
+  if (
+    next === 0 &&
+    !animate
+  ) {
+    clearTargetStyles(
+      target
+    );
     return;
   }
 
-  shell.style.transition =
+  target.style.transition =
     animate
-      ? "transform 240ms cubic-bezier(.22,.8,.24,1)"
+      ? "transform 245ms cubic-bezier(.22,.8,.24,1)"
       : "none";
 
-  shell.style.transform =
+  target.style.transform =
     `translate3d(0, ${next}px, 0)`;
 
   if (
@@ -97,17 +111,257 @@ function setShellOffset(
     window.setTimeout(
       () => {
         if (
-          shell.style.transform ===
+          target.style.transform ===
           "translate3d(0, 0px, 0)"
         ) {
-          clearShellStyles(
-            shell
+          clearTargetStyles(
+            target
           );
         }
       },
-      260
+      270
     );
   }
+}
+
+function SideCelebration({
+  side,
+  progress,
+  refreshing,
+}: {
+  side: "left" | "right";
+  progress: number;
+  refreshing: boolean;
+}) {
+  const strength =
+    refreshing
+      ? 1
+      : clamp(
+          (progress - 0.14) /
+            0.86
+        );
+
+  return (
+    <div
+      className={`alumni-celebration alumni-celebration-${side}`}
+      aria-hidden="true"
+      style={{
+        opacity:
+          0.12 +
+          strength * 0.88,
+        transform:
+          `scaleX(${
+            0.45 +
+            strength * 0.55
+          })`,
+      }}
+    >
+      <span className="alumni-celebration-line alumni-celebration-line-main" />
+      <span className="alumni-celebration-line alumni-celebration-line-short" />
+      <span className="alumni-celebration-line alumni-celebration-line-soft" />
+
+      <span className="alumni-celebration-spark alumni-celebration-spark-a" />
+      <span className="alumni-celebration-spark alumni-celebration-spark-b" />
+      <span className="alumni-celebration-spark alumni-celebration-spark-c" />
+
+      <style jsx>{`
+        .alumni-celebration {
+          position: absolute;
+          top: 7px;
+          width: min(30vw, 150px);
+          height: 42px;
+          transform-origin:
+            ${side === "left"
+              ? "right center"
+              : "left center"};
+          transition:
+            opacity 100ms linear,
+            transform 100ms linear;
+        }
+
+        .alumni-celebration-left {
+          right:
+            calc(50% + 68px);
+        }
+
+        .alumni-celebration-right {
+          left:
+            calc(50% + 68px);
+        }
+
+        .alumni-celebration-line {
+          position: absolute;
+          height: 1px;
+          border-radius: 999px;
+          overflow: hidden;
+          background:
+            linear-gradient(
+              ${side === "left"
+                ? "90deg"
+                : "270deg"},
+              transparent,
+              color-mix(
+                in srgb,
+                var(--app-accent) 28%,
+                rgba(255,255,255,.32) 72%
+              )
+            );
+        }
+
+        .alumni-celebration-line::after {
+          content: "";
+          position: absolute;
+          inset: 0;
+          width: 38%;
+          background:
+            linear-gradient(
+              90deg,
+              transparent,
+              rgba(255,255,255,.9),
+              transparent
+            );
+          animation:
+            alumni-celebration-travel
+            1.35s ease-in-out
+            infinite;
+        }
+
+        .alumni-celebration-line-main {
+          top: 13px;
+          width: 100%;
+        }
+
+        .alumni-celebration-line-short {
+          top: 23px;
+          width: 68%;
+          opacity: .7;
+          ${side === "left"
+            ? "right: 0;"
+            : "left: 0;"}
+          animation:
+            alumni-celebration-breathe
+            1.7s ease-in-out
+            infinite alternate;
+        }
+
+        .alumni-celebration-line-soft {
+          top: 31px;
+          width: 42%;
+          opacity: .35;
+          ${side === "left"
+            ? "right: 5%;"
+            : "left: 5%;"}
+        }
+
+        .alumni-celebration-spark {
+          position: absolute;
+          width: 3px;
+          height: 3px;
+          border-radius: 999px;
+          background:
+            color-mix(
+              in srgb,
+              var(--app-accent) 54%,
+              white 46%
+            );
+          box-shadow:
+            0 0 8px
+              color-mix(
+                in srgb,
+                var(--app-accent) 22%,
+                transparent
+              );
+          animation:
+            alumni-celebration-spark
+            1.15s ease-in-out
+            infinite alternate;
+        }
+
+        .alumni-celebration-spark-a {
+          top: 5px;
+          ${side === "left"
+            ? "right: 16%;"
+            : "left: 16%;"}
+        }
+
+        .alumni-celebration-spark-b {
+          top: 20px;
+          ${side === "left"
+            ? "right: 47%;"
+            : "left: 47%;"}
+          animation-delay: .22s;
+        }
+
+        .alumni-celebration-spark-c {
+          top: 34px;
+          ${side === "left"
+            ? "right: 72%;"
+            : "left: 72%;"}
+          animation-delay: .44s;
+        }
+
+        @keyframes alumni-celebration-travel {
+          from {
+            transform:
+              translateX(
+                ${side === "left"
+                  ? "-120%"
+                  : "220%"}
+              );
+            opacity: 0;
+          }
+
+          35% {
+            opacity: .8;
+          }
+
+          to {
+            transform:
+              translateX(
+                ${side === "left"
+                  ? "260%"
+                  : "-160%"}
+              );
+            opacity: 0;
+          }
+        }
+
+        @keyframes alumni-celebration-breathe {
+          from {
+            opacity: .25;
+          }
+
+          to {
+            opacity: .85;
+          }
+        }
+
+        @keyframes alumni-celebration-spark {
+          from {
+            transform:
+              scale(.65);
+            opacity: .25;
+          }
+
+          to {
+            transform:
+              scale(1.35);
+            opacity: 1;
+          }
+        }
+
+        @media
+          (prefers-reduced-motion:
+            reduce) {
+          .alumni-celebration-line::after,
+          .alumni-celebration-line-short,
+          .alumni-celebration-spark {
+            animation: none;
+          }
+        }
+      `}</style>
+    </div>
+  );
 }
 
 function AnimatedBrand({
@@ -121,24 +375,47 @@ function AnimatedBrand({
     "Alumni".split("");
 
   const reveal =
-    clamp(progress / 0.22);
+    clamp(
+      progress / 0.20
+    );
+
   const erase =
-    clamp((progress - 0.73) / 0.27);
+    clamp(
+      (progress - 0.74) /
+        0.26
+    );
 
   return (
     <div className="alumni-refresh-hero">
+      <SideCelebration
+        side="left"
+        progress={progress}
+        refreshing={
+          refreshing
+        }
+      />
+
+      <SideCelebration
+        side="right"
+        progress={progress}
+        refreshing={
+          refreshing
+        }
+      />
+
       <div
-        className="alumni-refresh-glow"
+        className="alumni-refresh-aurora"
         style={{
           opacity:
             refreshing
-              ? 0.95
-              : 0.22 +
-                progress * 0.38,
-          transform: `scale(${
-            0.88 +
-            progress * 0.18
-          })`,
+              ? 0.7
+              : 0.18 +
+                progress * 0.42,
+          transform:
+            `translateX(-50%) scale(${
+              0.82 +
+              progress * 0.2
+            })`,
         }}
       />
 
@@ -148,16 +425,19 @@ function AnimatedBrand({
           opacity:
             refreshing
               ? 1
-              : 0.32 +
-                reveal * 0.68,
-          transform: `translate3d(0, ${
-            refreshing
-              ? 0
-              : (1 - reveal) * 8
-          }px, 0) scale(${
-            0.97 +
-            reveal * 0.03
-          })`,
+              : 0.4 +
+                reveal * 0.6,
+          transform:
+            `translate3d(0, ${
+              refreshing
+                ? 0
+                : (1 -
+                    reveal) *
+                  7
+            }px, 0) scale(${
+              0.97 +
+              reveal * 0.03
+            })`,
         }}
       >
         {!refreshing ? (
@@ -179,8 +459,8 @@ function AnimatedBrand({
                 return (
                   <span
                     key={`${letter}-${index}`}
-                    className="alumni-refresh-letter"
                     aria-hidden="true"
+                    className="alumni-refresh-letter"
                     style={{
                       opacity:
                         1 -
@@ -198,7 +478,7 @@ function AnimatedBrand({
                       filter:
                         `blur(${
                           localErase *
-                          2.6
+                          2.7
                         }px)`,
                     }}
                   >
@@ -215,7 +495,8 @@ function AnimatedBrand({
                 transform:
                   `scale(${
                     1 +
-                    erase * 0.16
+                    erase *
+                      0.18
                   })`,
               }}
             >
@@ -232,65 +513,74 @@ function AnimatedBrand({
         )}
       </div>
 
-      <div
-        className="alumni-refresh-line"
+      <span
+        aria-hidden="true"
+        className="alumni-refresh-center-line"
         style={{
+          width:
+            `${
+              18 +
+              progress * 42
+            }px`,
           opacity:
             refreshing
-              ? 0.36
-              : 0.12 +
+              ? 0.38
+              : 0.1 +
                 progress * 0.38,
-          width:
-            `${16 + progress * 44}px`,
         }}
       />
 
       <style jsx>{`
         .alumni-refresh-hero {
           position: relative;
+          z-index: 1;
           display: flex;
-          min-width: 160px;
-          min-height: 54px;
+          width: min(100vw, 560px);
+          min-height: 58px;
           align-items: center;
           justify-content: center;
         }
 
-        .alumni-refresh-glow {
+        .alumni-refresh-aurora {
           position: absolute;
-          inset: 5px auto auto 50%;
-          width: 130px;
-          height: 44px;
+          left: 50%;
+          top: 2px;
+          width: 170px;
+          height: 46px;
           border-radius: 999px;
-          transform: translateX(-50%);
           background:
             radial-gradient(
               ellipse at center,
               color-mix(
                   in srgb,
-                  var(--app-accent) 14%,
+                  var(--app-accent) 16%,
                   transparent
                 )
                 0%,
               color-mix(
                   in srgb,
-                  var(--app-accent) 8%,
+                  var(--app-accent) 7%,
                   transparent
                 )
-                34%,
-              transparent 72%
+                42%,
+              transparent
+                74%
             );
-          filter: blur(6px);
+          filter: blur(8px);
           pointer-events: none;
+          transition:
+            opacity 100ms linear,
+            transform 100ms linear;
         }
 
         .alumni-refresh-stage {
           position: relative;
-          z-index: 1;
+          z-index: 2;
           display: flex;
-          min-height: 34px;
+          min-width: 106px;
+          min-height: 36px;
           align-items: center;
           justify-content: center;
-          transform-origin: 50% 55%;
           transition:
             opacity 90ms linear,
             transform 90ms linear;
@@ -304,12 +594,11 @@ function AnimatedBrand({
           font-weight: 900;
           letter-spacing: -0.062em;
           line-height: 1;
-          color: #f5f7ff;
+          color: #f6f8ff;
           text-rendering: geometricPrecision;
           -webkit-font-smoothing: antialiased;
           text-shadow:
-            0 1px 0 rgba(255,255,255,0.04),
-            0 0 18px rgba(13, 90, 255, 0.04);
+            0 1px 0 rgba(255,255,255,.035);
         }
 
         .alumni-refresh-letter {
@@ -325,24 +614,18 @@ function AnimatedBrand({
 
         .alumni-refresh-dot {
           display: inline-block;
-          margin-left: 0.018em;
+          margin-left: .018em;
           color:
             color-mix(
               in srgb,
               var(--app-accent) 72%,
-              #ffffff 28%
+              white 28%
             );
           text-shadow:
-            0 0 10px
+            0 0 11px
               color-mix(
                 in srgb,
-                var(--app-accent) 18%,
-                transparent
-              ),
-            0 0 24px
-              color-mix(
-                in srgb,
-                var(--app-accent) 10%,
+                var(--app-accent) 20%,
                 transparent
               );
           transform-origin: center;
@@ -350,34 +633,36 @@ function AnimatedBrand({
             transform 90ms linear;
         }
 
-        .alumni-refresh-line {
+        .alumni-refresh-center-line {
           position: absolute;
+          bottom: 5px;
           left: 50%;
-          bottom: 7px;
+          z-index: 2;
           height: 1px;
+          transform:
+            translateX(-50%);
           border-radius: 999px;
-          transform: translateX(-50%);
           background:
             linear-gradient(
               90deg,
               transparent,
               color-mix(
                 in srgb,
-                var(--app-accent) 52%,
-                #ffffff 48%
+                var(--app-accent) 50%,
+                white 50%
               ),
               transparent
             );
           transition:
-            width 90ms linear,
-            opacity 90ms linear;
+            width 100ms linear,
+            opacity 100ms linear;
         }
 
         .alumni-refresh-loader {
           position: relative;
           display: inline-flex;
-          width: 26px;
-          height: 26px;
+          width: 28px;
+          height: 28px;
           align-items: center;
           justify-content: center;
           border-radius: 999px;
@@ -389,22 +674,22 @@ function AnimatedBrand({
           inset: 1px;
           border-radius: inherit;
           border: 1.8px solid
-            rgba(255,255,255,0.12);
+            rgba(255,255,255,.11);
           border-top-color:
             color-mix(
               in srgb,
-              var(--app-accent) 74%,
-              #ffffff 26%
+              var(--app-accent) 76%,
+              white 24%
             );
           border-right-color:
             color-mix(
               in srgb,
               var(--app-accent) 38%,
-              #ffffff 62%
+              white 62%
             );
           animation:
-            alumni-refresh-spin
-            0.78s
+            alumni-global-refresh-spin
+            .75s
             cubic-bezier(.5,.1,.5,.9)
             infinite;
         }
@@ -417,7 +702,7 @@ function AnimatedBrand({
           background:
             color-mix(
               in srgb,
-              var(--app-accent) 8%,
+              var(--app-accent) 9%,
               transparent
             );
         }
@@ -431,51 +716,56 @@ function AnimatedBrand({
           background:
             color-mix(
               in srgb,
-              var(--app-accent) 64%,
-              #ffffff 36%
+              var(--app-accent) 65%,
+              white 35%
             );
           box-shadow:
-            0 0 12px
+            0 0 13px
               color-mix(
                 in srgb,
-                var(--app-accent) 28%,
+                var(--app-accent) 30%,
                 transparent
               );
           animation:
-            alumni-refresh-pulse
-            0.9s ease-in-out
+            alumni-global-refresh-pulse
+            .88s ease-in-out
             infinite alternate;
         }
 
-        @keyframes alumni-refresh-spin {
+        @keyframes alumni-global-refresh-spin {
           to {
             transform:
               rotate(360deg);
           }
         }
 
-        @keyframes alumni-refresh-pulse {
+        @keyframes alumni-global-refresh-pulse {
           from {
-            transform: scale(0.82);
-            opacity: 0.72;
+            transform:
+              scale(.78);
+            opacity: .68;
           }
 
           to {
-            transform: scale(1.18);
+            transform:
+              scale(1.22);
             opacity: 1;
           }
         }
 
-        @media (prefers-reduced-motion: reduce) {
+        @media
+          (prefers-reduced-motion:
+            reduce) {
           .alumni-refresh-stage,
           .alumni-refresh-letter,
           .alumni-refresh-dot,
-          .alumni-refresh-line {
+          .alumni-refresh-center-line {
             transition: none;
           }
 
           .alumni-refresh-loader::before {
-            animation-duration: 1.5s;
+            animation-duration:
+              1.5s;
           }
 
           .alumni-refresh-loader-core {
@@ -488,19 +778,28 @@ function AnimatedBrand({
 }
 
 export default function GlobalPullToRefresh() {
-  const [pull, setPull] =
-    useState(0);
-  const [refreshing, setRefreshing] =
-    useState(false);
+  const [
+    pull,
+    setPull,
+  ] = useState(0);
+
+  const [
+    refreshing,
+    setRefreshing,
+  ] = useState(false);
 
   const startYRef =
     useRef(0);
+
   const startXRef =
     useRef(0);
+
   const activeRef =
     useRef(false);
+
   const pullRef =
     useRef(0);
+
   const refreshingRef =
     useRef(false);
 
@@ -512,18 +811,21 @@ export default function GlobalPullToRefresh() {
   useEffect(() => {
     const html =
       document.documentElement;
+
     const body =
       document.body;
 
     const previousHtml =
       html.style
         .overscrollBehaviorY;
+
     const previousBody =
       body.style
         .overscrollBehaviorY;
 
     html.style.overscrollBehaviorY =
       "none";
+
     body.style.overscrollBehaviorY =
       "none";
 
@@ -532,9 +834,11 @@ export default function GlobalPullToRefresh() {
     ) {
       activeRef.current =
         false;
+
       pullRef.current = 0;
       setPull(0);
-      setShellOffset(
+
+      setContentOffset(
         0,
         animate
       );
@@ -564,12 +868,14 @@ export default function GlobalPullToRefresh() {
 
       startYRef.current =
         touch.clientY;
+
       startXRef.current =
         touch.clientX;
+
       activeRef.current = true;
       pullRef.current = 0;
 
-      setShellOffset(
+      setContentOffset(
         0,
         false
       );
@@ -591,13 +897,15 @@ export default function GlobalPullToRefresh() {
       const deltaY =
         touch.clientY -
         startYRef.current;
+
       const deltaX =
         touch.clientX -
         startXRef.current;
 
       if (
         Math.abs(deltaX) >
-        Math.abs(deltaY) * 0.8
+        Math.abs(deltaY) *
+          0.8
       ) {
         reset();
         return;
@@ -621,8 +929,10 @@ export default function GlobalPullToRefresh() {
 
       pullRef.current =
         distance;
+
       setPull(distance);
-      setShellOffset(
+
+      setContentOffset(
         distance,
         false
       );
@@ -644,12 +954,17 @@ export default function GlobalPullToRefresh() {
       ) {
         refreshingRef.current =
           true;
+
         setRefreshing(true);
 
         pullRef.current =
           HOLD_OFFSET;
-        setPull(HOLD_OFFSET);
-        setShellOffset(
+
+        setPull(
+          HOLD_OFFSET
+        );
+
+        setContentOffset(
           HOLD_OFFSET,
           true
         );
@@ -658,7 +973,7 @@ export default function GlobalPullToRefresh() {
           () => {
             window.location.reload();
           },
-          760
+          900
         );
 
         return;
@@ -710,16 +1025,17 @@ export default function GlobalPullToRefresh() {
     return () => {
       html.style.overscrollBehaviorY =
         previousHtml;
+
       body.style.overscrollBehaviorY =
         previousBody;
 
-      const shell =
-        document.getElementById(
-          "alumni-global-shell"
-        );
+      const target =
+        refreshTarget();
 
-      if (shell) {
-        clearShellStyles(shell);
+      if (target) {
+        clearTargetStyles(
+          target
+        );
       }
 
       window.removeEventListener(
@@ -727,16 +1043,19 @@ export default function GlobalPullToRefresh() {
         onTouchStart,
         true
       );
+
       window.removeEventListener(
         "touchmove",
         onTouchMove,
         true
       );
+
       window.removeEventListener(
         "touchend",
         onTouchEnd,
         true
       );
+
       window.removeEventListener(
         "touchcancel",
         onTouchCancel,
@@ -750,6 +1069,7 @@ export default function GlobalPullToRefresh() {
       pull /
         TRIGGER_DISTANCE
     );
+
   const visible =
     refreshing ||
     pull > 2;
@@ -768,22 +1088,24 @@ export default function GlobalPullToRefresh() {
           : "opacity-0"
       }`}
       style={{
-        height: `${Math.max(
-          0,
-          pull
-        )}px`,
+        height:
+          `${Math.max(
+            0,
+            pull
+          )}px`,
         paddingTop:
           "max(8px, env(safe-area-inset-top))",
       }}
     >
       <div
-        className="absolute inset-x-0 top-0 h-full"
+        aria-hidden="true"
+        className="absolute inset-0"
         style={{
           opacity:
-            0.28 +
-            progress * 0.34,
+            0.22 +
+            progress * 0.38,
           background:
-            "linear-gradient(180deg, rgba(6,13,28,.76) 0%, rgba(6,13,28,.48) 48%, rgba(6,13,28,0) 100%)",
+            "linear-gradient(180deg, rgba(7,15,34,.92) 0%, rgba(8,19,42,.58) 52%, rgba(7,15,34,0) 100%)",
           backdropFilter:
             "blur(8px)",
         }}

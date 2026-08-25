@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import Script from "next/script";
 import { AuthProvider } from "@/components/auth/AuthProvider";
 import { ThemeProvider } from "@/components/theme/ThemeProvider";
+import GlobalPullToRefresh from "@/components/layout/GlobalPullToRefresh";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 
@@ -66,7 +67,12 @@ export default function RootLayout({
 
         <ThemeProvider>
           <AuthProvider>
-            <div className="min-h-[100dvh]">
+            <GlobalPullToRefresh />
+
+            <div
+              id="alumni-root-content"
+              className="min-h-[100dvh]"
+            >
               {children}
             </div>
           </AuthProvider>
