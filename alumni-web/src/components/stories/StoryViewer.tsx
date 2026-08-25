@@ -31,6 +31,7 @@ import { supabase } from "@/lib/supabase";
 import StoryMusicPlayer from "@/components/stories/StoryMusicPlayer";
 import StoryDesignOverlay from "@/components/stories/StoryDesignOverlay";
 import StoryFreeOverlay, {
+  STORY_FILTER_CSS,
   type StoryOverlayData,
 } from "@/components/stories/StoryFreeOverlay";
 import {
@@ -204,6 +205,13 @@ export default function StoryViewer({
   const story = group?.stories[storyIndex];
   const ownStory =
     story?.user_id === currentUserId;
+
+  const mediaFilterCss =
+    STORY_FILTER_CSS[
+      story?.story_overlay
+        ?.media_filter ||
+        "original"
+    ] || "none";
 
   /*
     ALUMNI_1_1_0_A_PRELOAD
@@ -1034,6 +1042,10 @@ export default function StoryViewer({
               storyMusicPlaying
             }
             onEnded={next}
+            style={{
+              filter:
+                mediaFilterCss,
+            }}
             className="h-full w-full object-cover sm:object-contain"
           />
         ) : (
@@ -1045,6 +1057,10 @@ export default function StoryViewer({
               src={story.media_url}
               alt=""
               aria-hidden="true"
+              style={{
+                filter:
+                  mediaFilterCss,
+              }}
               className="absolute inset-0 h-full w-full scale-110 object-cover opacity-60 blur-3xl"
             />
             <div className="absolute inset-0 bg-black/15" />
@@ -1052,6 +1068,10 @@ export default function StoryViewer({
               src={story.media_url}
               alt={`Historia de @${group.username}`}
               draggable={false}
+              style={{
+                filter:
+                  mediaFilterCss,
+              }}
               className="relative z-[1] h-full w-full object-contain"
               loading="eager"
               decoding="async"

@@ -15,6 +15,28 @@ export type SharedPostStoryPayload = {
   image_url?: string | null;
 };
 
+export type StoryTextColor =
+  | "white"
+  | "black"
+  | "indigo"
+  | "cyan"
+  | "emerald"
+  | "gold"
+  | "rose";
+
+export type StoryTextFill =
+  | "none"
+  | "black"
+  | "white";
+
+export type StoryMediaFilter =
+  | "original"
+  | "vivid"
+  | "warm"
+  | "cool"
+  | "mono"
+  | "fade";
+
 export type StoryOverlayData = {
   version: 1;
   text?: {
@@ -26,19 +48,62 @@ export type StoryOverlayData = {
       | "medium"
       | "large";
     scale?: number;
-    style:
+    style?:
       | "clean"
       | "glass"
       | "accent";
+    color?:
+      | StoryTextColor;
+    fill?:
+      | StoryTextFill;
   };
+  media_filter?:
+    | StoryMediaFilter;
+  shared_post?:
+    | SharedPostStoryPayload
+    | null;
+
+  /*
+    Compatibilidad con Stories 2.0 ya publicadas.
+    D.2 no crea enlaces nuevos ni los muestra.
+  */
   link?: {
     url: string;
     label?: string | null;
   };
-  shared_post?:
-    | SharedPostStoryPayload
-    | null;
 };
+
+export const STORY_FILTER_CSS:
+  Record<
+    StoryMediaFilter,
+    string
+  > = {
+    original: "none",
+    vivid:
+      "saturate(1.18) contrast(1.06)",
+    warm:
+      "saturate(1.08) sepia(.16) contrast(1.03)",
+    cool:
+      "saturate(1.05) hue-rotate(8deg) contrast(1.03)",
+    mono:
+      "grayscale(1) contrast(1.08)",
+    fade:
+      "saturate(.82) contrast(.92) brightness(1.06)",
+  };
+
+const TEXT_COLORS:
+  Record<
+    StoryTextColor,
+    string
+  > = {
+    white: "#ffffff",
+    black: "#090b10",
+    indigo: "#aeb6ff",
+    cyan: "#8be9ff",
+    emerald: "#8cf2c6",
+    gold: "#ffd782",
+    rose: "#ff9fc2",
+  };
 
 function clamp(
   value: number,
@@ -51,27 +116,14 @@ function clamp(
   );
 }
 
-function normalizeExternalUrl(
-  value: string
-) {
-  const trimmed =
-    value.trim();
-
-  if (!trimmed) return "";
-
-  return /^https?:\/\//i.test(
-    trimmed
-  )
-    ? trimmed
-    : `https://${trimmed}`;
-}
-
 function TextContent({
   value,
   interactive,
+  color,
 }: {
   value: string;
   interactive: boolean;
+  color: string;
 }) {
   const pieces =
     value.split(
@@ -102,14 +154,17 @@ function TextContent({
                 onClick={(event) =>
                   event.stopPropagation()
                 }
-                className="pointer-events-auto text-[#b8c0ff] underline decoration-[#8d98ff]/35 underline-offset-4"
+                className="pointer-events-auto underline decoration-current/35 underline-offset-4"
+                style={{
+                  color,
+                }}
               >
                 {piece}
               </a>
             ) : (
               <span
                 key={`${piece}-${index}`}
-                className="text-[#b8c0ff]"
+                className="opacity-95"
               >
                 {piece}
               </span>
@@ -197,9 +252,6 @@ export default function StoryFreeOverlay({
   const sharedPost =
     overlay.shared_post;
 
-  const link =
-    overlay.link;
-
   const scale =
     clamp(
       Number(
@@ -240,10 +292,27 @@ export default function StoryFreeOverlay({
       scale
     ).toFixed(2)}px)`;
 
-  const textStyle =
-    text?.style === "glass"
+  const textColor =
+    TEXT_COLORS[
+      text?.color ||
+        "white"
+    ];
+
+  const fill =
+    text?.fill ||
+    "none";
+
+  const legacyStyle =
+    text?.style;
+
+  const fillClass =
+    fill === "black"
+      ? "rounded-[18px] bg-black/72 px-4 py-3 shadow-[0_14px_38px_rgba(0,0,0,.28)] backdrop-blur-lg"
+      : fill === "white"
+      ? "rounded-[18px] bg-white/92 px-4 py-3 shadow-[0_14px_38px_rgba(0,0,0,.22)] backdrop-blur-lg"
+      : legacyStyle === "glass"
       ? "rounded-[18px] border border-white/15 bg-black/30 px-4 py-3 shadow-[0_16px_45px_rgba(0,0,0,.24)] backdrop-blur-xl"
-      : text?.style === "accent"
+      : legacyStyle === "accent"
       ? "rounded-[18px] border border-[#8d98ff]/30 bg-[#6d7cff]/20 px-4 py-3 shadow-[0_16px_45px_rgba(0,0,0,.20)] backdrop-blur-xl"
       : "drop-shadow-[0_4px_20px_rgba(0,0,0,.62)]";
 
@@ -283,7 +352,8 @@ export default function StoryFreeOverlay({
   }
 
   function rememberPointer(
-    event: React.PointerEvent<HTMLDivElement>
+    event:
+      React.PointerEvent<HTMLDivElement>
   ) {
     pointersRef.current.set(
       event.pointerId,
@@ -350,7 +420,7 @@ export default function StoryFreeOverlay({
 
       {text?.value && (
         <div
-          className={`absolute max-w-[84%] whitespace-pre-wrap text-center font-black leading-[1.04] tracking-[-0.045em] text-white ${textStyle} ${
+          className={`absolute max-w-[84%] whitespace-pre-wrap text-center font-black leading-[1.04] tracking-[-0.045em] ${fillClass} ${
             editable
               ? "pointer-events-auto cursor-grab touch-none select-none active:cursor-grabbing"
               : ""
@@ -363,6 +433,11 @@ export default function StoryFreeOverlay({
             transform:
               "translate(-50%, -50%)",
             fontSize,
+            color:
+              fill === "white" &&
+              !text?.color
+                ? "#090b10"
+                : textColor,
           }}
           onPointerDown={
             editable
@@ -502,37 +577,14 @@ export default function StoryFreeOverlay({
             interactive={
               !editable
             }
+            color={
+              fill ===
+                "white" &&
+              !text?.color
+                ? "#090b10"
+                : textColor
+            }
           />
-        </div>
-      )}
-
-      {link?.url && (
-        <div className="absolute inset-x-0 bottom-[7.2%] flex justify-center px-6">
-          <a
-            href={normalizeExternalUrl(
-              link.url
-            )}
-            target="_blank"
-            rel="noreferrer"
-            onPointerDown={(event) =>
-              event.stopPropagation()
-            }
-            onClick={(event) =>
-              event.stopPropagation()
-            }
-            className={`inline-flex min-h-10 items-center gap-2 rounded-full border border-white/15 bg-black/38 px-4 text-[10px] font-black uppercase tracking-[0.11em] text-white/90 backdrop-blur-xl ${
-              editable
-                ? "pointer-events-none"
-                : "pointer-events-auto"
-            }`}
-          >
-            {link.label ||
-              "Abrir enlace"}
-
-            <ArrowUpRight
-              size={13}
-            />
-          </a>
         </div>
       )}
     </div>

@@ -16,14 +16,15 @@ import {
   Check,
   Film,
   ImagePlus,
+  Images,
   Layers3,
-  Link2,
   Loader2,
   Move,
   Palette,
   Play,
-  Send,
+  SlidersHorizontal,
   Sparkles,
+  UserRoundPlus,
   Type,
   WandSparkles,
   X,
@@ -33,8 +34,12 @@ import { supabase } from "@/lib/supabase";
 import { prepareStoryImage } from "@/lib/storyImagePipeline";
 import StoryDesignOverlay from "@/components/stories/StoryDesignOverlay";
 import StoryFreeOverlay, {
+  STORY_FILTER_CSS,
   type SharedPostStoryPayload,
+  type StoryMediaFilter,
   type StoryOverlayData,
+  type StoryTextColor,
+  type StoryTextFill,
 } from "@/components/stories/StoryFreeOverlay";
 
 type Props = {
@@ -855,6 +860,356 @@ async function generateStoryBackground({
   );
 }
 
+type MentionProfile = {
+  id: string;
+  username: string;
+  full_name: string | null;
+  avatar_url: string | null;
+};
+
+const STORY_FILTERS: Array<{
+  id: StoryMediaFilter;
+  label: string;
+}> = [
+  {
+    id: "original",
+    label: "Original",
+  },
+  {
+    id: "vivid",
+    label: "Vivo",
+  },
+  {
+    id: "warm",
+    label: "Cálido",
+  },
+  {
+    id: "cool",
+    label: "Frío",
+  },
+  {
+    id: "mono",
+    label: "B&N",
+  },
+  {
+    id: "fade",
+    label: "Fade",
+  },
+];
+
+const STORY_TEXT_COLORS: Array<{
+  id: StoryTextColor;
+  label: string;
+  value: string;
+}> = [
+  {
+    id: "white",
+    label: "Blanco",
+    value: "#ffffff",
+  },
+  {
+    id: "black",
+    label: "Negro",
+    value: "#090b10",
+  },
+  {
+    id: "indigo",
+    label: "Indigo",
+    value: "#aeb6ff",
+  },
+  {
+    id: "cyan",
+    label: "Cian",
+    value: "#8be9ff",
+  },
+  {
+    id: "emerald",
+    label: "Verde",
+    value: "#8cf2c6",
+  },
+  {
+    id: "gold",
+    label: "Dorado",
+    value: "#ffd782",
+  },
+  {
+    id: "rose",
+    label: "Rosa",
+    value: "#ff9fc2",
+  },
+];
+
+function drawCollageCover(
+  ctx: CanvasRenderingContext2D,
+  image: HTMLImageElement,
+  x: number,
+  y: number,
+  w: number,
+  h: number
+) {
+  const scale =
+    Math.max(
+      w /
+        image.naturalWidth,
+      h /
+        image.naturalHeight
+    );
+
+  const sw = w / scale;
+  const sh = h / scale;
+  const sx =
+    (image.naturalWidth -
+      sw) /
+    2;
+  const sy =
+    (image.naturalHeight -
+      sh) /
+    2;
+
+  ctx.drawImage(
+    image,
+    sx,
+    sy,
+    sw,
+    sh,
+    x,
+    y,
+    w,
+    h
+  );
+}
+
+function collageFrames(
+  count: number
+) {
+  const gap = 12;
+
+  if (count === 2) {
+    return [
+      {
+        x: 0,
+        y: 0,
+        w: 1080,
+        h:
+          960 -
+          gap / 2,
+      },
+      {
+        x: 0,
+        y:
+          960 +
+          gap / 2,
+        w: 1080,
+        h:
+          960 -
+          gap / 2,
+      },
+    ];
+  }
+
+  if (count === 3) {
+    return [
+      {
+        x: 0,
+        y: 0,
+        w: 1080,
+        h: 960 - gap / 2,
+      },
+      {
+        x: 0,
+        y: 960 + gap / 2,
+        w: 540 - gap / 2,
+        h: 960 - gap / 2,
+      },
+      {
+        x: 540 + gap / 2,
+        y: 960 + gap / 2,
+        w: 540 - gap / 2,
+        h: 960 - gap / 2,
+      },
+    ];
+  }
+
+  return [
+    {
+      x: 0,
+      y: 0,
+      w: 540 - gap / 2,
+      h: 960 - gap / 2,
+    },
+    {
+      x: 540 + gap / 2,
+      y: 0,
+      w: 540 - gap / 2,
+      h: 960 - gap / 2,
+    },
+    {
+      x: 0,
+      y: 960 + gap / 2,
+      w: 540 - gap / 2,
+      h: 960 - gap / 2,
+    },
+    {
+      x: 540 + gap / 2,
+      y: 960 + gap / 2,
+      w: 540 - gap / 2,
+      h: 960 - gap / 2,
+    },
+  ];
+}
+
+async function generateCollageImage(
+  files: File[]
+) {
+  if (
+    files.length < 2 ||
+    files.length > 4
+  ) {
+    throw new Error(
+      "El collage admite de 2 a 4 fotografías."
+    );
+  }
+
+  const canvas =
+    document.createElement(
+      "canvas"
+    );
+
+  canvas.width = 1080;
+  canvas.height = 1920;
+
+  const ctx =
+    canvas.getContext(
+      "2d"
+    );
+
+  if (!ctx) {
+    throw new Error(
+      "No se pudo crear el collage."
+    );
+  }
+
+  ctx.imageSmoothingEnabled =
+    true;
+
+  ctx.imageSmoothingQuality =
+    "high";
+
+  ctx.fillStyle =
+    "#07090e";
+
+  ctx.fillRect(
+    0,
+    0,
+    1080,
+    1920
+  );
+
+  const urls =
+    files.map(
+      (file) =>
+        URL.createObjectURL(
+          file
+        )
+    );
+
+  try {
+    const images =
+      await Promise.all(
+        urls.map(
+          (url) =>
+            loadImage(url)
+        )
+      );
+
+    const frames =
+      collageFrames(
+        images.length
+      );
+
+    images.forEach(
+      (
+        image,
+        index
+      ) => {
+        const frame =
+          frames[index];
+
+        drawCollageCover(
+          ctx,
+          image,
+          frame.x,
+          frame.y,
+          frame.w,
+          frame.h
+        );
+      }
+    );
+  } finally {
+    urls.forEach(
+      (url) =>
+        URL.revokeObjectURL(
+          url
+        )
+    );
+  }
+
+  return new Promise<File>(
+    (
+      resolve,
+      reject
+    ) => {
+      const done = (
+        blob:
+          | Blob
+          | null
+      ) => {
+        if (!blob) {
+          reject(
+            new Error(
+              "No se pudo guardar el collage."
+            )
+          );
+          return;
+        }
+
+        resolve(
+          new File(
+            [blob],
+            `alumni-collage-${Date.now()}.webp`,
+            {
+              type:
+                blob.type ||
+                "image/webp",
+              lastModified:
+                Date.now(),
+            }
+          )
+        );
+      };
+
+      canvas.toBlob(
+        done,
+        "image/webp",
+        0.97
+      );
+    }
+  );
+}
+
+function activeMentionToken(
+  value: string
+) {
+  const match =
+    value.match(
+      /(?:^|\s)@([a-zA-Z0-9._-]*)$/
+    );
+
+  return match
+    ? match[1]
+    : null;
+}
+
 async function generateSharedPostBackground() {
   const canvas =
     document.createElement(
@@ -1005,6 +1360,14 @@ export default function StoryComposer({
   const mediaInputRef =
     useRef<HTMLInputElement>(null);
 
+  const collageInputRef =
+    useRef<HTMLInputElement>(null);
+
+  const mentionTimerRef =
+    useRef<number | null>(
+      null
+    );
+
   const [kind, setKind] =
     useState<StoryKind | null>(
       null
@@ -1089,11 +1452,6 @@ export default function StoryComposer({
   ] = useState("");
 
   const [
-    storyLink,
-    setStoryLink,
-  ] = useState("");
-
-  const [
     storyTextStyle,
     setStoryTextStyle,
   ] =
@@ -1140,13 +1498,68 @@ export default function StoryComposer({
   ] = useState(false);
 
   const [
-    storyLinkEditing,
-    setStoryLinkEditing,
+    storyStyleOpen,
+    setStoryStyleOpen,
   ] = useState(false);
 
   const [
-    storyStyleOpen,
-    setStoryStyleOpen,
+    storyTextColor,
+    setStoryTextColor,
+  ] =
+    useState<StoryTextColor>(
+      "white"
+    );
+
+  const [
+    storyTextFill,
+    setStoryTextFill,
+  ] =
+    useState<StoryTextFill>(
+      "none"
+    );
+
+  const [
+    storyFilter,
+    setStoryFilter,
+  ] =
+    useState<StoryMediaFilter>(
+      "original"
+    );
+
+  const [
+    storyFilterOpen,
+    setStoryFilterOpen,
+  ] = useState(false);
+
+  const [
+    collageFiles,
+    setCollageFiles,
+  ] = useState<File[]>([]);
+
+  const [
+    collagePreviewUrls,
+    setCollagePreviewUrls,
+  ] = useState<string[]>([]);
+
+  const [
+    followingProfiles,
+    setFollowingProfiles,
+  ] =
+    useState<MentionProfile[]>(
+      []
+    );
+
+  const [
+    mentionResults,
+    setMentionResults,
+  ] =
+    useState<MentionProfile[]>(
+      []
+    );
+
+  const [
+    mentionLoading,
+    setMentionLoading,
   ] = useState(false);
 
   const [editorTab, setEditorTab] =
@@ -1183,6 +1596,256 @@ export default function StoryComposer({
   }, [open]);
 
   useEffect(() => {
+    const urls =
+      collageFiles.map(
+        (item) =>
+          URL.createObjectURL(
+            item
+          )
+      );
+
+    setCollagePreviewUrls(
+      urls
+    );
+
+    return () => {
+      urls.forEach(
+        (url) =>
+          URL.revokeObjectURL(
+            url
+          )
+      );
+    };
+  }, [collageFiles]);
+
+  useEffect(() => {
+    if (
+      !open ||
+      !user ||
+      kind !== "standard"
+    ) {
+      return;
+    }
+
+    let cancelled =
+      false;
+
+    async function loadFollowingProfiles() {
+      const {
+        data: followsData,
+      } =
+        await supabase
+          .from("follows")
+          .select(
+            "following_id"
+          )
+          .eq(
+            "follower_id",
+            user.id
+          );
+
+      const ids =
+        (followsData ||
+          []).map(
+          (item: any) =>
+            item.following_id
+        );
+
+      if (
+        !ids.length ||
+        cancelled
+      ) {
+        setFollowingProfiles(
+          []
+        );
+        return;
+      }
+
+      const {
+        data:
+          profilesData,
+      } =
+        await supabase
+          .from("profiles")
+          .select(
+            "id, username, full_name, avatar_url"
+          )
+          .in(
+            "id",
+            ids
+          )
+          .limit(80);
+
+      if (!cancelled) {
+        setFollowingProfiles(
+          (profilesData ||
+            []) as MentionProfile[]
+        );
+      }
+    }
+
+    void loadFollowingProfiles();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    open,
+    user?.id,
+    kind,
+  ]);
+
+  const mentionQuery =
+    useMemo(
+      () =>
+        activeMentionToken(
+          storyText
+        ),
+      [storyText]
+    );
+
+  useEffect(() => {
+    if (
+      mentionTimerRef.current !==
+      null
+    ) {
+      window.clearTimeout(
+        mentionTimerRef.current
+      );
+    }
+
+    if (
+      !storyTextEditing ||
+      mentionQuery === null
+    ) {
+      setMentionResults(
+        []
+      );
+      setMentionLoading(
+        false
+      );
+      return;
+    }
+
+    const normalized =
+      mentionQuery.toLowerCase();
+
+    const followedMatches =
+      followingProfiles.filter(
+        (profile) =>
+          profile.username
+            ?.toLowerCase()
+            .startsWith(
+              normalized
+            ) ||
+          profile.full_name
+            ?.toLowerCase()
+            .startsWith(
+              normalized
+            )
+      );
+
+    if (!normalized) {
+      setMentionResults(
+        followedMatches.slice(
+          0,
+          7
+        )
+      );
+      return;
+    }
+
+    setMentionResults(
+      followedMatches.slice(
+        0,
+        7
+      )
+    );
+
+    mentionTimerRef.current =
+      window.setTimeout(
+        () => {
+          void (async () => {
+            setMentionLoading(
+              true
+            );
+
+            const {
+              data:
+                globalProfiles,
+            } =
+              await supabase
+                .from(
+                  "profiles"
+                )
+                .select(
+                  "id, username, full_name, avatar_url"
+                )
+                .neq(
+                  "id",
+                  user?.id ||
+                    ""
+                )
+                .ilike(
+                  "username",
+                  `${normalized}%`
+                )
+                .limit(8);
+
+            const combined =
+              [
+                ...followedMatches,
+                ...((globalProfiles ||
+                  []) as MentionProfile[]),
+              ];
+
+            const unique =
+              Array.from(
+                new Map(
+                  combined.map(
+                    (
+                      item
+                    ) => [
+                      item.id,
+                      item,
+                    ]
+                  )
+                ).values()
+              ).slice(
+                0,
+                8
+              );
+
+            setMentionResults(
+              unique
+            );
+
+            setMentionLoading(
+              false
+            );
+          })();
+        },
+        130
+      );
+
+    return () => {
+      if (
+        mentionTimerRef.current !==
+        null
+      ) {
+        window.clearTimeout(
+          mentionTimerRef.current
+        );
+      }
+    };
+  }, [
+    storyTextEditing,
+    mentionQuery,
+    followingProfiles,
+    user?.id,
+  ]);
+
+  useEffect(() => {
     if (
       !open ||
       !initialSharedPost
@@ -1201,7 +1864,6 @@ export default function StoryComposer({
     );
 
     setStoryText("");
-    setStoryLink("");
     setStoryTextPosition({
       x: 50,
       y: 28,
@@ -1267,7 +1929,6 @@ export default function StoryComposer({
     setAnimation("rise");
     setFontStyle("modern");
     setStoryText("");
-    setStoryLink("");
     setStoryTextStyle(
       "clean"
     );
@@ -1280,8 +1941,26 @@ export default function StoryComposer({
     });
     setStoryTextScale(1);
     setStoryTextEditing(false);
-    setStoryLinkEditing(false);
     setStoryStyleOpen(false);
+    setStoryTextColor(
+      "white"
+    );
+    setStoryTextFill(
+      "none"
+    );
+    setStoryFilter(
+      "original"
+    );
+    setStoryFilterOpen(
+      false
+    );
+    setCollageFiles([]);
+    setCollagePreviewUrls(
+      []
+    );
+    setMentionResults(
+      []
+    );
     setSharedPost(null);
     setEditorTab("content");
   }
@@ -1360,13 +2039,11 @@ export default function StoryComposer({
         const textValue =
           storyText.trim();
 
-        const linkValue =
-          storyLink.trim();
-
         if (
           !textValue &&
-          !linkValue &&
-          !sharedPost
+          !sharedPost &&
+          storyFilter ===
+            "original"
         ) {
           return null;
         }
@@ -1387,20 +2064,15 @@ export default function StoryComposer({
                   scale:
                     storyTextScale,
                   style:
-                    storyTextStyle,
+                    "clean",
+                  color:
+                    storyTextColor,
+                  fill:
+                    storyTextFill,
                 }
               : undefined,
-          link:
-            linkValue
-              ? {
-                  url:
-                    normalizeUrl(
-                      linkValue
-                    ) || "",
-                  label:
-                    "Abrir enlace",
-                }
-              : undefined,
+          media_filter:
+            storyFilter,
           shared_post:
             sharedPost ||
             undefined,
@@ -1409,12 +2081,13 @@ export default function StoryComposer({
       [
         kind,
         storyText,
-        storyLink,
-        storyTextStyle,
+        storyTextColor,
+        storyTextFill,
         storyTextSize,
         storyTextScale,
         storyTextPosition.x,
         storyTextPosition.y,
+        storyFilter,
         sharedPost,
       ]
     );
@@ -1466,7 +2139,69 @@ export default function StoryComposer({
       return;
     }
 
+    setCollageFiles([]);
     setFile(selected);
+  }
+
+  function chooseCollage(
+    files: FileList | null
+  ) {
+    const selected =
+      Array.from(
+        files || []
+      ).filter(
+        (item) =>
+          item.type.startsWith(
+            "image/"
+          )
+      );
+
+    if (
+      selected.length < 2 ||
+      selected.length > 4
+    ) {
+      alert(
+        "Selecciona 2, 3 o 4 fotografías para el collage."
+      );
+      return;
+    }
+
+    setFile(null);
+    setSharedPost(null);
+    setCollageFiles(
+      selected
+    );
+  }
+
+  function insertMention(
+    profile: MentionProfile
+  ) {
+    const replacement =
+      `@${profile.username} `;
+
+    setStoryText(
+      (current) =>
+        current.replace(
+          /(?:^|\s)@[a-zA-Z0-9._-]*$/,
+          (match) => {
+            const prefix =
+              match.startsWith(
+                " "
+              )
+                ? " "
+                : "";
+
+            return (
+              prefix +
+              replacement
+            );
+          }
+        )
+    );
+
+    setMentionResults(
+      []
+    );
   }
 
   function normalizeUrl(
@@ -1508,7 +2243,8 @@ export default function StoryComposer({
     if (
       kind === "standard" &&
       !file &&
-      !sharedPost
+      !sharedPost &&
+      collageFiles.length < 2
     ) {
       alert(
         "Selecciona una foto o video, o comparte una publicación."
@@ -1525,6 +2261,18 @@ export default function StoryComposer({
     try {
       let prepared =
         file;
+
+      if (
+        kind ===
+          "standard" &&
+        collageFiles.length >=
+          2
+      ) {
+        prepared =
+          await generateCollageImage(
+            collageFiles
+          );
+      }
 
       if (
         kind ===
@@ -1814,11 +2562,19 @@ export default function StoryComposer({
     kind === "standard"
   ) {
     /*
-      ALUMNI_1_1_0_D1_STUDIO
-      Story Studio de una sola pantalla:
-      herramientas, edición y publicación viven
-      encima del medio. No existe panel inferior.
+      ALUMNI_1_1_0_D2_STUDIO_PRO
+      Todo el editor vive encima de la historia.
+      Móvil: pinch directo para escala.
+      Desktop: controles A-/A+ auxiliares.
     */
+    const editorColor =
+      STORY_TEXT_COLORS.find(
+        (item) =>
+          item.id ===
+          storyTextColor
+      )?.value ||
+      "#ffffff";
+
     const editorFontSize =
       `clamp(${(
         20 *
@@ -1836,9 +2592,18 @@ export default function StoryComposer({
       standardOverlay
         ? {
             ...standardOverlay,
-            text: undefined,
+            text:
+              undefined,
           }
         : standardOverlay;
+
+    const hasMedia =
+      Boolean(
+        previewUrl ||
+        sharedPost ||
+        collageFiles.length >=
+          2
+      );
 
     return createPortal(
       <div
@@ -1846,7 +2611,60 @@ export default function StoryComposer({
         data-pull-refresh-lock="true"
       >
         <div className="relative mx-auto h-[100dvh] w-full max-w-[560px] overflow-hidden bg-black shadow-[0_0_90px_rgba(0,0,0,.55)]">
-          {previewUrl ? (
+          {collagePreviewUrls.length >=
+          2 ? (
+            <div
+              className="absolute inset-0 grid gap-[3px] bg-[#07090e]"
+              style={{
+                filter:
+                  STORY_FILTER_CSS[
+                    storyFilter
+                  ],
+                gridTemplateColumns:
+                  collagePreviewUrls.length ===
+                  2
+                    ? "1fr"
+                    : "1fr 1fr",
+                gridTemplateRows:
+                  collagePreviewUrls.length ===
+                  2
+                    ? "1fr 1fr"
+                    : collagePreviewUrls.length ===
+                      3
+                    ? "1fr 1fr"
+                    : "1fr 1fr",
+              }}
+            >
+              {collagePreviewUrls.map(
+                (
+                  url,
+                  index
+                ) => (
+                  <div
+                    key={url}
+                    className="min-h-0 min-w-0 overflow-hidden"
+                    style={
+                      collagePreviewUrls.length ===
+                        3 &&
+                      index === 0
+                        ? {
+                            gridColumn:
+                              "1 / span 2",
+                          }
+                        : undefined
+                    }
+                  >
+                    <img
+                      src={url}
+                      alt=""
+                      draggable={false}
+                      className="h-full w-full object-cover"
+                    />
+                  </div>
+                )
+              )}
+            </div>
+          ) : previewUrl ? (
             file?.type.startsWith(
               "video/"
             ) ? (
@@ -1856,6 +2674,12 @@ export default function StoryComposer({
                 muted
                 loop
                 playsInline
+                style={{
+                  filter:
+                    STORY_FILTER_CSS[
+                      storyFilter
+                    ],
+                }}
                 className="absolute inset-0 h-full w-full object-cover"
               />
             ) : (
@@ -1864,6 +2688,12 @@ export default function StoryComposer({
                   src={previewUrl}
                   alt=""
                   aria-hidden="true"
+                  style={{
+                    filter:
+                      STORY_FILTER_CSS[
+                        storyFilter
+                      ],
+                  }}
                   className="absolute inset-0 h-full w-full scale-110 object-cover opacity-55 blur-3xl"
                 />
 
@@ -1873,6 +2703,12 @@ export default function StoryComposer({
                   src={previewUrl}
                   alt=""
                   draggable={false}
+                  style={{
+                    filter:
+                      STORY_FILTER_CSS[
+                        storyFilter
+                      ],
+                  }}
                   className="absolute inset-0 h-full w-full object-contain"
                 />
               </>
@@ -1909,6 +2745,7 @@ export default function StoryComposer({
           )}
 
           <div className="pointer-events-none absolute inset-x-0 top-0 z-40 h-40 bg-gradient-to-b from-black/70 via-black/20 to-transparent" />
+
           <div className="pointer-events-none absolute inset-x-0 bottom-0 z-40 h-48 bg-gradient-to-t from-black/72 via-black/24 to-transparent" />
 
           <StoryFreeOverlay
@@ -1930,9 +2767,15 @@ export default function StoryComposer({
             <button
               type="button"
               onClick={() => {
-                setStoryTextEditing(false);
-                setStoryLinkEditing(false);
-                setStoryStyleOpen(false);
+                setStoryTextEditing(
+                  false
+                );
+                setStoryStyleOpen(
+                  false
+                );
+                setStoryFilterOpen(
+                  false
+                );
                 setKind(null);
               }}
               className="flex h-10 w-10 items-center justify-center rounded-full border border-white/[0.12] bg-black/28 text-white/90 shadow-[0_10px_30px_rgba(0,0,0,.28)] backdrop-blur-2xl transition active:scale-95"
@@ -1955,15 +2798,20 @@ export default function StoryComposer({
             </button>
           </div>
 
-          {(previewUrl ||
-            sharedPost) && (
+          {hasMedia && (
             <div className="absolute right-[max(14px,env(safe-area-inset-right))] top-[max(14px,env(safe-area-inset-top))] z-[80] flex flex-col gap-2">
               <button
                 type="button"
                 onClick={() => {
-                  setStoryTextEditing(true);
-                  setStoryLinkEditing(false);
-                  setStoryStyleOpen(false);
+                  setStoryTextEditing(
+                    true
+                  );
+                  setStoryStyleOpen(
+                    false
+                  );
+                  setStoryFilterOpen(
+                    false
+                  );
                 }}
                 className={`flex h-11 w-11 items-center justify-center rounded-full border backdrop-blur-2xl transition active:scale-95 ${
                   storyTextEditing
@@ -1983,19 +2831,32 @@ export default function StoryComposer({
                   setStoryText(
                     (current) =>
                       current
-                        ? current.endsWith(" ")
-                          ? current + "@"
-                          : current + " @"
+                        ? current.endsWith(
+                            " "
+                          )
+                          ? current +
+                            "@"
+                          : current +
+                            " @"
                         : "@"
                   );
-                  setStoryTextEditing(true);
-                  setStoryLinkEditing(false);
-                  setStoryStyleOpen(false);
+
+                  setStoryTextEditing(
+                    true
+                  );
+
+                  setStoryStyleOpen(
+                    false
+                  );
+
+                  setStoryFilterOpen(
+                    false
+                  );
                 }}
                 className="flex h-11 w-11 items-center justify-center rounded-full border border-white/[0.12] bg-black/28 text-white/85 backdrop-blur-2xl transition active:scale-95"
                 aria-label="Mención"
               >
-                <AtSign
+                <UserRoundPlus
                   size={18}
                 />
               </button>
@@ -2007,15 +2868,21 @@ export default function StoryComposer({
                     (value) =>
                       !value
                   );
-                  setStoryLinkEditing(false);
-                  setStoryTextEditing(false);
+
+                  setStoryTextEditing(
+                    false
+                  );
+
+                  setStoryFilterOpen(
+                    false
+                  );
                 }}
                 className={`flex h-11 w-11 items-center justify-center rounded-full border backdrop-blur-2xl transition active:scale-95 ${
                   storyStyleOpen
                     ? "border-[#aeb6ff]/50 bg-[#6d7cff]/25 text-white"
                     : "border-white/[0.12] bg-black/28 text-white/85"
                 }`}
-                aria-label="Estilo de texto"
+                aria-label="Color y fondo del texto"
               >
                 <Palette
                   size={18}
@@ -2025,21 +2892,40 @@ export default function StoryComposer({
               <button
                 type="button"
                 onClick={() => {
-                  setStoryLinkEditing(
+                  setStoryFilterOpen(
                     (value) =>
                       !value
                   );
-                  setStoryTextEditing(false);
-                  setStoryStyleOpen(false);
+
+                  setStoryTextEditing(
+                    false
+                  );
+
+                  setStoryStyleOpen(
+                    false
+                  );
                 }}
                 className={`flex h-11 w-11 items-center justify-center rounded-full border backdrop-blur-2xl transition active:scale-95 ${
-                  storyLinkEditing
+                  storyFilterOpen
                     ? "border-[#aeb6ff]/50 bg-[#6d7cff]/25 text-white"
                     : "border-white/[0.12] bg-black/28 text-white/85"
                 }`}
-                aria-label="Enlace"
+                aria-label="Filtros"
               >
-                <Link2
+                <SlidersHorizontal
+                  size={18}
+                />
+              </button>
+
+              <button
+                type="button"
+                onClick={() =>
+                  collageInputRef.current?.click()
+                }
+                className="flex h-11 w-11 items-center justify-center rounded-full border border-white/[0.12] bg-black/28 text-white/85 backdrop-blur-2xl transition active:scale-95"
+                aria-label="Crear collage"
+              >
+                <Images
                   size={18}
                 />
               </button>
@@ -2059,8 +2945,12 @@ export default function StoryComposer({
             </div>
           )}
 
+          {/*
+            PC: controles auxiliares.
+            Móvil: el tamaño se cambia con pinch sobre el texto.
+          */}
           {storyText && (
-            <div className="absolute left-[max(14px,env(safe-area-inset-left))] top-1/2 z-[82] flex -translate-y-1/2 flex-col items-center gap-2">
+            <div className="absolute left-[max(14px,env(safe-area-inset-left))] top-1/2 z-[82] hidden -translate-y-1/2 flex-col items-center gap-2 sm:flex">
               <button
                 type="button"
                 onClick={() =>
@@ -2078,7 +2968,6 @@ export default function StoryComposer({
                   )
                 }
                 className="flex h-10 min-w-10 items-center justify-center rounded-full border border-white/[0.12] bg-black/28 px-2.5 text-[11px] font-black text-white/85 backdrop-blur-2xl transition active:scale-95"
-                aria-label="Reducir texto"
               >
                 A−
               </button>
@@ -2107,7 +2996,6 @@ export default function StoryComposer({
                   )
                 }
                 className="flex h-10 min-w-10 items-center justify-center rounded-full border border-white/[0.12] bg-black/28 px-2.5 text-[11px] font-black text-white/85 backdrop-blur-2xl transition active:scale-95"
-                aria-label="Agrandar texto"
               >
                 A+
               </button>
@@ -2116,7 +3004,7 @@ export default function StoryComposer({
 
           {storyTextEditing && (
             <div
-              className="absolute z-[95] w-[82%] max-w-[430px] -translate-x-1/2 -translate-y-1/2"
+              className="absolute z-[95] w-[84%] max-w-[430px] -translate-x-1/2 -translate-y-1/2"
               style={{
                 left:
                   `${storyTextPosition.x}%`,
@@ -2124,15 +3012,17 @@ export default function StoryComposer({
                   `${storyTextPosition.y}%`,
               }}
             >
-              <div className={`relative ${
-                storyTextStyle ===
-                "glass"
-                  ? "rounded-[20px] border border-white/15 bg-black/32 px-4 py-3 backdrop-blur-2xl"
-                  : storyTextStyle ===
-                    "accent"
-                  ? "rounded-[20px] border border-[#8d98ff]/30 bg-[#6d7cff]/24 px-4 py-3 backdrop-blur-2xl"
-                  : ""
-              }`}>
+              <div
+                className={`relative ${
+                  storyTextFill ===
+                  "black"
+                    ? "rounded-[20px] bg-black/72 px-4 py-3 backdrop-blur-lg"
+                    : storyTextFill ===
+                      "white"
+                    ? "rounded-[20px] bg-white/92 px-4 py-3 backdrop-blur-lg"
+                    : ""
+                }`}
+              >
                 <textarea
                   autoFocus
                   value={
@@ -2151,8 +3041,15 @@ export default function StoryComposer({
                   style={{
                     fontSize:
                       editorFontSize,
+                    color:
+                      storyTextFill ===
+                        "white" &&
+                      storyTextColor ===
+                        "white"
+                        ? "#090b10"
+                        : editorColor,
                   }}
-                  className="w-full resize-none bg-transparent text-center font-black leading-[1.04] tracking-[-0.045em] text-white outline-none placeholder:text-white/35"
+                  className="w-full resize-none bg-transparent text-center font-black leading-[1.04] tracking-[-0.045em] outline-none placeholder:text-current/35"
                 />
 
                 <button
@@ -2169,120 +3066,254 @@ export default function StoryComposer({
                     size={16}
                   />
                 </button>
+
+                {mentionQuery !==
+                  null && (
+                  <div className="absolute left-1/2 top-[calc(100%+12px)] w-[min(88vw,330px)] -translate-x-1/2 overflow-hidden rounded-[22px] border border-white/[0.11] bg-[#0b0f17]/94 p-1.5 shadow-[0_24px_70px_rgba(0,0,0,.50)] backdrop-blur-2xl">
+                    <div className="flex items-center gap-2 px-3 py-2">
+                      <AtSign
+                        size={13}
+                        className="text-[#aeb6ff]"
+                      />
+
+                      <p className="text-[9px] font-black uppercase tracking-[0.11em] text-white/45">
+                        {mentionQuery
+                          ? `@ ${mentionQuery}`
+                          : "Personas que sigues"}
+                      </p>
+
+                      {mentionLoading && (
+                        <Loader2
+                          size={12}
+                          className="ml-auto animate-spin text-white/35"
+                        />
+                      )}
+                    </div>
+
+                    {mentionResults.length >
+                    0 ? (
+                      mentionResults.map(
+                        (
+                          profile
+                        ) => (
+                          <button
+                            key={
+                              profile.id
+                            }
+                            type="button"
+                            onClick={() =>
+                              insertMention(
+                                profile
+                              )
+                            }
+                            className="flex w-full items-center gap-3 rounded-[16px] px-3 py-2.5 text-left transition hover:bg-white/[0.055]"
+                          >
+                            <span className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full bg-white/[0.06] text-[10px] font-black">
+                              {profile.avatar_url ? (
+                                <img
+                                  src={
+                                    profile.avatar_url
+                                  }
+                                  alt=""
+                                  className="h-full w-full object-cover"
+                                />
+                              ) : (
+                                profile.username
+                                  .charAt(
+                                    0
+                                  )
+                                  .toUpperCase()
+                              )}
+                            </span>
+
+                            <span className="min-w-0 flex-1">
+                              <span className="block truncate text-[11px] font-black text-white/90">
+                                @
+                                {
+                                  profile.username
+                                }
+                              </span>
+
+                              {profile.full_name && (
+                                <span className="mt-0.5 block truncate text-[9px] text-white/35">
+                                  {
+                                    profile.full_name
+                                  }
+                                </span>
+                              )}
+                            </span>
+
+                            {followingProfiles.some(
+                              (
+                                item
+                              ) =>
+                                item.id ===
+                                profile.id
+                            ) && (
+                              <span className="rounded-full bg-[#6d7cff]/12 px-2 py-1 text-[7px] font-black uppercase tracking-[0.08em] text-[#aeb6ff]">
+                                Sigues
+                              </span>
+                            )}
+                          </button>
+                        )
+                      )
+                    ) : (
+                      <p className="px-3 pb-3 pt-1 text-[10px] text-white/30">
+                        {mentionLoading
+                          ? "Buscando…"
+                          : "Sin coincidencias"}
+                      </p>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
           )}
 
           {storyStyleOpen && (
-            <div className="absolute right-[72px] top-[max(72px,calc(env(safe-area-inset-top)+64px))] z-[94] w-[178px] overflow-hidden rounded-[22px] border border-white/[0.12] bg-[#0b0f17]/88 p-2 shadow-[0_22px_65px_rgba(0,0,0,.45)] backdrop-blur-2xl">
-              {[
-                [
-                  "clean",
-                  "Limpio",
-                  "Solo tipografía",
-                ],
-                [
-                  "glass",
-                  "Cristal",
-                  "Fondo translúcido",
-                ],
-                [
-                  "accent",
-                  "Acento",
-                  "Identidad Alumni",
-                ],
-              ].map(
-                ([
-                  id,
-                  label,
-                  description,
-                ]) => (
-                  <button
-                    key={id}
-                    type="button"
-                    onClick={() => {
-                      setStoryTextStyle(
-                        id as
-                          | "clean"
-                          | "glass"
-                          | "accent"
-                      );
-                      setStoryStyleOpen(
-                        false
-                      );
-                    }}
-                    className={`w-full rounded-[16px] px-3 py-2.5 text-left transition ${
-                      storyTextStyle ===
-                      id
-                        ? "bg-white/[0.08]"
-                        : "hover:bg-white/[0.04]"
-                    }`}
-                  >
-                    <p className="text-[10px] font-black text-white/90">
-                      {label}
-                    </p>
+            <div className="absolute right-[70px] top-[max(58px,calc(env(safe-area-inset-top)+46px))] z-[94] w-[218px] overflow-hidden rounded-[24px] border border-white/[0.12] bg-[#0b0f17]/92 p-3 shadow-[0_24px_70px_rgba(0,0,0,.50)] backdrop-blur-2xl">
+              <p className="px-1 text-[8px] font-black uppercase tracking-[0.13em] text-white/35">
+                Color del texto
+              </p>
 
-                    <p className="mt-0.5 text-[8px] text-white/35">
-                      {description}
-                    </p>
-                  </button>
-                )
-              )}
+              <div className="mt-3 flex flex-wrap gap-2">
+                {STORY_TEXT_COLORS.map(
+                  (item) => (
+                    <button
+                      key={
+                        item.id
+                      }
+                      type="button"
+                      onClick={() =>
+                        setStoryTextColor(
+                          item.id
+                        )
+                      }
+                      title={
+                        item.label
+                      }
+                      className={`relative h-8 w-8 rounded-full border transition ${
+                        storyTextColor ===
+                        item.id
+                          ? "scale-110 border-white/80"
+                          : "border-white/10"
+                      }`}
+                      style={{
+                        background:
+                          item.value,
+                      }}
+                    >
+                      {storyTextColor ===
+                        item.id && (
+                        <span className="absolute inset-0 flex items-center justify-center">
+                          <Check
+                            size={13}
+                            className={
+                              item.id ===
+                              "white" ||
+                              item.id ===
+                              "gold"
+                                ? "text-black"
+                                : "text-white"
+                            }
+                          />
+                        </span>
+                      )}
+                    </button>
+                  )
+                )}
+              </div>
+
+              <div className="my-4 h-px bg-white/[0.07]" />
+
+              <p className="px-1 text-[8px] font-black uppercase tracking-[0.13em] text-white/35">
+                Relleno
+              </p>
+
+              <div className="mt-3 grid grid-cols-3 gap-2">
+                {[
+                  [
+                    "none",
+                    "Sin fondo",
+                  ],
+                  [
+                    "black",
+                    "Negro",
+                  ],
+                  [
+                    "white",
+                    "Blanco",
+                  ],
+                ].map(
+                  ([
+                    id,
+                    label,
+                  ]) => (
+                    <button
+                      key={id}
+                      type="button"
+                      onClick={() =>
+                        setStoryTextFill(
+                          id as StoryTextFill
+                        )
+                      }
+                      className={`rounded-[14px] border px-2 py-2.5 text-[8px] font-black transition ${
+                        storyTextFill ===
+                        id
+                          ? "border-[#aeb6ff]/45 bg-[#6d7cff]/13 text-[#c4c9ff]"
+                          : "border-white/[0.07] text-white/42"
+                      }`}
+                    >
+                      {label}
+                    </button>
+                  )
+                )}
+              </div>
             </div>
           )}
 
-          {storyLinkEditing && (
-            <div className="absolute inset-x-4 bottom-[104px] z-[96]">
-              <div className="mx-auto flex max-w-[460px] items-center gap-2 rounded-[20px] border border-white/[0.12] bg-[#0b0f17]/88 p-2 pl-4 shadow-[0_22px_65px_rgba(0,0,0,.45)] backdrop-blur-2xl">
-                <Link2
-                  size={15}
-                  className="shrink-0 text-[#aeb6ff]"
-                />
-
-                <input
-                  autoFocus
-                  value={
-                    storyLink
-                  }
-                  onChange={(event) =>
-                    setStoryLink(
-                      event.target.value
-                    )
-                  }
-                  placeholder="Pega un enlace"
-                  inputMode="url"
-                  className="h-9 min-w-0 flex-1 bg-transparent text-[12px] font-semibold text-white outline-none placeholder:text-white/30"
-                />
-
-                <button
-                  type="button"
-                  onClick={() =>
-                    setStoryLinkEditing(
-                      false
-                    )
-                  }
-                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/[0.08] text-white"
-                  aria-label="Guardar enlace"
-                >
-                  <Check
-                    size={15}
-                  />
-                </button>
+          {storyFilterOpen && (
+            <div className="absolute inset-x-3 bottom-[94px] z-[94]">
+              <div className="mx-auto flex max-w-[520px] gap-2 overflow-x-auto rounded-[24px] border border-white/[0.11] bg-[#0b0f17]/90 p-2.5 shadow-[0_24px_70px_rgba(0,0,0,.45)] backdrop-blur-2xl">
+                {STORY_FILTERS.map(
+                  (item) => (
+                    <button
+                      key={
+                        item.id
+                      }
+                      type="button"
+                      onClick={() =>
+                        setStoryFilter(
+                          item.id
+                        )
+                      }
+                      className={`shrink-0 rounded-full border px-3.5 py-2 text-[9px] font-black transition ${
+                        storyFilter ===
+                        item.id
+                          ? "border-[#aeb6ff]/45 bg-[#6d7cff]/15 text-[#c5caff]"
+                          : "border-white/[0.07] text-white/45"
+                      }`}
+                    >
+                      {
+                        item.label
+                      }
+                    </button>
+                  )
+                )}
               </div>
             </div>
           )}
 
           {storyText &&
             !storyTextEditing && (
-            <div className="pointer-events-none absolute bottom-[max(90px,calc(env(safe-area-inset-bottom)+78px))] left-[max(14px,env(safe-area-inset-left))] z-[70] max-w-[210px]">
-              <p className="rounded-full border border-white/[0.08] bg-black/22 px-3 py-1.5 text-[8px] font-bold text-white/40 backdrop-blur-xl">
+            <div className="pointer-events-none absolute bottom-[max(88px,calc(env(safe-area-inset-bottom)+76px))] left-[max(14px,env(safe-area-inset-left))] z-[70] max-w-[235px] sm:hidden">
+              <p className="rounded-full border border-white/[0.08] bg-black/24 px-3 py-1.5 text-[8px] font-bold text-white/42 backdrop-blur-xl">
                 Arrastra para mover · pellizca para cambiar tamaño
               </p>
             </div>
           )}
 
-          {(previewUrl ||
-            sharedPost) && (
+          {hasMedia && (
             <button
               type="button"
               onClick={
@@ -2291,7 +3322,7 @@ export default function StoryComposer({
               disabled={
                 publishing
               }
-              className="absolute bottom-[max(18px,env(safe-area-inset-bottom))] right-[max(14px,env(safe-area-inset-right))] z-[100] flex h-12 items-center gap-2 rounded-full border border-[#aeb6ff]/20 bg-[#6d7cff] px-5 text-[11px] font-black text-white shadow-[0_18px_50px_rgba(72,82,205,.38)] transition active:scale-[0.97] disabled:opacity-60"
+              className="group absolute bottom-[max(16px,env(safe-area-inset-bottom))] right-[max(14px,env(safe-area-inset-right))] z-[100] flex h-12 items-center gap-3 rounded-full border border-[#aeb6ff]/20 bg-[#6d7cff] pl-3 pr-5 text-[10px] font-black uppercase tracking-[0.08em] text-white shadow-[0_18px_50px_rgba(72,82,205,.38)] transition active:scale-[0.97] disabled:opacity-60"
             >
               {publishing ? (
                 <>
@@ -2303,10 +3334,14 @@ export default function StoryComposer({
                 </>
               ) : (
                 <>
-                  <Send
-                    size={15}
-                  />
-                  Subir historia
+                  <span className="relative flex h-8 w-8 items-center justify-center rounded-full bg-white/[0.11] text-[14px] font-black tracking-[-0.08em]">
+                    A
+                    <span className="ml-[1px] text-[#c9ceff]">
+                      .
+                    </span>
+                    <span className="absolute inset-[-3px] rounded-full border border-white/[0.08] opacity-0 transition group-active:opacity-100" />
+                  </span>
+                  Publicar
                 </>
               )}
             </button>
@@ -2326,6 +3361,21 @@ export default function StoryComposer({
             </button>
           )}
 
+          {collageFiles.length >=
+            2 && (
+            <button
+              type="button"
+              onClick={() =>
+                setCollageFiles(
+                  []
+                )
+              }
+              className="absolute bottom-[max(22px,env(safe-area-inset-bottom))] left-[max(14px,env(safe-area-inset-left))] z-[80] text-[9px] font-black uppercase tracking-[0.1em] text-white/45"
+            >
+              Quitar collage
+            </button>
+          )}
+
           <HiddenInput
             inputRef={
               mediaInputRef
@@ -2333,6 +3383,23 @@ export default function StoryComposer({
             onPick={
               chooseMedia
             }
+          />
+
+          <input
+            ref={
+              collageInputRef
+            }
+            type="file"
+            accept="image/*"
+            multiple
+            className="hidden"
+            onChange={(event) => {
+              chooseCollage(
+                event.target.files
+              );
+              event.currentTarget.value =
+                "";
+            }}
           />
         </div>
       </div>,
