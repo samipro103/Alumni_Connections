@@ -141,7 +141,7 @@ function FeedContent() {
     if (user) {
       const { data: profileData } = await supabase
         .from("profiles")
-        .select("id, username, avatar_url, university, career, city, country")
+        .select("id, username, avatar_url, university, education_institution_name, education_program_name, career, city, country, residence_country_code")
         .eq("id", user.id)
         .maybeSingle();
 
@@ -168,8 +168,14 @@ function FeedContent() {
         profiles (
           username,
           avatar_url,
+          full_name,
           university,
-          career
+          education_institution_name,
+          education_program_name,
+          career,
+          city,
+          country,
+          residence_country_code
         ),
         likes (
           user_id

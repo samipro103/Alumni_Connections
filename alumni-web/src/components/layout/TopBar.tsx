@@ -95,7 +95,7 @@ export default function TopBar() {
             <input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Buscar personas, carrera o universidad"
+              placeholder="Buscar personas, carrera, programa o universidad"
               className="h-full flex-1 bg-transparent px-3 text-sm text-white outline-none placeholder:text-zinc-600"
             />
           </div>

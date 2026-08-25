@@ -1,229 +1,1144 @@
 "use client";
 
-import { Suspense, useEffect, useMemo, useState } from "react";
-import { useSearchParams } from "next/navigation";
+import {
+  Suspense,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
+import {
+  useSearchParams,
+} from "next/navigation";
 import Link from "next/link";
-import { Briefcase, GraduationCap, MapPin, Search, UserPlus, Users } from "lucide-react";
-import { supabase } from "@/lib/supabase";
+import {
+  Briefcase,
+  Building2,
+  GraduationCap,
+  MapPin,
+  Search,
+  Sparkles,
+  UserPlus,
+  Users,
+} from "lucide-react";
+import {
+  supabase,
+} from "@/lib/supabase";
 import AppShell from "@/components/layout/AppShell";
-import { useAuth } from "@/components/auth/AuthProvider";
-import { getRecommendedProfiles, RecommendedProfile } from "@/lib/recommendations";
+import {
+  useAuth,
+} from "@/components/auth/AuthProvider";
+import {
+  getRecommendedProfiles,
+  RecommendedProfile,
+} from "@/lib/recommendations";
 
-type FilterType = "all" | "university" | "career" | "location";
+type FilterType =
+  | "all"
+  | "institution"
+  | "career"
+  | "program"
+  | "location";
+
+function normalize(
+  value: unknown
+) {
+  return String(value || "")
+    .normalize("NFKD")
+    .replace(
+      /[\u0300-\u036f]/g,
+      ""
+    )
+    .trim()
+    .toLowerCase();
+}
+
+function institutionOf(
+  person: any
+) {
+  return (
+    person
+      ?.education_institution_name ||
+    person?.university ||
+    ""
+  );
+}
+
+function searchScore(
+  person: any,
+  query: string
+) {
+  const q =
+    normalize(query);
+
+  if (!q) return 0;
+
+  const username =
+    normalize(
+      person.username
+    );
+
+  const fullName =
+    normalize(
+      person.full_name
+    );
+
+  const career =
+    normalize(
+      person.career
+    );
+
+  const institution =
+    normalize(
+      institutionOf(
+        person
+      )
+    );
+
+  const program =
+    normalize(
+      person
+        .education_program_name
+    );
+
+  const city =
+    normalize(
+      person.city
+    );
+
+  const country =
+    normalize(
+      person.country
+    );
+
+  let score = 0;
+
+  if (username === q) {
+    score += 150;
+  } else if (
+    username.startsWith(q)
+  ) {
+    score += 110;
+  } else if (
+    username.includes(q)
+  ) {
+    score += 75;
+  }
+
+  if (fullName === q) {
+    score += 130;
+  } else if (
+    fullName.startsWith(q)
+  ) {
+    score += 95;
+  } else if (
+    fullName.includes(q)
+  ) {
+    score += 65;
+  }
+
+  if (
+    career.includes(q)
+  ) {
+    score += 58;
+  }
+
+  if (
+    program.includes(q)
+  ) {
+    score += 56;
+  }
+
+  if (
+    institution.includes(q)
+  ) {
+    score += 54;
+  }
+
+  if (
+    city.includes(q) ||
+    country.includes(q)
+  ) {
+    score += 38;
+  }
+
+  return score;
+}
+
+function affinityScore(
+  person: any,
+  me: any,
+  following:
+    Set<string>
+) {
+  let score = 0;
+
+  if (
+    following.has(
+      person.id
+    )
+  ) {
+    score += 6;
+  }
+
+  if (
+    normalize(
+      person
+        .education_program_name
+    ) &&
+    normalize(
+      person
+        .education_program_name
+    ) ===
+      normalize(
+        me?.education_program_name
+      )
+  ) {
+    score += 48;
+  }
+
+  if (
+    normalize(
+      person.career
+    ) &&
+    normalize(
+      person.career
+    ) ===
+      normalize(
+        me?.career
+      )
+  ) {
+    score += 40;
+  }
+
+  if (
+    normalize(
+      institutionOf(person)
+    ) &&
+    normalize(
+      institutionOf(person)
+    ) ===
+      normalize(
+        institutionOf(me)
+      )
+  ) {
+    score += 36;
+  }
+
+  if (
+    normalize(
+      person.city
+    ) &&
+    normalize(
+      person.city
+    ) ===
+      normalize(
+        me?.city
+      )
+  ) {
+    score += 11;
+  }
+
+  return score;
+}
+
+function matchesFilter(
+  person: any,
+  filter: FilterType
+) {
+  switch (filter) {
+    case "institution":
+      return Boolean(
+        institutionOf(
+          person
+        )
+      );
+
+    case "career":
+      return Boolean(
+        person.career
+      );
+
+    case "program":
+      return Boolean(
+        person
+          .education_program_name
+      );
+
+    case "location":
+      return Boolean(
+        person.city ||
+          person.country
+      );
+
+    default:
+      return true;
+  }
+}
+
+function searchableText(
+  person: any
+) {
+  return normalize(
+    [
+      person.username,
+      person.full_name,
+      person.career,
+      institutionOf(
+        person
+      ),
+      person
+        .education_program_name,
+      person.bio,
+      person.city,
+      person.country,
+    ]
+      .filter(Boolean)
+      .join(" ")
+  );
+}
+
+function connectionLabel(
+  person: any,
+  me: any,
+  following:
+    Set<string>
+) {
+  if (
+    following.has(
+      person.id
+    )
+  ) {
+    return "Ya sigues";
+  }
+
+  if (
+    person
+      .education_program_name &&
+    normalize(
+      person
+        .education_program_name
+    ) ===
+      normalize(
+        me?.education_program_name
+      )
+  ) {
+    return "Mismo programa";
+  }
+
+  if (
+    person.career &&
+    normalize(
+      person.career
+    ) ===
+      normalize(
+        me?.career
+      )
+  ) {
+    return "Tu carrera";
+  }
+
+  if (
+    institutionOf(
+      person
+    ) &&
+    normalize(
+      institutionOf(
+        person
+      )
+    ) ===
+      normalize(
+        institutionOf(me)
+      )
+  ) {
+    return "Tu institución";
+  }
+
+  if (
+    person.city &&
+    normalize(
+      person.city
+    ) ===
+      normalize(me?.city)
+  ) {
+    return "Misma ciudad";
+  }
+
+  return "";
+}
 
 function ExploreContent() {
-  const { user } = useAuth();
-  const searchParams = useSearchParams();
-  const [users, setUsers] = useState<any[]>([]);
-  const [recommended, setRecommended] = useState<RecommendedProfile[]>([]);
-  const [search, setSearch] = useState(searchParams.get("q") || "");
-  const [filter, setFilter] = useState<FilterType>("all");
-  const [loading, setLoading] = useState(true);
-  const [busy, setBusy] = useState<string | null>(null);
+  const { user } =
+    useAuth();
+
+  const searchParams =
+    useSearchParams();
+
+  const [users, setUsers] =
+    useState<any[]>([]);
+
+  const [
+    recommended,
+    setRecommended,
+  ] = useState<
+    RecommendedProfile[]
+  >([]);
+
+  const [search, setSearch] =
+    useState(
+      searchParams.get("q") ||
+        ""
+    );
+
+  const [filter, setFilter] =
+    useState<FilterType>(
+      "all"
+    );
+
+  const [loading, setLoading] =
+    useState(true);
+
+  const [busy, setBusy] =
+    useState<string | null>(
+      null
+    );
+
+  const [
+    currentProfile,
+    setCurrentProfile,
+  ] = useState<any>(null);
+
+  const [
+    followingIds,
+    setFollowingIds,
+  ] = useState<string[]>(
+    []
+  );
 
   useEffect(() => {
-    supabase
-      .from("profiles")
-      .select("id, username, avatar_url, full_name, university, career, bio, city, country, created_at")
-      .order("created_at", { ascending: false })
-      .then(({ data }) => {
-        setUsers(data || []);
-        setLoading(false);
-      });
+    setSearch(
+      searchParams.get("q") ||
+        ""
+    );
+  }, [searchParams]);
+
+  useEffect(() => {
+    let active = true;
+
+    async function loadDirectory() {
+      const { data } =
+        await supabase
+          .from("profiles")
+          .select(
+            [
+              "id",
+              "username",
+              "avatar_url",
+              "full_name",
+              "university",
+              "education_institution_name",
+              "education_institution_logo_url",
+              "education_program_name",
+              "education_program_logo_url",
+              "career",
+              "bio",
+              "city",
+              "country",
+              "residence_country_code",
+              "created_at",
+            ].join(",")
+          )
+          .order(
+            "created_at",
+            {
+              ascending: false,
+            }
+          )
+          .limit(500);
+
+      if (!active) return;
+
+      setUsers(
+        data || []
+      );
+
+      setLoading(false);
+    }
+
+    void loadDirectory();
+
+    return () => {
+      active = false;
+    };
   }, []);
 
   useEffect(() => {
     if (!user) {
       setRecommended([]);
+      setCurrentProfile(null);
+      setFollowingIds([]);
       return;
     }
-    getRecommendedProfiles(user.id, 8).then(setRecommended);
+
+    let active = true;
+
+    async function loadPersonalization() {
+      const [
+        { data: me },
+        { data: follows },
+        recommendations,
+      ] = await Promise.all([
+        supabase
+          .from("profiles")
+          .select(
+            [
+              "id",
+              "university",
+              "education_institution_name",
+              "education_program_name",
+              "career",
+              "city",
+              "country",
+              "residence_country_code",
+            ].join(",")
+          )
+          .eq(
+            "id",
+            user!.id
+          )
+          .maybeSingle(),
+
+        supabase
+          .from("follows")
+          .select(
+            "following_id"
+          )
+          .eq(
+            "follower_id",
+            user!.id
+          ),
+
+        getRecommendedProfiles(
+          user!.id,
+          10
+        ),
+      ]);
+
+      if (!active) return;
+
+      setCurrentProfile(
+        me || null
+      );
+
+      setFollowingIds(
+        (follows || []).map(
+          (row: any) =>
+            row.following_id
+        )
+      );
+
+      setRecommended(
+        recommendations
+      );
+    }
+
+    void loadPersonalization();
+
+    return () => {
+      active = false;
+    };
   }, [user?.id]);
 
-  async function follow(person: RecommendedProfile) {
+  async function follow(
+    person:
+      RecommendedProfile
+  ) {
     if (!user) {
-      window.location.href = "/login";
+      window.location.href =
+        "/login";
       return;
     }
 
     setBusy(person.id);
-    const { error } = await supabase.from("follows").insert({
-      follower_id: user.id,
-      following_id: person.id,
-    });
+
+    const { error } =
+      await supabase
+        .from("follows")
+        .insert({
+          follower_id:
+            user.id,
+          following_id:
+            person.id,
+        });
 
     if (!error) {
-      await supabase.from("notifications").insert({
-        user_id: person.id,
-        actor_id: user.id,
-        type: "follow",
-        target_type: "profile",
-        target_id: user.id,
-      });
-      setRecommended((old) => old.filter((item) => item.id !== person.id));
+      await supabase
+        .from("notifications")
+        .insert({
+          user_id:
+            person.id,
+          actor_id:
+            user.id,
+          type: "follow",
+          target_type:
+            "profile",
+          target_id:
+            user.id,
+        });
+
+      setRecommended(
+        (current) =>
+          current.filter(
+            (item) =>
+              item.id !==
+              person.id
+          )
+      );
+
+      setFollowingIds(
+        (current) =>
+          current.includes(
+            person.id
+          )
+            ? current
+            : [
+                ...current,
+                person.id,
+              ]
+      );
     }
 
     setBusy(null);
   }
 
-  const filteredUsers = useMemo(() => {
-    const q = search.trim().toLowerCase();
+  const following =
+    useMemo(
+      () =>
+        new Set(
+          followingIds
+        ),
+      [followingIds]
+    );
 
-    return users.filter((person: any) => {
-      const fields = [
-        person.username,
-        person.full_name,
-        person.university,
-        person.career,
-        person.bio,
-        person.city,
-        person.country,
-      ].filter(Boolean).map((value) => String(value).toLowerCase());
+  const filteredUsers =
+    useMemo(() => {
+      const q =
+        normalize(search);
 
-      if (q && !fields.some((value) => value.includes(q))) return false;
-      if (filter === "university") return Boolean(person.university);
-      if (filter === "career") return Boolean(person.career);
-      if (filter === "location") return Boolean(person.city || person.country);
-      return true;
-    });
-  }, [users, search, filter]);
+      return users
+        .filter(
+          (person: any) => {
+            if (
+              person.id ===
+              user?.id
+            ) {
+              return false;
+            }
+
+            if (
+              !matchesFilter(
+                person,
+                filter
+              )
+            ) {
+              return false;
+            }
+
+            if (
+              q &&
+              !searchableText(
+                person
+              ).includes(q)
+            ) {
+              return false;
+            }
+
+            return true;
+          }
+        )
+        .map(
+          (person: any) => ({
+            ...person,
+            _searchScore:
+              searchScore(
+                person,
+                search
+              ),
+            _affinityScore:
+              affinityScore(
+                person,
+                currentProfile,
+                following
+              ),
+          })
+        )
+        .sort(
+          (a: any, b: any) => {
+            if (q) {
+              const searchDiff =
+                b._searchScore -
+                a._searchScore;
+
+              if (
+                searchDiff !== 0
+              ) {
+                return searchDiff;
+              }
+            }
+
+            const affinityDiff =
+              b._affinityScore -
+              a._affinityScore;
+
+            if (
+              affinityDiff !== 0
+            ) {
+              return affinityDiff;
+            }
+
+            return (
+              new Date(
+                b.created_at
+              ).getTime() -
+              new Date(
+                a.created_at
+              ).getTime()
+            );
+          }
+        );
+    }, [
+      users,
+      search,
+      filter,
+      currentProfile,
+      following,
+      user?.id,
+    ]);
 
   const filters = [
-    ["all", "Todos", <Users key="u" size={14} />],
-    ["university", "Universidad", <GraduationCap key="g" size={14} />],
-    ["career", "Carrera", <Briefcase key="b" size={14} />],
-    ["location", "Ubicación", <MapPin key="m" size={14} />],
+    {
+      id: "all",
+      label: "Todos",
+      icon: Users,
+    },
+    {
+      id: "institution",
+      label: "Institución",
+      icon: Building2,
+    },
+    {
+      id: "career",
+      label: "Carrera",
+      icon: GraduationCap,
+    },
+    {
+      id: "program",
+      label: "Programa",
+      icon: Sparkles,
+    },
+    {
+      id: "location",
+      label: "Ubicación",
+      icon: MapPin,
+    },
   ] as const;
 
   return (
     <AppShell>
-      <div className="alumni-explore-page mx-auto w-full max-w-[940px]">
-        <div className="mb-6 pt-2">
-          <h1 className="text-[30px] font-black tracking-[-0.04em]">Explorar</h1>
-          <p className="mt-1 text-sm text-zinc-600">
-            Descubre personas relevantes para tu carrera y comunidad.
+      <div className="mx-auto w-full max-w-[940px]">
+        <header className="pb-6 pt-2 sm:pb-8">
+          <p className="text-[10px] font-black uppercase tracking-[0.22em] text-[var(--app-muted-2)]">
+            Red Alumni.
           </p>
-        </div>
 
-        <div className="alumni-search-line flex h-12 items-center rounded-2xl border border-white/[0.07] bg-white/[0.035] px-4 focus-within:border-[#6d7cff]/40">
-          <Search size={18} className="text-zinc-600" />
-          <input
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Buscar personas, carrera o universidad..."
-            className="alumni-mobile-input h-full min-w-0 flex-1 bg-transparent px-3 text-sm text-zinc-200 outline-none placeholder:text-zinc-700"
-          />
-          <span className="text-[11px] font-bold text-zinc-700">{filteredUsers.length}</span>
-        </div>
+          <div className="mt-2 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <h1 className="text-[31px] font-black tracking-[-0.045em] text-[var(--app-text)] sm:text-[35px]">
+                Descubrir
+              </h1>
 
-        <div className="alumni-filter-strip scrollbar-thin mt-3 flex gap-2 overflow-x-auto pb-1">
-          {filters.map(([id, label, icon]) => (
-            <button
-              key={id}
-              onClick={() => setFilter(id as FilterType)}
-              className={`flex h-9 shrink-0 items-center gap-2 rounded-xl px-3 text-xs font-bold transition ${
-                filter === id
-                  ? "bg-[#6d7cff] text-white"
-                  : "border border-white/[0.07] bg-white/[0.025] text-zinc-600 hover:bg-white/[0.05] hover:text-zinc-300"
-              }`}
-            >
-              {icon}
-              {label}
-            </button>
-          ))}
-        </div>
-
-        {!search && recommended.length > 0 && (
-          <section className="mt-7">
-            <h2 className="text-lg font-black tracking-[-0.025em]">Recomendados para ti</h2>
-            <p className="mt-1 text-xs text-zinc-700">
-              Según universidad, carrera, conexiones y actividad.
-            </p>
-
-            <div className="alumni-recommended-grid mt-4 grid gap-3 sm:grid-cols-2">
-              {recommended.slice(0, 6).map((person) => (
-                <div key={person.id} className="alumni-profile-suggestion flex items-center gap-3 rounded-[22px] border border-white/[0.07] bg-[#101318]/95 p-4">
-                  <Link href={`/u/${person.username}`} className="flex min-w-0 flex-1 items-center gap-3">
-                    <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[#1a1f29] text-sm font-bold ring-1 ring-white/10">
-                      {person.avatar_url ? (
-                        <img src={person.avatar_url} alt={person.username} className="h-full w-full object-cover" />
-                      ) : (
-                        person.username?.charAt(0)?.toUpperCase() || "U"
-                      )}
-                    </div>
-                    <div className="min-w-0">
-                      <p className="truncate text-sm font-black text-zinc-100">@{person.username}</p>
-                      <p className="mt-1 truncate text-xs text-zinc-600">{person.reason}</p>
-                    </div>
-                  </Link>
-
-                  <button
-                    onClick={() => follow(person)}
-                    disabled={busy === person.id}
-                    className="flex h-9 shrink-0 items-center gap-1.5 rounded-xl bg-white/[0.06] px-3 text-xs font-black text-zinc-300 transition hover:bg-[#6d7cff] hover:text-white disabled:opacity-50"
-                  >
-                    <UserPlus size={14} />
-                    Seguir
-                  </button>
-                </div>
-              ))}
+              <p className="mt-1 max-w-xl text-sm leading-6 text-[var(--app-muted)]">
+                Encuentra personas por institución, carrera, programa y ubicación.
+              </p>
             </div>
-          </section>
-        )}
 
-        <section className="mt-7">
-          <h2 className="text-lg font-black tracking-[-0.025em]">Comunidad</h2>
-          <p className="mt-1 text-xs text-zinc-700">
-            {search ? `Resultados para “${search}”` : "Explora todos los perfiles de Alumni."}
-          </p>
+            <p className="text-xs font-bold text-[var(--app-muted-2)]">
+              {filteredUsers.length} perfiles
+            </p>
+          </div>
+        </header>
+
+        <div className="border-y border-[var(--app-border)] py-4">
+          <div className="flex items-center gap-3">
+            <Search
+              size={19}
+              className="shrink-0 text-[var(--app-muted)]"
+            />
+
+            <input
+              value={search}
+              onChange={(event) =>
+                setSearch(
+                  event.target.value
+                )
+              }
+              placeholder="Nombre, carrera, universidad, programa o ciudad..."
+              className="alumni-mobile-input h-11 min-w-0 flex-1 bg-transparent text-[15px] font-semibold text-[var(--app-text)] outline-none placeholder:font-medium placeholder:text-[var(--app-muted-2)]"
+            />
+
+            {search && (
+              <button
+                type="button"
+                onClick={() =>
+                  setSearch("")
+                }
+                className="text-[10px] font-black uppercase tracking-[0.12em] text-[var(--app-muted)] transition hover:text-[var(--app-text)]"
+              >
+                Limpiar
+              </button>
+            )}
+          </div>
+
+          <div className="scrollbar-thin mt-2 flex gap-1 overflow-x-auto">
+            {filters.map(
+              ({
+                id,
+                label,
+                icon: Icon,
+              }) => (
+                <button
+                  key={id}
+                  type="button"
+                  onClick={() =>
+                    setFilter(
+                      id as FilterType
+                    )
+                  }
+                  className={`relative flex h-9 shrink-0 items-center gap-2 px-3 text-xs font-bold transition ${
+                    filter === id
+                      ? "text-[var(--app-text)]"
+                      : "text-[var(--app-muted-2)] hover:text-[var(--app-muted)]"
+                  }`}
+                >
+                  <Icon
+                    size={14}
+                  />
+                  {label}
+
+                  {filter === id && (
+                    <span className="absolute inset-x-3 bottom-0 h-px bg-[var(--app-accent)]" />
+                  )}
+                </button>
+              )
+            )}
+          </div>
+        </div>
+
+        {!search &&
+          recommended.length >
+            0 && (
+            <section className="pt-8">
+              <div className="flex items-end justify-between gap-4">
+                <div>
+                  <h2 className="text-lg font-black tracking-[-0.025em] text-[var(--app-text)]">
+                    Personas que vale la pena conocer
+                  </h2>
+
+                  <p className="mt-1 text-xs leading-5 text-[var(--app-muted-2)]">
+                    Afinidad académica, conexiones y actividad reciente.
+                  </p>
+                </div>
+              </div>
+
+              <div className="mt-4 grid border-t border-[var(--app-border)] sm:grid-cols-2">
+                {recommended
+                  .slice(0, 6)
+                  .map(
+                    (
+                      person,
+                      index
+                    ) => (
+                      <div
+                        key={
+                          person.id
+                        }
+                        className={`flex min-w-0 items-center gap-3 border-b border-[var(--app-border)] py-4 ${
+                          index %
+                            2 ===
+                            0
+                            ? "sm:pr-5"
+                            : "sm:border-l sm:pl-5"
+                        }`}
+                      >
+                        <Link
+                          href={`/u/${person.username}`}
+                          className="flex min-w-0 flex-1 items-center gap-3"
+                        >
+                          <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[var(--app-surface-2)] text-sm font-black text-[var(--app-text)] ring-1 ring-[var(--app-border)]">
+                            {person.avatar_url ? (
+                              <img
+                                src={
+                                  person.avatar_url
+                                }
+                                alt={
+                                  person.username
+                                }
+                                loading={
+                                  index <
+                                  2
+                                    ? "eager"
+                                    : "lazy"
+                                }
+                                decoding="async"
+                                className="h-full w-full object-cover"
+                              />
+                            ) : (
+                              person.username
+                                ?.charAt(
+                                  0
+                                )
+                                ?.toUpperCase() ||
+                              "A"
+                            )}
+                          </div>
+
+                          <div className="min-w-0">
+                            <p className="truncate text-sm font-black text-[var(--app-text)]">
+                              @
+                              {
+                                person.username
+                              }
+                            </p>
+
+                            <p className="mt-1 truncate text-xs text-[var(--app-muted)]">
+                              {
+                                person.reason
+                              }
+                            </p>
+                          </div>
+                        </Link>
+
+                        <button
+                          type="button"
+                          onClick={() =>
+                            follow(
+                              person
+                            )
+                          }
+                          disabled={
+                            busy ===
+                            person.id
+                          }
+                          className="flex h-9 shrink-0 items-center gap-1.5 px-2 text-[10px] font-black uppercase tracking-[0.08em] text-[var(--app-accent)] transition hover:text-[var(--app-text)] disabled:opacity-50"
+                        >
+                          <UserPlus
+                            size={14}
+                          />
+                          Seguir
+                        </button>
+                      </div>
+                    )
+                  )}
+              </div>
+            </section>
+          )}
+
+        <section className="pb-12 pt-9">
+          <div className="flex items-end justify-between gap-4">
+            <div>
+              <h2 className="text-lg font-black tracking-[-0.025em] text-[var(--app-text)]">
+                {search
+                  ? "Resultados"
+                  : "Comunidad Alumni"}
+              </h2>
+
+              <p className="mt-1 text-xs leading-5 text-[var(--app-muted-2)]">
+                {search
+                  ? `Coincidencias para “${search}”`
+                  : "Ordenado por afinidad contigo y actividad reciente."}
+              </p>
+            </div>
+          </div>
 
           {loading ? (
-            <div className="py-16 text-center text-sm text-zinc-600">Buscando personas...</div>
-          ) : filteredUsers.length === 0 ? (
-            <div className="alumni-empty-state mt-4 rounded-[24px] border border-dashed border-white/[0.09] px-6 py-16 text-center">
-              <Users size={25} className="mx-auto text-zinc-700" />
-              <p className="mt-4 font-bold text-zinc-300">No encontramos coincidencias</p>
+            <div className="border-t border-[var(--app-border)] py-16 text-center text-sm text-[var(--app-muted)]">
+              Buscando personas...
+            </div>
+          ) : filteredUsers.length ===
+            0 ? (
+            <div className="mt-4 border-y border-[var(--app-border)] py-16 text-center">
+              <Users
+                size={24}
+                className="mx-auto text-[var(--app-muted-2)]"
+              />
+
+              <p className="mt-4 font-bold text-[var(--app-text-soft)]">
+                No encontramos coincidencias
+              </p>
+
+              <p className="mx-auto mt-1 max-w-sm text-xs leading-5 text-[var(--app-muted)]">
+                Prueba con otra carrera, institución, programa o ciudad.
+              </p>
             </div>
           ) : (
-            <div className="alumni-open-list mt-4 overflow-hidden rounded-[24px] border border-white/[0.07] bg-[#101318]/95">
-              <div className="divide-y divide-white/[0.06]">
-                {filteredUsers.map((person: any) => (
-                  <Link
-                    key={person.id}
-                    href={`/u/${person.username}`}
-                    className="alumni-directory-row flex gap-4 px-4 py-5 transition hover:bg-white/[0.035] sm:px-5"
-                  >
-                    <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[#1a1f29] text-sm font-bold ring-1 ring-white/10">
-                      {person.avatar_url ? (
-                        <img src={person.avatar_url} alt={person.username} className="h-full w-full object-cover" />
-                      ) : (
-                        person.username?.charAt(0)?.toUpperCase() || "U"
-                      )}
-                    </div>
+            <div className="mt-4 border-t border-[var(--app-border)]">
+              {filteredUsers.map(
+                (
+                  person: any,
+                  index: number
+                ) => {
+                  const label =
+                    connectionLabel(
+                      person,
+                      currentProfile,
+                      following
+                    );
 
-                    <div className="min-w-0 flex-1">
-                      <p className="font-black text-zinc-100">@{person.username}</p>
-                      <div className="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-xs text-zinc-600">
-                        {(person.career || person.university) && (
-                          <span className="flex items-center gap-1.5">
-                            <GraduationCap size={13} />
-                            {[person.career, person.university].filter(Boolean).join(" · ")}
-                          </span>
-                        )}
-                        {(person.city || person.country) && (
-                          <span className="flex items-center gap-1.5">
-                            <MapPin size={13} />
-                            {[person.city, person.country].filter(Boolean).join(", ")}
-                          </span>
+                  const institution =
+                    institutionOf(
+                      person
+                    );
+
+                  return (
+                    <Link
+                      key={
+                        person.id
+                      }
+                      href={`/u/${person.username}`}
+                      className="group flex gap-4 border-b border-[var(--app-border)] py-5 transition sm:px-1"
+                    >
+                      <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[var(--app-surface-2)] text-sm font-black text-[var(--app-text)] ring-1 ring-[var(--app-border)]">
+                        {person.avatar_url ? (
+                          <img
+                            src={
+                              person.avatar_url
+                            }
+                            alt={
+                              person.username
+                            }
+                            loading={
+                              index <
+                              3
+                                ? "eager"
+                                : "lazy"
+                            }
+                            decoding="async"
+                            className="h-full w-full object-cover"
+                          />
+                        ) : (
+                          person.username
+                            ?.charAt(
+                              0
+                            )
+                            ?.toUpperCase() ||
+                          "A"
                         )}
                       </div>
-                      {person.bio && (
-                        <p className="mt-2 line-clamp-2 text-sm leading-5 text-zinc-500">{person.bio}</p>
-                      )}
-                    </div>
-                  </Link>
-                ))}
-              </div>
+
+                      <div className="min-w-0 flex-1">
+                        <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
+                          <p className="truncate font-black text-[var(--app-text)] transition group-hover:text-[var(--app-accent)]">
+                            @
+                            {
+                              person.username
+                            }
+                          </p>
+
+                          {person.full_name && (
+                            <span className="truncate text-xs font-semibold text-[var(--app-muted)]">
+                              {
+                                person.full_name
+                              }
+                            </span>
+                          )}
+
+                          {label && (
+                            <span className="text-[9px] font-black uppercase tracking-[0.12em] text-[var(--app-accent)]">
+                              {
+                                label
+                              }
+                            </span>
+                          )}
+                        </div>
+
+                        <div className="mt-2 flex flex-wrap gap-x-5 gap-y-1.5 text-xs text-[var(--app-muted)]">
+                          {(person.career ||
+                            institution) && (
+                            <span className="flex min-w-0 items-center gap-1.5">
+                              <GraduationCap
+                                size={
+                                  13
+                                }
+                              />
+
+                              <span className="truncate">
+                                {[
+                                  person.career,
+                                  institution,
+                                ]
+                                  .filter(
+                                    Boolean
+                                  )
+                                  .join(
+                                    " · "
+                                  )}
+                              </span>
+                            </span>
+                          )}
+
+                          {person
+                            .education_program_name && (
+                            <span className="flex items-center gap-1.5">
+                              <Sparkles
+                                size={
+                                  13
+                                }
+                              />
+                              {
+                                person
+                                  .education_program_name
+                              }
+                            </span>
+                          )}
+
+                          {(person.city ||
+                            person.country) && (
+                            <span className="flex items-center gap-1.5">
+                              <MapPin
+                                size={
+                                  13
+                                }
+                              />
+                              {[
+                                person.city,
+                                person.country,
+                              ]
+                                .filter(
+                                  Boolean
+                                )
+                                .join(
+                                  ", "
+                                )}
+                            </span>
+                          )}
+                        </div>
+
+                        {person.bio && (
+                          <p className="mt-2 line-clamp-2 max-w-2xl text-sm leading-5 text-[var(--app-muted)]">
+                            {
+                              person.bio
+                            }
+                          </p>
+                        )}
+                      </div>
+
+                      <Briefcase
+                        size={16}
+                        className="mt-1 hidden shrink-0 text-[var(--app-muted-3)] transition group-hover:text-[var(--app-accent)] sm:block"
+                      />
+                    </Link>
+                  );
+                }
+              )}
             </div>
           )}
         </section>
@@ -236,7 +1151,7 @@ export default function ExplorePage() {
   return (
     <Suspense
       fallback={
-        <div className="flex min-h-screen items-center justify-center bg-[#090b0f] text-sm text-zinc-500">
+        <div className="flex min-h-screen items-center justify-center bg-[var(--app-bg)] text-sm text-[var(--app-muted)]">
           Cargando...
         </div>
       }

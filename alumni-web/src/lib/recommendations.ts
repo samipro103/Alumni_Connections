@@ -1,4 +1,5 @@
 "use client";
+
 import { supabase } from "@/lib/supabase";
 
 export type RecommendedProfile = {
@@ -7,103 +8,356 @@ export type RecommendedProfile = {
   avatar_url: string | null;
   full_name?: string | null;
   university?: string | null;
+  education_institution_name?: string | null;
+  education_program_name?: string | null;
   career?: string | null;
   city?: string | null;
   country?: string | null;
+  residence_country_code?: string | null;
   bio?: string | null;
   score: number;
   mutualCount: number;
   reason: string;
 };
 
-export async function getRecommendedProfiles(userId: string, limit = 8) {
-  const { data: me } = await supabase
+function normalized(
+  value: unknown
+) {
+  return String(value || "")
+    .normalize("NFKD")
+    .replace(
+      /[\u0300-\u036f]/g,
+      ""
+    )
+    .trim()
+    .toLowerCase();
+}
+
+function same(
+  left: unknown,
+  right: unknown
+) {
+  const a = normalized(left);
+  const b = normalized(right);
+
+  return Boolean(
+    a && b && a === b
+  );
+}
+
+function institution(
+  person: any
+) {
+  return (
+    person
+      ?.education_institution_name ||
+    person?.university ||
+    ""
+  );
+}
+
+export async function getRecommendedProfiles(
+  userId: string,
+  limit = 8
+) {
+  const { data: me } =
+    await supabase
+      .from("profiles")
+      .select(
+        [
+          "id",
+          "university",
+          "education_institution_name",
+          "education_program_name",
+          "career",
+          "city",
+          "country",
+          "residence_country_code",
+        ].join(",")
+      )
+      .eq("id", userId)
+      .maybeSingle();
+
+  const { data: mineRows } =
+    await supabase
+      .from("follows")
+      .select("following_id")
+      .eq(
+        "follower_id",
+        userId
+      );
+
+  const mine =
+    new Set(
+      (mineRows || []).map(
+        (row: any) =>
+          row.following_id
+      )
+    );
+
+  const {
+    data: candidatesData,
+  } = await supabase
     .from("profiles")
-    .select("id, university, career, city, country")
-    .eq("id", userId)
-    .maybeSingle();
-
-  const { data: mineRows } = await supabase
-    .from("follows")
-    .select("following_id")
-    .eq("follower_id", userId);
-
-  const mine = new Set((mineRows || []).map((r: any) => r.following_id));
-
-  const { data: candidatesData } = await supabase
-    .from("profiles")
-    .select("id, username, avatar_url, full_name, university, career, city, country, bio")
+    .select(
+      [
+        "id",
+        "username",
+        "avatar_url",
+        "full_name",
+        "university",
+        "education_institution_name",
+        "education_program_name",
+        "career",
+        "city",
+        "country",
+        "residence_country_code",
+        "bio",
+      ].join(",")
+    )
     .neq("id", userId)
-    .limit(80);
+    .limit(140);
 
-  const candidates = (candidatesData || []).filter((p: any) => !mine.has(p.id));
-  if (!candidates.length) return [];
+  const candidates =
+    (candidatesData || []).filter(
+      (person: any) =>
+        !mine.has(person.id)
+    );
 
-  const ids = candidates.map((p: any) => p.id);
+  if (!candidates.length) {
+    return [];
+  }
 
-  const { data: otherFollows } = await supabase
+  const ids =
+    candidates.map(
+      (person: any) =>
+        person.id
+    );
+
+  const {
+    data: otherFollows,
+  } = await supabase
     .from("follows")
-    .select("follower_id, following_id")
-    .in("follower_id", ids);
+    .select(
+      "follower_id, following_id"
+    )
+    .in(
+      "follower_id",
+      ids
+    );
 
-  const followMap = new Map<string, Set<string>>();
-  (otherFollows || []).forEach((row: any) => {
-    const set = followMap.get(row.follower_id) || new Set<string>();
-    set.add(row.following_id);
-    followMap.set(row.follower_id, set);
+  const followMap =
+    new Map<
+      string,
+      Set<string>
+    >();
+
+  (
+    otherFollows || []
+  ).forEach((row: any) => {
+    const set =
+      followMap.get(
+        row.follower_id
+      ) ||
+      new Set<string>();
+
+    set.add(
+      row.following_id
+    );
+
+    followMap.set(
+      row.follower_id,
+      set
+    );
   });
 
-  const since = new Date();
-  since.setDate(since.getDate() - 30);
+  const since =
+    new Date();
 
-  const { data: recentPosts } = await supabase
+  since.setDate(
+    since.getDate() - 30
+  );
+
+  const {
+    data: recentPosts,
+  } = await supabase
     .from("posts")
     .select("user_id")
     .in("user_id", ids)
-    .gte("created_at", since.toISOString());
+    .gte(
+      "created_at",
+      since.toISOString()
+    );
 
-  const active = new Set((recentPosts || []).map((p: any) => p.user_id));
+  const active =
+    new Set(
+      (
+        recentPosts || []
+      ).map(
+        (post: any) =>
+          post.user_id
+      )
+    );
 
-  return candidates.map((p: any) => {
-    let score = 0;
-    let mutualCount = 0;
+  return candidates
+    .map((person: any) => {
+      let score = 0;
+      let mutualCount = 0;
 
-    const theirs = followMap.get(p.id) || new Set<string>();
-    mine.forEach((id) => {
-      if (theirs.has(id)) mutualCount += 1;
-    });
+      const theirs =
+        followMap.get(
+          person.id
+        ) ||
+        new Set<string>();
 
-    const sameUniversity = me?.university && p.university === me.university;
-    const sameCareer = me?.career && p.career === me.career;
-    const sameCity = me?.city && p.city === me.city;
-    const sameCountry = me?.country && p.country === me.country;
+      mine.forEach((id) => {
+        if (
+          theirs.has(id)
+        ) {
+          mutualCount += 1;
+        }
+      });
 
-    if (sameUniversity) score += 40;
-    if (sameCareer) score += 35;
-    score += Math.min(mutualCount * 8, 24);
-    if (sameCity) score += 10;
-    else if (sameCountry) score += 5;
-    if (p.avatar_url) score += 3;
-    if (p.bio) score += 2;
-    if (active.has(p.id)) score += 5;
+      const sameInstitution =
+        same(
+          institution(me),
+          institution(person)
+        );
 
-    let reason = "Perfil de la comunidad";
-    if (sameCareer && mutualCount) {
-      reason = `${p.career} · ${mutualCount} ${mutualCount === 1 ? "conexión en común" : "conexiones en común"}`;
-    } else if (mutualCount) {
-      reason = `${mutualCount} ${mutualCount === 1 ? "conexión en común" : "conexiones en común"}`;
-    } else if (sameCareer) {
-      reason = `También estudia ${p.career}`;
-    } else if (sameUniversity) {
-      reason = p.university;
-    } else if (sameCity) {
-      reason = `También está en ${p.city}`;
-    } else {
-      reason = p.career || p.university || reason;
-    }
+      const sameProgram =
+        same(
+          me?.education_program_name,
+          person
+            .education_program_name
+        );
 
-    return { ...p, score, mutualCount, reason };
-  })
-  .sort((a: any, b: any) => b.score - a.score)
-  .slice(0, limit);
+      const sameCareer =
+        same(
+          me?.career,
+          person.career
+        );
+
+      const sameCity =
+        same(
+          me?.city,
+          person.city
+        );
+
+      const sameCountry =
+        same(
+          me
+            ?.residence_country_code ||
+            me?.country,
+          person
+            .residence_country_code ||
+            person.country
+        );
+
+      if (sameProgram) {
+        score += 48;
+      }
+
+      if (sameCareer) {
+        score += 39;
+      }
+
+      if (sameInstitution) {
+        score += 36;
+      }
+
+      score +=
+        Math.min(
+          mutualCount * 9,
+          27
+        );
+
+      if (sameCity) {
+        score += 12;
+      } else if (
+        sameCountry
+      ) {
+        score += 5;
+      }
+
+      if (
+        person.avatar_url
+      ) {
+        score += 3;
+      }
+
+      if (person.bio) {
+        score += 2;
+      }
+
+      if (
+        active.has(person.id)
+      ) {
+        score += 7;
+      }
+
+      let reason =
+        "Perfil de la comunidad";
+
+      if (
+        sameProgram &&
+        person.education_program_name
+      ) {
+        reason =
+          person
+            .education_program_name;
+      } else if (
+        sameCareer &&
+        mutualCount
+      ) {
+        reason =
+          `${person.career} · ${mutualCount} ${
+            mutualCount === 1
+              ? "conexión en común"
+              : "conexiones en común"
+          }`;
+      } else if (
+        mutualCount
+      ) {
+        reason =
+          `${mutualCount} ${
+            mutualCount === 1
+              ? "conexión en común"
+              : "conexiones en común"
+          }`;
+      } else if (
+        sameCareer &&
+        person.career
+      ) {
+        reason =
+          `También estudia ${person.career}`;
+      } else if (
+        sameInstitution
+      ) {
+        reason =
+          institution(person);
+      } else if (
+        sameCity &&
+        person.city
+      ) {
+        reason =
+          `También está en ${person.city}`;
+      } else {
+        reason =
+          person.career ||
+          institution(person) ||
+          reason;
+      }
+
+      return {
+        ...person,
+        score,
+        mutualCount,
+        reason,
+      };
+    })
+    .sort(
+      (a: any, b: any) =>
+        b.score - a.score
+    )
+    .slice(0, limit);
 }
