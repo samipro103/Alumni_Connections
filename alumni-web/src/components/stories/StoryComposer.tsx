@@ -22,6 +22,7 @@ import {
   Move,
   Palette,
   Play,
+  Send,
   SlidersHorizontal,
   Sparkles,
   UserRoundPlus,

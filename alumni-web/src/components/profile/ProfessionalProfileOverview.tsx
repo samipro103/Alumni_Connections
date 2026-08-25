@@ -16,6 +16,11 @@ import {
 import {
   es,
 } from "date-fns/locale";
+import {
+  externalLinkRel,
+  safeExternalUrl,
+  type SocialKind,
+} from "@/lib/safeExternalUrl";
 
 type Props = {
   profile: any;
@@ -36,22 +41,6 @@ function first(
   ) as
     | string
     | undefined;
-}
-
-function safeUrl(
-  value: unknown
-) {
-  const url =
-    String(value || "")
-      .trim();
-
-  if (!url) return "";
-
-  return /^https?:\/\//i.test(
-    url
-  )
-    ? url
-    : `https://${url}`;
 }
 
 function activityTotal(
@@ -144,24 +133,47 @@ export default function ProfessionalProfileOverview({
   const links = [
     {
       label: "Sitio web",
-      value: profile?.website,
+      key:
+        "website" as SocialKind,
+      value:
+        profile?.website,
     },
     {
       label: "LinkedIn",
-      value: profile?.linkedin,
+      key:
+        "linkedin" as SocialKind,
+      value:
+        profile?.linkedin,
     },
     {
       label: "GitHub",
-      value: profile?.github,
+      key:
+        "github" as SocialKind,
+      value:
+        profile?.github,
     },
     {
       label: "Instagram",
-      value: profile?.instagram,
+      key:
+        "instagram" as SocialKind,
+      value:
+        profile?.instagram,
     },
-  ].filter(
-    (item) =>
-      Boolean(item.value)
-  );
+  ]
+    .map((item) => ({
+      ...item,
+      href:
+        safeExternalUrl(
+          item.value,
+          item.key
+        ),
+    }))
+    .filter(
+      (item) =>
+        Boolean(
+          item.href
+        )
+    );
 
   const lastPost =
     posts?.[0];
@@ -384,11 +396,14 @@ export default function ProfessionalProfileOverview({
                     key={
                       item.label
                     }
-                    href={safeUrl(
-                      item.value
-                    )}
+                    href={
+                      item.href
+                    }
                     target="_blank"
-                    rel="noreferrer"
+                    rel={
+                      externalLinkRel()
+                    }
+                    referrerPolicy="no-referrer"
                     className="flex items-center gap-1.5 rounded-lg border border-[var(--app-border)] px-2.5 py-2 text-[10px] font-black text-[var(--app-muted)] transition hover:border-[var(--app-accent)]/40 hover:text-[var(--app-text)]"
                   >
                     {
