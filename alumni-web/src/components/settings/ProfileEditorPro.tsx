@@ -48,7 +48,10 @@ export default function ProfileEditorPro({
   const avatarInput = useRef<HTMLInputElement>(null);
   const bannerInput = useRef<HTMLInputElement>(null);
   const avatarProcessToken = useRef(0);
-  const bannerProcessToken = useRef(0);
+const bannerProcessToken = useRef(0);
+const profileLoadToken = useRef(0);
+const mountedRef = useRef(true);
+
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -66,8 +69,20 @@ export default function ProfileEditorPro({
   const [picker, setPicker] = useState<"institution" | "program" | "career" | "residence" | "nationality1" | "nationality2" | null>(null);
 
   useEffect(() => {
-    void load();
-  }, [userId]);
+  mountedRef.current = true;
+
+  return () => {
+    mountedRef.current = false;
+    profileLoadToken.current += 1;
+    avatarProcessToken.current += 1;
+    bannerProcessToken.current += 1;
+  };
+}, []);
+
+useEffect(() => {
+  void load();
+}, [userId]);
+
 
   useEffect(() => {
     return () => {
@@ -86,55 +101,120 @@ export default function ProfileEditorPro({
   }, [bannerPreview]);
 
   async function load() {
-    setLoading(true);
+  const token =
+    ++profileLoadToken.current;
 
-    const [{ data: profileData, error }, { data: catalog }] = await Promise.all([
-      supabase.from("profiles").select("*").eq("id", userId).single(),
-      supabase
-        .from("education_institutions")
-        .select("id,name,kind,country_code,country_name,city,website,logo_url,parent_name")
-        .eq("active", true)
-        .order("name"),
-    ]);
+  setLoading(true);
 
-    if (error || !profileData) {
-      alert(error?.message || "No se pudo cargar el perfil.");
-      setLoading(false);
-      return;
-    }
+  const [
+    {
+      data: profileData,
+      error,
+    },
+    {
+      data: catalog,
+    },
+  ] = await Promise.all([
+    supabase
+      .from("profiles")
+      .select("*")
+      .eq("id", userId)
+      .single(),
+    supabase
+      .from("education_institutions")
+      .select("id,name,kind,country_code,country_name,city,website,logo_url,parent_name")
+      .eq("active", true)
+      .order("name"),
+  ]);
 
-    setProfile(profileData);
-    setInstitutions((catalog || []) as Institution[]);
-    setAvatarPreview(profileData.avatar_url || "");
-    setBannerPreview(profileData.banner_url || "");
-
-    if (profileData.education_institution_name) {
-      setInstitution({
-        id: profileData.education_institution_id || null,
-        name: profileData.education_institution_name,
-        kind: "university",
-        logo_url: profileData.education_institution_logo_url || null,
-      });
-    } else if (profileData.university) {
-      setInstitution({
-        id: null,
-        name: profileData.university,
-        kind: "university",
-        logo_url: null,
-      });
-    }
-
-    if (profileData.education_program_name) {
-      setProgram({
-        id: profileData.education_program_id || null,
-        name: profileData.education_program_name,
-        kind: "program",
-        logo_url: profileData.education_program_logo_url || null,
-      });
-    }
-
-    setLoading(false);
+  if (
+    !mountedRef.current ||
+    token !==
+      profileLoadToken.current
+  ) {
+    return;
   }
+
+  if (error || !profileData) {
+    alert(
+      error?.message ||
+        "No se pudo cargar el perfil."
+    );
+    setLoading(false);
+    return;
+  }
+
+  setProfile(profileData);
+  setInstitutions(
+    (catalog || []) as Institution[]
+  );
+  setAvatarFile(null);
+  setBannerFile(null);
+  setAvatarPreview(
+    profileData.avatar_url || ""
+  );
+  setBannerPreview(
+    profileData.banner_url || ""
+  );
+  setInstitution(null);
+  setProgram(null);
+  setPicker(null);
+
+  if (
+    profileData
+      .education_institution_name
+  ) {
+    setInstitution({
+      id:
+        profileData
+          .education_institution_id ||
+        null,
+      name:
+        profileData
+          .education_institution_name,
+      kind:
+        "university",
+      logo_url:
+        profileData
+          .education_institution_logo_url ||
+        null,
+    });
+  } else if (
+    profileData.university
+  ) {
+    setInstitution({
+      id: null,
+      name:
+        profileData.university,
+      kind:
+        "university",
+      logo_url: null,
+    });
+  }
+
+  if (
+    profileData
+      .education_program_name
+  ) {
+    setProgram({
+      id:
+        profileData
+          .education_program_id ||
+        null,
+      name:
+        profileData
+          .education_program_name,
+      kind: "program",
+      logo_url:
+        profileData
+          .education_program_logo_url ||
+        null,
+    });
+  }
+
+  setLoading(false);
+}
+
 
   function update(field: string, value: any) {
     setProfile((current: any) => ({
@@ -173,9 +253,13 @@ export default function ProfileEditorPro({
     try {
       const prepared = await prepareProfileImage(file, type);
 
-      if (tokenRef.current !== token) {
-        return;
-      }
+      if (
+  !mountedRef.current ||
+  tokenRef.current !== token
+) {
+  return;
+}
+
 
       const finalUrl = URL.createObjectURL(prepared.file);
 
@@ -199,7 +283,10 @@ export default function ProfileEditorPro({
     } catch (error: any) {
       console.error(error);
 
-      if (tokenRef.current === token) {
+      if (
+  mountedRef.current &&
+  tokenRef.current === token
+) {
         alert(
           error?.message ||
             "No se pudo preparar la imagen."
@@ -214,7 +301,10 @@ export default function ProfileEditorPro({
         }
       }
     } finally {
-      if (tokenRef.current === token) {
+      if (
+  mountedRef.current &&
+  tokenRef.current === token
+) {
         if (isAvatar) {
           setAvatarProcessing(false);
         } else {
@@ -238,26 +328,72 @@ export default function ProfileEditorPro({
       return;
     }
 
-    setSaving(true);
+    
 
-    try {
-      let avatarUrl = profile.avatar_url || "";
-      let bannerUrl = profile.banner_url || "";
+if (
+  !/^[a-zA-Z0-9._-]{3,30}$/.test(
+    cleanUsername
+  )
+) {
+  alert(
+    "El usuario debe tener entre 3 y 30 caracteres y usar solo letras, números, punto, guion o guion bajo."
+  );
+  return;
+}
+
+if (
+  String(profile.bio || "").length >
+  2000
+) {
+  alert(
+    "La biografía no puede superar 2000 caracteres."
+  );
+  return;
+}
+
+setSaving(true);
+
+try {
+  const {
+    data: {
+      user: authUser,
+    },
+    error: authError,
+  } =
+    await supabase.auth.getUser();
+
+  if (
+    authError ||
+    !authUser ||
+    authUser.id !== userId
+  ) {
+    throw new Error(
+      "Tu sesión cambió. Vuelve a abrir el editor antes de guardar."
+    );
+  }
+
+  let avatarUrl =
+    profile.avatar_url || "";
+  let bannerUrl =
+    profile.banner_url || "";
+
 
       if (avatarFile) {
         avatarUrl = await uploadProfileImage(
           avatarFile,
           "avatars",
-          userId
-        );
+            authUser.id
+);
+
       }
 
       if (bannerFile) {
         bannerUrl = await uploadProfileImage(
           bannerFile,
           "banners",
-          userId
-        );
+            authUser.id
+);
+
       }
 
       const residence = countryByCode(profile.residence_country_code);
@@ -302,9 +438,10 @@ export default function ProfileEditorPro({
           avatar_url: avatarUrl,
           banner_url: bannerUrl,
         })
-        .eq("id", userId);
+          .eq("id", authUser.id);
 
-      if (error) throw error;
+if (error) throw error;
+
 
       setProfile((current: any) => ({
         ...current,
@@ -341,7 +478,10 @@ export default function ProfileEditorPro({
   const nationality2 = countryByCode(profile.nationality_secondary_code);
 
   return (
-    <div className="alumni-profile-editor">
+    <div
+  className="alumni-profile-editor"
+  data-pull-refresh-lock="true"
+>
       <div className="alumni-profile-editor-top">
         <button
           type="button"

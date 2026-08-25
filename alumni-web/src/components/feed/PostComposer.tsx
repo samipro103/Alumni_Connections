@@ -10,7 +10,7 @@ interface Props {
   setContent: (v: string) => void;
   image: File | null;
   setImage: (file: File | null) => void;
-  createPost: () => void;
+  createPost: () => boolean | Promise<boolean>;
 }
 
 export default function PostComposer({
@@ -30,23 +30,33 @@ export default function PostComposer({
   const [publishing, setPublishing] = useState(false);
 
   useEffect(() => {
-    if (!user) {
-      setProfile(null);
-      return;
-    }
+  if (!user) {
+    setProfile(null);
+    return;
+  }
 
-    async function loadProfile() {
-      const { data } = await supabase
-        .from("profiles")
-        .select("username, avatar_url")
-        .eq("id", user!.id)
-        .maybeSingle();
+  const userId = user.id;
+  let active = true;
 
+  async function loadProfile() {
+    const { data } = await supabase
+      .from("profiles")
+      .select("username, avatar_url")
+      .eq("id", userId)
+      .maybeSingle();
+
+    if (active) {
       setProfile(data);
     }
+  }
 
-    void loadProfile();
-  }, [user?.id]);
+  void loadProfile();
+
+  return () => {
+    active = false;
+  };
+}, [user?.id]);
+
 
   useEffect(() => {
     if (!image) {
@@ -82,16 +92,27 @@ export default function PostComposer({
   }
 
   async function publish() {
-    if (!canPublish || publishing) return;
+  if (!canPublish || publishing) return;
 
-    setPublishing(true);
-    try {
+  setPublishing(true);
+
+  try {
+    const published =
       await createPost();
+
+    if (published) {
       setExpanded(false);
-    } finally {
-      setPublishing(false);
     }
+  } catch (error) {
+    console.error(
+      "Post publish error:",
+      error
+    );
+  } finally {
+    setPublishing(false);
   }
+}
+
 
   function cancelComposer() {
     setExpanded(false);

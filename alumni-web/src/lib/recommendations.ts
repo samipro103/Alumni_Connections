@@ -15,7 +15,9 @@ export type RecommendedProfile = {
   country?: string | null;
   residence_country_code?: string | null;
   bio?: string | null;
-  score: number;
+is_private?: boolean | null;
+score: number;
+
   mutualCount: number;
   reason: string;
 };
@@ -82,19 +84,38 @@ export async function getRecommendedProfiles(
       );
 
   const mine =
-    new Set(
-      (mineRows || []).map(
-        (row: any) =>
-          row.following_id
-      )
-    );
+  new Set(
+    (mineRows || []).map(
+      (row: any) =>
+        row.following_id
+    )
+  );
 
-  const {
-    data: candidatesData,
-  } = await supabase
+const {
+  data: pendingRows,
+} = await supabase
+  .from("follow_requests")
+  .select("target_id")
+  .eq(
+    "requester_id",
+    userId
+  );
+
+const pending =
+  new Set(
+    (pendingRows || []).map(
+      (row: any) =>
+        row.target_id
+    )
+  );
+
+const {
+  data: candidatesData,
+} = await supabase
+
     .from("profiles")
     .select(
-      "id, username, avatar_url, full_name, university, education_institution_name, education_program_name, career, city, country, residence_country_code, bio"
+      "id, username, avatar_url, full_name, university, education_institution_name, education_program_name, career, city, country, residence_country_code, bio, is_private"
     )
     .neq("id", userId)
     .limit(140);
@@ -105,7 +126,8 @@ export async function getRecommendedProfiles(
   const candidates =
     candidateRows.filter(
       (person: any) =>
-        !mine.has(person.id)
+        !mine.has(person.id) &&
+!pending.has(person.id)
     );
 
   if (!candidates.length) {

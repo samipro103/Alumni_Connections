@@ -622,29 +622,60 @@ export default function StoryViewer({
     setSendingReply(true);
 
     try {
-      const { error } = await supabase
-        .from("messages")
-        .insert({
-          sender_id: currentUserId,
-          receiver_id: story.user_id,
-          content,
-          message_type: "story_reply",
-          story_id: story.id,
-          story_media_url:
-            story.media_url,
-        });
+      const {
+  data: insertedMessage,
+  error,
+} = await supabase
+  .from("messages")
+  .insert({
+    sender_id: currentUserId,
+    receiver_id: story.user_id,
+    content,
+    message_type: "story_reply",
+    story_id: story.id,
+    story_media_url:
+      story.media_url,
+  })
+  .select("id")
+  .single();
 
-      if (error) throw error;
+if (
+  error ||
+  !insertedMessage
+) {
+  throw (
+    error ||
+    new Error(
+      "No se pudo crear la respuesta."
+    )
+  );
+}
 
-      await supabase
-        .from("notifications")
-        .insert({
-          user_id: story.user_id,
-          actor_id: currentUserId,
-          type: "story_reply",
-          target_type: "message",
-          target_id: story.id,
-        });
+const {
+  error:
+    notificationError,
+} = await supabase
+  .from("notifications")
+  .insert({
+    user_id: story.user_id,
+    actor_id: currentUserId,
+    type: "story_reply",
+    target_type: "message",
+    target_id:
+      String(
+        insertedMessage.id
+      ),
+  });
+
+if (
+  notificationError
+) {
+  console.warn(
+    "Story reply notification:",
+    notificationError
+  );
+}
+
 
       setReply("");
       setReplyFocused(false);

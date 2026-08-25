@@ -198,9 +198,13 @@ export default function ChatPage() {
     );
 
   const menuRef =
-    useRef<HTMLDivElement>(
-      null
-    );
+  useRef<HTMLDivElement>(
+    null
+  );
+
+const loadChatRequestRef =
+  useRef(0);
+
 
   useEffect(() => {
     if (
@@ -282,10 +286,13 @@ export default function ChatPage() {
         .subscribe();
 
     return () => {
-      supabase.removeChannel(
-        channel
-      );
-    };
+  loadChatRequestRef.current += 1;
+
+  supabase.removeChannel(
+    channel
+  );
+};
+
   }, [
     user?.id,
     username,
@@ -684,11 +691,15 @@ export default function ChatPage() {
   }
 
   async function loadChat(
-    showLoader = true
-  ) {
-    if (!user) return;
+  showLoader = true
+) {
+  if (!user) return;
 
-    if (showLoader) {
+  const requestId =
+    ++loadChatRequestRef.current;
+
+  if (showLoader) {
+
       setLoadingChat(
         true
       );
@@ -708,12 +719,20 @@ export default function ChatPage() {
         "username",
         username
       )
-      .maybeSingle();
+        .maybeSingle();
 
-    if (
-      receiverError ||
-      !receiverData
-    ) {
+if (
+  requestId !==
+  loadChatRequestRef.current
+) {
+  return;
+}
+
+if (
+  receiverError ||
+  !receiverData
+) {
+
       if (
         receiverError
       ) {
@@ -742,20 +761,36 @@ export default function ChatPage() {
       .or(
         `and(sender_id.eq.${user.id},receiver_id.eq.${receiverData.id}),and(sender_id.eq.${receiverData.id},receiver_id.eq.${user.id})`
       )
-      .order(
-        "created_at",
-        {
-          ascending: true,
-        }
-      );
+        .order(
+    "created_at",
+    {
+      ascending: true,
+    }
+  );
 
-    if (!error) {
+if (
+  requestId !==
+  loadChatRequestRef.current
+) {
+  return;
+}
+
+if (!error) {
+
       const hydrated =
-        await hydrateMedia(
-          data || []
-        );
+  await hydrateMedia(
+    data || []
+  );
 
-      setMessages(
+if (
+  requestId !==
+  loadChatRequestRef.current
+) {
+  return;
+}
+
+setMessages(
+
         hydrated
       );
 
@@ -786,12 +821,18 @@ export default function ChatPage() {
           readError
         );
       }
-    } else {
-      console.error(error);
-    }
+      } else {
+    console.error(error);
+  }
 
+  if (
+    requestId ===
+    loadChatRequestRef.current
+  ) {
     setLoadingChat(false);
   }
+}
+
 
   function clearMedia() {
     if (

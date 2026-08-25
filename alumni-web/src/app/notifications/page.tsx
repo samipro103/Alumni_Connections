@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   Bell,
@@ -110,8 +110,10 @@ export default function NotificationsPage() {
   const [requestBusy, setRequestBusy] = useState<string | null>(null);
   const [loadingNotifications, setLoadingNotifications] = useState(true);
   const [filter, setFilter] = useState<FilterType>("all");
+const loadRequestRef = useRef(0);
 
-  useEffect(() => {
+useEffect(() => {
+
     if (!loading && !user) router.push("/login");
   }, [user, loading, router]);
 
@@ -142,31 +144,55 @@ export default function NotificationsPage() {
   }, [user?.id]);
 
   async function loadNotifications(markRead = true) {
-    if (!user) return;
+  if (!user) return;
 
+  const requestId =
+    ++loadRequestRef.current;
+
+  if (markRead) {
     setLoadingNotifications(true);
+  }
 
-    const [
+  const [
+
       { data: notificationsData, error },
       { data: requestsData, error: requestsError },
     ] = await Promise.all([
-      supabase
-        .from("notifications")
-        .select("*")
-        .eq("user_id", user.id)
-        .order("created_at", { ascending: false }),
-      supabase
-        .from("follow_requests")
-        .select("id")
-        .eq("target_id", user.id),
-    ]);
+  supabase
+    .from("notifications")
+    .select("*")
+    .eq("user_id", user.id)
+    .order("created_at", { ascending: false }),
+  supabase
+    .from("follow_requests")
+    .select("id")
+    .eq("target_id", user.id),
+]);
 
-    if (error || !notificationsData) {
-      console.error(error);
-      setNotifications([]);
-      setLoadingNotifications(false);
-      return;
-    }
+if (
+  requestId !==
+  loadRequestRef.current
+) {
+  return;
+}
+
+if (error || !notificationsData) {
+  console.error(error);
+
+  if (markRead) {
+    setNotifications([]);
+      if (
+    requestId ===
+    loadRequestRef.current
+  ) {
+    setLoadingNotifications(false);
+  }
+}
+
+
+  return;
+}
+
 
     if (requestsError) {
       console.error("Error cargando solicitudes pendientes:", requestsError);
@@ -194,10 +220,18 @@ export default function NotificationsPage() {
         .select("id, username, full_name, avatar_url, university, career")
         .in("id", actorIds);
 
-      profilesData = data || [];
-    }
+        profilesData = data || [];
+}
 
-    setNotifications(
+if (
+  requestId !==
+  loadRequestRef.current
+) {
+  return;
+}
+
+setNotifications(
+
       notificationsData.map((notification: any) => ({
         ...notification,
         profile: profilesData.find(

@@ -39,6 +39,7 @@ function FeedContent() {
   const [focusedPostId, setFocusedPostId] = useState<number | null>(null);
   const [focusedCommentId, setFocusedCommentId] = useState<number | null>(null);
   const refreshTimerRef = useRef<number | null>(null);
+const feedRequestRef = useRef(0);
 
   useEffect(() => {
     void getPosts({ showLoader: true });
@@ -65,11 +66,15 @@ function FeedContent() {
       .subscribe();
 
     return () => {
-      if (refreshTimerRef.current !== null) {
-        window.clearTimeout(refreshTimerRef.current);
-      }
-      supabase.removeChannel(channel);
-    };
+  feedRequestRef.current += 1;
+
+  if (refreshTimerRef.current !== null) {
+    window.clearTimeout(refreshTimerRef.current);
+  }
+
+  supabase.removeChannel(channel);
+};
+
   }, []);
 
   useEffect(() => {
@@ -131,33 +136,62 @@ function FeedContent() {
   }: {
     showLoader?: boolean;
   } = {}) {
-    if (showLoader) {
-      setLoading(true);
-    }
+  const requestId =
+    ++feedRequestRef.current;
 
-    const { data: { session } } = await supabase.auth.getSession();
-    const user = session?.user;
-    setCurrentUser(user || null);
+  if (showLoader) {
+    setLoading(true);
+  }
+
+  const { data: { session } } =
+    await supabase.auth.getSession();
+
+  if (
+    requestId !==
+    feedRequestRef.current
+  ) {
+    return;
+  }
+
+  const user = session?.user;
+  setCurrentUser(user || null);
+
 
     if (user) {
       const { data: profileData } = await supabase
-        .from("profiles")
-        .select("id, username, avatar_url, university, education_institution_name, education_program_name, career, city, country, residence_country_code")
-        .eq("id", user.id)
-        .maybeSingle();
+  .from("profiles")
+  .select("id, username, avatar_url, university, education_institution_name, education_program_name, career, city, country, residence_country_code")
+  .eq("id", user.id)
+  .maybeSingle();
 
-      setCurrentProfile(profileData || null);
+if (
+  requestId !==
+  feedRequestRef.current
+) {
+  return;
+}
+
+setCurrentProfile(profileData || null);
+
     } else {
       setCurrentProfile(null);
     }
 
     if (user) {
       const { data: followingData } = await supabase
-        .from("follows")
-        .select("following_id")
-        .eq("follower_id", user.id);
+  .from("follows")
+  .select("following_id")
+  .eq("follower_id", user.id);
 
-      setFollowingIds((followingData || []).map((row: any) => row.following_id));
+if (
+  requestId !==
+  feedRequestRef.current
+) {
+  return;
+}
+
+setFollowingIds((followingData || []).map((row: any) => row.following_id));
+
     } else {
       setFollowingIds([]);
     }
@@ -182,9 +216,17 @@ function FeedContent() {
           user_id
         )
       `)
-      .order("created_at", { ascending: false });
+        .order("created_at", { ascending: false });
 
-    if (!postsData) {
+if (
+  requestId !==
+  feedRequestRef.current
+) {
+  return;
+}
+
+if (!postsData) {
+
       if (showLoader) {
         setPosts([]);
         setLoading(false);
@@ -193,11 +235,19 @@ function FeedContent() {
     }
 
     const { data: commentsData } = await supabase
-      .from("comments")
-      .select("*")
-      .order("created_at", { ascending: true });
+  .from("comments")
+  .select("*")
+  .order("created_at", { ascending: true });
 
-    const commentUserIds = [
+if (
+  requestId !==
+  feedRequestRef.current
+) {
+  return;
+}
+
+const commentUserIds = [
+
       ...new Set((commentsData || []).map((comment: any) => comment.user_id)),
     ];
 
@@ -209,11 +259,22 @@ function FeedContent() {
         .select("id, username, avatar_url")
         .in("id", commentUserIds);
 
-      commentProfiles = data || [];
-    }
+        commentProfiles = data || [];
+}
 
-    const formattedPosts = postsData.map((post: any) => {
-      const liked = post.likes.some((like: any) => like.user_id === user?.id);
+if (
+  requestId !==
+  feedRequestRef.current
+) {
+  return;
+}
+
+const formattedPosts = postsData.map((post: any) => {
+  const liked = (post.likes || []).some(
+    (like: any) =>
+      like.user_id === user?.id
+  );
+
 
       const postComments = (commentsData || [])
         .filter((comment: any) => comment.post_id === post.id)
@@ -224,7 +285,7 @@ function FeedContent() {
 
       return {
         ...post,
-        likesCount: post.likes.length,
+        likesCount: (post.likes || []).length,
         liked,
         comments: postComments,
       };
@@ -237,7 +298,9 @@ function FeedContent() {
     }
   }
 
-  async function uploadPostImage() {
+  async function uploadPostImage(
+  userId: string
+) {
     if (!image) return null;
 
     try {
@@ -256,7 +319,8 @@ function FeedContent() {
           .slice(-120);
 
       const fileName =
-        `${currentUser?.id || "user"}/${Date.now()}-${safeName}`;
+  `${userId}/${Date.now()}-${safeName}`;
+
 
       const { error } =
         await supabase.storage
@@ -296,23 +360,34 @@ function FeedContent() {
     }
   }
 
-  async function createPost() {
-    if (!content.trim() && !image) return;
+  async function createPost(): Promise<boolean> {
+  if (!content.trim() && !image) {
+    return false;
+  }
+
 
     const { data: { session } } = await supabase.auth.getSession();
     const user = session?.user;
 
     if (!user) {
-      window.location.href = "/login";
-      return;
-    }
+  window.location.href = "/login";
+  return false;
+}
+
 
     let imageUrl = null;
 
     if (image) {
-      imageUrl = await uploadPostImage();
-      if (!imageUrl) return;
-    }
+  imageUrl =
+    await uploadPostImage(
+      user.id
+    );
+
+  if (!imageUrl) {
+    return false;
+  }
+}
+
 
     const {
       data: insertedPost,
@@ -328,12 +403,13 @@ function FeedContent() {
       .single();
 
     if (error || !insertedPost) {
-      alert(
-        error?.message ||
-          "No se pudo crear la publicación."
-      );
-      return;
-    }
+  alert(
+    error?.message ||
+      "No se pudo crear la publicación."
+  );
+  return false;
+}
+
 
     const imageForModeration = image;
 
@@ -362,10 +438,13 @@ function FeedContent() {
       });
     })().catch(() => {});
 
-    setContent("");
-    setImage(null);
-    schedulePostsRefresh(60);
-  }
+      setContent("");
+  setImage(null);
+  schedulePostsRefresh(60);
+
+  return true;
+}
+
 
   async function deletePost(postId: number) {
     if (!confirm("¿Eliminar esta publicación?")) return;

@@ -429,7 +429,7 @@ function ExploreContent() {
         await supabase
           .from("profiles")
           .select(
-            "id, username, avatar_url, full_name, university, education_institution_name, education_institution_logo_url, education_program_name, education_program_logo_url, career, bio, city, country, residence_country_code, created_at"
+            "id, username, avatar_url, full_name, university, education_institution_name, education_institution_logo_url, education_program_name, education_program_logo_url, career, bio, city, country, residence_country_code, is_private, created_at"
           )
           .order(
             "created_at",
@@ -524,41 +524,39 @@ function ExploreContent() {
   }, [user?.id]);
 
   async function follow(
-    person:
-      RecommendedProfile
-  ) {
-    if (!user) {
-      window.location.href =
-        "/login";
-      return;
-    }
+  person:
+    RecommendedProfile
+) {
+  if (!user) {
+    window.location.href =
+      "/login";
+    return;
+  }
 
-    setBusy(person.id);
+  if (busy) {
+    return;
+  }
 
-    const { error } =
-      await supabase
-        .from("follows")
+  setBusy(person.id);
+
+  try {
+    if (person.is_private) {
+      const {
+        error,
+      } = await supabase
+        .from(
+          "follow_requests"
+        )
         .insert({
-          follower_id:
+          requester_id:
             user.id,
-          following_id:
-            person.id,
-        });
-
-    if (!error) {
-      await supabase
-        .from("notifications")
-        .insert({
-          user_id:
-            person.id,
-          actor_id:
-            user.id,
-          type: "follow",
-          target_type:
-            "profile",
           target_id:
-            user.id,
+            person.id,
         });
+
+      if (error) {
+        throw error;
+      }
 
       setRecommended(
         (current) =>
@@ -569,21 +567,85 @@ function ExploreContent() {
           )
       );
 
-      setFollowingIds(
-        (current) =>
-          current.includes(
-            person.id
-          )
-            ? current
-            : [
-                ...current,
-                person.id,
-              ]
+      return;
+    }
+
+    const {
+      error,
+    } = await supabase
+      .from("follows")
+      .insert({
+        follower_id:
+          user.id,
+        following_id:
+          person.id,
+      });
+
+    if (error) {
+      throw error;
+    }
+
+    const {
+      error:
+        notificationError,
+    } = await supabase
+      .from("notifications")
+      .insert({
+        user_id:
+          person.id,
+        actor_id:
+          user.id,
+        type: "follow",
+        target_type:
+          "profile",
+        target_id:
+          user.id,
+      });
+
+    if (
+      notificationError
+    ) {
+      console.warn(
+        "Follow notification:",
+        notificationError
       );
     }
 
+    setRecommended(
+      (current) =>
+        current.filter(
+          (item) =>
+            item.id !==
+            person.id
+        )
+    );
+
+    setFollowingIds(
+      (current) =>
+        current.includes(
+          person.id
+        )
+          ? current
+          : [
+              ...current,
+              person.id,
+            ]
+    );
+  } catch (error: any) {
+    console.error(
+      "Follow error:",
+      error
+    );
+
+    alert(
+      error?.message ||
+        "No se pudo completar la acción."
+    );
+  } finally {
     setBusy(null);
   }
+}
+
 
   const following =
     useMemo(
