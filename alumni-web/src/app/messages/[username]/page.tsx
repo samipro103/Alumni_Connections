@@ -28,6 +28,7 @@ import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/components/auth/AuthProvider";
 import AppShell from "@/components/layout/AppShell";
+import MessageProTools from "@/components/messages/MessageProTools";
 
 const BUCKET = "message-media";
 const MAX_IMAGE =
@@ -115,6 +116,24 @@ export default function ChatPage() {
     newMessage,
     setNewMessage,
   ] = useState("");
+
+  const [
+    replyingTo,
+    setReplyingTo,
+  ] = useState<any>(null);
+
+  const [
+    receiverTyping,
+    setReceiverTyping,
+  ] = useState(false);
+
+  const chatChannelRef =
+    useRef<any>(null);
+
+  const typingTimerRef =
+    useRef<number | null>(
+      null
+    );
 
   const [
     receiver,
@@ -283,15 +302,48 @@ const loadChatRequestRef =
           },
           refresh
         )
+        .on(
+          "broadcast",
+          {
+            event: "typing",
+          },
+          ({ payload }: any) => {
+            if (
+              payload?.user_id !==
+                user.id
+            ) {
+              setReceiverTyping(
+                Boolean(
+                  payload?.typing
+                )
+              );
+            }
+          }
+        )
         .subscribe();
 
-    return () => {
-  loadChatRequestRef.current += 1;
+    chatChannelRef.current =
+      channel;
 
-  supabase.removeChannel(
-    channel
-  );
-};
+    return () => {
+      loadChatRequestRef.current += 1;
+
+      if (
+        typingTimerRef.current !==
+        null
+      ) {
+        window.clearTimeout(
+          typingTimerRef.current
+        );
+      }
+
+      chatChannelRef.current =
+        null;
+
+      supabase.removeChannel(
+        channel
+      );
+    };
 
   }, [
     user?.id,
@@ -789,10 +841,47 @@ if (
   return;
 }
 
-setMessages(
+const messageIds =
+  hydrated.map(
+    (message: any) =>
+      message.id
+  );
 
-        hydrated
-      );
+let reactionRows: any[] =
+  [];
+
+if (messageIds.length) {
+  const {
+    data: reactionsData,
+  } = await supabase
+    .from(
+      "message_reactions"
+    )
+    .select(
+      "message_id,user_id,emoji"
+    )
+    .in(
+      "message_id",
+      messageIds
+    );
+
+  reactionRows =
+    reactionsData || [];
+}
+
+setMessages(
+  hydrated.map(
+    (message: any) => ({
+      ...message,
+      reactions:
+        reactionRows.filter(
+          (reaction: any) =>
+            reaction.message_id ===
+            message.id
+        ),
+    })
+  )
+);
 
       const {
         error:
@@ -1034,6 +1123,9 @@ setMessages(
             media_name:
               media?.name ||
               null,
+            reply_to_id:
+              replyingTo?.id ||
+              null,
           });
 
       if (error) {
@@ -1041,7 +1133,9 @@ setMessages(
       }
 
       setNewMessage("");
+      setReplyingTo(null);
       clearMedia();
+      broadcastTyping(false);
 
       await loadChat(false);
 
@@ -1071,6 +1165,132 @@ setMessages(
       );
     } finally {
       setSending(false);
+    }
+  }
+
+  function broadcastTyping(
+    typing: boolean
+  ) {
+    if (
+      !user ||
+      !receiver ||
+      !chatChannelRef.current
+    ) {
+      return;
+    }
+
+    void chatChannelRef.current.send({
+      type: "broadcast",
+      event: "typing",
+      payload: {
+        user_id: user.id,
+        typing,
+      },
+    });
+  }
+
+  function signalTyping(
+    value: string
+  ) {
+    broadcastTyping(
+      Boolean(value.trim())
+    );
+
+    if (
+      typingTimerRef.current !==
+      null
+    ) {
+      window.clearTimeout(
+        typingTimerRef.current
+      );
+    }
+
+    typingTimerRef.current =
+      window.setTimeout(
+        () =>
+          broadcastTyping(false),
+        1200
+      );
+  }
+
+  async function toggleMessageReaction(
+    messageId: number,
+    emoji: string
+  ) {
+    if (!user) return;
+
+    const message =
+      messages.find(
+        (item) =>
+          item.id === messageId
+      );
+
+    const mine =
+      message?.reactions?.find(
+        (reaction: any) =>
+          reaction.user_id ===
+          user.id
+      );
+
+    try {
+      if (
+        mine?.emoji === emoji
+      ) {
+        const { error } =
+          await supabase
+            .from(
+              "message_reactions"
+            )
+            .delete()
+            .eq(
+              "message_id",
+              messageId
+            )
+            .eq(
+              "user_id",
+              user.id
+            );
+
+        if (error) throw error;
+      } else {
+        if (mine) {
+          await supabase
+            .from(
+              "message_reactions"
+            )
+            .delete()
+            .eq(
+              "message_id",
+              messageId
+            )
+            .eq(
+              "user_id",
+              user.id
+            );
+        }
+
+        const { error } =
+          await supabase
+            .from(
+              "message_reactions"
+            )
+            .insert({
+              message_id:
+                messageId,
+              user_id:
+                user.id,
+              emoji,
+            });
+
+        if (error) throw error;
+      }
+
+      await loadChat(false);
+    } catch (error: any) {
+      alert(
+        error?.message ||
+          "No se pudo actualizar la reacción."
+      );
     }
   }
 
@@ -1502,7 +1722,7 @@ setMessages(
                       )}
 
                       <div
-                        className={`flex ${
+                        className={`group flex ${
                           mine
                             ? "justify-end"
                             : "justify-start"
@@ -1686,6 +1906,24 @@ setMessages(
                         )}
                       </div>
 
+                      <MessageProTools
+                        message={message}
+                        messages={messages}
+                        mine={mine}
+                        currentUserId={user?.id}
+                        onReply={() =>
+                          setReplyingTo(
+                            message
+                          )
+                        }
+                        onReact={(emoji) =>
+                          toggleMessageReaction(
+                            message.id,
+                            emoji
+                          )
+                        }
+                      />
+
                       {mine &&
                         isLastOwn &&
                         message.read_at &&
@@ -1702,12 +1940,43 @@ setMessages(
           )}
         </div>
 
+        {receiverTyping && (
+          <div className="shrink-0 px-4 pb-1 text-[10px] font-semibold text-[var(--app-muted-2)]">
+            @{receiver?.username || username} está escribiendo…
+          </div>
+        )}
+
         <form
           onSubmit={
             handleSendMessage
           }
           className="alumni-chat-composer-shell shrink-0 border-t border-[var(--app-border)] bg-[color-mix(in_srgb,var(--app-surface)_97%,transparent)] px-2.5 pb-[max(8px,env(safe-area-inset-bottom))] pt-2 backdrop-blur-2xl sm:px-4 sm:pb-4 sm:pt-3"
         >
+          {replyingTo && (
+            <div className="mb-2 flex items-center gap-3 rounded-[18px] border border-[var(--app-border)] bg-[var(--app-soft)] px-3 py-2">
+              <div className="min-w-0 flex-1">
+                <p className="text-[9px] font-black uppercase tracking-[0.1em] text-[var(--app-accent)]">
+                  Respondiendo
+                </p>
+                <p className="mt-1 truncate text-[11px] text-[var(--app-muted)]">
+                  {replyingTo.content ||
+                    replyingTo.media_name ||
+                    "Mensaje"}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() =>
+                  setReplyingTo(null)
+                }
+                className="flex h-8 w-8 items-center justify-center rounded-full text-[var(--app-muted)]"
+                aria-label="Cancelar respuesta"
+              >
+                <X size={14} />
+              </button>
+            </div>
+          )}
+
           {mediaFile && (
             <div className="mb-2 flex items-center gap-3 rounded-[18px] border border-[var(--app-border)] bg-[var(--app-soft)] p-2">
               <div className="h-12 w-12 shrink-0 overflow-hidden rounded-[13px] bg-black/20">
@@ -1818,6 +2087,10 @@ setMessages(
                 event
               ) => {
                 setNewMessage(
+                  event.target.value
+                );
+
+                signalTyping(
                   event.target.value
                 );
 
@@ -1998,3 +2271,5 @@ setMessages(
     </AppShell>
   );
 }
+
+/* ALUMNI_1_2_0_1_MESSAGING_PRO_CONTINUATION */

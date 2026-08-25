@@ -25,6 +25,7 @@ import ProfileSocialLinks from "@/components/profile/ProfileSocialLinks";
 import ProfileIdentityMeta from "@/components/profile/ProfileIdentityMeta";
 import ProfileHeaderFacts from "@/components/profile/ProfileHeaderFacts";
 import ProfessionalProfileOverview from "@/components/profile/ProfessionalProfileOverview";
+import { hydratePostMedia } from "@/lib/privateMedia";
 
 
 type ProfileTab = "posts" | "about";
@@ -95,8 +96,15 @@ export default function ProfilePage() {
       console.error("Error cargando publicaciones del perfil:", postsError);
     }
 
-    const safePosts = postsData || [];
-    const postIds = safePosts.map((post: any) => post.id);
+    const safePosts =
+      await hydratePostMedia(
+        (postsData || []) as any[]
+      );
+
+    const postIds =
+      safePosts.map(
+        (post: any) => post.id
+      );
 
     let commentsData: any[] = [];
 
@@ -470,3 +478,5 @@ function Detail({
     </div>
   );
 }
+
+/* ALUMNI_1_2_0_TRUST_BLOCK:OWN_PROFILE_MEDIA */

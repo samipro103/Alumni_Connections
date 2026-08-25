@@ -33,6 +33,7 @@ import AppShell from "@/components/layout/AppShell";
 import ProfileSettingsHub from "@/components/settings/ProfileSettingsHub";
 import ProfileEditorPro from "@/components/settings/ProfileEditorPro";
 import SpotifyPremiumMusicGate from "@/components/music/SpotifyPremiumMusicGate";
+import AccountTrustPanel from "@/components/settings/AccountTrustPanel";
 
 type SettingsSectionId =
   | "appearance"
@@ -247,6 +248,25 @@ export default function SettingsPage() {
       setAvatarPreview(data.avatar_url || "");
       setBannerPreview(data.banner_url || "");
       setIsPrivate(Boolean(data.is_private));
+
+      if (
+        data.is_private &&
+        !data.private_media_migrated_at
+      ) {
+        const {
+          error: migrationError,
+        } =
+          await supabase.functions.invoke(
+            "migrate-private-media"
+          );
+
+        if (migrationError) {
+          console.warn(
+            "Private media migration:",
+            migrationError
+          );
+        }
+      }
     }
 
     await loadFollowRequests();
@@ -319,6 +339,22 @@ export default function SettingsPage() {
 
       setIsPrivate(nextPrivate);
 
+      if (nextPrivate) {
+        const {
+          error: migrationError,
+        } =
+          await supabase.functions.invoke(
+            "migrate-private-media"
+          );
+
+        if (migrationError) {
+          console.warn(
+            "Private media migration:",
+            migrationError
+          );
+        }
+      }
+
       if (!nextPrivate) {
         setFollowRequests([]);
       }
@@ -346,6 +382,21 @@ export default function SettingsPage() {
       if (error) throw error;
 
       setIsPrivate(true);
+
+      const {
+        error: migrationError,
+      } =
+        await supabase.functions.invoke(
+          "migrate-private-media"
+        );
+
+      if (migrationError) {
+        console.warn(
+          "Private media migration:",
+          migrationError
+        );
+      }
+
       setPrivacyModalOpen(false);
     } catch (error: any) {
       console.error(error);
@@ -689,7 +740,7 @@ export default function SettingsPage() {
             )}
 
             {activeSection === "account" && (
-              <AccountPanel
+              <AccountTrustPanel
                 email={user?.email || ""}
                 logout={logout}
               />
@@ -1379,3 +1430,5 @@ function SocialField({
     </label>
   );
 }
+
+/* ALUMNI_1_2_0_TRUST_BLOCK:SETTINGS_TRUST */

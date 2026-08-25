@@ -20,6 +20,7 @@ import CommentLikeButton from "@/components/social/CommentLikeButton";
 import { rankForYouPosts } from "@/lib/feedRanking";
 import { analyzeImageLocally } from "@/lib/imageModerationClient";
 import { preparePostImage } from "@/lib/postImagePipeline";
+import { hydratePostMedia } from "@/lib/privateMedia";
 
 type FeedMode = "for-you" | "following";
 
@@ -269,7 +270,50 @@ if (
   return;
 }
 
-const formattedPosts = postsData.map((post: any) => {
+let mutedUserIds =
+  new Set<string>();
+
+if (user) {
+  const { data: muteRows } =
+    await supabase
+      .from("user_mutes")
+      .select("muted_user_id")
+      .eq("user_id", user.id);
+
+  mutedUserIds =
+    new Set(
+      (muteRows || []).map(
+        (row: any) =>
+          row.muted_user_id
+      )
+    );
+}
+
+if (
+  requestId !==
+  feedRequestRef.current
+) {
+  return;
+}
+
+const mediaReadyPosts =
+  await hydratePostMedia(
+    (postsData as any[]).filter(
+      (post: any) =>
+        !mutedUserIds.has(
+          post.user_id
+        )
+    )
+  );
+
+if (
+  requestId !==
+  feedRequestRef.current
+) {
+  return;
+}
+
+const formattedPosts = mediaReadyPosts.map((post: any) => {
   const liked = (post.likes || []).some(
     (like: any) =>
       like.user_id === user?.id
@@ -299,8 +343,9 @@ const formattedPosts = postsData.map((post: any) => {
   }
 
   async function uploadPostImage(
-  userId: string
-) {
+    userId: string,
+    isPrivate: boolean
+  ) {
     if (!image) return null;
 
     try {
@@ -313,18 +358,22 @@ const formattedPosts = postsData.map((post: any) => {
         prepared.file.name
           .normalize("NFKD")
           .replace(
-            /[^\w.\-]+/g,
+            /[^\\w.\\-]+/g,
             "_"
           )
           .slice(-120);
 
       const fileName =
-  `${userId}/${Date.now()}-${safeName}`;
+        `${userId}/${Date.now()}-${safeName}`;
 
+      const mediaBucket =
+        isPrivate
+          ? "private-posts"
+          : "posts";
 
       const { error } =
         await supabase.storage
-          .from("posts")
+          .from(mediaBucket)
           .upload(
             fileName,
             prepared.file,
@@ -342,6 +391,14 @@ const formattedPosts = postsData.map((post: any) => {
         throw error;
       }
 
+      if (isPrivate) {
+        return {
+          imageUrl: null,
+          imagePath: fileName,
+          mediaBucket,
+        };
+      }
+
       const { data } =
         supabase.storage
           .from("posts")
@@ -349,7 +406,14 @@ const formattedPosts = postsData.map((post: any) => {
             fileName
           );
 
-      return data.publicUrl;
+      return {
+        imageUrl:
+          data.publicUrl,
+        imagePath:
+          fileName,
+        mediaBucket:
+          "posts",
+      };
     } catch (error: any) {
       console.error(error);
       alert(
@@ -375,18 +439,41 @@ const formattedPosts = postsData.map((post: any) => {
 }
 
 
-    let imageUrl = null;
+    const {
+      data: privacyProfile,
+    } = await supabase
+      .from("profiles")
+      .select("is_private")
+      .eq("id", user.id)
+      .maybeSingle();
+
+    let imageMeta:
+      | {
+          imageUrl:
+            | string
+            | null;
+          imagePath:
+            | string
+            | null;
+          mediaBucket:
+            | string
+            | null;
+        }
+      | null = null;
 
     if (image) {
-  imageUrl =
-    await uploadPostImage(
-      user.id
-    );
+      imageMeta =
+        await uploadPostImage(
+          user.id,
+          Boolean(
+            privacyProfile?.is_private
+          )
+        );
 
-  if (!imageUrl) {
-    return false;
-  }
-}
+      if (!imageMeta) {
+        return false;
+      }
+    }
 
 
     const {
@@ -397,7 +484,15 @@ const formattedPosts = postsData.map((post: any) => {
       .insert({
         user_id: user.id,
         content: content.trim(),
-        image_url: imageUrl,
+        image_url:
+          imageMeta?.imageUrl ||
+          null,
+        image_path:
+          imageMeta?.imagePath ||
+          null,
+        media_bucket:
+          imageMeta?.mediaBucket ||
+          null,
       })
       .select("id")
       .single();
@@ -998,3 +1093,5 @@ export default function FeedPage() {
   );
 }
 
+
+/* ALUMNI_1_2_0_TRUST_BLOCK:FEED_PRIVATE_MEDIA */

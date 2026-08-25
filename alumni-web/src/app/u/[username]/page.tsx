@@ -29,6 +29,8 @@ import ProfileIdentityMeta from "@/components/profile/ProfileIdentityMeta";
 import ProfileHeaderFacts from "@/components/profile/ProfileHeaderFacts";
 import ProfessionalProfileOverview from "@/components/profile/ProfessionalProfileOverview";
 import CommentLikeButton from "@/components/social/CommentLikeButton";
+import UserSafetyActions from "@/components/trust/UserSafetyActions";
+import { hydratePostMedia } from "@/lib/privateMedia";
 
 type ProfileTab = "posts" | "about";
 
@@ -138,8 +140,13 @@ export default function UserProfilePage() {
       commentProfiles = data || [];
     }
 
+    const hydratedPosts =
+      await hydratePostMedia(
+        (postsData || []) as any[]
+      );
+
     setPosts(
-      (postsData || []).map((post: any) => ({
+      hydratedPosts.map((post: any) => ({
         ...post,
         liked:
           post.likes?.some(
@@ -546,6 +553,14 @@ export default function UserProfilePage() {
                     <MessageCircle size={15} />
                     Mensaje
                   </button>
+
+                  <UserSafetyActions
+                    targetUserId={profile.id}
+                    targetUsername={profile.username}
+                    onBlocked={() =>
+                      router.push("/feed")
+                    }
+                  />
                 </div>
               )}
             </div>
@@ -899,3 +914,5 @@ function Detail({
     </div>
   );
 }
+
+/* ALUMNI_1_2_0_TRUST_BLOCK:USER_PROFILE_SAFETY */

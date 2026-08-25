@@ -16,6 +16,7 @@ import StoryViewer, {
 import type {
   SharedPostStoryPayload,
 } from "@/components/stories/StoryFreeOverlay";
+import { hydrateStoryMedia } from "@/lib/privateMedia";
 
 type ProfileLite = {
   id: string;
@@ -156,12 +157,32 @@ export default function StoriesRail({
         throw followsError;
       }
 
+      const {
+        data: muteRows,
+      } = await supabase
+        .from("user_mutes")
+        .select("muted_user_id")
+        .eq("user_id", user.id);
+
+      const mutedIds =
+        new Set(
+          (muteRows || []).map(
+            (row: any) =>
+              row.muted_user_id
+          )
+        );
+
       const followingIds = (
         follows || []
-      ).map(
-        (row: any) =>
-          row.following_id as string
-      );
+      )
+        .map(
+          (row: any) =>
+            row.following_id as string
+        )
+        .filter(
+          (id) =>
+            !mutedIds.has(id)
+        );
 
       const candidateIds =
         Array.from(
@@ -181,6 +202,8 @@ export default function StoriesRail({
           id,
           user_id,
           media_url,
+          media_path,
+          media_bucket,
           media_type,
           created_at,
           expires_at,
@@ -299,8 +322,13 @@ export default function StoriesRail({
         return;
       }
 
+      const signedStories =
+        await hydrateStoryMedia(
+          storiesData
+        );
+
       const stories =
-        storiesData as StoryItem[];
+        signedStories as StoryItem[];
 
       if (!stories.length) {
         setGroups([]);
@@ -786,3 +814,5 @@ export default function StoriesRail({
     </>
   );
 }
+
+/* ALUMNI_1_2_0_TRUST_BLOCK:STORIES_PRIVATE_MEDIA */

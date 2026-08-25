@@ -390,6 +390,15 @@ export default function LoginPage() {
                     </div>
                   </label>
 
+                  <div className="flex justify-end">
+                    <Link
+                      href="/forgot-password"
+                      className="text-[11px] font-bold text-zinc-600 transition hover:text-[#8d98ff]"
+                    >
+                      ¿Olvidaste tu contraseña?
+                    </Link>
+                  </div>
+
                   <button
                     type="submit"
                     disabled={
@@ -429,3 +438,5 @@ export default function LoginPage() {
     </main>
   );
 }
+
+/* ALUMNI_1_2_0_TRUST_BLOCK:LOGIN_RECOVERY */

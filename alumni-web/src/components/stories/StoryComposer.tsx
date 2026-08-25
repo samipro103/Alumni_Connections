@@ -2269,6 +2269,11 @@ export default function StoryComposer({
       | string
       | null = null;
 
+    let storageBucket:
+      | "stories"
+      | "private-stories" =
+      "stories";
+
     try {
       let prepared =
         file;
@@ -2345,6 +2350,19 @@ export default function StoryComposer({
         );
       }
 
+      const {
+        data: privacyProfile,
+      } = await supabase
+        .from("profiles")
+        .select("is_private")
+        .eq("id", user.id)
+        .maybeSingle();
+
+      storageBucket =
+        privacyProfile?.is_private
+          ? "private-stories"
+          : "stories";
+
       path =
         `${user.id}/${Date.now()}-${cleanName(
           prepared.name
@@ -2352,7 +2370,7 @@ export default function StoryComposer({
 
       const { error: uploadError } =
         await supabase.storage
-          .from("stories")
+          .from(storageBucket)
           .upload(
             path,
             prepared,
@@ -2370,12 +2388,15 @@ export default function StoryComposer({
         throw uploadError;
       }
 
-      const { data: urlData } =
-        supabase.storage
-          .from("stories")
-          .getPublicUrl(
-            path
-          );
+      const mediaUrl =
+        storageBucket ===
+        "stories"
+          ? supabase.storage
+              .from("stories")
+              .getPublicUrl(
+                path
+              ).data.publicUrl
+          : "";
 
       const { error: insertError } =
         await supabase
@@ -2383,8 +2404,10 @@ export default function StoryComposer({
           .insert({
             user_id: user.id,
             media_url:
-              urlData.publicUrl,
+              mediaUrl,
             media_path: path,
+            media_bucket:
+              storageBucket,
             media_type:
               kind ===
                 "standard" &&
@@ -2486,7 +2509,7 @@ export default function StoryComposer({
     } catch (error: any) {
       if (path) {
         await supabase.storage
-          .from("stories")
+          .from(storageBucket)
           .remove([path]);
       }
 
@@ -4650,3 +4673,5 @@ function HiddenInput({
     />
   );
 }
+
+/* ALUMNI_1_2_0_TRUST_BLOCK:STORY_COMPOSER_PRIVATE */
