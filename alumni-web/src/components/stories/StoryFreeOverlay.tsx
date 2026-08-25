@@ -21,10 +21,11 @@ export type StoryOverlayData = {
     value: string;
     x: number;
     y: number;
-    size:
+    size?:
       | "small"
       | "medium"
       | "large";
+    scale?: number;
     style:
       | "clean"
       | "glass"
@@ -101,14 +102,14 @@ function TextContent({
                 onClick={(event) =>
                   event.stopPropagation()
                 }
-                className="pointer-events-auto text-[#aeb6ff] underline decoration-[#8d98ff]/35 underline-offset-4"
+                className="pointer-events-auto text-[#b8c0ff] underline decoration-[#8d98ff]/35 underline-offset-4"
               >
                 {piece}
               </a>
             ) : (
               <span
                 key={`${piece}-${index}`}
-                className="text-[#aeb6ff]"
+                className="text-[#b8c0ff]"
               >
                 {piece}
               </span>
@@ -128,10 +129,27 @@ function TextContent({
   );
 }
 
+function distance(
+  a: {
+    x: number;
+    y: number;
+  },
+  b: {
+    x: number;
+    y: number;
+  }
+) {
+  return Math.hypot(
+    b.x - a.x,
+    b.y - a.y
+  );
+}
+
 export default function StoryFreeOverlay({
   overlay,
   editable = false,
   onPositionChange,
+  onScaleChange,
 }: {
   overlay?:
     | StoryOverlayData
@@ -143,15 +161,30 @@ export default function StoryFreeOverlay({
       y: number;
     }
   ) => void;
+  onScaleChange?: (
+    scale: number
+  ) => void;
 }) {
   const rootRef =
     useRef<HTMLDivElement>(
       null
     );
 
-  const dragRef =
+  const pointersRef =
+    useRef(
+      new Map<
+        number,
+        {
+          x: number;
+          y: number;
+        }
+      >()
+    );
+
+  const pinchRef =
     useRef<{
-      pointerId: number;
+      distance: number;
+      scale: number;
     } | null>(null);
 
   if (!overlay) {
@@ -167,12 +200,45 @@ export default function StoryFreeOverlay({
   const link =
     overlay.link;
 
-  const textSize =
+  const scale =
+    clamp(
+      Number(
+        text?.scale || 1
+      ),
+      0.55,
+      2.2
+    );
+
+  const sizeBase =
     text?.size === "large"
-      ? "text-[clamp(28px,7vw,44px)]"
+      ? {
+          min: 28,
+          vw: 7,
+          max: 44,
+        }
       : text?.size === "small"
-      ? "text-[clamp(16px,4vw,22px)]"
-      : "text-[clamp(21px,5.4vw,32px)]";
+      ? {
+          min: 16,
+          vw: 4,
+          max: 22,
+        }
+      : {
+          min: 21,
+          vw: 5.4,
+          max: 32,
+        };
+
+  const fontSize =
+    `clamp(${(
+      sizeBase.min *
+      scale
+    ).toFixed(2)}px, ${(
+      sizeBase.vw *
+      scale
+    ).toFixed(2)}vw, ${(
+      sizeBase.max *
+      scale
+    ).toFixed(2)}px)`;
 
   const textStyle =
     text?.style === "glass"
@@ -210,10 +276,40 @@ export default function StoryFreeOverlay({
           rect.top) /
           rect.height) *
           100,
-        15,
-        76
+        12,
+        82
       ),
     });
+  }
+
+  function rememberPointer(
+    event: React.PointerEvent<HTMLDivElement>
+  ) {
+    pointersRef.current.set(
+      event.pointerId,
+      {
+        x:
+          event.clientX,
+        y:
+          event.clientY,
+      }
+    );
+  }
+
+  function releasePointer(
+    pointerId: number
+  ) {
+    pointersRef.current.delete(
+      pointerId
+    );
+
+    if (
+      pointersRef.current
+        .size < 2
+    ) {
+      pinchRef.current =
+        null;
+    }
   }
 
   return (
@@ -254,16 +350,19 @@ export default function StoryFreeOverlay({
 
       {text?.value && (
         <div
-          className={`absolute max-w-[82%] whitespace-pre-wrap text-center font-black leading-[1.04] tracking-[-0.045em] text-white ${textSize} ${textStyle} ${
+          className={`absolute max-w-[84%] whitespace-pre-wrap text-center font-black leading-[1.04] tracking-[-0.045em] text-white ${textStyle} ${
             editable
-              ? "pointer-events-auto cursor-grab touch-none active:cursor-grabbing"
+              ? "pointer-events-auto cursor-grab touch-none select-none active:cursor-grabbing"
               : ""
           }`}
           style={{
-            left: `${text.x}%`,
-            top: `${text.y}%`,
+            left:
+              `${text.x}%`,
+            top:
+              `${text.y}%`,
             transform:
               "translate(-50%, -50%)",
+            fontSize,
           }}
           onPointerDown={
             editable
@@ -271,19 +370,42 @@ export default function StoryFreeOverlay({
                   event.preventDefault();
                   event.stopPropagation();
 
-                  dragRef.current = {
-                    pointerId:
-                      event.pointerId,
-                  };
-
                   event.currentTarget.setPointerCapture(
                     event.pointerId
                   );
 
-                  updatePosition(
-                    event.clientX,
-                    event.clientY
+                  rememberPointer(
+                    event
                   );
+
+                  const values =
+                    Array.from(
+                      pointersRef.current.values()
+                    );
+
+                  if (
+                    values.length >=
+                      2 &&
+                    onScaleChange
+                  ) {
+                    pinchRef.current =
+                      {
+                        distance:
+                          Math.max(
+                            1,
+                            distance(
+                              values[0],
+                              values[1]
+                            )
+                          ),
+                        scale,
+                      };
+                  } else {
+                    updatePosition(
+                      event.clientX,
+                      event.clientY
+                    );
+                  }
                 }
               : undefined
           }
@@ -291,9 +413,9 @@ export default function StoryFreeOverlay({
             editable
               ? (event) => {
                   if (
-                    dragRef.current
-                      ?.pointerId !==
-                    event.pointerId
+                    !pointersRef.current.has(
+                      event.pointerId
+                    )
                   ) {
                     return;
                   }
@@ -301,28 +423,76 @@ export default function StoryFreeOverlay({
                   event.preventDefault();
                   event.stopPropagation();
 
-                  updatePosition(
-                    event.clientX,
-                    event.clientY
+                  rememberPointer(
+                    event
                   );
+
+                  const values =
+                    Array.from(
+                      pointersRef.current.values()
+                    );
+
+                  if (
+                    values.length >=
+                      2 &&
+                    pinchRef.current &&
+                    onScaleChange
+                  ) {
+                    const nextDistance =
+                      Math.max(
+                        1,
+                        distance(
+                          values[0],
+                          values[1]
+                        )
+                      );
+
+                    onScaleChange(
+                      clamp(
+                        pinchRef.current.scale *
+                          (nextDistance /
+                            pinchRef.current.distance),
+                        0.55,
+                        2.2
+                      )
+                    );
+
+                    return;
+                  }
+
+                  if (
+                    values.length ===
+                    1
+                  ) {
+                    updatePosition(
+                      event.clientX,
+                      event.clientY
+                    );
+                  }
                 }
               : undefined
           }
           onPointerUp={
             editable
               ? (event) => {
-                  if (
-                    dragRef.current
-                      ?.pointerId ===
+                  releasePointer(
                     event.pointerId
-                  ) {
-                    dragRef.current =
-                      null;
+                  );
 
+                  try {
                     event.currentTarget.releasePointerCapture(
                       event.pointerId
                     );
-                  }
+                  } catch {}
+                }
+              : undefined
+          }
+          onPointerCancel={
+            editable
+              ? (event) => {
+                  releasePointer(
+                    event.pointerId
+                  );
                 }
               : undefined
           }

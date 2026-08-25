@@ -171,12 +171,13 @@ export default function StoriesRail({
           ])
         );
 
-      const {
-        data: storiesData,
-        error: storiesError,
-      } = await supabase
-        .from("stories")
-        .select(`
+      /*
+        ALUMNI_1_1_0_D1_SAFE_STORIES
+        Una columna nueva nunca debe hacer desaparecer
+        las historias existentes. Si existe drift de
+        schema, cargamos inmediatamente el formato anterior.
+      */
+      const storyFieldsBase = `
           id,
           user_id,
           media_url,
@@ -208,29 +209,80 @@ export default function StoriesRail({
           story_animation,
           story_photo_style,
           story_decor,
-          story_font_style,
-          story_overlay
-        `)
-        .in("user_id", candidateIds)
-        .gt(
-          "expires_at",
-          new Date().toISOString()
-        )
-        .order("created_at", {
-          ascending: true,
-        });
+          story_font_style
+        `;
 
-      if (storiesError) {
+      let storiesResult =
+        await supabase
+          .from("stories")
+          .select(
+            `${storyFieldsBase}, story_overlay`
+          )
+          .in(
+            "user_id",
+            candidateIds
+          )
+          .gt(
+            "expires_at",
+            new Date().toISOString()
+          )
+          .order(
+            "created_at",
+            {
+              ascending: true,
+            }
+          );
+
+      if (
+        storiesResult.error &&
+        String(
+          storiesResult.error.message ||
+            ""
+        )
+          .toLowerCase()
+          .includes(
+            "story_overlay"
+          )
+      ) {
+        console.warn(
+          "Story overlay no disponible; cargando historias compatibles."
+        );
+
+        storiesResult =
+          await supabase
+            .from("stories")
+            .select(
+              storyFieldsBase
+            )
+            .in(
+              "user_id",
+              candidateIds
+            )
+            .gt(
+              "expires_at",
+              new Date().toISOString()
+            )
+            .order(
+              "created_at",
+              {
+                ascending: true,
+              }
+            );
+      }
+
+      if (
+        storiesResult.error
+      ) {
         console.error(
           "Stories load error:",
-          storiesError
+          storiesResult.error
         );
-        setGroups([]);
         return;
       }
 
       const stories = (
-        storiesData || []
+        storiesResult.data ||
+        []
       ) as StoryItem[];
 
       if (!stories.length) {

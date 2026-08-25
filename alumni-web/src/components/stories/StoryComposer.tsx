@@ -1129,6 +1129,26 @@ export default function StoryComposer({
       null
     );
 
+  const [
+    storyTextScale,
+    setStoryTextScale,
+  ] = useState(1);
+
+  const [
+    storyTextEditing,
+    setStoryTextEditing,
+  ] = useState(false);
+
+  const [
+    storyLinkEditing,
+    setStoryLinkEditing,
+  ] = useState(false);
+
+  const [
+    storyStyleOpen,
+    setStoryStyleOpen,
+  ] = useState(false);
+
   const [editorTab, setEditorTab] =
     useState<
       | "content"
@@ -1258,6 +1278,10 @@ export default function StoryComposer({
       x: 50,
       y: 38,
     });
+    setStoryTextScale(1);
+    setStoryTextEditing(false);
+    setStoryLinkEditing(false);
+    setStoryStyleOpen(false);
     setSharedPost(null);
     setEditorTab("content");
   }
@@ -1360,6 +1384,8 @@ export default function StoryComposer({
                     storyTextPosition.y,
                   size:
                     storyTextSize,
+                  scale:
+                    storyTextScale,
                   style:
                     storyTextStyle,
                 }
@@ -1386,6 +1412,7 @@ export default function StoryComposer({
         storyLink,
         storyTextStyle,
         storyTextSize,
+        storyTextScale,
         storyTextPosition.x,
         storyTextPosition.y,
         sharedPost,
@@ -1786,294 +1813,518 @@ export default function StoryComposer({
   if (
     kind === "standard"
   ) {
-    return (
-      <Shell
-        title="Historia libre"
-        subtitle="Stories 2.0 · 9:16"
-        onClose={onClose}
-        onBack={() =>
-          setKind(null)
-        }
+    /*
+      ALUMNI_1_1_0_D1_STUDIO
+      Story Studio de una sola pantalla:
+      herramientas, edición y publicación viven
+      encima del medio. No existe panel inferior.
+    */
+    const editorFontSize =
+      `clamp(${(
+        20 *
+        storyTextScale
+      ).toFixed(1)}px, ${(
+        5.2 *
+        storyTextScale
+      ).toFixed(2)}vw, ${(
+        34 *
+        storyTextScale
+      ).toFixed(1)}px)`;
+
+    const overlayForCanvas =
+      storyTextEditing &&
+      standardOverlay
+        ? {
+            ...standardOverlay,
+            text: undefined,
+          }
+        : standardOverlay;
+
+    return createPortal(
+      <div
+        className="fixed inset-0 z-[2147483000] overflow-hidden bg-[#05070b] text-white"
+        data-pull-refresh-lock="true"
       >
-        <div className="p-4 pb-7 sm:p-5">
-          {previewUrl ||
-          sharedPost ? (
-            <div className="relative mx-auto aspect-[9/16] max-h-[68dvh] overflow-hidden rounded-[26px] bg-[#090c13] shadow-[0_24px_65px_rgba(0,0,0,.30)]">
-              {previewUrl ? (
-                file?.type.startsWith(
-                  "video/"
-                ) ? (
-                  <video
-                    src={previewUrl}
-                    controls
-                    playsInline
-                    className="h-full w-full object-cover"
-                  />
-                ) : (
-                  <>
-                    <img
-                      src={previewUrl}
-                      alt=""
-                      aria-hidden="true"
-                      className="absolute inset-0 h-full w-full scale-110 object-cover opacity-60 blur-3xl"
-                    />
-                    <div className="absolute inset-0 bg-black/15" />
-                    <img
-                      src={previewUrl}
-                      alt=""
-                      draggable={false}
-                      className="relative z-[1] h-full w-full object-contain"
-                    />
-                  </>
-                )
-              ) : (
-                <>
-                  <div className="absolute inset-0 bg-[linear-gradient(160deg,#111b35_0%,#0c1221_45%,#080b11_100%)]" />
-                  <div className="absolute left-1/2 top-[22%] h-[58%] w-[120%] -translate-x-1/2 rounded-full bg-[#6d7cff]/12 blur-[85px]" />
-                  <div className="absolute inset-x-[12%] top-[18%] h-px bg-white/[0.06]" />
-                  <div className="absolute inset-x-[18%] top-[28%] h-px bg-white/[0.035]" />
-                </>
-              )}
-
-              <StoryFreeOverlay
-                overlay={
-                  standardOverlay
-                }
-                editable
-                onPositionChange={
-                  setStoryTextPosition
-                }
+        <div className="relative mx-auto h-[100dvh] w-full max-w-[560px] overflow-hidden bg-black shadow-[0_0_90px_rgba(0,0,0,.55)]">
+          {previewUrl ? (
+            file?.type.startsWith(
+              "video/"
+            ) ? (
+              <video
+                src={previewUrl}
+                autoPlay
+                muted
+                loop
+                playsInline
+                className="absolute inset-0 h-full w-full object-cover"
               />
+            ) : (
+              <>
+                <img
+                  src={previewUrl}
+                  alt=""
+                  aria-hidden="true"
+                  className="absolute inset-0 h-full w-full scale-110 object-cover opacity-55 blur-3xl"
+                />
 
-              {file && (
-                <button
-                  type="button"
-                  onClick={() =>
-                    setFile(null)
-                  }
-                  className="absolute right-3 top-3 z-[60] flex h-9 w-9 items-center justify-center rounded-full bg-black/55 text-white backdrop-blur-xl"
-                  aria-label="Quitar medio"
-                >
-                  <X
-                    size={17}
-                  />
-                </button>
-              )}
-            </div>
+                <div className="absolute inset-0 bg-black/15" />
+
+                <img
+                  src={previewUrl}
+                  alt=""
+                  draggable={false}
+                  className="absolute inset-0 h-full w-full object-contain"
+                />
+              </>
+            )
+          ) : sharedPost ? (
+            <>
+              <div className="absolute inset-0 bg-[linear-gradient(160deg,#111b35_0%,#0c1221_45%,#080b11_100%)]" />
+              <div className="absolute left-1/2 top-[18%] h-[58%] w-[120%] -translate-x-1/2 rounded-full bg-[#6d7cff]/14 blur-[90px]" />
+              <div className="absolute inset-x-[12%] top-[20%] h-px bg-white/[0.06]" />
+              <div className="absolute inset-x-[18%] top-[31%] h-px bg-white/[0.035]" />
+            </>
           ) : (
             <button
               type="button"
               onClick={() =>
                 mediaInputRef.current?.click()
               }
-              className="mx-auto flex aspect-[9/16] max-h-[68dvh] w-full flex-col items-center justify-center rounded-[26px] border border-dashed border-white/[0.1] bg-white/[0.018]"
+              className="absolute inset-0 flex flex-col items-center justify-center bg-[#090c12]"
             >
-              <div className="flex gap-2">
-                <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-[#6d7cff]/12 text-[#9ba5ff]">
-                  <ImagePlus
-                    size={24}
-                  />
-                </span>
+              <span className="flex h-16 w-16 items-center justify-center rounded-[22px] border border-white/[0.08] bg-white/[0.045] text-[#aeb6ff] shadow-[0_18px_50px_rgba(0,0,0,.35)]">
+                <ImagePlus
+                  size={26}
+                />
+              </span>
 
-                <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white/[0.04] text-zinc-500">
-                  <Film
-                    size={23}
-                  />
-                </span>
-              </div>
-
-              <p className="mt-4 text-sm font-black text-white">
+              <p className="mt-4 text-sm font-black">
                 Elegir foto o video
               </p>
 
               <p className="mt-1 text-[10px] text-zinc-600">
-                Sin zoom · formato 9:16
+                Se conserva la calidad original
               </p>
             </button>
           )}
 
-          <div className="mx-auto mt-5 max-w-[560px] border-t border-white/[0.07] pt-4">
-            <div>
-              <div className="mb-2 flex items-center gap-2 text-[#9ba5ff]">
-                <AtSign
-                  size={14}
+          <div className="pointer-events-none absolute inset-x-0 top-0 z-40 h-40 bg-gradient-to-b from-black/70 via-black/20 to-transparent" />
+          <div className="pointer-events-none absolute inset-x-0 bottom-0 z-40 h-48 bg-gradient-to-t from-black/72 via-black/24 to-transparent" />
+
+          <StoryFreeOverlay
+            overlay={
+              overlayForCanvas
+            }
+            editable={
+              !storyTextEditing
+            }
+            onPositionChange={
+              setStoryTextPosition
+            }
+            onScaleChange={
+              setStoryTextScale
+            }
+          />
+
+          <div className="absolute left-[max(14px,env(safe-area-inset-left))] top-[max(14px,env(safe-area-inset-top))] z-[80] flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => {
+                setStoryTextEditing(false);
+                setStoryLinkEditing(false);
+                setStoryStyleOpen(false);
+                setKind(null);
+              }}
+              className="flex h-10 w-10 items-center justify-center rounded-full border border-white/[0.12] bg-black/28 text-white/90 shadow-[0_10px_30px_rgba(0,0,0,.28)] backdrop-blur-2xl transition active:scale-95"
+              aria-label="Volver"
+            >
+              <ArrowLeft
+                size={18}
+              />
+            </button>
+
+            <button
+              type="button"
+              onClick={onClose}
+              className="flex h-10 w-10 items-center justify-center rounded-full border border-white/[0.12] bg-black/28 text-white/65 shadow-[0_10px_30px_rgba(0,0,0,.28)] backdrop-blur-2xl transition active:scale-95"
+              aria-label="Cerrar"
+            >
+              <X
+                size={17}
+              />
+            </button>
+          </div>
+
+          {(previewUrl ||
+            sharedPost) && (
+            <div className="absolute right-[max(14px,env(safe-area-inset-right))] top-[max(14px,env(safe-area-inset-top))] z-[80] flex flex-col gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setStoryTextEditing(true);
+                  setStoryLinkEditing(false);
+                  setStoryStyleOpen(false);
+                }}
+                className={`flex h-11 w-11 items-center justify-center rounded-full border backdrop-blur-2xl transition active:scale-95 ${
+                  storyTextEditing
+                    ? "border-[#aeb6ff]/50 bg-[#6d7cff]/25 text-white"
+                    : "border-white/[0.12] bg-black/28 text-white/90"
+                }`}
+                aria-label="Texto"
+              >
+                <Type
+                  size={19}
                 />
+              </button>
 
-                <p className="text-[10px] font-black uppercase tracking-[0.12em]">
-                  Texto libre
-                </p>
-
-                {storyText && (
-                  <span className="ml-auto flex items-center gap-1 text-[9px] font-bold normal-case tracking-normal text-zinc-600">
-                    <Move
-                      size={11}
-                    />
-                    arrástralo
-                  </span>
-                )}
-              </div>
-
-              <textarea
-                value={
-                  storyText
-                }
-                onChange={(event) =>
+              <button
+                type="button"
+                onClick={() => {
                   setStoryText(
-                    event.target.value.slice(
-                      0,
-                      180
-                    )
+                    (current) =>
+                      current
+                        ? current.endsWith(" ")
+                          ? current + "@"
+                          : current + " @"
+                        : "@"
+                  );
+                  setStoryTextEditing(true);
+                  setStoryLinkEditing(false);
+                  setStoryStyleOpen(false);
+                }}
+                className="flex h-11 w-11 items-center justify-center rounded-full border border-white/[0.12] bg-black/28 text-white/85 backdrop-blur-2xl transition active:scale-95"
+                aria-label="Mención"
+              >
+                <AtSign
+                  size={18}
+                />
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setStoryStyleOpen(
+                    (value) =>
+                      !value
+                  );
+                  setStoryLinkEditing(false);
+                  setStoryTextEditing(false);
+                }}
+                className={`flex h-11 w-11 items-center justify-center rounded-full border backdrop-blur-2xl transition active:scale-95 ${
+                  storyStyleOpen
+                    ? "border-[#aeb6ff]/50 bg-[#6d7cff]/25 text-white"
+                    : "border-white/[0.12] bg-black/28 text-white/85"
+                }`}
+                aria-label="Estilo de texto"
+              >
+                <Palette
+                  size={18}
+                />
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setStoryLinkEditing(
+                    (value) =>
+                      !value
+                  );
+                  setStoryTextEditing(false);
+                  setStoryStyleOpen(false);
+                }}
+                className={`flex h-11 w-11 items-center justify-center rounded-full border backdrop-blur-2xl transition active:scale-95 ${
+                  storyLinkEditing
+                    ? "border-[#aeb6ff]/50 bg-[#6d7cff]/25 text-white"
+                    : "border-white/[0.12] bg-black/28 text-white/85"
+                }`}
+                aria-label="Enlace"
+              >
+                <Link2
+                  size={18}
+                />
+              </button>
+
+              <button
+                type="button"
+                onClick={() =>
+                  mediaInputRef.current?.click()
+                }
+                className="flex h-11 w-11 items-center justify-center rounded-full border border-white/[0.12] bg-black/28 text-white/85 backdrop-blur-2xl transition active:scale-95"
+                aria-label="Cambiar foto o video"
+              >
+                <ImagePlus
+                  size={18}
+                />
+              </button>
+            </div>
+          )}
+
+          {storyText && (
+            <div className="absolute left-[max(14px,env(safe-area-inset-left))] top-1/2 z-[82] flex -translate-y-1/2 flex-col items-center gap-2">
+              <button
+                type="button"
+                onClick={() =>
+                  setStoryTextScale(
+                    (value) =>
+                      Math.max(
+                        0.55,
+                        Number(
+                          (
+                            value -
+                            0.1
+                          ).toFixed(2)
+                        )
+                      )
                   )
                 }
-                placeholder="Escribe algo… puedes mencionar @usuario"
-                rows={2}
-                className="w-full resize-none border-b border-white/[0.10] bg-transparent px-0 py-2 text-[16px] font-semibold leading-6 text-white outline-none placeholder:text-zinc-700 focus:border-[#8d98ff]/55"
-              />
-            </div>
+                className="flex h-10 min-w-10 items-center justify-center rounded-full border border-white/[0.12] bg-black/28 px-2.5 text-[11px] font-black text-white/85 backdrop-blur-2xl transition active:scale-95"
+                aria-label="Reducir texto"
+              >
+                A−
+              </button>
 
-            <div className="mt-4 flex flex-wrap items-center gap-2">
+              <div className="flex min-h-8 min-w-10 items-center justify-center rounded-full border border-white/[0.08] bg-black/20 px-2 text-[8px] font-black text-white/50 backdrop-blur-xl">
+                {Math.round(
+                  storyTextScale *
+                    100
+                )}%
+              </div>
+
+              <button
+                type="button"
+                onClick={() =>
+                  setStoryTextScale(
+                    (value) =>
+                      Math.min(
+                        2.2,
+                        Number(
+                          (
+                            value +
+                            0.1
+                          ).toFixed(2)
+                        )
+                      )
+                  )
+                }
+                className="flex h-10 min-w-10 items-center justify-center rounded-full border border-white/[0.12] bg-black/28 px-2.5 text-[11px] font-black text-white/85 backdrop-blur-2xl transition active:scale-95"
+                aria-label="Agrandar texto"
+              >
+                A+
+              </button>
+            </div>
+          )}
+
+          {storyTextEditing && (
+            <div
+              className="absolute z-[95] w-[82%] max-w-[430px] -translate-x-1/2 -translate-y-1/2"
+              style={{
+                left:
+                  `${storyTextPosition.x}%`,
+                top:
+                  `${storyTextPosition.y}%`,
+              }}
+            >
+              <div className={`relative ${
+                storyTextStyle ===
+                "glass"
+                  ? "rounded-[20px] border border-white/15 bg-black/32 px-4 py-3 backdrop-blur-2xl"
+                  : storyTextStyle ===
+                    "accent"
+                  ? "rounded-[20px] border border-[#8d98ff]/30 bg-[#6d7cff]/24 px-4 py-3 backdrop-blur-2xl"
+                  : ""
+              }`}>
+                <textarea
+                  autoFocus
+                  value={
+                    storyText
+                  }
+                  onChange={(event) =>
+                    setStoryText(
+                      event.target.value.slice(
+                        0,
+                        180
+                      )
+                    )
+                  }
+                  placeholder="Escribe… @usuario"
+                  rows={3}
+                  style={{
+                    fontSize:
+                      editorFontSize,
+                  }}
+                  className="w-full resize-none bg-transparent text-center font-black leading-[1.04] tracking-[-0.045em] text-white outline-none placeholder:text-white/35"
+                />
+
+                <button
+                  type="button"
+                  onClick={() =>
+                    setStoryTextEditing(
+                      false
+                    )
+                  }
+                  className="absolute -right-2 -top-12 flex h-9 w-9 items-center justify-center rounded-full border border-white/[0.14] bg-black/42 text-white shadow-lg backdrop-blur-2xl"
+                  aria-label="Listo"
+                >
+                  <Check
+                    size={16}
+                  />
+                </button>
+              </div>
+            </div>
+          )}
+
+          {storyStyleOpen && (
+            <div className="absolute right-[72px] top-[max(72px,calc(env(safe-area-inset-top)+64px))] z-[94] w-[178px] overflow-hidden rounded-[22px] border border-white/[0.12] bg-[#0b0f17]/88 p-2 shadow-[0_22px_65px_rgba(0,0,0,.45)] backdrop-blur-2xl">
               {[
-                ["clean", "Limpio"],
-                ["glass", "Cristal"],
-                ["accent", "Acento"],
+                [
+                  "clean",
+                  "Limpio",
+                  "Solo tipografía",
+                ],
+                [
+                  "glass",
+                  "Cristal",
+                  "Fondo translúcido",
+                ],
+                [
+                  "accent",
+                  "Acento",
+                  "Identidad Alumni",
+                ],
               ].map(
-                ([id, label]) => (
+                ([
+                  id,
+                  label,
+                  description,
+                ]) => (
                   <button
                     key={id}
                     type="button"
-                    onClick={() =>
+                    onClick={() => {
                       setStoryTextStyle(
                         id as
                           | "clean"
                           | "glass"
                           | "accent"
-                      )
-                    }
-                    className={`h-8 rounded-full border px-3 text-[9px] font-black transition ${
+                      );
+                      setStoryStyleOpen(
+                        false
+                      );
+                    }}
+                    className={`w-full rounded-[16px] px-3 py-2.5 text-left transition ${
                       storyTextStyle ===
                       id
-                        ? "border-[#8d98ff]/40 bg-[#6d7cff]/12 text-[#b9c0ff]"
-                        : "border-white/[0.07] text-zinc-600"
+                        ? "bg-white/[0.08]"
+                        : "hover:bg-white/[0.04]"
                     }`}
                   >
-                    {label}
-                  </button>
-                )
-              )}
+                    <p className="text-[10px] font-black text-white/90">
+                      {label}
+                    </p>
 
-              <span className="mx-1 h-4 w-px bg-white/[0.08]" />
-
-              {[
-                ["small", "S"],
-                ["medium", "M"],
-                ["large", "L"],
-              ].map(
-                ([id, label]) => (
-                  <button
-                    key={id}
-                    type="button"
-                    onClick={() =>
-                      setStoryTextSize(
-                        id as
-                          | "small"
-                          | "medium"
-                          | "large"
-                      )
-                    }
-                    className={`flex h-8 w-8 items-center justify-center rounded-full border text-[9px] font-black transition ${
-                      storyTextSize ===
-                      id
-                        ? "border-white/18 bg-white/[0.07] text-white"
-                        : "border-white/[0.06] text-zinc-700"
-                    }`}
-                  >
-                    {label}
+                    <p className="mt-0.5 text-[8px] text-white/35">
+                      {description}
+                    </p>
                   </button>
                 )
               )}
             </div>
+          )}
 
-            <div className="mt-5">
-              <div className="mb-2 flex items-center gap-2 text-zinc-500">
+          {storyLinkEditing && (
+            <div className="absolute inset-x-4 bottom-[104px] z-[96]">
+              <div className="mx-auto flex max-w-[460px] items-center gap-2 rounded-[20px] border border-white/[0.12] bg-[#0b0f17]/88 p-2 pl-4 shadow-[0_22px_65px_rgba(0,0,0,.45)] backdrop-blur-2xl">
                 <Link2
-                  size={14}
+                  size={15}
+                  className="shrink-0 text-[#aeb6ff]"
                 />
 
-                <p className="text-[10px] font-black uppercase tracking-[0.12em]">
-                  Enlace opcional
-                </p>
-              </div>
-
-              <input
-                value={
-                  storyLink
-                }
-                onChange={(event) =>
-                  setStoryLink(
-                    event.target.value
-                  )
-                }
-                placeholder="https://..."
-                inputMode="url"
-                className="h-10 w-full border-b border-white/[0.10] bg-transparent text-[15px] text-white outline-none placeholder:text-zinc-700 focus:border-[#8d98ff]/55"
-              />
-            </div>
-
-            {sharedPost && (
-              <div className="mt-5 flex items-center gap-3 border-y border-white/[0.06] py-3">
-                <div className="min-w-0 flex-1">
-                  <p className="text-[9px] font-black uppercase tracking-[0.12em] text-[#9ba5ff]">
-                    Publicación incluida
-                  </p>
-
-                  <p className="mt-1 truncate text-xs font-bold text-zinc-400">
-                    @{sharedPost.username}
-                  </p>
-                </div>
+                <input
+                  autoFocus
+                  value={
+                    storyLink
+                  }
+                  onChange={(event) =>
+                    setStoryLink(
+                      event.target.value
+                    )
+                  }
+                  placeholder="Pega un enlace"
+                  inputMode="url"
+                  className="h-9 min-w-0 flex-1 bg-transparent text-[12px] font-semibold text-white outline-none placeholder:text-white/30"
+                />
 
                 <button
                   type="button"
                   onClick={() =>
-                    setSharedPost(
-                      null
+                    setStoryLinkEditing(
+                      false
                     )
                   }
-                  className="text-[9px] font-black uppercase tracking-[0.1em] text-zinc-600 transition hover:text-zinc-300"
+                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/[0.08] text-white"
+                  aria-label="Guardar enlace"
                 >
-                  Quitar
+                  <Check
+                    size={15}
+                  />
                 </button>
               </div>
-            )}
+            </div>
+          )}
 
+          {storyText &&
+            !storyTextEditing && (
+            <div className="pointer-events-none absolute bottom-[max(90px,calc(env(safe-area-inset-bottom)+78px))] left-[max(14px,env(safe-area-inset-left))] z-[70] max-w-[210px]">
+              <p className="rounded-full border border-white/[0.08] bg-black/22 px-3 py-1.5 text-[8px] font-bold text-white/40 backdrop-blur-xl">
+                Arrastra para mover · pellizca para cambiar tamaño
+              </p>
+            </div>
+          )}
+
+          {(previewUrl ||
+            sharedPost) && (
+            <button
+              type="button"
+              onClick={
+                publishStory
+              }
+              disabled={
+                publishing
+              }
+              className="absolute bottom-[max(18px,env(safe-area-inset-bottom))] right-[max(14px,env(safe-area-inset-right))] z-[100] flex h-12 items-center gap-2 rounded-full border border-[#aeb6ff]/20 bg-[#6d7cff] px-5 text-[11px] font-black text-white shadow-[0_18px_50px_rgba(72,82,205,.38)] transition active:scale-[0.97] disabled:opacity-60"
+            >
+              {publishing ? (
+                <>
+                  <Loader2
+                    size={16}
+                    className="animate-spin"
+                  />
+                  Subiendo
+                </>
+              ) : (
+                <>
+                  <Send
+                    size={15}
+                  />
+                  Subir historia
+                </>
+              )}
+            </button>
+          )}
+
+          {sharedPost && (
             <button
               type="button"
               onClick={() =>
-                mediaInputRef.current?.click()
+                setSharedPost(
+                  null
+                )
               }
-              className="mt-4 flex h-10 items-center gap-2 text-[10px] font-black uppercase tracking-[0.1em] text-zinc-500 transition hover:text-white"
+              className="absolute bottom-[max(22px,env(safe-area-inset-bottom))] left-[max(14px,env(safe-area-inset-left))] z-[80] text-[9px] font-black uppercase tracking-[0.1em] text-white/45"
             >
-              <ImagePlus
-                size={15}
-              />
-              {file
-                ? "Cambiar medio"
-                : "Agregar foto o video"}
+              Quitar publicación
             </button>
-          </div>
-
-          <PublishBar
-            disabled={
-              (!file &&
-                !sharedPost) ||
-              publishing
-            }
-            publishing={
-              publishing
-            }
-            onPublish={
-              publishStory
-            }
-          />
+          )}
 
           <HiddenInput
             inputRef={
@@ -2084,7 +2335,8 @@ export default function StoryComposer({
             }
           />
         </div>
-      </Shell>
+      </div>,
+      document.body
     );
   }
 
