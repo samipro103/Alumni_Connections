@@ -1627,6 +1627,16 @@ export default function StoryComposer({
       return;
     }
 
+    /*
+      ALUMNI_1_1_0_D2_1_USER_NARROW
+      El guard superior confirma que user existe,
+      pero TypeScript pierde ese narrowing dentro
+      de una función async anidada. Conservamos
+      una referencia no nula estable.
+    */
+    const currentUser =
+      user;
+
     let cancelled =
       false;
 
@@ -1641,7 +1651,7 @@ export default function StoryComposer({
           )
           .eq(
             "follower_id",
-            user.id
+            currentUser.id
           );
 
       const ids =
