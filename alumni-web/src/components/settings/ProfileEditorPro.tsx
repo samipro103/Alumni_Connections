@@ -19,6 +19,8 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { uploadImage } from "@/lib/storage";
 import { COUNTRIES, flagEmoji, type CountryOption } from "@/lib/profileCatalog";
+import { careersForUniversity } from "@/data/academicCatalog";
+import MonochromeBrandMark from "@/components/profile/MonochromeBrandMark";
 
 type Institution = {
   id: string | null;
@@ -57,7 +59,7 @@ export default function ProfileEditorPro({
 
   const [institution, setInstitution] = useState<Institution | null>(null);
   const [program, setProgram] = useState<Institution | null>(null);
-  const [picker, setPicker] = useState<"institution" | "program" | "residence" | "nationality1" | "nationality2" | null>(null);
+  const [picker, setPicker] = useState<"institution" | "program" | "career" | "residence" | "nationality1" | "nationality2" | null>(null);
 
   useEffect(() => {
     void load();
@@ -171,13 +173,19 @@ export default function ProfileEditorPro({
         .trim()
         .replace(/\s+/g, "");
 
+      const allowedCareers = careersForUniversity(institution?.name);
+      const safeCareer =
+        allowedCareers.length === 0 || allowedCareers.includes(profile.career)
+          ? profile.career || null
+          : null;
+
       const { error } = await supabase
         .from("profiles")
         .update({
           full_name: profile.full_name || null,
           username: cleanUsername,
           bio: profile.bio || null,
-          career: profile.career || null,
+          career: safeCareer,
           city: profile.city || null,
           country: residence?.name || profile.country || null,
           residence_country_code: residence?.code || null,
@@ -331,6 +339,7 @@ export default function ProfileEditorPro({
           label="Institución educativa"
           value={institution?.name || ""}
           logo={institution?.logo_url}
+          brandKind="university"
           onClick={() => setPicker("institution")}
         />
 
@@ -339,11 +348,25 @@ export default function ProfileEditorPro({
           label="Programa / comunidad"
           value={program?.name || ""}
           logo={program?.logo_url}
+          brandKind="program"
           onClick={() => setPicker("program")}
           optional
         />
 
-        <TextRow label="Carrera / especialidad" value={profile.career || ""} onChange={(v) => update("career", v)} />
+        {careersForUniversity(institution?.name).length > 0 ? (
+          <PickerRow
+            icon={<GraduationCap size={17} />}
+            label="Carrera / especialidad"
+            value={profile.career || ""}
+            onClick={() => setPicker("career")}
+          />
+        ) : (
+          <TextRow
+            label="Carrera / especialidad"
+            value={profile.career || ""}
+            onChange={(v) => update("career", v)}
+          />
+        )}
         <TextRow label="Ciudad" value={profile.city || ""} onChange={(v) => update("city", v)} />
 
         <PickerRow
@@ -383,10 +406,26 @@ export default function ProfileEditorPro({
           items={institutions.filter((item) => item.kind !== "program")}
           onClose={() => setPicker(null)}
           onPick={(item) => {
+            if (institution?.name !== item.name) {
+              update("career", "");
+            }
             setInstitution(item);
             setPicker(null);
           }}
           allowCustom
+        />
+      )}
+
+      {picker === "career" && (
+        <CareerPicker
+          title="Carrera / especialidad"
+          items={careersForUniversity(institution?.name)}
+          current={profile.career || ""}
+          onClose={() => setPicker(null)}
+          onPick={(career) => {
+            update("career", career);
+            setPicker(null);
+          }}
         />
       )}
 
@@ -492,6 +531,7 @@ function PickerRow({
   label,
   value,
   logo,
+  brandKind,
   onClick,
   optional,
   onClear,
@@ -500,6 +540,7 @@ function PickerRow({
   label: string;
   value: string;
   logo?: string | null;
+  brandKind?: "university" | "program";
   onClick: () => void;
   optional?: boolean;
   onClear?: () => void;
@@ -515,10 +556,13 @@ function PickerRow({
         onClick={onClick}
         className="flex min-w-0 flex-1 items-center gap-2 text-left"
       >
-        {logo ? (
-          <span className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-[9px] border border-[var(--app-border)] bg-white">
-            <img src={logo} alt="" className="h-full w-full object-contain p-1" />
-          </span>
+        {value && brandKind ? (
+          <MonochromeBrandMark
+            name={value}
+            kind={brandKind}
+            size={30}
+            className="text-[var(--app-text-soft)]"
+          />
         ) : (
           <span className="shrink-0 text-[var(--app-accent)]">{icon}</span>
         )}
@@ -581,13 +625,12 @@ function InstitutionPicker({
             onClick={() => onPick(item)}
             className="flex w-full items-center gap-3 border-b border-[var(--app-border)] py-3 text-left"
           >
-            <span className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-[11px] border border-[var(--app-border)] bg-white text-[10px] font-black text-zinc-700">
-              {item.logo_url ? (
-                <img src={item.logo_url} alt="" className="h-full w-full object-contain p-1" />
-              ) : (
-                item.name.slice(0, 2).toUpperCase()
-              )}
-            </span>
+            <MonochromeBrandMark
+              name={item.name}
+              kind={item.kind === "program" ? "program" : "university"}
+              size={36}
+              className="text-[var(--app-text-soft)]"
+            />
 
             <span className="min-w-0 flex-1">
               <span className="block text-xs font-black text-[var(--app-text)]">
@@ -620,6 +663,67 @@ function InstitutionPicker({
               Usar “{query.trim()}”
             </span>
           </button>
+        )}
+      </div>
+    </PickerShell>
+  );
+}
+
+function CareerPicker({
+  title,
+  items,
+  current,
+  onClose,
+  onPick,
+}: {
+  title: string;
+  items: string[];
+  current: string;
+  onClose: () => void;
+  onPick: (career: string) => void;
+}) {
+  const [query, setQuery] = useState("");
+
+  const filtered = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    if (!q) return items;
+    return items.filter((item) => item.toLowerCase().includes(q));
+  }, [items, query]);
+
+  return (
+    <PickerShell title={title} onClose={onClose}>
+      <SearchBox
+        value={query}
+        onChange={setQuery}
+        placeholder="Buscar carrera..."
+      />
+
+      <div className="mt-2 min-h-0 flex-1 overflow-y-auto">
+        {filtered.map((career) => (
+          <button
+            key={career}
+            type="button"
+            onClick={() => onPick(career)}
+            className="flex w-full items-center gap-3 border-b border-[var(--app-border)] py-3.5 text-left"
+          >
+            <span className="flex h-8 w-8 shrink-0 items-center justify-center text-[var(--app-muted)]">
+              <GraduationCap size={17} strokeWidth={1.7} />
+            </span>
+
+            <span className="min-w-0 flex-1 text-xs font-bold leading-5 text-[var(--app-text)]">
+              {career}
+            </span>
+
+            {career === current && (
+              <Check size={15} className="shrink-0 text-[var(--app-accent)]" />
+            )}
+          </button>
+        ))}
+
+        {!filtered.length && (
+          <p className="py-10 text-center text-xs text-[var(--app-muted-3)]">
+            No se encontraron carreras.
+          </p>
         )}
       </div>
     </PickerShell>

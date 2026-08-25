@@ -440,8 +440,8 @@ export default function UserProfilePage() {
   return (
     <AppShell>
       <div className="mx-auto w-full max-w-[900px]">
-        <section className="relative rounded-[28px] border border-white/[0.07] bg-[#101318]/95">
-<div className="overflow-hidden rounded-t-[27px]">
+        <section className="relative">
+<div className="overflow-hidden rounded-[24px]">
             <div className="h-48 bg-[#151a23] sm:h-60">
               {profile.banner_url ? (
                 <HDProfileImage
@@ -797,7 +797,7 @@ export default function UserProfilePage() {
             )}
           </section>
         ) : (
-          <section className="grid gap-4 pt-4 md:grid-cols-2">
+          <section className="grid gap-x-10 pt-2 md:grid-cols-2">
             <InfoBlock
               title="Trayectoria académica"
               icon={<GraduationCap size={17} />}
@@ -905,7 +905,7 @@ function InfoBlock({
 }) {
   return (
     <div
-      className={`rounded-[22px] border border-white/[0.07] bg-[#101318]/95 p-5 ${className}`}
+      className={`border-b border-[var(--app-border)] py-5 ${className}`}
     >
       <div className="flex items-center gap-2 text-[#8d98ff]">
         {icon}

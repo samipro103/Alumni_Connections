@@ -23,7 +23,6 @@ import ProfileMusicCard from "@/components/profile/ProfileMusicCard";
 import HDProfileImage from "@/components/profile/HDProfileImage";
 import ProfileSocialLinks from "@/components/profile/ProfileSocialLinks";
 import ProfileIdentityMeta from "@/components/profile/ProfileIdentityMeta";
-import AcademicProfileSection from "@/components/profile/AcademicProfileSection"
 
 
 type ProfileTab = "posts" | "about";
@@ -191,8 +190,8 @@ export default function ProfilePage() {
   return (
     <AppShell>
       <div className="alumni-profile-page mx-auto w-full max-w-[920px]">
-        <section className="alumni-profile-hero rounded-[28px] border border-white/[0.07] bg-[#101318]/95">
-          <div className="alumni-profile-banner overflow-hidden rounded-t-[27px]">
+        <section className="alumni-profile-hero">
+          <div className="alumni-profile-banner overflow-hidden rounded-[24px]">
             <div className="relative h-48 bg-[#151a23] sm:h-60">
               {profile.banner_url ? (
                 <HDProfileImage
@@ -260,7 +259,6 @@ export default function ProfilePage() {
 
             <ProfileIdentityMeta profile={profile} />
 
-            <AcademicProfileSection />
         <ProfileSocialLinks profile={profile} className="mt-5" />
 
             <ProfileMusicCard track={profileMusic} className="mt-5" />
@@ -362,7 +360,7 @@ export default function ProfilePage() {
             )}
           </section>
         ) : (
-          <section className="grid gap-4 pt-4 md:grid-cols-2">
+          <section className="grid gap-x-10 pt-2 md:grid-cols-2">
             <InfoBlock
               title="Trayectoria académica"
               icon={<GraduationCap size={17} />}
@@ -475,7 +473,7 @@ function InfoBlock({
 }) {
   return (
     <div
-      className={`alumni-open-info rounded-[22px] border border-white/[0.07] bg-[#101318]/95 p-5 ${className}`}
+      className={`alumni-open-info border-b border-[var(--app-border)] py-5 ${className}`}
     >
       <div className="flex items-center gap-2 text-[#8d98ff]">
         {icon}
