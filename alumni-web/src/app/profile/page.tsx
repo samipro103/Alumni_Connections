@@ -23,6 +23,8 @@ import ProfileMusicCard from "@/components/profile/ProfileMusicCard";
 import HDProfileImage from "@/components/profile/HDProfileImage";
 import ProfileSocialLinks from "@/components/profile/ProfileSocialLinks";
 import ProfileIdentityMeta from "@/components/profile/ProfileIdentityMeta";
+import AcademicProfileSection from "@/components/profile/AcademicProfileSection"
+
 
 type ProfileTab = "posts" | "about";
 
@@ -258,7 +260,8 @@ export default function ProfilePage() {
 
             <ProfileIdentityMeta profile={profile} />
 
-            <ProfileSocialLinks profile={profile} className="mt-5" />
+            <AcademicProfileSection />
+        <ProfileSocialLinks profile={profile} className="mt-5" />
 
             <ProfileMusicCard track={profileMusic} className="mt-5" />
 
