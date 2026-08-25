@@ -212,7 +212,13 @@ export default function StoriesRail({
           story_font_style
         `;
 
-      let storiesResult =
+      /*
+        ALUMNI_1_1_0_D1_1_TYPES
+        No reasignamos respuestas PostgREST con selects distintos:
+        TypeScript infiere formas diferentes cuando una consulta
+        incluye story_overlay y la otra no.
+      */
+      const overlayResult =
         await supabase
           .from("stories")
           .select(
@@ -233,10 +239,18 @@ export default function StoriesRail({
             }
           );
 
+      let storiesData =
+        (overlayResult.data ||
+          []) as any[];
+
+      let storiesError:
+        any =
+        overlayResult.error;
+
       if (
-        storiesResult.error &&
+        storiesError &&
         String(
-          storiesResult.error.message ||
+          storiesError.message ||
             ""
         )
           .toLowerCase()
@@ -248,7 +262,7 @@ export default function StoriesRail({
           "Story overlay no disponible; cargando historias compatibles."
         );
 
-        storiesResult =
+        const fallbackResult =
           await supabase
             .from("stories")
             .select(
@@ -268,22 +282,25 @@ export default function StoriesRail({
                 ascending: true,
               }
             );
+
+        storiesData =
+          (fallbackResult.data ||
+            []) as any[];
+
+        storiesError =
+          fallbackResult.error;
       }
 
-      if (
-        storiesResult.error
-      ) {
+      if (storiesError) {
         console.error(
           "Stories load error:",
-          storiesResult.error
+          storiesError
         );
         return;
       }
 
-      const stories = (
-        storiesResult.data ||
-        []
-      ) as StoryItem[];
+      const stories =
+        storiesData as StoryItem[];
 
       if (!stories.length) {
         setGroups([]);
