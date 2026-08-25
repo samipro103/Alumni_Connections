@@ -30,6 +30,9 @@ import {
 import { supabase } from "@/lib/supabase";
 import StoryMusicPlayer from "@/components/stories/StoryMusicPlayer";
 import StoryDesignOverlay from "@/components/stories/StoryDesignOverlay";
+import StoryFreeOverlay, {
+  type StoryOverlayData,
+} from "@/components/stories/StoryFreeOverlay";
 import {
   startStoryMusicNow,
   stopAllStoryMusic,
@@ -70,6 +73,9 @@ export type StoryItem = {
   story_photo_style?: string | null;
   story_decor?: string | null;
   story_font_style?: string | null;
+  story_overlay?:
+    | StoryOverlayData
+    | null;
 };
 
 export type StoryGroup = {
@@ -1055,6 +1061,13 @@ export default function StoryViewer({
 
         <StoryDesignOverlay
           story={story}
+        />
+
+        <StoryFreeOverlay
+          overlay={
+            story.story_overlay ||
+            null
+          }
         />
 
         <button

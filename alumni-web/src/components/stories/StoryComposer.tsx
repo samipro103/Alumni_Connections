@@ -10,13 +10,16 @@ import type { ReactNode } from "react";
 import { createPortal } from "react-dom";
 import {
   ArrowLeft,
+  AtSign,
   Award,
   Briefcase,
   Check,
   Film,
   ImagePlus,
   Layers3,
+  Link2,
   Loader2,
+  Move,
   Palette,
   Play,
   Send,
@@ -29,11 +32,18 @@ import { useAuth } from "@/components/auth/AuthProvider";
 import { supabase } from "@/lib/supabase";
 import { prepareStoryImage } from "@/lib/storyImagePipeline";
 import StoryDesignOverlay from "@/components/stories/StoryDesignOverlay";
+import StoryFreeOverlay, {
+  type SharedPostStoryPayload,
+  type StoryOverlayData,
+} from "@/components/stories/StoryFreeOverlay";
 
 type Props = {
   open: boolean;
   onClose: () => void;
   onPublished: () => void | Promise<void>;
+  initialSharedPost?:
+    | SharedPostStoryPayload
+    | null;
 };
 
 type StoryKind =
@@ -845,10 +855,150 @@ async function generateStoryBackground({
   );
 }
 
+async function generateSharedPostBackground() {
+  const canvas =
+    document.createElement(
+      "canvas"
+    );
+
+  canvas.width = 1080;
+  canvas.height = 1920;
+
+  const ctx =
+    canvas.getContext(
+      "2d"
+    );
+
+  if (!ctx) {
+    throw new Error(
+      "No se pudo crear la historia."
+    );
+  }
+
+  ctx.imageSmoothingEnabled =
+    true;
+  ctx.imageSmoothingQuality =
+    "high";
+
+  const gradient =
+    ctx.createLinearGradient(
+      0,
+      0,
+      1080,
+      1920
+    );
+
+  gradient.addColorStop(
+    0,
+    "#111b35"
+  );
+  gradient.addColorStop(
+    0.45,
+    "#0c1221"
+  );
+  gradient.addColorStop(
+    1,
+    "#080b11"
+  );
+
+  ctx.fillStyle =
+    gradient;
+
+  ctx.fillRect(
+    0,
+    0,
+    1080,
+    1920
+  );
+
+  const halo =
+    ctx.createRadialGradient(
+      540,
+      680,
+      20,
+      540,
+      680,
+      760
+    );
+
+  halo.addColorStop(
+    0,
+    "rgba(109,124,255,.34)"
+  );
+  halo.addColorStop(
+    1,
+    "rgba(109,124,255,0)"
+  );
+
+  ctx.fillStyle =
+    halo;
+
+  ctx.fillRect(
+    0,
+    0,
+    1080,
+    1500
+  );
+
+  ctx.strokeStyle =
+    "rgba(255,255,255,.045)";
+  ctx.lineWidth = 2;
+
+  for (
+    let y = 280;
+    y < 1680;
+    y += 210
+  ) {
+    ctx.beginPath();
+    ctx.moveTo(
+      110,
+      y
+    );
+    ctx.lineTo(
+      970,
+      y
+    );
+    ctx.stroke();
+  }
+
+  return new Promise<File>(
+    (resolve, reject) => {
+      canvas.toBlob(
+        (blob) => {
+          if (!blob) {
+            reject(
+              new Error(
+                "No se pudo preparar la historia."
+              )
+            );
+            return;
+          }
+
+          resolve(
+            new File(
+              [blob],
+              `alumni-shared-post-${Date.now()}.jpg`,
+              {
+                type:
+                  "image/jpeg",
+                lastModified:
+                  Date.now(),
+              }
+            )
+          );
+        },
+        "image/jpeg",
+        0.96
+      );
+    }
+  );
+}
+
 export default function StoryComposer({
   open,
   onClose,
   onPublished,
+  initialSharedPost = null,
 }: Props) {
   const { user } = useAuth();
 
@@ -933,6 +1083,52 @@ export default function StoryComposer({
     setFontStyle,
   ] = useState("modern");
 
+  const [
+    storyText,
+    setStoryText,
+  ] = useState("");
+
+  const [
+    storyLink,
+    setStoryLink,
+  ] = useState("");
+
+  const [
+    storyTextStyle,
+    setStoryTextStyle,
+  ] =
+    useState<
+      "clean" |
+      "glass" |
+      "accent"
+    >("clean");
+
+  const [
+    storyTextSize,
+    setStoryTextSize,
+  ] =
+    useState<
+      "small" |
+      "medium" |
+      "large"
+    >("medium");
+
+  const [
+    storyTextPosition,
+    setStoryTextPosition,
+  ] = useState({
+    x: 50,
+    y: 38,
+  });
+
+  const [
+    sharedPost,
+    setSharedPost,
+  ] =
+    useState<SharedPostStoryPayload | null>(
+      null
+    );
+
   const [editorTab, setEditorTab] =
     useState<
       | "content"
@@ -965,6 +1161,35 @@ export default function StoryComposer({
       resetAll();
     }
   }, [open]);
+
+  useEffect(() => {
+    if (
+      !open ||
+      !initialSharedPost
+    ) {
+      return;
+    }
+
+    setKind(
+      "standard"
+    );
+
+    setFile(null);
+
+    setSharedPost(
+      initialSharedPost
+    );
+
+    setStoryText("");
+    setStoryLink("");
+    setStoryTextPosition({
+      x: 50,
+      y: 28,
+    });
+  }, [
+    open,
+    initialSharedPost?.id,
+  ]);
 
   useEffect(() => {
     if (
@@ -1021,6 +1246,19 @@ export default function StoryComposer({
     setDecor("sparkles");
     setAnimation("rise");
     setFontStyle("modern");
+    setStoryText("");
+    setStoryLink("");
+    setStoryTextStyle(
+      "clean"
+    );
+    setStoryTextSize(
+      "medium"
+    );
+    setStoryTextPosition({
+      x: 50,
+      y: 38,
+    });
+    setSharedPost(null);
     setEditorTab("content");
   }
 
@@ -1082,6 +1320,75 @@ export default function StoryComposer({
         photoStyle,
         decor,
         fontStyle,
+      ]
+    );
+
+  const standardOverlay =
+    useMemo<StoryOverlayData | null>(
+      () => {
+        if (
+          kind !==
+          "standard"
+        ) {
+          return null;
+        }
+
+        const textValue =
+          storyText.trim();
+
+        const linkValue =
+          storyLink.trim();
+
+        if (
+          !textValue &&
+          !linkValue &&
+          !sharedPost
+        ) {
+          return null;
+        }
+
+        return {
+          version: 1,
+          text:
+            textValue
+              ? {
+                  value:
+                    textValue,
+                  x:
+                    storyTextPosition.x,
+                  y:
+                    storyTextPosition.y,
+                  size:
+                    storyTextSize,
+                  style:
+                    storyTextStyle,
+                }
+              : undefined,
+          link:
+            linkValue
+              ? {
+                  url:
+                    normalizeUrl(
+                      linkValue
+                    ) || "",
+                  label:
+                    "Abrir enlace",
+                }
+              : undefined,
+          shared_post:
+            sharedPost ||
+            undefined,
+        };
+      },
+      [
+        kind,
+        storyText,
+        storyLink,
+        storyTextStyle,
+        storyTextSize,
+        storyTextPosition.x,
+        storyTextPosition.y,
+        sharedPost,
       ]
     );
 
@@ -1173,10 +1480,11 @@ export default function StoryComposer({
 
     if (
       kind === "standard" &&
-      !file
+      !file &&
+      !sharedPost
     ) {
       alert(
-        "Selecciona una foto o video."
+        "Selecciona una foto o video, o comparte una publicación."
       );
       return;
     }
@@ -1190,6 +1498,16 @@ export default function StoryComposer({
     try {
       let prepared =
         file;
+
+      if (
+        kind ===
+          "standard" &&
+        !prepared &&
+        sharedPost
+      ) {
+        prepared =
+          await generateSharedPostBackground();
+      }
 
       /*
         ALUMNI 1.0.22:
@@ -1355,6 +1673,11 @@ export default function StoryComposer({
               kind === "standard"
                 ? null
                 : fontStyle,
+            story_overlay:
+              kind ===
+              "standard"
+                ? standardOverlay
+                : null,
 
             music_provider: null,
             music_track_id: null,
@@ -1466,54 +1789,76 @@ export default function StoryComposer({
     return (
       <Shell
         title="Historia libre"
-        subtitle="1080 × 1920 · 9:16"
+        subtitle="Stories 2.0 · 9:16"
         onClose={onClose}
         onBack={() =>
           setKind(null)
         }
       >
         <div className="p-4 pb-7 sm:p-5">
-          {previewUrl ? (
-            <div className="relative mx-auto aspect-[9/16] max-h-[70dvh] overflow-hidden rounded-[26px] bg-black">
-              {file?.type.startsWith(
-                "video/"
-              ) ? (
-                <video
-                  src={previewUrl}
-                  controls
-                  playsInline
-                  className="h-full w-full object-cover"
-                />
+          {previewUrl ||
+          sharedPost ? (
+            <div className="relative mx-auto aspect-[9/16] max-h-[68dvh] overflow-hidden rounded-[26px] bg-[#090c13] shadow-[0_24px_65px_rgba(0,0,0,.30)]">
+              {previewUrl ? (
+                file?.type.startsWith(
+                  "video/"
+                ) ? (
+                  <video
+                    src={previewUrl}
+                    controls
+                    playsInline
+                    className="h-full w-full object-cover"
+                  />
+                ) : (
+                  <>
+                    <img
+                      src={previewUrl}
+                      alt=""
+                      aria-hidden="true"
+                      className="absolute inset-0 h-full w-full scale-110 object-cover opacity-60 blur-3xl"
+                    />
+                    <div className="absolute inset-0 bg-black/15" />
+                    <img
+                      src={previewUrl}
+                      alt=""
+                      draggable={false}
+                      className="relative z-[1] h-full w-full object-contain"
+                    />
+                  </>
+                )
               ) : (
                 <>
-                  <img
-                    src={previewUrl}
-                    alt=""
-                    aria-hidden="true"
-                    className="absolute inset-0 h-full w-full scale-110 object-cover opacity-60 blur-3xl"
-                  />
-                  <div className="absolute inset-0 bg-black/15" />
-                  <img
-                    src={previewUrl}
-                    alt=""
-                    draggable={false}
-                    className="relative z-[1] h-full w-full object-contain"
-                  />
+                  <div className="absolute inset-0 bg-[linear-gradient(160deg,#111b35_0%,#0c1221_45%,#080b11_100%)]" />
+                  <div className="absolute left-1/2 top-[22%] h-[58%] w-[120%] -translate-x-1/2 rounded-full bg-[#6d7cff]/12 blur-[85px]" />
+                  <div className="absolute inset-x-[12%] top-[18%] h-px bg-white/[0.06]" />
+                  <div className="absolute inset-x-[18%] top-[28%] h-px bg-white/[0.035]" />
                 </>
               )}
 
-              <button
-                type="button"
-                onClick={() =>
-                  setFile(null)
+              <StoryFreeOverlay
+                overlay={
+                  standardOverlay
                 }
-                className="absolute right-3 top-3 flex h-9 w-9 items-center justify-center rounded-full bg-black/55 text-white backdrop-blur-xl"
-                aria-label="Quitar"
-              >
-                <X
-                  size={17}
-                />
-              </button>
+                editable
+                onPositionChange={
+                  setStoryTextPosition
+                }
+              />
+
+              {file && (
+                <button
+                  type="button"
+                  onClick={() =>
+                    setFile(null)
+                  }
+                  className="absolute right-3 top-3 z-[60] flex h-9 w-9 items-center justify-center rounded-full bg-black/55 text-white backdrop-blur-xl"
+                  aria-label="Quitar medio"
+                >
+                  <X
+                    size={17}
+                  />
+                </button>
+              )}
             </div>
           ) : (
             <button
@@ -1521,7 +1866,7 @@ export default function StoryComposer({
               onClick={() =>
                 mediaInputRef.current?.click()
               }
-              className="mx-auto flex aspect-[9/16] max-h-[70dvh] w-full flex-col items-center justify-center rounded-[26px] border border-dashed border-white/[0.1] bg-white/[0.018]"
+              className="mx-auto flex aspect-[9/16] max-h-[68dvh] w-full flex-col items-center justify-center rounded-[26px] border border-dashed border-white/[0.1] bg-white/[0.018]"
             >
               <div className="flex gap-2">
                 <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-[#6d7cff]/12 text-[#9ba5ff]">
@@ -1529,24 +1874,197 @@ export default function StoryComposer({
                     size={24}
                   />
                 </span>
+
                 <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white/[0.04] text-zinc-500">
                   <Film
                     size={23}
                   />
                 </span>
               </div>
+
               <p className="mt-4 text-sm font-black text-white">
                 Elegir foto o video
               </p>
+
               <p className="mt-1 text-[10px] text-zinc-600">
-                Se mostrará en formato 9:16
+                Sin zoom · formato 9:16
               </p>
             </button>
           )}
 
+          <div className="mx-auto mt-5 max-w-[560px] border-t border-white/[0.07] pt-4">
+            <div>
+              <div className="mb-2 flex items-center gap-2 text-[#9ba5ff]">
+                <AtSign
+                  size={14}
+                />
+
+                <p className="text-[10px] font-black uppercase tracking-[0.12em]">
+                  Texto libre
+                </p>
+
+                {storyText && (
+                  <span className="ml-auto flex items-center gap-1 text-[9px] font-bold normal-case tracking-normal text-zinc-600">
+                    <Move
+                      size={11}
+                    />
+                    arrástralo
+                  </span>
+                )}
+              </div>
+
+              <textarea
+                value={
+                  storyText
+                }
+                onChange={(event) =>
+                  setStoryText(
+                    event.target.value.slice(
+                      0,
+                      180
+                    )
+                  )
+                }
+                placeholder="Escribe algo… puedes mencionar @usuario"
+                rows={2}
+                className="w-full resize-none border-b border-white/[0.10] bg-transparent px-0 py-2 text-[16px] font-semibold leading-6 text-white outline-none placeholder:text-zinc-700 focus:border-[#8d98ff]/55"
+              />
+            </div>
+
+            <div className="mt-4 flex flex-wrap items-center gap-2">
+              {[
+                ["clean", "Limpio"],
+                ["glass", "Cristal"],
+                ["accent", "Acento"],
+              ].map(
+                ([id, label]) => (
+                  <button
+                    key={id}
+                    type="button"
+                    onClick={() =>
+                      setStoryTextStyle(
+                        id as
+                          | "clean"
+                          | "glass"
+                          | "accent"
+                      )
+                    }
+                    className={`h-8 rounded-full border px-3 text-[9px] font-black transition ${
+                      storyTextStyle ===
+                      id
+                        ? "border-[#8d98ff]/40 bg-[#6d7cff]/12 text-[#b9c0ff]"
+                        : "border-white/[0.07] text-zinc-600"
+                    }`}
+                  >
+                    {label}
+                  </button>
+                )
+              )}
+
+              <span className="mx-1 h-4 w-px bg-white/[0.08]" />
+
+              {[
+                ["small", "S"],
+                ["medium", "M"],
+                ["large", "L"],
+              ].map(
+                ([id, label]) => (
+                  <button
+                    key={id}
+                    type="button"
+                    onClick={() =>
+                      setStoryTextSize(
+                        id as
+                          | "small"
+                          | "medium"
+                          | "large"
+                      )
+                    }
+                    className={`flex h-8 w-8 items-center justify-center rounded-full border text-[9px] font-black transition ${
+                      storyTextSize ===
+                      id
+                        ? "border-white/18 bg-white/[0.07] text-white"
+                        : "border-white/[0.06] text-zinc-700"
+                    }`}
+                  >
+                    {label}
+                  </button>
+                )
+              )}
+            </div>
+
+            <div className="mt-5">
+              <div className="mb-2 flex items-center gap-2 text-zinc-500">
+                <Link2
+                  size={14}
+                />
+
+                <p className="text-[10px] font-black uppercase tracking-[0.12em]">
+                  Enlace opcional
+                </p>
+              </div>
+
+              <input
+                value={
+                  storyLink
+                }
+                onChange={(event) =>
+                  setStoryLink(
+                    event.target.value
+                  )
+                }
+                placeholder="https://..."
+                inputMode="url"
+                className="h-10 w-full border-b border-white/[0.10] bg-transparent text-[15px] text-white outline-none placeholder:text-zinc-700 focus:border-[#8d98ff]/55"
+              />
+            </div>
+
+            {sharedPost && (
+              <div className="mt-5 flex items-center gap-3 border-y border-white/[0.06] py-3">
+                <div className="min-w-0 flex-1">
+                  <p className="text-[9px] font-black uppercase tracking-[0.12em] text-[#9ba5ff]">
+                    Publicación incluida
+                  </p>
+
+                  <p className="mt-1 truncate text-xs font-bold text-zinc-400">
+                    @{sharedPost.username}
+                  </p>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() =>
+                    setSharedPost(
+                      null
+                    )
+                  }
+                  className="text-[9px] font-black uppercase tracking-[0.1em] text-zinc-600 transition hover:text-zinc-300"
+                >
+                  Quitar
+                </button>
+              </div>
+            )}
+
+            <button
+              type="button"
+              onClick={() =>
+                mediaInputRef.current?.click()
+              }
+              className="mt-4 flex h-10 items-center gap-2 text-[10px] font-black uppercase tracking-[0.1em] text-zinc-500 transition hover:text-white"
+            >
+              <ImagePlus
+                size={15}
+              />
+              {file
+                ? "Cambiar medio"
+                : "Agregar foto o video"}
+            </button>
+          </div>
+
           <PublishBar
             disabled={
-              !file ||
+              (!file &&
+                !sharedPost) ||
               publishing
             }
             publishing={

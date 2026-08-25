@@ -13,6 +13,9 @@ import StoryViewer, {
   StoryGroup,
   StoryItem,
 } from "@/components/stories/StoryViewer";
+import type {
+  SharedPostStoryPayload,
+} from "@/components/stories/StoryFreeOverlay";
 
 type ProfileLite = {
   id: string;
@@ -42,6 +45,14 @@ export default function StoriesRail({
   ] = useState(false);
 
   const [
+    sharedPostDraft,
+    setSharedPostDraft,
+  ] =
+    useState<SharedPostStoryPayload | null>(
+      null
+    );
+
+  const [
     viewerOpen,
     setViewerOpen,
   ] = useState(false);
@@ -60,6 +71,44 @@ export default function StoriesRail({
     lastHandledFocusStory,
     setLastHandledFocusStory,
   ] = useState<string | null>(null);
+
+  useEffect(() => {
+    function openPostAsStory(
+      event: Event
+    ) {
+      const detail =
+        (
+          event as CustomEvent<SharedPostStoryPayload>
+        ).detail;
+
+      if (
+        !detail ||
+        !detail.id ||
+        !detail.username
+      ) {
+        return;
+      }
+
+      setSharedPostDraft(
+        detail
+      );
+
+      setComposerOpen(
+        true
+      );
+    }
+
+    window.addEventListener(
+      "alumni:compose-story-from-post",
+      openPostAsStory
+    );
+
+    return () =>
+      window.removeEventListener(
+        "alumni:compose-story-from-post",
+        openPostAsStory
+      );
+  }, []);
 
   useEffect(() => {
     if (!user) {
@@ -159,7 +208,8 @@ export default function StoriesRail({
           story_animation,
           story_photo_style,
           story_decor,
-          story_font_style
+          story_font_style,
+          story_overlay
         `)
         .in("user_id", candidateIds)
         .gt(
@@ -630,11 +680,20 @@ export default function StoriesRail({
 
       <StoryComposer
         open={composerOpen}
-        onClose={() =>
-          setComposerOpen(false)
+        initialSharedPost={
+          sharedPostDraft
         }
+        onClose={() => {
+          setComposerOpen(false);
+          setSharedPostDraft(
+            null
+          );
+        }}
         onPublished={async () => {
           setComposerOpen(false);
+          setSharedPostDraft(
+            null
+          );
           await loadStories();
         }}
       />

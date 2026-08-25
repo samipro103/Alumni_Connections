@@ -4,6 +4,7 @@ import Script from "next/script";
 import { AuthProvider } from "@/components/auth/AuthProvider";
 import { ThemeProvider } from "@/components/theme/ThemeProvider";
 import GlobalPullToRefresh from "@/components/layout/GlobalPullToRefresh";
+import PWAProBootstrap from "@/components/pwa/PWAProBootstrap";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 
@@ -68,6 +69,7 @@ export default function RootLayout({
         <ThemeProvider>
           <AuthProvider>
             <GlobalPullToRefresh />
+            <PWAProBootstrap />
 
             <div
               id="alumni-root-content"

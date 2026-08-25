@@ -6,6 +6,7 @@ import {
   Heart,
   MessageCircle,
   Share2,
+  Sparkles,
   Trash2,
   X,
 } from "lucide-react";
@@ -524,6 +525,40 @@ function FeedContent() {
     schedulePostsRefresh(220);
   }
 
+  function sharePostToStory(
+    post: any
+  ) {
+    window.dispatchEvent(
+      new CustomEvent(
+        "alumni:compose-story-from-post",
+        {
+          detail: {
+            id:
+              post.id,
+            username:
+              post.profiles?.username ||
+              "Alumni",
+            avatar_url:
+              post.profiles?.avatar_url ||
+              null,
+            content:
+              post.content ||
+              null,
+            image_url:
+              post.image_url ||
+              null,
+          },
+        }
+      )
+    );
+
+    window.scrollTo({
+      top: 0,
+      behavior:
+        "smooth",
+    });
+  }
+
   async function sharePost(post: any) {
     const url = `${window.location.origin}/feed?post=${post.id}`;
 
@@ -733,8 +768,26 @@ function FeedContent() {
                       </button>
 
                       <button
+                        type="button"
+                        onClick={() =>
+                          sharePostToStory(
+                            post
+                          )
+                        }
+                        className="ml-auto flex h-9 items-center gap-2 rounded-xl px-2.5 text-sm font-semibold text-zinc-500 transition hover:bg-white/[0.04] hover:text-[#aeb6ff]"
+                        aria-label="Compartir en historia"
+                      >
+                        <Sparkles
+                          size={17}
+                        />
+                        <span className="hidden sm:inline">
+                          Historia
+                        </span>
+                      </button>
+
+                      <button
                         onClick={() => sharePost(post)}
-                        className="ml-auto flex h-9 items-center gap-2 rounded-xl px-3 text-sm font-semibold text-zinc-500 transition hover:bg-white/[0.04] hover:text-zinc-200"
+                        className="flex h-9 items-center gap-2 rounded-xl px-3 text-sm font-semibold text-zinc-500 transition hover:bg-white/[0.04] hover:text-zinc-200"
                       >
                         <Share2 size={18} />
                         <span className="hidden sm:inline">Compartir</span>

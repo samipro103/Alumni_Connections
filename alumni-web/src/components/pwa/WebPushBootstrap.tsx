@@ -152,7 +152,10 @@ export default function WebPushBootstrap({
         const registration =
           await navigator.serviceWorker.register(
             "/sw.js",
-            { scope: "/" }
+            {
+              scope: "/",
+              updateViaCache: "none",
+            }
           );
 
         await navigator.serviceWorker.ready;
