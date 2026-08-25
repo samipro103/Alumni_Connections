@@ -10,7 +10,6 @@ import {
   GraduationCap,
   Loader2,
   MapPin,
-  Save,
   Search,
   Sparkles,
   X,
@@ -259,17 +258,21 @@ export default function ProfileEditorPro({
 
         <div className="alumni-profile-editor-top-copy">
           <p>Editar perfil</p>
-          <p>Actualiza tu identidad, trayectoria y ubicación en Alumni.</p>
         </div>
 
         <button
           type="button"
           onClick={() => void save()}
           disabled={saving}
-          className="flex h-10 items-center gap-2 rounded-xl bg-[var(--app-accent)] px-4 text-xs font-black text-[var(--app-on-accent)] disabled:opacity-50"
+          className="alumni-profile-editor-save"
+          aria-label={saving ? "Guardando cambios" : "Guardar cambios"}
         >
-          {saving ? <Loader2 size={15} className="animate-spin" /> : <Save size={15} />}
-          Guardar
+          {saving ? (
+            <Loader2 size={15} className="animate-spin" />
+          ) : (
+            <Check size={15} strokeWidth={2.2} />
+          )}
+          <span>{saving ? "Guardando" : "Guardar cambios"}</span>
         </button>
       </div>
 
@@ -304,7 +307,16 @@ export default function ProfileEditorPro({
           className="group relative block h-44 w-full overflow-hidden bg-[var(--app-soft-strong)] sm:h-52"
         >
           {bannerPreview ? (
-            <img src={bannerPreview} alt="" className="h-full w-full object-cover" />
+            <img
+              src={bannerPreview}
+              alt=""
+              loading="eager"
+              decoding="sync"
+              fetchPriority="high"
+              draggable={false}
+              className="h-full w-full object-cover"
+              style={{ imageRendering: "auto" }}
+            />
           ) : (
             <div className="profile-banner-fallback h-full w-full" />
           )}
@@ -317,26 +329,36 @@ export default function ProfileEditorPro({
         </div>
 
         <div className="alumni-profile-editor-photo-row">
-          <button
-          type="button"
-          onClick={() => avatarInput.current?.click()}
-          className="alumni-profile-editor-avatar flex items-center justify-center overflow-hidden rounded-full bg-[var(--app-soft-strong)] text-xl font-black text-[var(--app-text)]"
-        >
-          {avatarPreview ? (
-            <img src={avatarPreview} alt="" className="h-full w-full object-cover" />
-          ) : (
-            String(profile.username || "U").charAt(0).toUpperCase()
-          )}
-          <span className="absolute bottom-0 right-0 flex h-8 w-8 items-center justify-center rounded-full bg-[var(--app-accent)] text-[var(--app-on-accent)] ring-4 ring-[var(--app-bg)]">
-            <Camera size={13} />
-          </span>
-          </button>
+          <div className="alumni-profile-editor-avatar-cluster">
+            <div className="alumni-profile-editor-avatar flex items-center justify-center text-xl font-black text-[var(--app-text)]">
+              {avatarPreview ? (
+                <img
+                  src={avatarPreview}
+                  alt="Foto de perfil"
+                  loading="eager"
+                  decoding="sync"
+                  fetchPriority="high"
+                  draggable={false}
+                  style={{ imageRendering: "auto" }}
+                />
+              ) : (
+                String(profile.username || "U").charAt(0).toUpperCase()
+              )}
+            </div>
+
+            <button
+              type="button"
+              onClick={() => avatarInput.current?.click()}
+              className="alumni-profile-editor-camera"
+              aria-label="Cambiar foto de perfil"
+              title="Cambiar foto de perfil"
+            >
+              <Camera size={16} strokeWidth={1.9} />
+            </button>
+          </div>
 
           <div className="alumni-profile-editor-photo-copy">
             <strong>Foto de perfil</strong>
-            <span>
-              Esta imagen representa tu identidad en publicaciones, comentarios y conexiones.
-            </span>
           </div>
         </div>
       </div>
@@ -344,10 +366,7 @@ export default function ProfileEditorPro({
       <div className="alumni-profile-editor-fields">
         <section className="alumni-editor-section">
           <div className="alumni-editor-section-head">
-            <p>Identidad</p>
-            <p>
-              La información principal que otras personas verán al encontrarte en Alumni.
-            </p>
+            <h3>Identidad</h3>
           </div>
 
           <div className="alumni-editor-grid-2">
@@ -373,10 +392,7 @@ export default function ProfileEditorPro({
 
         <section className="alumni-editor-section">
           <div className="alumni-editor-section-head">
-            <p>Trayectoria académica</p>
-            <p>
-              Selecciona tu institución, carrera y las comunidades académicas de las que formas parte.
-            </p>
+            <h3>Académica</h3>
           </div>
 
           <div className="alumni-editor-grid-2">
@@ -418,10 +434,7 @@ export default function ProfileEditorPro({
 
         <section className="alumni-editor-section">
           <div className="alumni-editor-section-head">
-            <p>Ubicación e identidad</p>
-            <p>
-              Estos datos ayudan a conectar con personas y comunidades cercanas a tu contexto.
-            </p>
+            <h3>Ubicación</h3>
           </div>
 
           <div className="alumni-editor-grid-2">
