@@ -7,7 +7,7 @@ import {
 } from "react";
 
 const TRIGGER_DISTANCE = 78;
-const MAX_PULL = 116;
+const MAX_PULL = 118;
 
 function blockedTarget(
   target: EventTarget | null
@@ -18,6 +18,11 @@ function blockedTarget(
     return false;
   }
 
+  /*
+    Dejamos pasar imágenes, banners y zonas
+    de perfil. Solo bloqueamos controles
+    realmente interactivos o flujos delicados.
+  */
   return Boolean(
     target.closest(
       [
@@ -25,7 +30,6 @@ function blockedTarget(
         "textarea",
         "select",
         "button",
-        "a",
         '[contenteditable="true"]',
         '[role="dialog"]',
         '[data-pull-refresh-lock="true"]',
@@ -39,27 +43,27 @@ function blockedTarget(
 function brandStage(
   progress: number
 ) {
-  if (progress < 0.14) {
+  if (progress < 0.58) {
     return "Alumni.";
   }
 
-  if (progress < 0.28) {
+  if (progress < 0.68) {
     return "lumni.";
   }
 
-  if (progress < 0.42) {
+  if (progress < 0.76) {
     return "umni.";
   }
 
-  if (progress < 0.56) {
+  if (progress < 0.84) {
     return "mni.";
   }
 
-  if (progress < 0.70) {
+  if (progress < 0.90) {
     return "ni.";
   }
 
-  if (progress < 0.84) {
+  if (progress < 0.96) {
     return "i.";
   }
 
@@ -231,11 +235,6 @@ export default function GlobalPullToRefresh() {
 
       event.preventDefault();
 
-      /*
-        Resistencia:
-        el contenido sí baja, pero menos
-        que el movimiento del dedo.
-      */
       const distance =
         Math.min(
           MAX_PULL,
@@ -272,23 +271,19 @@ export default function GlobalPullToRefresh() {
 
         setRefreshing(true);
 
-        pullRef.current = 68;
-        setPull(68);
+        pullRef.current = 70;
+        setPull(70);
 
         setShellOffset(
-          68,
+          70,
           true
         );
 
-        /*
-          Deja ver la animación del punto
-          antes de ejecutar la recarga real.
-        */
         window.setTimeout(
           () => {
             window.location.reload();
           },
-          650
+          680
         );
 
         return;
@@ -417,7 +412,7 @@ export default function GlobalPullToRefresh() {
           opacity:
             Math.min(
               1,
-              pull / 24
+              pull / 22
             ),
         }}
       >
@@ -430,17 +425,14 @@ export default function GlobalPullToRefresh() {
           </span>
         ) : (
           <span
-            className="select-none whitespace-pre text-[17px] font-black tracking-[-0.045em] text-[var(--app-text)]"
+            className="alumni-refresh-brand select-none whitespace-pre"
             style={{
               transform:
                 `translateY(${Math.max(
                   0,
-                  8 -
-                    progress * 8
+                  7 -
+                    progress * 7
                 )}px)`,
-              opacity:
-                0.55 +
-                progress * 0.45,
             }}
           >
             {stage}
@@ -449,6 +441,33 @@ export default function GlobalPullToRefresh() {
       </div>
 
       <style jsx>{`
+        .alumni-refresh-brand {
+          font-size: 17px;
+          font-weight: 900;
+          letter-spacing: -0.045em;
+          color: var(--app-text);
+          background-image: linear-gradient(
+            90deg,
+            var(--app-text) 0%,
+            var(--app-text) 72%,
+            color-mix(
+                in srgb,
+                var(--app-accent) 42%,
+                var(--app-text) 58%
+              )
+              100%
+          );
+          -webkit-background-clip: text;
+          background-clip: text;
+          -webkit-text-fill-color: transparent;
+          text-shadow: 0 1px 0
+            color-mix(
+              in srgb,
+              var(--app-accent) 12%,
+              transparent
+            );
+        }
+
         .alumni-refresh-dot-spinner {
           position: relative;
           display: inline-flex;
@@ -470,7 +489,11 @@ export default function GlobalPullToRefresh() {
           border-top-color:
             var(--app-accent);
           border-right-color:
-            var(--app-accent);
+            color-mix(
+              in srgb,
+              var(--app-accent) 70%,
+              var(--app-text) 30%
+            );
         }
 
         .alumni-refresh-dot-core {
@@ -478,7 +501,11 @@ export default function GlobalPullToRefresh() {
           height: 4px;
           border-radius: 999px;
           background:
-            var(--app-text);
+            color-mix(
+              in srgb,
+              var(--app-accent) 35%,
+              var(--app-text) 65%
+            );
         }
 
         @keyframes alumni-refresh-spin {
