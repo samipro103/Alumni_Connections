@@ -971,10 +971,6 @@ export default function StoryComposer({
     setEditorTab("content");
   }
 
-  if (!open) {
-    return null;
-  }
-
   const availableTemplates =
     TEMPLATES.filter(
       (item) =>
@@ -1035,6 +1031,10 @@ export default function StoryComposer({
         fontStyle,
       ]
     );
+
+  if (!open) {
+    return null;
+  }
 
   function chooseMedia(
     selected: File
