@@ -27,6 +27,7 @@ import HDProfileImage from "@/components/profile/HDProfileImage";
 import ProfileSocialLinks from "@/components/profile/ProfileSocialLinks";
 import ProfileIdentityMeta from "@/components/profile/ProfileIdentityMeta";
 import ProfileHeaderFacts from "@/components/profile/ProfileHeaderFacts";
+import ProfessionalProfileOverview from "@/components/profile/ProfessionalProfileOverview";
 import CommentLikeButton from "@/components/social/CommentLikeButton";
 
 type ProfileTab = "posts" | "about";
@@ -665,7 +666,7 @@ export default function UserProfilePage() {
                         <img
                           src={post.image_url}
                           alt="Publicación"
-                          className="max-h-[650px] w-full object-cover"
+                          className="max-h-[650px] w-full object-contain"
                         />
                       )}
 
@@ -800,52 +801,13 @@ export default function UserProfilePage() {
             )}
           </section>
         ) : (
-          <section className="grid gap-x-10 pt-2 md:grid-cols-2">
-            <InfoBlock
-              title="Trayectoria académica"
-              icon={<GraduationCap size={17} />}
-            >
-              <Detail
-                label="Universidad"
-                value={profile.university}
-              />
-              <Detail label="Carrera" value={profile.career} />
-            </InfoBlock>
-
-            <InfoBlock
-              title="Ubicación"
-              icon={<MapPin size={17} />}
-            >
-              <Detail label="Ciudad" value={profile.city} />
-              <Detail label="País" value={profile.country} />
-            </InfoBlock>
-
-            <InfoBlock
-              title="Enlaces"
-              icon={<Link2 size={17} />}
-              className="md:col-span-2"
-            >
-              {links.length > 0 ? (
-                <div className="flex flex-wrap gap-2">
-                  {links.map(([label, value]) => (
-                    <a
-                      key={label}
-                      href={String(value)}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="rounded-xl border border-white/[0.07] bg-white/[0.025] px-3 py-2 text-xs font-bold text-zinc-500 transition hover:text-zinc-200"
-                    >
-                      {label}
-                    </a>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-sm text-zinc-700">
-                  Este usuario todavía no ha agregado enlaces.
-                </p>
-              )}
-            </InfoBlock>
-          </section>
+          <ProfessionalProfileOverview
+            profile={profile}
+            posts={posts}
+            followers={followers}
+            following={followingCount}
+            own={ownProfile}
+          />
         )}
           </>
         )}

@@ -22,7 +22,7 @@ import { useAuth } from "@/components/auth/AuthProvider";
 import { supabase } from "@/lib/supabase";
 import AppShell from "@/components/layout/AppShell";
 
-type FilterType = "all" | "connections" | "activity";
+type FilterType = "all" | "priority" | "connections" | "activity";
 
 type NotificationGroup = {
   key: string;
@@ -33,6 +33,71 @@ type NotificationGroup = {
   items: any[];
   actors: any[];
 };
+
+function notificationPriority(
+  group: NotificationGroup
+) {
+  if (
+    group.type ===
+    "follow_request"
+  ) {
+    return 100;
+  }
+
+  if (
+    group.type ===
+    "story_reply"
+  ) {
+    return 92;
+  }
+
+  if (
+    group.type ===
+    "comment"
+  ) {
+    return 84;
+  }
+
+  if (
+    group.type ===
+    "follow_request_accepted"
+  ) {
+    return 74;
+  }
+
+  if (
+    group.type ===
+    "follow"
+  ) {
+    return 64;
+  }
+
+  if (
+    group.targetType ===
+    "comment"
+  ) {
+    return 50;
+  }
+
+  if (
+    group.targetType ===
+    "story"
+  ) {
+    return 42;
+  }
+
+  return 30;
+}
+
+function isPriorityNotification(
+  group: NotificationGroup
+) {
+  return (
+    notificationPriority(
+      group
+    ) >= 80
+  );
+}
 
 export default function NotificationsPage() {
   const router = useRouter();
@@ -255,8 +320,30 @@ export default function NotificationsPage() {
     });
 
     return [...map.values()].sort(
-      (a, b) =>
-        new Date(b.latestAt).getTime() - new Date(a.latestAt).getTime()
+      (a, b) => {
+        const priorityDiff =
+          notificationPriority(
+            b
+          ) -
+          notificationPriority(
+            a
+          );
+
+        if (
+          priorityDiff !== 0
+        ) {
+          return priorityDiff;
+        }
+
+        return (
+          new Date(
+            b.latestAt
+          ).getTime() -
+          new Date(
+            a.latestAt
+          ).getTime()
+        );
+      }
     );
   }, [notifications]);
 
@@ -266,6 +353,12 @@ export default function NotificationsPage() {
       "follow_request",
       "follow_request_accepted",
     ]);
+
+    if (filter === "priority") {
+      return groupedNotifications.filter(
+        isPriorityNotification
+      );
+    }
 
     if (filter === "connections") {
       return groupedNotifications.filter((group) =>
@@ -281,6 +374,15 @@ export default function NotificationsPage() {
 
     return groupedNotifications;
   }, [groupedNotifications, filter]);
+
+  const priorityCount =
+    useMemo(
+      () =>
+        groupedNotifications.filter(
+          isPriorityNotification
+        ).length,
+      [groupedNotifications]
+    );
 
   const groupedByDate = useMemo(() => {
     const result: Record<string, NotificationGroup[]> = {
@@ -448,11 +550,21 @@ export default function NotificationsPage() {
           <p className="mt-2 max-w-xl text-sm leading-6 text-[var(--app-muted)]">
             Conexiones, reacciones y conversaciones importantes, sin ruido.
           </p>
+
+          {priorityCount > 0 && (
+            <div className="mt-5 flex items-center gap-3 border-t border-[var(--app-border)] pt-4">
+              <span className="h-1.5 w-1.5 rounded-full bg-[var(--app-accent)]" />
+              <p className="text-[10px] font-black uppercase tracking-[0.13em] text-[var(--app-muted)]">
+                {priorityCount} {priorityCount === 1 ? "actividad prioritaria" : "actividades prioritarias"}
+              </p>
+            </div>
+          )}
         </header>
 
         <div className="mb-7 flex items-center gap-5 border-b border-[var(--app-border)]">
           {[
             ["all", "Todas"],
+            ["priority", "Prioridad"],
             ["connections", "Conexiones"],
             ["activity", "Actividad"],
           ].map(([id, label]) => {

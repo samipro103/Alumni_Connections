@@ -102,6 +102,15 @@ export default function PostComposer({
   return (
     <section
       id="composer"
+      data-pull-refresh-lock={
+        expanded &&
+        Boolean(
+          content.trim() ||
+            image
+        )
+          ? "true"
+          : undefined
+      }
       className="alumni-composer mb-6 scroll-mt-24 overflow-hidden rounded-[24px] border"
     >
       <div className="p-4 sm:p-5">

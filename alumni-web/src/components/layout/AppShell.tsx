@@ -6,6 +6,7 @@ import RightSidebar from "./RightSidebar";
 import TopBar from "./TopBar";
 import MobileNav from "./MobileNav";
 import AppUtilities from "./AppUtilities";
+import GlobalPullToRefresh from "./GlobalPullToRefresh";
 
 interface Props {
   children: ReactNode;
@@ -22,6 +23,8 @@ export default function AppShell({
 }: Props) {
   return (
     <div className={immersiveMobile ? "min-h-[100dvh] overflow-x-clip text-[var(--app-text)]" : "min-h-[100dvh] overflow-x-clip text-[var(--app-text)]"}>
+      <GlobalPullToRefresh />
+
       <div className={immersiveMobile ? "hidden lg:block" : ""}>
         <TopBar />
       </div>
