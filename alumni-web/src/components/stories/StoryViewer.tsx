@@ -89,7 +89,7 @@ type Props = {
   onChanged?: () => void | Promise<void>;
 };
 
-const STORY_DURATION_MS = 15000;
+const STORY_DURATION_MS = 10000;
 
 // Spotify sigue disponible para Música de Perfil.
 // No usamos pistas Spotify como soundtrack sincronizado de Stories.
@@ -134,6 +134,10 @@ export default function StoryViewer({
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const pausedRef = useRef(false);
   const advancingRef = useRef(false);
+  const holdTimerRef = useRef<number | null>(null);
+  const holdingRef = useRef(false);
+  const suppressTapRef = useRef(false);
+  const pausedBeforeHoldRef = useRef(false);
 
   const [groupIndex, setGroupIndex] =
     useState(startGroupIndex);
@@ -151,6 +155,7 @@ export default function StoryViewer({
   const [saveBusy, setSaveBusy] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [paused, setPaused] = useState(false);
+  const [holding, setHolding] = useState(false);
   const [videoMuted, setVideoMuted] = useState(false);
   const [replyFocused, setReplyFocused] =
     useState(false);
@@ -202,6 +207,13 @@ export default function StoryViewer({
     setViewCount(null);
     setReply("");
     setPaused(false);
+    setHolding(false);
+    holdingRef.current = false;
+    suppressTapRef.current = false;
+    if (holdTimerRef.current !== null) {
+      window.clearTimeout(holdTimerRef.current);
+      holdTimerRef.current = null;
+    }
     setReplyFocused(false);
     setStoryMusicPlaying(false);
     setVideoMuted(false);
@@ -212,8 +224,8 @@ export default function StoryViewer({
 
     cancelAnimation();
 
-    // Todas las historias duran exactamente 15 segundos.
-    // El progreso ya no depende de la duración del video ni de si lleva música.
+    // ALUMNI_1_0_20_HOLD
+    // Fotos: 10 segundos. Videos: terminan al finalizar o a los 10 segundos, lo que ocurra primero.
     let elapsed = 0;
     let last = performance.now();
 
@@ -579,6 +591,62 @@ export default function StoryViewer({
     }
   }
 
+  function beginStoryHold() {
+    if (replyFocused) return;
+
+    if (holdTimerRef.current !== null) {
+      window.clearTimeout(holdTimerRef.current);
+    }
+
+    suppressTapRef.current = false;
+    pausedBeforeHoldRef.current = paused;
+
+    holdTimerRef.current = window.setTimeout(() => {
+      holdingRef.current = true;
+      suppressTapRef.current = true;
+      setHolding(true);
+      setPaused(true);
+    }, 170);
+  }
+
+  function releaseStoryHold() {
+    if (holdTimerRef.current !== null) {
+      window.clearTimeout(holdTimerRef.current);
+      holdTimerRef.current = null;
+    }
+
+    if (!holdingRef.current) {
+      return false;
+    }
+
+    holdingRef.current = false;
+    setHolding(false);
+    setPaused(pausedBeforeHoldRef.current);
+    return true;
+  }
+
+  function cancelStoryHold() {
+    if (holdTimerRef.current !== null) {
+      window.clearTimeout(holdTimerRef.current);
+      holdTimerRef.current = null;
+    }
+
+    if (holdingRef.current) {
+      holdingRef.current = false;
+      setHolding(false);
+      setPaused(pausedBeforeHoldRef.current);
+    }
+  }
+
+  function runTap(action: () => void) {
+    if (suppressTapRef.current) {
+      suppressTapRef.current = false;
+      return;
+    }
+
+    action();
+  }
+
   function next() {
     if (advancingRef.current) return;
     advancingRef.current = true;
@@ -770,9 +838,12 @@ export default function StoryViewer({
   }
 
   return createPortal(
-    <div data-theme-lock="dark" className="alumni-story-viewer fixed inset-0 z-[110] flex items-center justify-center overflow-hidden bg-black">
+    <div
+      data-theme-lock="dark"
+      className={`alumni-story-viewer fixed inset-0 z-[110] flex items-center justify-center overflow-hidden bg-black ${holding ? "is-holding" : ""}`}
+    >
       <div className="relative flex h-[100dvh] w-full max-w-[560px] items-center justify-center overflow-hidden bg-[#050506] sm:h-[calc(100dvh-24px)] sm:rounded-[30px] sm:border sm:border-white/[0.08] sm:shadow-[0_30px_100px_rgba(0,0,0,.5)]">
-        <div className="absolute left-3 right-3 top-[max(10px,env(safe-area-inset-top))] z-40 px-1">
+        <div className="alumni-story-chrome alumni-story-chrome-top absolute left-3 right-3 top-[max(10px,env(safe-area-inset-top))] z-40 px-1">
           <div className="flex gap-1">
             {group.stories.map(
               (item, index) => (
@@ -799,7 +870,7 @@ export default function StoryViewer({
           </div>
         </div>
 
-        <div className="absolute left-4 right-4 top-[max(28px,calc(env(safe-area-inset-top)+18px))] z-40 flex items-center gap-3">
+        <div className="alumni-story-chrome alumni-story-chrome-top absolute left-4 right-4 top-[max(28px,calc(env(safe-area-inset-top)+18px))] z-40 flex items-center gap-3">
           <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-full bg-white/10 text-xs font-black text-white ring-1 ring-white/15">
             {group.avatar_url ? (
               <img
@@ -878,8 +949,8 @@ export default function StoryViewer({
           </button>
         </div>
 
-        <div className="absolute inset-x-0 top-0 z-20 h-36 bg-gradient-to-b from-black/70 to-transparent" />
-        <div className="absolute inset-x-0 bottom-0 z-20 h-64 bg-gradient-to-t from-black/85 via-black/30 to-transparent" />
+        <div className="alumni-story-chrome alumni-story-chrome-top absolute inset-x-0 top-0 z-20 h-36 bg-gradient-to-b from-black/70 to-transparent" />
+        <div className="alumni-story-chrome alumni-story-chrome-bottom absolute inset-x-0 bottom-0 z-20 h-64 bg-gradient-to-t from-black/85 via-black/30 to-transparent" />
 
         {story.media_type ===
         "video" ? (
@@ -893,7 +964,7 @@ export default function StoryViewer({
               videoMuted ||
               storyMusicPlaying
             }
-            loop
+            onEnded={next}
             className="h-full w-full object-cover sm:object-contain"
           />
         ) : (
@@ -925,23 +996,37 @@ export default function StoryViewer({
 
         <button
           type="button"
-          onClick={previous}
+          onPointerDown={beginStoryHold}
+          onPointerUp={releaseStoryHold}
+          onPointerCancel={cancelStoryHold}
+          onContextMenu={(event) => event.preventDefault()}
+          onClick={() => runTap(previous)}
           className="absolute inset-y-[90px] left-0 z-10 w-[28%]"
           aria-label="Historia anterior"
         />
 
         <button
           type="button"
-          onClick={next}
+          onPointerDown={beginStoryHold}
+          onPointerUp={releaseStoryHold}
+          onPointerCancel={cancelStoryHold}
+          onContextMenu={(event) => event.preventDefault()}
+          onClick={() => runTap(next)}
           className="absolute inset-y-[90px] right-0 z-10 w-[28%]"
           aria-label="Historia siguiente"
         />
 
         <button
           type="button"
+          onPointerDown={beginStoryHold}
+          onPointerUp={releaseStoryHold}
+          onPointerCancel={cancelStoryHold}
+          onContextMenu={(event) => event.preventDefault()}
           onClick={() =>
-            setPaused(
-              (value) => !value
+            runTap(() =>
+              setPaused(
+                (value) => !value
+              )
             )
           }
           className="absolute bottom-[100px] left-[28%] right-[28%] top-[90px] z-10"
@@ -953,7 +1038,8 @@ export default function StoryViewer({
         />
 
         {paused &&
-          !replyFocused && (
+          !replyFocused &&
+          !holding && (
             <div className="pointer-events-none absolute left-1/2 top-1/2 z-30 flex h-14 w-14 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-white/10 bg-black/45 text-white backdrop-blur-xl">
               {story.media_type ===
               "video" ? (
@@ -970,7 +1056,7 @@ export default function StoryViewer({
         <button
           type="button"
           onClick={previous}
-          className="absolute left-3 top-1/2 z-30 hidden h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-black/30 text-white/65 backdrop-blur-lg sm:flex"
+          className="alumni-story-chrome absolute left-3 top-1/2 z-30 hidden h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-black/30 text-white/65 backdrop-blur-lg sm:flex"
           aria-label="Anterior"
         >
           <ChevronLeft size={20} />
@@ -979,7 +1065,7 @@ export default function StoryViewer({
         <button
           type="button"
           onClick={next}
-          className="absolute right-3 top-1/2 z-30 hidden h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-black/30 text-white/65 backdrop-blur-lg sm:flex"
+          className="alumni-story-chrome absolute right-3 top-1/2 z-30 hidden h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-black/30 text-white/65 backdrop-blur-lg sm:flex"
           aria-label="Siguiente"
         >
           <ChevronRight size={20} />
@@ -1037,7 +1123,7 @@ export default function StoryViewer({
         {!ownStory &&
           story.story_kind === "opportunity" && (
             <div
-              className="absolute bottom-[82px] left-4 right-4 z-40 flex items-center gap-2"
+              className="alumni-story-chrome alumni-story-chrome-bottom absolute bottom-[82px] left-4 right-4 z-40 flex items-center gap-2"
               onClick={(event) =>
                 event.stopPropagation()
               }
@@ -1082,7 +1168,7 @@ export default function StoryViewer({
           )}
 
         {ownStory ? (
-          <div className="absolute bottom-5 left-5 z-40 flex items-center gap-2">
+          <div className="alumni-story-chrome alumni-story-chrome-bottom absolute bottom-5 left-5 z-40 flex items-center gap-2">
             {viewCount !== null && (
               <div className="flex items-center gap-2 rounded-full bg-black/40 px-3 py-2 text-[11px] font-bold text-white/70 backdrop-blur-xl">
                 <Eye size={14} />
@@ -1104,122 +1190,132 @@ export default function StoryViewer({
           </div>
         ) : (
           <div
-            className="absolute bottom-0 left-0 right-0 z-40 px-4 pb-[max(14px,env(safe-area-inset-bottom))] pt-14"
+            className="alumni-story-chrome alumni-story-chrome-bottom alumni-story-reply-shell"
             onClick={(event) =>
               event.stopPropagation()
             }
           >
-            <div className="flex items-center gap-2.5">
-              <div
-                className={`flex min-w-0 flex-1 items-center rounded-[22px] border bg-black/35 px-4 backdrop-blur-2xl transition ${
-                  replyFocused
-                    ? "border-white/25 bg-black/55"
-                    : "border-white/10"
-                }`}
-              >
-                <input
-                  value={reply}
-                  onChange={(event) =>
-                    setReply(
-                      event.target.value
-                    )
-                  }
-                  onFocus={() =>
-                    setReplyFocused(true)
-                  }
-                  onBlur={() => {
-                    if (!reply.trim()) {
-                      setReplyFocused(false);
+            <div className="alumni-story-reply-stage">
+              <div className="alumni-story-reply-context">
+                Responder a
+                <strong>@{group.username}</strong>
+              </div>
+
+              <div className="alumni-story-reply-row">
+                <div
+                  className={`alumni-story-reply-editor ${
+                    replyFocused
+                      ? "is-focused"
+                      : ""
+                  }`}
+                >
+                  <input
+                    value={reply}
+                    onChange={(event) =>
+                      setReply(
+                        event.target.value
+                      )
                     }
-                  }}
-                  onKeyDown={(event) => {
-                    if (
-                      event.key ===
-                        "Enter" &&
-                      !event.shiftKey
-                    ) {
-                      event.preventDefault();
-                      void sendStoryReply();
+                    onFocus={() =>
+                      setReplyFocused(true)
                     }
-                  }}
-                  placeholder={`Responder a @${group.username}`}
-                  className="h-12 min-w-0 flex-1 bg-transparent text-[13px] text-white outline-none placeholder:text-white/35"
-                />
+                    onBlur={() => {
+                      if (!reply.trim()) {
+                        setReplyFocused(false);
+                      }
+                    }}
+                    onKeyDown={(event) => {
+                      if (
+                        event.key ===
+                          "Enter" &&
+                        !event.shiftKey
+                      ) {
+                        event.preventDefault();
+                        void sendStoryReply();
+                      }
+                    }}
+                    placeholder="Escribe una respuesta..."
+                    className="alumni-story-reply-input"
+                  />
+
+                  <button
+                    type="button"
+                    onMouseDown={(event) =>
+                      event.preventDefault()
+                    }
+                    onClick={() =>
+                      void sendStoryReply()
+                    }
+                    disabled={
+                      !reply.trim() ||
+                      sendingReply
+                    }
+                    className="alumni-story-reply-send"
+                    aria-label="Enviar respuesta"
+                  >
+                    {sendingReply ? (
+                      <Loader2
+                        size={14}
+                        className="animate-spin"
+                      />
+                    ) : (
+                      <>
+                        <span>Enviar</span>
+                        <Send size={14} />
+                      </>
+                    )}
+                  </button>
+                </div>
 
                 <button
                   type="button"
-                  onMouseDown={(event) =>
-                    event.preventDefault()
-                  }
                   onClick={() =>
-                    void sendStoryReply()
+                    void toggleStoryLike()
                   }
-                  disabled={
-                    !reply.trim() ||
-                    sendingReply
+                  disabled={likeBusy}
+                  className={`alumni-story-reaction ${
+                    liked
+                      ? "is-active"
+                      : ""
+                  }`}
+                  aria-label={
+                    story.story_kind === "achievement"
+                      ? liked
+                        ? "Quitar felicitación"
+                        : "Felicitar"
+                      : liked
+                      ? "Quitar me gusta"
+                      : "Me gusta"
                   }
-                  className="ml-2 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white text-black transition disabled:bg-white/10 disabled:text-white/25"
-                  aria-label="Enviar respuesta"
                 >
-                  {sendingReply ? (
-                    <Loader2
-                      size={14}
-                      className="animate-spin"
+                  {story.story_kind === "achievement" ? (
+                    <Award
+                      size={18}
+                      fill={
+                        liked
+                          ? "currentColor"
+                          : "none"
+                      }
                     />
                   ) : (
-                    <Send size={14} />
+                    <Heart
+                      size={18}
+                      fill={
+                        liked
+                          ? "currentColor"
+                          : "none"
+                      }
+                    />
                   )}
                 </button>
               </div>
 
-              <button
-                type="button"
-                onClick={() =>
-                  void toggleStoryLike()
-                }
-                disabled={likeBusy}
-                className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-full border backdrop-blur-2xl transition ${
-                  liked
-                    ? "border-red-400/25 bg-red-500/12 text-red-400"
-                    : "border-white/10 bg-black/35 text-white/70 hover:bg-black/55 hover:text-white"
-                }`}
-                aria-label={
-                  story.story_kind === "achievement"
-                    ? liked
-                      ? "Quitar felicitación"
-                      : "Felicitar"
-                    : liked
-                    ? "Quitar me gusta"
-                    : "Me gusta"
-                }
-              >
-                {story.story_kind === "achievement" ? (
-                  <Award
-                    size={18}
-                    fill={
-                      liked
-                        ? "currentColor"
-                        : "none"
-                    }
-                  />
-                ) : (
-                  <Heart
-                    size={18}
-                    fill={
-                      liked
-                        ? "currentColor"
-                        : "none"
-                    }
-                  />
-                )}
-              </button>
+              {likeCount > 0 && (
+                <p className="alumni-story-like-count">
+                  {likeCount} {story.story_kind === "achievement" ? "felicitaciones" : "me gusta"}
+                </p>
+              )}
             </div>
-
-            {likeCount > 0 && (
-              <p className="mt-2 pl-3 text-[9px] font-bold text-white/30">
-                {likeCount} {story.story_kind === "achievement" ? "felicitaciones" : "me gusta"}
-              </p>
-            )}
           </div>
         )}
       </div>
