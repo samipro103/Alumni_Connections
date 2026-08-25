@@ -30,11 +30,6 @@ function blockedTarget(
     return false;
   }
 
-  /*
-    Banner y avatar HD son botones para abrir
-    el visor, pero también deben permitir iniciar
-    Pull-to-Refresh cuando el usuario arrastra.
-  */
   if (
     target.closest(
       '[data-pull-refresh-pass="true"]'
@@ -95,12 +90,6 @@ function setShellOffset(
   shell.style.transform =
     `translate3d(0, ${next}px, 0)`;
 
-  /*
-    Muy importante:
-    al terminar el gesto quitamos transform
-    por completo. Dejar transform: translateY(0)
-    alteraría el comportamiento de elementos fixed.
-  */
   if (
     next === 0 &&
     animate
@@ -131,51 +120,48 @@ function AnimatedBrand({
   const letters =
     "Alumni".split("");
 
-  /*
-    La marca completa permanece durante casi
-    todo el gesto. Solo cerca del umbral se
-    empieza a desmaterializar de izquierda
-    a derecha hasta dejar el punto.
-  */
-  const erase =
-    clamp(
-      (progress - 0.70) /
-        0.30
-    );
-
   const reveal =
-    clamp(
-      progress / 0.28
-    );
+    clamp(progress / 0.22);
+  const erase =
+    clamp((progress - 0.73) / 0.27);
 
   return (
-    <div className="alumni-refresh-mark-wrap">
+    <div className="alumni-refresh-hero">
       <div
-        className={`alumni-refresh-mark ${
-          refreshing
-            ? "is-refreshing"
-            : ""
-        }`}
+        className="alumni-refresh-glow"
+        style={{
+          opacity:
+            refreshing
+              ? 0.95
+              : 0.22 +
+                progress * 0.38,
+          transform: `scale(${
+            0.88 +
+            progress * 0.18
+          })`,
+        }}
+      />
+
+      <div
+        className="alumni-refresh-stage"
         style={{
           opacity:
             refreshing
               ? 1
-              : 0.38 +
-                reveal * 0.62,
-          transform:
-            `translate3d(0, ${
-              refreshing
-                ? 0
-                : (1 - reveal) *
-                  7
-            }px, 0) scale(${
-              0.97 +
-              reveal * 0.03
-            })`,
+              : 0.32 +
+                reveal * 0.68,
+          transform: `translate3d(0, ${
+            refreshing
+              ? 0
+              : (1 - reveal) * 8
+          }px, 0) scale(${
+            0.97 +
+            reveal * 0.03
+          })`,
         }}
       >
-        {!refreshing && (
-          <span
+        {!refreshing ? (
+          <div
             className="alumni-refresh-word"
             aria-label="Alumni."
           >
@@ -186,15 +172,15 @@ function AnimatedBrand({
               ) => {
                 const localErase =
                   clamp(
-                    erase * 6 -
+                    erase * 6.1 -
                       index
                   );
 
                 return (
                   <span
                     key={`${letter}-${index}`}
-                    aria-hidden="true"
                     className="alumni-refresh-letter"
+                    aria-hidden="true"
                     style={{
                       opacity:
                         1 -
@@ -206,13 +192,13 @@ function AnimatedBrand({
                         }em`,
                       transform:
                         `translate3d(0, ${
-                          -3 *
+                          -4 *
                           localErase
                         }px, 0)`,
                       filter:
                         `blur(${
                           localErase *
-                          3
+                          2.6
                         }px)`,
                     }}
                   >
@@ -235,48 +221,71 @@ function AnimatedBrand({
             >
               .
             </span>
-          </span>
-        )}
-
-        {refreshing && (
-          <span
-            className="alumni-refresh-orbit"
+          </div>
+        ) : (
+          <div
+            className="alumni-refresh-loader"
             aria-label="Actualizando Alumni"
           >
-            <span className="alumni-refresh-orbit-dot" />
-          </span>
+            <span className="alumni-refresh-loader-core" />
+          </div>
         )}
       </div>
 
-      {!refreshing && (
-        <span
-          aria-hidden="true"
-          className="alumni-refresh-accent-line"
-          style={{
-            width:
-              `${
-                14 +
-                progress * 34
-              }px`,
-            opacity:
-              0.12 +
-              progress * 0.34,
-          }}
-        />
-      )}
+      <div
+        className="alumni-refresh-line"
+        style={{
+          opacity:
+            refreshing
+              ? 0.36
+              : 0.12 +
+                progress * 0.38,
+          width:
+            `${16 + progress * 44}px`,
+        }}
+      />
 
       <style jsx>{`
-        .alumni-refresh-mark-wrap {
+        .alumni-refresh-hero {
           position: relative;
           display: flex;
-          min-width: 108px;
-          min-height: 50px;
+          min-width: 160px;
+          min-height: 54px;
           align-items: center;
           justify-content: center;
         }
 
-        .alumni-refresh-mark {
+        .alumni-refresh-glow {
+          position: absolute;
+          inset: 5px auto auto 50%;
+          width: 130px;
+          height: 44px;
+          border-radius: 999px;
+          transform: translateX(-50%);
+          background:
+            radial-gradient(
+              ellipse at center,
+              color-mix(
+                  in srgb,
+                  var(--app-accent) 14%,
+                  transparent
+                )
+                0%,
+              color-mix(
+                  in srgb,
+                  var(--app-accent) 8%,
+                  transparent
+                )
+                34%,
+              transparent 72%
+            );
+          filter: blur(6px);
+          pointer-events: none;
+        }
+
+        .alumni-refresh-stage {
           position: relative;
+          z-index: 1;
           display: flex;
           min-height: 34px;
           align-items: center;
@@ -291,13 +300,16 @@ function AnimatedBrand({
           display: inline-flex;
           align-items: baseline;
           justify-content: center;
-          font-size: 22px;
+          font-size: 24px;
           font-weight: 900;
-          letter-spacing: -0.055em;
+          letter-spacing: -0.062em;
           line-height: 1;
-          color: var(--app-text);
+          color: #f5f7ff;
           text-rendering: geometricPrecision;
           -webkit-font-smoothing: antialiased;
+          text-shadow:
+            0 1px 0 rgba(255,255,255,0.04),
+            0 0 18px rgba(13, 90, 255, 0.04);
         }
 
         .alumni-refresh-letter {
@@ -313,18 +325,24 @@ function AnimatedBrand({
 
         .alumni-refresh-dot {
           display: inline-block;
-          margin-left: 0.015em;
+          margin-left: 0.018em;
           color:
             color-mix(
               in srgb,
-              var(--app-accent) 64%,
-              var(--app-text) 36%
+              var(--app-accent) 72%,
+              #ffffff 28%
             );
           text-shadow:
-            0 0 13px
+            0 0 10px
               color-mix(
                 in srgb,
                 var(--app-accent) 18%,
+                transparent
+              ),
+            0 0 24px
+              color-mix(
+                in srgb,
+                var(--app-accent) 10%,
                 transparent
               );
           transform-origin: center;
@@ -332,22 +350,21 @@ function AnimatedBrand({
             transform 90ms linear;
         }
 
-        .alumni-refresh-accent-line {
+        .alumni-refresh-line {
           position: absolute;
-          bottom: 3px;
           left: 50%;
+          bottom: 7px;
           height: 1px;
-          transform:
-            translateX(-50%);
           border-radius: 999px;
+          transform: translateX(-50%);
           background:
             linear-gradient(
               90deg,
               transparent,
               color-mix(
                 in srgb,
-                var(--app-accent) 58%,
-                var(--app-text) 42%
+                var(--app-accent) 52%,
+                #ffffff 48%
               ),
               transparent
             );
@@ -356,50 +373,46 @@ function AnimatedBrand({
             opacity 90ms linear;
         }
 
-        .alumni-refresh-orbit {
+        .alumni-refresh-loader {
           position: relative;
           display: inline-flex;
-          width: 25px;
-          height: 25px;
+          width: 26px;
+          height: 26px;
           align-items: center;
           justify-content: center;
           border-radius: 999px;
         }
 
-        .alumni-refresh-orbit::before {
+        .alumni-refresh-loader::before {
           content: "";
           position: absolute;
           inset: 1px;
           border-radius: inherit;
-          border: 1.7px solid
-            color-mix(
-              in srgb,
-              var(--app-border) 86%,
-              transparent
-            );
+          border: 1.8px solid
+            rgba(255,255,255,0.12);
           border-top-color:
             color-mix(
               in srgb,
-              var(--app-accent) 72%,
-              var(--app-text) 28%
+              var(--app-accent) 74%,
+              #ffffff 26%
             );
           border-right-color:
             color-mix(
               in srgb,
-              var(--app-accent) 36%,
-              var(--app-text) 64%
+              var(--app-accent) 38%,
+              #ffffff 62%
             );
           animation:
-            alumni-refresh-orbit-spin
+            alumni-refresh-spin
             0.78s
             cubic-bezier(.5,.1,.5,.9)
             infinite;
         }
 
-        .alumni-refresh-orbit::after {
+        .alumni-refresh-loader::after {
           content: "";
           position: absolute;
-          inset: 6px;
+          inset: 7px;
           border-radius: inherit;
           background:
             color-mix(
@@ -409,7 +422,7 @@ function AnimatedBrand({
             );
         }
 
-        .alumni-refresh-orbit-dot {
+        .alumni-refresh-loader-core {
           position: relative;
           z-index: 1;
           width: 4px;
@@ -418,8 +431,8 @@ function AnimatedBrand({
           background:
             color-mix(
               in srgb,
-              var(--app-accent) 58%,
-              var(--app-text) 42%
+              var(--app-accent) 64%,
+              #ffffff 36%
             );
           box-shadow:
             0 0 12px
@@ -429,48 +442,43 @@ function AnimatedBrand({
                 transparent
               );
           animation:
-            alumni-refresh-dot-breathe
+            alumni-refresh-pulse
             0.9s ease-in-out
             infinite alternate;
         }
 
-        @keyframes alumni-refresh-orbit-spin {
+        @keyframes alumni-refresh-spin {
           to {
             transform:
               rotate(360deg);
           }
         }
 
-        @keyframes alumni-refresh-dot-breathe {
+        @keyframes alumni-refresh-pulse {
           from {
-            transform:
-              scale(.82);
-            opacity: .72;
+            transform: scale(0.82);
+            opacity: 0.72;
           }
 
           to {
-            transform:
-              scale(1.18);
+            transform: scale(1.18);
             opacity: 1;
           }
         }
 
-        @media
-          (prefers-reduced-motion:
-            reduce) {
+        @media (prefers-reduced-motion: reduce) {
+          .alumni-refresh-stage,
           .alumni-refresh-letter,
-          .alumni-refresh-mark,
           .alumni-refresh-dot,
-          .alumni-refresh-accent-line {
+          .alumni-refresh-line {
             transition: none;
           }
 
-          .alumni-refresh-orbit::before {
-            animation-duration:
-              1.5s;
+          .alumni-refresh-loader::before {
+            animation-duration: 1.5s;
           }
 
-          .alumni-refresh-orbit-dot {
+          .alumni-refresh-loader-core {
             animation: none;
           }
         }
@@ -482,24 +490,17 @@ function AnimatedBrand({
 export default function GlobalPullToRefresh() {
   const [pull, setPull] =
     useState(0);
-
-  const [
-    refreshing,
-    setRefreshing,
-  ] = useState(false);
+  const [refreshing, setRefreshing] =
+    useState(false);
 
   const startYRef =
     useRef(0);
-
   const startXRef =
     useRef(0);
-
   const activeRef =
     useRef(false);
-
   const pullRef =
     useRef(0);
-
   const refreshingRef =
     useRef(false);
 
@@ -511,21 +512,18 @@ export default function GlobalPullToRefresh() {
   useEffect(() => {
     const html =
       document.documentElement;
-
     const body =
       document.body;
 
     const previousHtml =
       html.style
         .overscrollBehaviorY;
-
     const previousBody =
       body.style
         .overscrollBehaviorY;
 
     html.style.overscrollBehaviorY =
       "none";
-
     body.style.overscrollBehaviorY =
       "none";
 
@@ -534,11 +532,8 @@ export default function GlobalPullToRefresh() {
     ) {
       activeRef.current =
         false;
-
       pullRef.current = 0;
-
       setPull(0);
-
       setShellOffset(
         0,
         animate
@@ -569,10 +564,8 @@ export default function GlobalPullToRefresh() {
 
       startYRef.current =
         touch.clientY;
-
       startXRef.current =
         touch.clientX;
-
       activeRef.current = true;
       pullRef.current = 0;
 
@@ -598,7 +591,6 @@ export default function GlobalPullToRefresh() {
       const deltaY =
         touch.clientY -
         startYRef.current;
-
       const deltaX =
         touch.clientX -
         startXRef.current;
@@ -629,9 +621,7 @@ export default function GlobalPullToRefresh() {
 
       pullRef.current =
         distance;
-
       setPull(distance);
-
       setShellOffset(
         distance,
         false
@@ -654,25 +644,16 @@ export default function GlobalPullToRefresh() {
       ) {
         refreshingRef.current =
           true;
-
         setRefreshing(true);
 
         pullRef.current =
           HOLD_OFFSET;
-
-        setPull(
-          HOLD_OFFSET
-        );
-
+        setPull(HOLD_OFFSET);
         setShellOffset(
           HOLD_OFFSET,
           true
         );
 
-        /*
-          Se deja tiempo suficiente para ver
-          la transición punto -> loader.
-        */
         window.setTimeout(
           () => {
             window.location.reload();
@@ -729,7 +710,6 @@ export default function GlobalPullToRefresh() {
     return () => {
       html.style.overscrollBehaviorY =
         previousHtml;
-
       body.style.overscrollBehaviorY =
         previousBody;
 
@@ -739,9 +719,7 @@ export default function GlobalPullToRefresh() {
         );
 
       if (shell) {
-        clearShellStyles(
-          shell
-        );
+        clearShellStyles(shell);
       }
 
       window.removeEventListener(
@@ -749,19 +727,16 @@ export default function GlobalPullToRefresh() {
         onTouchStart,
         true
       );
-
       window.removeEventListener(
         "touchmove",
         onTouchMove,
         true
       );
-
       window.removeEventListener(
         "touchend",
         onTouchEnd,
         true
       );
-
       window.removeEventListener(
         "touchcancel",
         onTouchCancel,
@@ -775,7 +750,6 @@ export default function GlobalPullToRefresh() {
       pull /
         TRIGGER_DISTANCE
     );
-
   const visible =
     refreshing ||
     pull > 2;
@@ -794,15 +768,27 @@ export default function GlobalPullToRefresh() {
           : "opacity-0"
       }`}
       style={{
-        height:
-          `${Math.max(
-            0,
-            pull
-          )}px`,
+        height: `${Math.max(
+          0,
+          pull
+        )}px`,
         paddingTop:
-          "max(7px, env(safe-area-inset-top))",
+          "max(8px, env(safe-area-inset-top))",
       }}
     >
+      <div
+        className="absolute inset-x-0 top-0 h-full"
+        style={{
+          opacity:
+            0.28 +
+            progress * 0.34,
+          background:
+            "linear-gradient(180deg, rgba(6,13,28,.76) 0%, rgba(6,13,28,.48) 48%, rgba(6,13,28,0) 100%)",
+          backdropFilter:
+            "blur(8px)",
+        }}
+      />
+
       <AnimatedBrand
         progress={progress}
         refreshing={
