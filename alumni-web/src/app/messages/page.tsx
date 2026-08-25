@@ -1,43 +1,113 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import {
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ChevronRight, MessageCircle, Search } from "lucide-react";
+import {
+  CheckCheck,
+  ChevronRight,
+  Image as ImageIcon,
+  MessageCircle,
+  Search,
+  SquarePen,
+  Video,
+} from "lucide-react";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { supabase } from "@/lib/supabase";
 import AppShell from "@/components/layout/AppShell";
+
+type Conversation = {
+  id: string;
+  username: string;
+  avatar_url: string | null;
+  university: string | null;
+  career: string | null;
+  lastMessage: any;
+  unreadCount: number;
+};
+
+type InboxFilter = "all" | "unread";
 
 export default function MessagesPage() {
   const router = useRouter();
   const { user, loading } = useAuth();
 
-  const [conversations, setConversations] = useState<any[]>([]);
+  const [conversations, setConversations] =
+    useState<Conversation[]>([]);
   const [search, setSearch] = useState("");
-  const [loadingConversations, setLoadingConversations] = useState(true);
+  const [filter, setFilter] =
+    useState<InboxFilter>("all");
+  const [
+    loadingConversations,
+    setLoadingConversations,
+  ] = useState(true);
 
   useEffect(() => {
-    if (!loading && !user) router.push("/login");
+    if (!loading && !user) {
+      router.push("/login");
+    }
   }, [user, loading, router]);
 
   useEffect(() => {
-    if (user) loadConversations();
+    if (user) {
+      void loadConversations(false);
+    }
   }, [user?.id]);
 
   useEffect(() => {
     if (!user) return;
 
+    const refresh = () => {
+      void loadConversations(true);
+    };
+
     const channel = supabase
-      .channel(`message-list:${user.id}`)
-      .on(
-        "postgres_changes",
-        { event: "INSERT", schema: "public", table: "messages", filter: `receiver_id=eq.${user.id}` },
-        () => loadConversations()
+      .channel(
+        `message-inbox:${user.id}`
       )
       .on(
         "postgres_changes",
-        { event: "INSERT", schema: "public", table: "messages", filter: `sender_id=eq.${user.id}` },
-        () => loadConversations()
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "messages",
+          filter: `receiver_id=eq.${user.id}`,
+        },
+        refresh
+      )
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "messages",
+          filter: `sender_id=eq.${user.id}`,
+        },
+        refresh
+      )
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "messages",
+          filter: `receiver_id=eq.${user.id}`,
+        },
+        refresh
+      )
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "messages",
+          filter: `sender_id=eq.${user.id}`,
+        },
+        refresh
       )
       .subscribe();
 
@@ -46,227 +116,596 @@ export default function MessagesPage() {
     };
   }, [user?.id]);
 
-  async function loadConversations() {
+  async function loadConversations(
+    silent = false
+  ) {
     if (!user) return;
 
-    setLoadingConversations(true);
+    if (!silent) {
+      setLoadingConversations(true);
+    }
 
-    const { data: messages, error } = await supabase
-      .from("messages")
-      .select("*")
-      .or(`sender_id.eq.${user.id},receiver_id.eq.${user.id}`)
-      .order("created_at", { ascending: false });
+    const { data: messages, error } =
+      await supabase
+        .from("messages")
+        .select("*")
+        .or(
+          `sender_id.eq.${user.id},receiver_id.eq.${user.id}`
+        )
+        .order("created_at", {
+          ascending: false,
+        });
 
     if (error) {
       console.error(error);
-      setConversations([]);
-      setLoadingConversations(false);
-      return;
-    }
 
-    const latestByUser = new Map<string, any>();
-
-    (messages || []).forEach((message: any) => {
-      const otherUserId =
-        message.sender_id === user.id
-          ? message.receiver_id
-          : message.sender_id;
-
-      if (!latestByUser.has(otherUserId)) {
-        latestByUser.set(otherUserId, message);
+      if (!silent) {
+        setConversations([]);
       }
-    });
 
-    const ids = Array.from(latestByUser.keys());
+      setLoadingConversations(false);
+      return;
+    }
 
-    if (ids.length === 0) {
+    const latestByUser =
+      new Map<string, any>();
+
+    const unreadByUser =
+      new Map<string, number>();
+
+    (messages || []).forEach(
+      (message: any) => {
+        const otherUserId =
+          message.sender_id === user.id
+            ? message.receiver_id
+            : message.sender_id;
+
+        if (
+          !latestByUser.has(otherUserId)
+        ) {
+          latestByUser.set(
+            otherUserId,
+            message
+          );
+        }
+
+        if (
+          message.receiver_id === user.id &&
+          !message.read_at
+        ) {
+          unreadByUser.set(
+            otherUserId,
+            (unreadByUser.get(
+              otherUserId
+            ) || 0) + 1
+          );
+        }
+      }
+    );
+
+    const ids = Array.from(
+      latestByUser.keys()
+    );
+
+    if (!ids.length) {
       setConversations([]);
       setLoadingConversations(false);
       return;
     }
 
-    const { data: profiles } = await supabase
-      .from("profiles")
-      .select("id, username, avatar_url, university, career")
-      .in("id", ids);
+    const { data: profiles, error: profilesError } =
+      await supabase
+        .from("profiles")
+        .select(
+          "id, username, avatar_url, university, career"
+        )
+        .in("id", ids);
 
-    const merged = (profiles || [])
+    if (profilesError) {
+      console.error(profilesError);
+      setLoadingConversations(false);
+      return;
+    }
+
+    const merged = (
+      profiles || []
+    )
       .map((profile: any) => ({
         ...profile,
-        lastMessage: latestByUser.get(profile.id),
+        lastMessage:
+          latestByUser.get(profile.id),
+        unreadCount:
+          unreadByUser.get(profile.id) ||
+          0,
       }))
       .sort(
         (a: any, b: any) =>
-          new Date(b.lastMessage?.created_at || 0).getTime() -
-          new Date(a.lastMessage?.created_at || 0).getTime()
-      );
+          new Date(
+            b.lastMessage
+              ?.created_at || 0
+          ).getTime() -
+          new Date(
+            a.lastMessage
+              ?.created_at || 0
+          ).getTime()
+      ) as Conversation[];
 
     setConversations(merged);
     setLoadingConversations(false);
   }
 
-  const filteredConversations = useMemo(() => {
-    const value = search.trim().toLowerCase();
-    if (!value) return conversations;
+  const unreadTotal = useMemo(
+    () =>
+      conversations.reduce(
+        (total, item) =>
+          total + item.unreadCount,
+        0
+      ),
+    [conversations]
+  );
 
-    return conversations.filter((conversation: any) =>
-      [
-        conversation.username,
-        conversation.university,
-        conversation.career,
-        conversation.lastMessage?.content,
-      ]
-        .filter(Boolean)
-        .some((field) => String(field).toLowerCase().includes(value))
-    );
-  }, [conversations, search]);
+  const filteredConversations =
+    useMemo(() => {
+      const value = search
+        .trim()
+        .toLowerCase();
+
+      return conversations.filter(
+        (conversation) => {
+          if (
+            filter === "unread" &&
+            conversation.unreadCount === 0
+          ) {
+            return false;
+          }
+
+          if (!value) {
+            return true;
+          }
+
+          return [
+            conversation.username,
+            conversation.university,
+            conversation.career,
+            conversation.lastMessage
+              ?.content,
+            conversation.lastMessage
+              ?.media_name,
+          ]
+            .filter(Boolean)
+            .some((field) =>
+              String(field)
+                .toLowerCase()
+                .includes(value)
+            );
+        }
+      );
+    }, [
+      conversations,
+      search,
+      filter,
+    ]);
 
   function formatTime(date?: string) {
     if (!date) return "";
 
     const parsed = new Date(date);
-    const today = new Date();
+    const now = new Date();
 
     const sameDay =
-      parsed.getDate() === today.getDate() &&
-      parsed.getMonth() === today.getMonth() &&
-      parsed.getFullYear() === today.getFullYear();
+      parsed.toDateString() ===
+      now.toDateString();
 
     if (sameDay) {
-      return parsed.toLocaleTimeString("es-SV", {
-        hour: "2-digit",
-        minute: "2-digit",
-      });
+      return parsed.toLocaleTimeString(
+        "es-SV",
+        {
+          hour: "2-digit",
+          minute: "2-digit",
+        }
+      );
     }
 
-    return parsed.toLocaleDateString("es-SV", {
-      day: "2-digit",
-      month: "short",
-    });
+    const yesterday =
+      new Date(now);
+    yesterday.setDate(
+      now.getDate() - 1
+    );
+
+    if (
+      parsed.toDateString() ===
+      yesterday.toDateString()
+    ) {
+      return "Ayer";
+    }
+
+    return parsed.toLocaleDateString(
+      "es-SV",
+      {
+        day: "numeric",
+        month: "short",
+      }
+    );
   }
 
-  function previewText(conversation: any) {
-    const message = conversation.lastMessage;
-    if (!message) return "Sin mensajes todavía";
+  function preview(
+    conversation: Conversation
+  ) {
+    const message =
+      conversation.lastMessage;
 
-    const mine = message.sender_id === user?.id;
-
-    if (message.message_type === "story_reply") {
-      return mine
-        ? `Tú respondiste a su historia: ${message.content}`
-        : `Respondió a tu historia: ${message.content}`;
+    if (!message) {
+      return {
+        text: "Sin mensajes todavía",
+        icon: null,
+      };
     }
 
-    if (message.media_type === "image" || message.message_type === "image") {
-      return `${mine ? "Tú: " : ""}📷 Foto${message.content ? ` · ${message.content}` : ""}`;
+    const mine =
+      message.sender_id === user?.id;
+
+    if (
+      message.message_type ===
+      "story_reply"
+    ) {
+      return {
+        text: `${
+          mine ? "Tú: " : ""
+        }Respuesta a una historia`,
+        icon: (
+          <MessageCircle
+            size={13}
+          />
+        ),
+      };
     }
 
-    if (message.media_type === "video" || message.message_type === "video") {
-      return `${mine ? "Tú: " : ""}🎥 Video${message.content ? ` · ${message.content}` : ""}`;
+    if (
+      message.media_type ===
+        "image" ||
+      message.message_type ===
+        "image"
+    ) {
+      return {
+        text: `${
+          mine ? "Tú: " : ""
+        }Foto${
+          message.content
+            ? ` · ${message.content}`
+            : ""
+        }`,
+        icon: (
+          <ImageIcon
+            size={13}
+          />
+        ),
+      };
     }
 
-    return `${mine ? "Tú: " : ""}${message.content || ""}`;
+    if (
+      message.media_type ===
+        "video" ||
+      message.message_type ===
+        "video"
+    ) {
+      return {
+        text: `${
+          mine ? "Tú: " : ""
+        }Video${
+          message.content
+            ? ` · ${message.content}`
+            : ""
+        }`,
+        icon: (
+          <Video size={13} />
+        ),
+      };
+    }
+
+    return {
+      text: `${
+        mine ? "Tú: " : ""
+      }${message.content || ""}`,
+      icon:
+        mine &&
+        message.read_at ? (
+          <CheckCheck
+            size={13}
+          />
+        ) : null,
+    };
   }
 
   return (
     <AppShell>
-      <div className="mx-auto w-full max-w-[760px]">
-        <div className="mb-6 pt-2">
-          <h1 className="text-[30px] font-black tracking-[-0.04em] text-white">
-            Mensajes
-          </h1>
-          <p className="mt-1 text-sm text-zinc-600">
-            Conversaciones con tu comunidad Alumni.
-          </p>
+      <div className="alumni-messages-page mx-auto w-full max-w-[820px]">
+        <div className="flex items-end gap-4 pb-5 pt-1 sm:pb-7 sm:pt-2">
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-2.5">
+              <h1 className="text-[30px] font-black tracking-[-0.045em] text-[var(--app-text)] sm:text-[34px]">
+                Mensajes
+              </h1>
+
+              {unreadTotal > 0 && (
+                <span className="inline-flex min-w-6 items-center justify-center rounded-full bg-[var(--app-accent)] px-2 py-1 text-[10px] font-black text-[var(--app-on-accent)]">
+                  {unreadTotal >
+                  99
+                    ? "99+"
+                    : unreadTotal}
+                </span>
+              )}
+            </div>
+
+            <p className="mt-1 text-sm text-[var(--app-muted-2)]">
+              Conversaciones de tu comunidad Alumni.
+            </p>
+          </div>
+
+          <Link
+            href="/explore"
+            className="alumni-message-new flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[var(--app-accent)] text-[var(--app-on-accent)] shadow-[0_10px_28px_color-mix(in_srgb,var(--app-accent)_24%,transparent)] transition active:scale-95"
+            aria-label="Nuevo mensaje"
+            title="Nuevo mensaje"
+          >
+            <SquarePen
+              size={18}
+            />
+          </Link>
         </div>
 
-        <div className="mb-5 flex h-12 items-center rounded-2xl border border-white/[0.07] bg-white/[0.035] px-4 transition focus-within:border-[#6d7cff]/40">
-          <Search size={18} className="text-zinc-600" />
+        <div className="alumni-messages-search flex h-12 items-center gap-2 border-b border-[var(--app-border)]">
+          <Search
+            size={17}
+            className="shrink-0 text-[var(--app-muted-2)]"
+          />
+
           <input
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Buscar conversación..."
-            className="h-full flex-1 bg-transparent px-3 text-[16px] text-zinc-200 outline-none placeholder:text-zinc-700 sm:text-sm"
+            onChange={(event) =>
+              setSearch(
+                event.target.value
+              )
+            }
+            placeholder="Buscar personas o mensajes"
+            className="alumni-mobile-input h-full min-w-0 flex-1 bg-transparent text-[15px] text-[var(--app-text)] outline-none placeholder:text-[var(--app-muted-3)]"
           />
         </div>
 
-        <div className="overflow-hidden rounded-[24px] border border-white/[0.07] bg-[#101318]/95">
-          {loadingConversations ? (
-            <div className="px-6 py-14 text-center text-sm text-zinc-600">
-              Cargando conversaciones...
-            </div>
-          ) : filteredConversations.length === 0 ? (
-            <div className="px-6 py-16 text-center">
-              <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-white/[0.04] text-zinc-500">
-                <MessageCircle size={24} />
+        <div className="flex items-center gap-5 border-b border-[var(--app-border)] py-3">
+          <button
+            type="button"
+            onClick={() =>
+              setFilter("all")
+            }
+            className={`relative py-1 text-[12px] font-black transition ${
+              filter === "all"
+                ? "text-[var(--app-text)]"
+                : "text-[var(--app-muted-2)]"
+            }`}
+          >
+            Todos
+            {filter ===
+              "all" && (
+              <span className="absolute -bottom-3 left-0 right-0 h-[2px] rounded-full bg-[var(--app-accent)]" />
+            )}
+          </button>
+
+          <button
+            type="button"
+            onClick={() =>
+              setFilter("unread")
+            }
+            className={`relative py-1 text-[12px] font-black transition ${
+              filter ===
+              "unread"
+                ? "text-[var(--app-text)]"
+                : "text-[var(--app-muted-2)]"
+            }`}
+          >
+            No leídos
+            {filter ===
+              "unread" && (
+              <span className="absolute -bottom-3 left-0 right-0 h-[2px] rounded-full bg-[var(--app-accent)]" />
+            )}
+          </button>
+        </div>
+
+        {loadingConversations ? (
+          <div className="divide-y divide-[var(--app-border)]">
+            {Array.from({
+              length: 5,
+            }).map((_, index) => (
+              <div
+                key={index}
+                className="flex items-center gap-3.5 py-4"
+              >
+                <div className="h-13 w-13 shrink-0 animate-pulse rounded-full bg-[var(--app-soft-strong)]" />
+
+                <div className="min-w-0 flex-1">
+                  <div className="h-3.5 w-32 animate-pulse rounded-full bg-[var(--app-soft-strong)]" />
+                  <div className="mt-3 h-3 w-[72%] animate-pulse rounded-full bg-[var(--app-soft)]" />
+                </div>
               </div>
-              <h2 className="mt-4 text-base font-bold text-zinc-300">
-                {search ? "No encontramos conversaciones" : "Aún no tienes conversaciones"}
-              </h2>
-              <p className="mx-auto mt-2 max-w-sm text-sm leading-6 text-zinc-600">
-                {search
-                  ? "Prueba buscando por usuario, universidad o carrera."
-                  : "Explora perfiles y envía un mensaje para comenzar a conectar."}
-              </p>
-              {!search && (
+            ))}
+          </div>
+        ) : filteredConversations.length ===
+          0 ? (
+          <div className="py-16 text-center sm:py-20">
+            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-[var(--app-soft)] text-[var(--app-muted)]">
+              <MessageCircle
+                size={23}
+              />
+            </div>
+
+            <h2 className="mt-4 text-[15px] font-black text-[var(--app-text-soft)]">
+              {search
+                ? "No encontramos conversaciones"
+                : filter ===
+                  "unread"
+                ? "Todo está al día"
+                : "Todavía no tienes conversaciones"}
+            </h2>
+
+            <p className="mx-auto mt-2 max-w-sm text-sm leading-6 text-[var(--app-muted-2)]">
+              {search
+                ? "Prueba con otro nombre, carrera, universidad o texto."
+                : filter ===
+                  "unread"
+                ? "No tienes mensajes pendientes por leer."
+                : "Explora perfiles y comienza una conversación con alguien de la comunidad."}
+            </p>
+
+            {!search &&
+              filter ===
+                "all" && (
                 <Link
                   href="/explore"
-                  className="mt-5 inline-flex h-10 items-center rounded-xl bg-[#6d7cff] px-4 text-sm font-bold text-white transition hover:bg-[#7b87ff]"
+                  className="mt-5 inline-flex h-10 items-center rounded-xl bg-[var(--app-accent)] px-4 text-sm font-black text-[var(--app-on-accent)]"
                 >
                   Explorar personas
                 </Link>
               )}
-            </div>
-          ) : (
-            <div className="divide-y divide-white/[0.06]">
-              {filteredConversations.map((conversation: any) => (
-                <Link
-                  key={conversation.id}
-                  href={`/messages/${conversation.username}`}
-                  className="group flex items-center gap-4 px-4 py-4 transition hover:bg-white/[0.035] sm:px-5"
-                >
-                  <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[#1a1f29] text-sm font-bold text-white ring-1 ring-white/10">
-                    {conversation.avatar_url ? (
-                      <img
-                        src={conversation.avatar_url}
-                        alt={conversation.username}
-                        className="h-full w-full object-cover"
-                      />
-                    ) : (
-                      conversation.username?.charAt(0)?.toUpperCase() || "U"
-                    )}
-                  </div>
+          </div>
+        ) : (
+          <div className="divide-y divide-[var(--app-border)]">
+            {filteredConversations.map(
+              (conversation) => {
+                const item =
+                  preview(
+                    conversation
+                  );
 
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-2">
-                      <p className="truncate text-sm font-bold text-zinc-100">
-                        @{conversation.username}
-                      </p>
-                      <span className="ml-auto shrink-0 text-[11px] text-zinc-700">
-                        {formatTime(conversation.lastMessage?.created_at)}
-                      </span>
+                const unread =
+                  conversation.unreadCount >
+                  0;
+
+                return (
+                  <Link
+                    key={
+                      conversation.id
+                    }
+                    href={`/messages/${conversation.username}`}
+                    className={`alumni-conversation-row group relative flex items-center gap-3.5 py-4 transition sm:py-4.5 ${
+                      unread
+                        ? "alumni-conversation-unread"
+                        : ""
+                    }`}
+                  >
+                    <div className="relative shrink-0">
+                      <div className="flex h-[52px] w-[52px] items-center justify-center overflow-hidden rounded-full bg-[var(--app-surface-2)] text-sm font-black text-[var(--app-text)] ring-1 ring-[var(--app-border)]">
+                        {conversation.avatar_url ? (
+                          <img
+                            src={
+                              conversation.avatar_url
+                            }
+                            alt={
+                              conversation.username
+                            }
+                            className="h-full w-full object-cover"
+                          />
+                        ) : (
+                          conversation.username
+                            ?.charAt(0)
+                            ?.toUpperCase() ||
+                          "U"
+                        )}
+                      </div>
+
+                      {unread && (
+                        <span className="absolute bottom-0 right-0 h-3.5 w-3.5 rounded-full border-[3px] border-[var(--app-bg)] bg-[var(--app-accent)]" />
+                      )}
                     </div>
 
-                    <p className="mt-0.5 truncate text-xs text-zinc-600">
-                      {[conversation.career, conversation.university]
-                        .filter(Boolean)
-                        .join(" · ") || "Comunidad Alumni"}
-                    </p>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-baseline gap-2">
+                        <p
+                          className={`truncate text-[14px] ${
+                            unread
+                              ? "font-black text-[var(--app-text)]"
+                              : "font-bold text-[var(--app-text-soft)]"
+                          }`}
+                        >
+                          @
+                          {
+                            conversation.username
+                          }
+                        </p>
 
-                    <p className="mt-2 truncate text-sm text-zinc-500">
-                      {previewText(conversation)}
-                    </p>
-                  </div>
+                        <span
+                          className={`ml-auto shrink-0 text-[10px] ${
+                            unread
+                              ? "font-black text-[var(--app-accent)]"
+                              : "text-[var(--app-muted-3)]"
+                          }`}
+                        >
+                          {formatTime(
+                            conversation
+                              .lastMessage
+                              ?.created_at
+                          )}
+                        </span>
+                      </div>
 
-                  <ChevronRight
-                    size={18}
-                    className="shrink-0 text-zinc-800 transition group-hover:translate-x-0.5 group-hover:text-zinc-500"
-                  />
-                </Link>
-              ))}
-            </div>
-          )}
-        </div>
+                      <p className="mt-0.5 truncate text-[10px] text-[var(--app-muted-3)]">
+                        {[
+                          conversation.career,
+                          conversation.university,
+                        ]
+                          .filter(Boolean)
+                          .join(
+                            " · "
+                          ) ||
+                          "Comunidad Alumni"}
+                      </p>
+
+                      <div className="mt-1.5 flex min-w-0 items-center gap-1.5">
+                        {item.icon && (
+                          <span
+                            className={`shrink-0 ${
+                              unread
+                                ? "text-[var(--app-accent)]"
+                                : "text-[var(--app-muted-3)]"
+                            }`}
+                          >
+                            {
+                              item.icon
+                            }
+                          </span>
+                        )}
+
+                        <p
+                          className={`truncate text-[13px] ${
+                            unread
+                              ? "font-semibold text-[var(--app-text-soft)]"
+                              : "text-[var(--app-muted)]"
+                          }`}
+                        >
+                          {
+                            item.text
+                          }
+                        </p>
+
+                        {unread && (
+                          <span className="ml-auto inline-flex min-w-5 shrink-0 items-center justify-center rounded-full bg-[var(--app-accent)] px-1.5 py-0.5 text-[9px] font-black text-[var(--app-on-accent)]">
+                            {conversation.unreadCount >
+                            9
+                              ? "9+"
+                              : conversation.unreadCount}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    <ChevronRight
+                      size={16}
+                      className="shrink-0 text-[var(--app-muted-3)] transition group-hover:translate-x-0.5"
+                    />
+                  </Link>
+                );
+              }
+            )}
+          </div>
+        )}
       </div>
     </AppShell>
   );

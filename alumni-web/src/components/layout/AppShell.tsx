@@ -21,7 +21,7 @@ export default function AppShell({
   immersiveMobile = false,
 }: Props) {
   return (
-    <div className={immersiveMobile ? "min-h-[100dvh] text-[var(--app-text)]" : "min-h-screen text-[var(--app-text)]"}>
+    <div className={immersiveMobile ? "min-h-[100dvh] overflow-x-clip text-[var(--app-text)]" : "min-h-[100dvh] overflow-x-clip text-[var(--app-text)]"}>
       <div className={immersiveMobile ? "hidden lg:block" : ""}>
         <TopBar />
       </div>

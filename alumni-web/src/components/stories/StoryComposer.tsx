@@ -1547,7 +1547,7 @@ export default function StoryComposer({
           </p>
         </div>
 
-        <div className="min-h-0 flex-1 overflow-y-auto">
+        <div className="alumni-story-studio-panel min-h-0 flex-1 overflow-y-auto overscroll-contain">
           <div className="sticky top-0 z-30 border-b border-white/[0.06] bg-[#0b0e13]/95 px-3 py-3 backdrop-blur-xl">
             <div className="grid grid-cols-4 gap-1">
               <EditorTab
@@ -1624,7 +1624,7 @@ export default function StoryComposer({
             </div>
           </div>
 
-          <div className="p-4 pb-28 sm:p-5 sm:pb-28">
+          <div className="p-4 pb-6 sm:p-5 sm:pb-6">
             {editorTab ===
               "content" && (
               <ContentEditor
@@ -1893,7 +1893,7 @@ export default function StoryComposer({
             )}
           </div>
 
-          <div className="fixed bottom-0 left-0 right-0 z-[120] border-t border-white/[0.07] bg-[#0b0e13]/96 p-3 pb-[max(12px,env(safe-area-inset-bottom))] backdrop-blur-2xl lg:absolute">
+          <div className="sticky bottom-0 z-40 border-t border-white/[0.07] bg-[#0b0e13]/96 p-3 pb-[max(12px,env(safe-area-inset-bottom))] backdrop-blur-2xl">
             <div className="mx-auto flex max-w-xl items-center gap-3">
               <button
                 type="button"
