@@ -113,17 +113,14 @@ function MobileLanding() {
       </div>
 
       <div className="relative z-10 mx-auto flex min-h-[100svh] w-full max-w-[520px] flex-col px-5 pb-[max(24px,env(safe-area-inset-bottom))] pt-[max(18px,env(safe-area-inset-top))]">
-        {/* Marca compacta para móvil. Después puede convertirse en el icono real de la app. */}
+        {/* La marca visible dentro de la app siempre es Alumni. */}
         <header className="flex min-h-12 items-center">
           <Link
             href="/"
             aria-label="Alumni."
-            className="relative flex h-11 w-11 items-center justify-center rounded-[15px] border border-white/[0.08] bg-white/[0.035] shadow-[0_12px_35px_rgba(0,0,0,.22)]"
+            className="alumni-brand inline-flex text-[20px] font-black tracking-[-0.055em] text-white"
           >
-            <span className="text-[23px] font-black tracking-[-0.06em] text-white">
-              A
-            </span>
-            <span className="absolute bottom-[10px] right-[8px] h-[5px] w-[5px] rounded-full bg-[#7f8cff] shadow-[0_0_10px_rgba(127,140,255,.85)]" />
+            Alumni<span className="alumni-brand-dot">.</span>
           </Link>
         </header>
 

@@ -6,6 +6,11 @@ type Props = {
   animated?: boolean;
 };
 
+/**
+ * Marca visible oficial: Alumni.
+ * La variante compacta A. queda reservada para recursos gráficos
+ * como launcher icon/favicon y no debe usarse como nombre dentro de la app.
+ */
 export default function BrandMark({
   compact = false,
   className = "",

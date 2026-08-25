@@ -85,11 +85,7 @@ export default function TopBar() {
           aria-label="Alumni."
         >
           <BrandMark
-            className="hidden text-[22px] text-[var(--app-text)] sm:inline-flex"
-          />
-          <BrandMark
-            compact
-            className="text-[24px] text-[var(--app-text)] sm:hidden"
+            className="text-[21px] text-[var(--app-text)] sm:text-[22px]"
           />
         </Link>
 
