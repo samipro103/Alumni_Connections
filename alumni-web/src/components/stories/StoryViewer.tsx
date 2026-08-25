@@ -28,6 +28,7 @@ import {
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import StoryMusicPlayer from "@/components/stories/StoryMusicPlayer";
+import StoryDesignOverlay from "@/components/stories/StoryDesignOverlay";
 import {
   startStoryMusicNow,
   stopAllStoryMusic,
@@ -53,6 +54,7 @@ export type StoryItem = {
   music_duration_ms?: number | null;
   music_clip_start_seconds?: number | null;
   music_clip_duration_seconds?: number | null;
+  caption?: string | null;
   story_kind?: "standard" | "achievement" | "opportunity";
   headline?: string | null;
   achievement_type?: string | null;
@@ -61,6 +63,12 @@ export type StoryItem = {
   work_mode?: string | null;
   location_text?: string | null;
   action_url?: string | null;
+  story_template?: string | null;
+  story_accent?: string | null;
+  story_animation?: string | null;
+  story_photo_style?: string | null;
+  story_decor?: string | null;
+  story_font_style?: string | null;
 };
 
 export type StoryGroup = {
@@ -485,11 +493,12 @@ export default function StoryViewer({
   function openOpportunity() {
     if (!story?.action_url) return;
 
-    const url = /^https?:\/\//i.test(
-      story.action_url
-    )
-      ? story.action_url
-      : `https://${story.action_url}`;
+    const url =
+      /^https?:\/\//i.test(
+        story.action_url
+      )
+        ? story.action_url
+        : `https://${story.action_url}`;
 
     window.open(
       url,
@@ -857,24 +866,6 @@ export default function StoryViewer({
           </button>
         </div>
 
-        {story.story_kind === "achievement" && (
-          <div className="absolute left-4 top-[82px] z-40">
-            <span className="story-kind-badge story-kind-achievement">
-              <Award size={11} />
-              {story.achievement_type || "Logro"}
-            </span>
-          </div>
-        )}
-
-        {story.story_kind === "opportunity" && (
-          <div className="absolute left-4 top-[82px] z-40">
-            <span className="story-kind-badge story-kind-opportunity">
-              <Briefcase size={11} />
-              {story.opportunity_type || "Oportunidad"}
-            </span>
-          </div>
-        )}
-
         <div className="absolute inset-x-0 top-0 z-20 h-36 bg-gradient-to-b from-black/70 to-transparent" />
         <div className="absolute inset-x-0 bottom-0 z-20 h-64 bg-gradient-to-t from-black/85 via-black/30 to-transparent" />
 
@@ -902,6 +893,10 @@ export default function StoryViewer({
             loading="eager"
           />
         )}
+
+        <StoryDesignOverlay
+          story={story}
+        />
 
         <button
           type="button"
@@ -1030,7 +1025,7 @@ export default function StoryViewer({
                 disabled={saveBusy}
                 className={`flex h-11 items-center gap-2 rounded-[15px] border px-4 text-xs font-black backdrop-blur-xl transition ${
                   saved
-                    ? "border-emerald-300/25 bg-emerald-400/15 text-emerald-200"
+                    ? "border-emerald-300/25 bg-emerald-400/15 text-emerald-100"
                     : "border-white/10 bg-black/45 text-white/75"
                 }`}
                 aria-label="Guardar oportunidad"

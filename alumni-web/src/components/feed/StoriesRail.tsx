@@ -145,6 +145,7 @@ export default function StoriesRail({
           music_duration_ms,
           music_clip_start_seconds,
           music_clip_duration_seconds,
+          caption,
           story_kind,
           headline,
           achievement_type,
@@ -152,7 +153,13 @@ export default function StoriesRail({
           opportunity_type,
           work_mode,
           location_text,
-          action_url
+          action_url,
+          story_template,
+          story_accent,
+          story_animation,
+          story_photo_style,
+          story_decor,
+          story_font_style
         `)
         .in("user_id", candidateIds)
         .gt(
@@ -492,13 +499,13 @@ export default function StoriesRail({
 
               <div className="absolute inset-x-2.5 bottom-2.5">
                 {ownPreviewStory?.story_kind === "achievement" && (
-                  <span className="mb-1 inline-flex rounded-full bg-indigo-500/40 px-2 py-0.5 text-[7px] font-black uppercase tracking-wide text-white">
+                  <span className="mb-1 inline-flex rounded-full border border-indigo-200/20 bg-indigo-500/40 px-2 py-0.5 text-[7px] font-black uppercase tracking-wide text-white backdrop-blur-xl">
                     Logro
                   </span>
                 )}
                 {ownPreviewStory?.story_kind === "opportunity" && (
-                  <span className="mb-1 inline-flex rounded-full bg-emerald-500/40 px-2 py-0.5 text-[7px] font-black uppercase tracking-wide text-white">
-                    Empleo
+                  <span className="mb-1 inline-flex rounded-full border border-emerald-200/20 bg-emerald-500/40 px-2 py-0.5 text-[7px] font-black uppercase tracking-wide text-white backdrop-blur-xl">
+                    Oportunidad
                   </span>
                 )}
                 <p className="truncate text-[11px] font-black text-white">
@@ -597,12 +604,12 @@ export default function StoriesRail({
 
                   <div className="absolute inset-x-2.5 bottom-2.5">
                     {previewStory?.story_kind === "achievement" && (
-                      <span className="mb-1 inline-flex rounded-full bg-indigo-500/40 px-2 py-0.5 text-[7px] font-black uppercase tracking-wide text-white">
+                      <span className="mb-1 inline-flex rounded-full border border-indigo-200/20 bg-indigo-500/40 px-2 py-0.5 text-[7px] font-black uppercase tracking-wide text-white backdrop-blur-xl">
                         Logro
                       </span>
                     )}
                     {previewStory?.story_kind === "opportunity" && (
-                      <span className="mb-1 inline-flex rounded-full bg-emerald-500/40 px-2 py-0.5 text-[7px] font-black uppercase tracking-wide text-white">
+                      <span className="mb-1 inline-flex rounded-full border border-emerald-200/20 bg-emerald-500/40 px-2 py-0.5 text-[7px] font-black uppercase tracking-wide text-white backdrop-blur-xl">
                         Oportunidad
                       </span>
                     )}

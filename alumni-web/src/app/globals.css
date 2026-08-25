@@ -775,3 +775,113 @@ input[type="datetime-local"] {
   background: rgba(5,150,105,.25);
   color: #d1fae5;
 }
+
+/* ALUMNI STORIES 12.1 - STUDIO */
+.story-field {
+  width: 100%;
+  min-height: 46px;
+  border-radius: 14px;
+  border: 1px solid rgba(255,255,255,.075);
+  background: rgba(255,255,255,.035);
+  padding-left: 13px;
+  padding-right: 13px;
+  font-size: 13px;
+  color: #e4e4e7;
+  outline: none;
+  transition: border-color .18s ease, background .18s ease, box-shadow .18s ease;
+}
+
+.story-field::placeholder {
+  color: #52525b;
+}
+
+.story-field:focus {
+  border-color: rgba(109,124,255,.5);
+  background: rgba(255,255,255,.05);
+  box-shadow: 0 0 0 3px rgba(109,124,255,.08);
+}
+
+.story-decor-grid {
+  background-image:
+    linear-gradient(rgba(255,255,255,.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,.035) 1px, transparent 1px);
+  background-size: 38px 38px;
+  mask-image: linear-gradient(to bottom, black, transparent 82%);
+}
+
+.story-confetti {
+  background-image:
+    radial-gradient(circle at 12% 18%, rgba(255,255,255,.42) 0 2px, transparent 3px),
+    radial-gradient(circle at 80% 20%, rgba(129,140,248,.56) 0 3px, transparent 4px),
+    radial-gradient(circle at 66% 42%, rgba(255,255,255,.28) 0 2px, transparent 3px),
+    radial-gradient(circle at 22% 58%, rgba(167,139,250,.52) 0 3px, transparent 4px),
+    radial-gradient(circle at 84% 66%, rgba(255,255,255,.25) 0 2px, transparent 3px);
+}
+
+@keyframes alumniStoryFade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes alumniStoryRise {
+  from { opacity: 0; transform: translateY(28px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes alumniStoryPop {
+  0% { opacity: 0; transform: scale(.88); }
+  70% { opacity: 1; transform: scale(1.035); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+@keyframes alumniStoryGlow {
+  0% { opacity: 0; filter: blur(8px); }
+  55% { opacity: 1; filter: blur(0); text-shadow: 0 0 22px rgba(255,255,255,.22); }
+  100% { opacity: 1; filter: blur(0); }
+}
+
+@keyframes alumniStoryFloat {
+  0% { opacity: 0; transform: translateY(18px) scale(.98); }
+  65% { opacity: 1; transform: translateY(-4px) scale(1); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes alumniStoryReveal {
+  from { opacity: 0; clip-path: inset(0 100% 0 0); }
+  to { opacity: 1; clip-path: inset(0 0 0 0); }
+}
+
+.story-anim-fade {
+  animation: alumniStoryFade .65s ease both;
+}
+
+.story-anim-rise {
+  animation: alumniStoryRise .72s cubic-bezier(.22,.8,.24,1) both;
+}
+
+.story-anim-pop {
+  animation: alumniStoryPop .72s cubic-bezier(.2,.75,.2,1) both;
+}
+
+.story-anim-glow {
+  animation: alumniStoryGlow .8s ease both;
+}
+
+.story-anim-float {
+  animation: alumniStoryFloat .9s cubic-bezier(.2,.7,.2,1) both;
+}
+
+.story-anim-reveal {
+  animation: alumniStoryReveal .85s cubic-bezier(.2,.8,.2,1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .story-anim-fade,
+  .story-anim-rise,
+  .story-anim-pop,
+  .story-anim-glow,
+  .story-anim-float,
+  .story-anim-reveal {
+    animation: none !important;
+  }
+}
