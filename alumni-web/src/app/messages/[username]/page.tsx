@@ -29,6 +29,11 @@ import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/components/auth/AuthProvider";
 import AppShell from "@/components/layout/AppShell";
 import MessageProTools from "@/components/messages/MessageProTools";
+import {
+  ComposerReplyPreview,
+  MessageReplyQuote,
+  SwipeToReply,
+} from "@/components/messages/MessageReplyExperience";
 
 const BUCKET = "message-media";
 const MAX_IMAGE =
@@ -543,7 +548,7 @@ const loadChatRequestRef =
       textareaRef.current
     ) {
       textareaRef.current.style.height =
-        "42px";
+        "38px";
     }
   }, [newMessage]);
 
@@ -681,12 +686,12 @@ const loadChatRequestRef =
       HTMLTextAreaElement
   ) {
     target.style.height =
-      "42px";
+      "38px";
 
     target.style.height =
       `${Math.min(
         target.scrollHeight,
-        118
+        104
       )}px`;
   }
 
@@ -1168,6 +1173,20 @@ setMessages(
     }
   }
 
+  function beginReply(
+    message: any
+  ) {
+    setReplyingTo(
+      message
+    );
+
+    window.requestAnimationFrame(
+      () => {
+        textareaRef.current?.focus();
+      }
+    );
+  }
+
   function broadcastTyping(
     typing: boolean
   ) {
@@ -1368,13 +1387,13 @@ setMessages(
     <AppShell immersiveMobile>
       <div
         style={chatStyle}
-        className="alumni-chat-stage fixed inset-x-0 top-[var(--chat-top)] z-[80] mx-auto flex h-[var(--chat-vh)] w-full max-w-[860px] flex-col overflow-hidden overscroll-none bg-[var(--app-bg)] lg:static lg:h-[calc(100vh-112px)] lg:min-h-[620px] lg:rounded-[28px] lg:border lg:border-[var(--app-border)] lg:bg-[var(--app-surface)] lg:shadow-[0_30px_100px_var(--app-shadow)]"
+        className="alumni-chat-stage fixed inset-x-0 top-[var(--chat-top)] z-[80] mx-auto flex h-[var(--chat-vh)] w-full max-w-[780px] flex-col overflow-hidden overscroll-none bg-[var(--app-bg)] lg:static lg:h-[calc(100vh-132px)] lg:min-h-[540px] lg:rounded-[24px] lg:border lg:border-[var(--app-border)] lg:bg-[var(--app-surface)] lg:shadow-[0_24px_70px_var(--app-shadow)]"
       >
         <header className="relative z-50 shrink-0 border-b border-[var(--app-border)] bg-[color-mix(in_srgb,var(--app-surface)_95%,transparent)] pt-[env(safe-area-inset-top)] backdrop-blur-2xl">
-          <div className="flex min-h-[64px] items-center gap-2 px-2.5 sm:px-4">
+          <div className="flex min-h-[56px] items-center gap-2 px-2.5 sm:px-3.5">
             <Link
               href="/messages"
-              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-[var(--app-muted)] transition active:bg-[var(--app-soft-strong)]"
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-[var(--app-muted)] transition active:bg-[var(--app-soft-strong)]"
               aria-label="Volver a mensajes"
             >
               <ArrowLeft
@@ -1390,7 +1409,7 @@ setMessages(
               }
               className="flex min-w-0 flex-1 items-center gap-3"
             >
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[var(--app-surface-2)] text-sm font-black text-[var(--app-text)] ring-1 ring-[var(--app-border)]">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[var(--app-surface-2)] text-sm font-black text-[var(--app-text)] ring-1 ring-[var(--app-border)]">
                 {receiver?.avatar_url ? (
                   <img
                     src={
@@ -1433,7 +1452,7 @@ setMessages(
               onClick={
                 openSearch
               }
-              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-[var(--app-muted-2)] transition active:bg-[var(--app-soft-strong)]"
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-[var(--app-muted-2)] transition active:bg-[var(--app-soft-strong)]"
               aria-label="Buscar en la conversación"
             >
               <Search
@@ -1453,7 +1472,7 @@ setMessages(
                       !value
                   )
                 }
-                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-[var(--app-muted-2)] transition active:bg-[var(--app-soft-strong)]"
+                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-[var(--app-muted-2)] transition active:bg-[var(--app-soft-strong)]"
                 aria-label="Opciones de conversación"
               >
                 <MoreHorizontal
@@ -1568,7 +1587,15 @@ setMessages(
 
         <div
           ref={scrollRef}
-          className="alumni-chat-scroll alumni-chat-wallpaper scrollbar-thin min-h-0 flex-1 overscroll-contain overflow-y-auto px-3 py-4 sm:px-7 sm:py-5"
+          className="alumni-chat-scroll alumni-chat-wallpaper scrollbar-thin min-h-0 flex-1 overscroll-contain overflow-y-auto px-2.5 py-3 sm:px-5 sm:py-4"
+          style={{
+            backgroundImage:
+              "radial-gradient(circle at 18% 16%, color-mix(in srgb,var(--app-accent) 7%,transparent) 0 1px, transparent 1.35px), radial-gradient(circle at 80% 72%, color-mix(in srgb,var(--app-text) 4%,transparent) 0 1px, transparent 1.3px), linear-gradient(180deg, color-mix(in srgb,var(--app-bg) 96%,var(--app-surface)), var(--app-bg))",
+            backgroundSize:
+              "29px 29px, 37px 37px, 100% 100%",
+            backgroundPosition:
+              "0 0, 12px 10px, 0 0",
+          }}
         >
           {loadingChat ? (
             <div className="flex h-full items-center justify-center">
@@ -1712,7 +1739,7 @@ setMessages(
                       }
                     >
                       {showDay && (
-                        <div className="my-4 flex items-center justify-center">
+                        <div className="my-3 flex items-center justify-center">
                           <span className="rounded-full border border-[var(--app-border)] bg-[color-mix(in_srgb,var(--app-surface)_88%,transparent)] px-3 py-1.5 text-[9px] font-black text-[var(--app-muted-2)] backdrop-blur-xl">
                             {dayLabel(
                               message.created_at
@@ -1721,6 +1748,13 @@ setMessages(
                         </div>
                       )}
 
+                      <SwipeToReply
+                        onReply={() =>
+                          beginReply(
+                            message
+                          )
+                        }
+                      >
                       <div
                         className={`group flex ${
                           mine
@@ -1728,18 +1762,25 @@ setMessages(
                             : "justify-start"
                         } ${
                           grouped
-                            ? "mt-1"
-                            : "mt-2.5"
+                            ? "mt-0.5"
+                            : "mt-1.5"
                         }`}
                       >
                         {story ? (
                           <div
-                            className={`max-w-[84%] overflow-hidden rounded-[22px] border sm:max-w-[72%] ${
+                            className={`max-w-[80%] overflow-hidden rounded-[18px] border sm:max-w-[66%] ${
                               mine
                                 ? "border-[color-mix(in_srgb,var(--app-accent)_24%,transparent)] bg-[var(--app-accent-soft)]"
                                 : "border-[var(--app-border)] bg-[var(--app-surface)]"
                             }`}
                           >
+                            <MessageReplyQuote
+                              message={message}
+                              messages={messages}
+                              currentUserId={user?.id}
+                              peerUsername={receiver?.username}
+                            />
+
                             {message.story_media_url && (
                               <div className="relative">
                                 <img
@@ -1758,7 +1799,7 @@ setMessages(
                             )}
 
                             <div className="px-3.5 py-3">
-                              <p className="text-[14px] leading-5 text-[var(--app-text-soft)]">
+                              <p className="text-[13px] leading-[1.4] text-[var(--app-text-soft)]">
                                 {
                                   message.content
                                 }
@@ -1784,12 +1825,19 @@ setMessages(
                           </div>
                         ) : media ? (
                           <div
-                            className={`max-w-[86%] overflow-hidden rounded-[22px] border sm:max-w-[72%] ${
+                            className={`max-w-[82%] overflow-hidden rounded-[18px] border sm:max-w-[66%] ${
                               mine
                                 ? "alumni-message-media-mine"
                                 : "border-[var(--app-border)] bg-[var(--app-surface)]"
                             }`}
                           >
+                            <MessageReplyQuote
+                              message={message}
+                              messages={messages}
+                              currentUserId={user?.id}
+                              peerUsername={receiver?.username}
+                            />
+
                             {message.media_url ? (
                               message.media_type ===
                               "video" ? (
@@ -1800,7 +1848,7 @@ setMessages(
                                   controls
                                   playsInline
                                   preload="metadata"
-                                  className="max-h-[48dvh] w-full bg-black object-contain"
+                                  className="max-h-[42dvh] w-full bg-black object-contain"
                                 />
                               ) : (
                                 <a
@@ -1819,7 +1867,7 @@ setMessages(
                                       message.media_name ||
                                       "Foto enviada"
                                     }
-                                    className="max-h-[52dvh] w-full object-contain"
+                                    className="max-h-[44dvh] w-full object-contain"
                                   />
                                 </a>
                               )
@@ -1831,7 +1879,7 @@ setMessages(
 
                             <div className="px-3.5 py-2.5">
                               {message.content && (
-                                <p className="text-[14px] leading-5 text-[var(--app-text-soft)]">
+                                <p className="text-[13px] leading-[1.4] text-[var(--app-text-soft)]">
                                   {
                                     message.content
                                   }
@@ -1858,7 +1906,7 @@ setMessages(
                           </div>
                         ) : (
                           <div
-                            className={`alumni-message-bubble max-w-[82%] px-3.5 py-2.5 sm:max-w-[68%] ${
+                            className={`alumni-message-bubble max-w-[78%] px-3 py-2 sm:max-w-[62%] ${
                               mine
                                 ? `alumni-message-mine ${
                                     isLastInGroup
@@ -1872,7 +1920,14 @@ setMessages(
                                   }`
                             }`}
                           >
-                            <p className="whitespace-pre-wrap break-words text-[14px] leading-[1.42]">
+                            <MessageReplyQuote
+                              message={message}
+                              messages={messages}
+                              currentUserId={user?.id}
+                              peerUsername={receiver?.username}
+                            />
+
+                            <p className="whitespace-pre-wrap break-words text-[13.5px] leading-[1.4]">
                               {
                                 message.content
                               }
@@ -1905,6 +1960,7 @@ setMessages(
                           </div>
                         )}
                       </div>
+                      </SwipeToReply>
 
                       <MessageProTools
                         message={message}
@@ -1912,7 +1968,7 @@ setMessages(
                         mine={mine}
                         currentUserId={user?.id}
                         onReply={() =>
-                          setReplyingTo(
+                          beginReply(
                             message
                           )
                         }
@@ -1950,32 +2006,16 @@ setMessages(
           onSubmit={
             handleSendMessage
           }
-          className="alumni-chat-composer-shell shrink-0 border-t border-[var(--app-border)] bg-[color-mix(in_srgb,var(--app-surface)_97%,transparent)] px-2.5 pb-[max(8px,env(safe-area-inset-bottom))] pt-2 backdrop-blur-2xl sm:px-4 sm:pb-4 sm:pt-3"
+          className="alumni-chat-composer-shell shrink-0 border-t border-[var(--app-border)] bg-[color-mix(in_srgb,var(--app-surface)_96%,transparent)] px-2 pb-[max(7px,env(safe-area-inset-bottom))] pt-1.5 backdrop-blur-2xl sm:px-3 sm:pb-3 sm:pt-2"
         >
-          {replyingTo && (
-            <div className="mb-2 flex items-center gap-3 rounded-[18px] border border-[var(--app-border)] bg-[var(--app-soft)] px-3 py-2">
-              <div className="min-w-0 flex-1">
-                <p className="text-[9px] font-black uppercase tracking-[0.1em] text-[var(--app-accent)]">
-                  Respondiendo
-                </p>
-                <p className="mt-1 truncate text-[11px] text-[var(--app-muted)]">
-                  {replyingTo.content ||
-                    replyingTo.media_name ||
-                    "Mensaje"}
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={() =>
-                  setReplyingTo(null)
-                }
-                className="flex h-8 w-8 items-center justify-center rounded-full text-[var(--app-muted)]"
-                aria-label="Cancelar respuesta"
-              >
-                <X size={14} />
-              </button>
-            </div>
-          )}
+          <ComposerReplyPreview
+            message={replyingTo}
+            currentUserId={user?.id}
+            peerUsername={receiver?.username}
+            onClose={() =>
+              setReplyingTo(null)
+            }
+          />
 
           {mediaFile && (
             <div className="mb-2 flex items-center gap-3 rounded-[18px] border border-[var(--app-border)] bg-[var(--app-soft)] p-2">
@@ -2040,7 +2080,7 @@ setMessages(
             </div>
           )}
 
-          <div className="alumni-chat-composer flex items-end gap-1.5 rounded-[24px] border p-1.5">
+          <div className="alumni-chat-composer flex items-end gap-1 rounded-[21px] border p-1">
             <input
               ref={
                 fileInputRef
@@ -2067,7 +2107,7 @@ setMessages(
                 !receiver ||
                 sending
               }
-              className="flex h-[42px] w-[42px] shrink-0 items-center justify-center rounded-full text-[var(--app-accent)] transition active:bg-[var(--app-accent-soft)] disabled:opacity-40"
+              className="flex h-[38px] w-[38px] shrink-0 items-center justify-center rounded-full text-[var(--app-accent)] transition active:bg-[var(--app-accent-soft)] disabled:opacity-40"
               aria-label="Adjuntar foto o video"
             >
               <ImagePlus
@@ -2137,7 +2177,7 @@ setMessages(
                   ? "Añade un mensaje..."
                   : "Escribe un mensaje"
               }
-              className="alumni-mobile-input min-h-[42px] min-w-0 flex-1 resize-none overflow-y-auto bg-transparent px-1.5 py-[11px] text-[16px] leading-5 text-[var(--app-text)] outline-none placeholder:text-[var(--app-muted-2)] sm:text-[14px]"
+              className="alumni-mobile-input min-h-[38px] min-w-0 flex-1 resize-none overflow-y-auto bg-transparent px-1.5 py-[9px] text-[16px] leading-5 text-[var(--app-text)] outline-none placeholder:text-[var(--app-muted-2)] sm:text-[14px]"
             />
 
             <button
@@ -2148,7 +2188,7 @@ setMessages(
                 !receiver ||
                 sending
               }
-              className="alumni-accent-button flex h-[42px] w-[42px] shrink-0 items-center justify-center rounded-full transition active:scale-95 disabled:cursor-not-allowed disabled:opacity-35"
+              className="alumni-accent-button flex h-[38px] w-[38px] shrink-0 items-center justify-center rounded-full transition active:scale-95 disabled:cursor-not-allowed disabled:opacity-35"
               aria-label="Enviar mensaje"
             >
               {sending ? (
@@ -2273,3 +2313,5 @@ setMessages(
 }
 
 /* ALUMNI_1_2_0_1_MESSAGING_PRO_CONTINUATION */
+
+/* ALUMNI_1_2_1_MESSAGING_EXPERIENCE */
