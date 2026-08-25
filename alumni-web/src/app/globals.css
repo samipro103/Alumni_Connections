@@ -1635,3 +1635,192 @@ video {
     display: none;
   }
 }
+
+
+/* ALUMNI v1.0.10 — PERFIL PRO */
+
+/* Ajustes abiertos, sin la barra/panel negro. */
+.alumni-settings-nav {
+  background: transparent !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
+
+.alumni-settings-nav > div:first-child {
+  border-bottom: 1px solid var(--app-border) !important;
+  padding-inline: 0 !important;
+}
+
+.alumni-settings-nav nav {
+  padding-inline: 0 !important;
+}
+
+.alumni-settings-nav nav button {
+  border-radius: 0 !important;
+  background: transparent !important;
+  padding-inline: 0 !important;
+}
+
+.alumni-settings-nav nav button:hover {
+  background: transparent !important;
+}
+
+.alumni-settings-detail > div:first-child {
+  position: static !important;
+  top: auto !important;
+  padding-block: 0 10px !important;
+  background: transparent !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  box-shadow: none !important;
+}
+
+/* Perfil > hub tipo ajustes de red social. */
+.alumni-profile-settings-hub {
+  border-top: 1px solid var(--app-border);
+  border-bottom: 1px solid var(--app-border);
+}
+
+.alumni-setting-row {
+  display: flex;
+  min-height: 72px;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 2px;
+}
+
+.alumni-privacy-switch {
+  position: relative;
+  display: block;
+  width: 46px;
+  min-width: 46px;
+  height: 26px;
+  flex: 0 0 46px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--app-soft-strong);
+  padding: 0 !important;
+}
+
+.alumni-privacy-switch > span {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 20px;
+  height: 20px;
+  border-radius: 999px;
+  background: #fff;
+  box-shadow: 0 2px 8px rgba(0,0,0,.22);
+  transform: translateX(0);
+  transition: transform .2s ease;
+}
+
+.alumni-privacy-switch.is-on {
+  background: var(--app-accent);
+}
+
+.alumni-privacy-switch.is-on > span {
+  transform: translateX(20px);
+}
+
+/* Editor de perfil */
+.alumni-profile-editor {
+  overflow: hidden;
+  border-top: 1px solid var(--app-border);
+}
+
+.alumni-profile-editor-top {
+  display: flex;
+  min-height: 58px;
+  align-items: center;
+  gap: 10px;
+  border-bottom: 1px solid var(--app-border);
+  padding-block: 8px;
+}
+
+.alumni-profile-editor-media {
+  padding-bottom: 10px;
+}
+
+.alumni-profile-editor-fields {
+  border-top: 1px solid var(--app-border);
+}
+
+.alumni-edit-row {
+  display: flex;
+  min-height: 58px;
+  align-items: center;
+  gap: 12px;
+  border-bottom: 1px solid var(--app-border);
+  padding: 11px 2px;
+}
+
+.alumni-profile-chip {
+  display: inline-flex;
+  min-height: 40px;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid var(--app-border);
+  border-radius: 13px;
+  background:
+    color-mix(
+      in srgb,
+      var(--app-surface-2) 55%,
+      transparent
+    );
+  padding: 5px 9px 5px 5px;
+}
+
+/* Paneles de ajustes: menos cajas. */
+.alumni-settings-panel {
+  border-inline: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  padding-inline: 2px !important;
+}
+
+/* La cabecera de Perfil no necesita el antiguo fondo sticky. */
+@media (max-width: 767px) {
+  .alumni-settings-page {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  .alumni-settings-nav > div:first-child {
+    display: none;
+  }
+
+  .alumni-settings-nav {
+    border-top: 0 !important;
+  }
+
+  .alumni-profile-settings-hub {
+    margin-inline: 0;
+  }
+
+  .alumni-setting-row {
+    min-height: 68px;
+  }
+
+  .alumni-profile-editor {
+    margin-inline: -4px;
+  }
+
+  .alumni-profile-editor-top {
+    position: sticky;
+    top: 0;
+    z-index: 40;
+    background:
+      color-mix(
+        in srgb,
+        var(--app-bg) 94%,
+        transparent
+      );
+    backdrop-filter: blur(18px);
+  }
+
+  .alumni-edit-row {
+    padding-inline: 4px;
+  }
+}

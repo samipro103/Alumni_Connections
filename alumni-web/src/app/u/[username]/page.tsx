@@ -25,6 +25,7 @@ import ProfileMusicCard from "@/components/profile/ProfileMusicCard";
 import ProfileSpotifyAction from "@/components/music/ProfileSpotifyAction";
 import HDProfileImage from "@/components/profile/HDProfileImage";
 import ProfileSocialLinks from "@/components/profile/ProfileSocialLinks";
+import ProfileIdentityMeta from "@/components/profile/ProfileIdentityMeta";
 import CommentLikeButton from "@/components/social/CommentLikeButton";
 
 type ProfileTab = "posts" | "about";
@@ -485,7 +486,7 @@ export default function UserProfilePage() {
               {ownProfile ? (
                 <div className="flex shrink-0 items-center gap-2">
                   <button
-                    onClick={() => router.push("/settings")}
+                    onClick={() => router.push("/settings?section=profile&edit=1")}
                     className="h-10 shrink-0 rounded-xl bg-[#6d7cff] px-4 text-xs font-black text-white"
                   >
                     Editar perfil
@@ -553,30 +554,7 @@ export default function UserProfilePage() {
               </p>
             )}
 
-            <div className="mt-6 flex flex-wrap gap-x-5 gap-y-2 text-xs text-zinc-600">
-              {profile.career && (
-                <span className="flex items-center gap-1.5">
-                  <Briefcase size={14} />
-                  {profile.career}
-                </span>
-              )}
-
-              {profile.university && (
-                <span className="flex items-center gap-1.5">
-                  <GraduationCap size={14} />
-                  {profile.university}
-                </span>
-              )}
-
-              {(profile.city || profile.country) && (
-                <span className="flex items-center gap-1.5">
-                  <MapPin size={14} />
-                  {[profile.city, profile.country]
-                    .filter(Boolean)
-                    .join(", ")}
-                </span>
-              )}
-            </div>
+            <ProfileIdentityMeta profile={profile} />
 
             <ProfileSocialLinks profile={profile} className="mt-5" />
 

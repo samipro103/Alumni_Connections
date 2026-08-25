@@ -22,6 +22,7 @@ import AppShell from "@/components/layout/AppShell";
 import ProfileMusicCard from "@/components/profile/ProfileMusicCard";
 import HDProfileImage from "@/components/profile/HDProfileImage";
 import ProfileSocialLinks from "@/components/profile/ProfileSocialLinks";
+import ProfileIdentityMeta from "@/components/profile/ProfileIdentityMeta";
 
 type ProfileTab = "posts" | "about";
 
@@ -232,7 +233,7 @@ export default function ProfilePage() {
 
               <div className="flex shrink-0 gap-2">
                 <Link
-                  href="/settings"
+                  href="/settings?section=profile&edit=1"
                   className="flex h-10 items-center gap-2 rounded-xl bg-[#6d7cff] px-4 text-xs font-black text-white transition hover:bg-[#7b87ff]"
                 >
                   <Pencil size={15} />
@@ -255,30 +256,7 @@ export default function ProfilePage() {
               </p>
             )}
 
-            <div className="mt-6 flex flex-wrap gap-x-5 gap-y-2 text-xs text-zinc-600">
-              {profile.career && (
-                <span className="flex items-center gap-1.5">
-                  <Briefcase size={14} />
-                  {profile.career}
-                </span>
-              )}
-
-              {profile.university && (
-                <span className="flex items-center gap-1.5">
-                  <GraduationCap size={14} />
-                  {profile.university}
-                </span>
-              )}
-
-              {(profile.city || profile.country) && (
-                <span className="flex items-center gap-1.5">
-                  <MapPin size={14} />
-                  {[profile.city, profile.country]
-                    .filter(Boolean)
-                    .join(", ")}
-                </span>
-              )}
-            </div>
+            <ProfileIdentityMeta profile={profile} />
 
             <ProfileSocialLinks profile={profile} className="mt-5" />
 

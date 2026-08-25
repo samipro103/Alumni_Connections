@@ -30,6 +30,8 @@ import {
 import { supabase } from "@/lib/supabase";
 import { uploadImage } from "@/lib/storage";
 import AppShell from "@/components/layout/AppShell";
+import ProfileSettingsHub from "@/components/settings/ProfileSettingsHub";
+import ProfileEditorPro from "@/components/settings/ProfileEditorPro";
 import SpotifyPremiumMusicGate from "@/components/music/SpotifyPremiumMusicGate";
 
 type SettingsSectionId =
@@ -57,12 +59,6 @@ const SETTINGS_ITEMS: Array<{
     label: "Perfil",
     description: "Foto, banner, nombre y biografía",
     icon: User,
-  },
-  {
-    id: "academic",
-    label: "Información académica",
-    description: "Universidad, carrera y ubicación",
-    icon: GraduationCap,
   },
   {
     id: "links",
@@ -94,6 +90,7 @@ export default function SettingsPage() {
 
   const [mobileSectionOpen, setMobileSectionOpen] =
     useState(false);
+  const [profileEditorOpen, setProfileEditorOpen] = useState(false);
 
   const [form, setForm] = useState({
     full_name: "",
@@ -134,8 +131,12 @@ export default function SettingsPage() {
   useEffect(() => {
     if (typeof window === "undefined") return;
 
-    const section =
-      new URLSearchParams(window.location.search).get("section");
+    const params = new URLSearchParams(window.location.search);
+    const section = params.get("section");
+
+    if (section === "profile" && params.get("edit") === "1") {
+      setProfileEditorOpen(true);
+    }
 
     if (
       section &&
@@ -363,9 +364,17 @@ export default function SettingsPage() {
     });
 
     if (error) {
-      alert(error.message);
+      console.error("Error aceptando solicitud:", error);
+      alert(
+        error.message ||
+          "No se pudo aceptar la solicitud."
+      );
       return;
     }
+
+    setFollowRequests((current) =>
+      current.filter((request) => request.id !== requestId)
+    );
 
     await loadFollowRequests();
   }
@@ -453,6 +462,7 @@ export default function SettingsPage() {
 
   function openSettingsSection(id: SettingsSectionId) {
     setActiveSection(id);
+    setProfileEditorOpen(false);
 
     if (typeof window !== "undefined" && window.innerWidth < 1024) {
       setMobileSectionOpen(true);
@@ -514,9 +524,6 @@ export default function SettingsPage() {
           <h1 className="text-[30px] font-black tracking-[-0.04em]">
             Configuración
           </h1>
-          <p className="mt-1 text-sm text-zinc-600">
-            Administra tu cuenta y personaliza tu experiencia en Alumni.
-          </p>
         </div>
 
         <div className="alumni-settings-layout grid gap-5 lg:grid-cols-[280px_minmax(0,1fr)]">
@@ -564,9 +571,6 @@ export default function SettingsPage() {
                         {item.label}
                       </span>
 
-                      <span className="mt-0.5 block truncate text-[11px] text-zinc-700">
-                        {item.description}
-                      </span>
                     </span>
 
                     <ChevronRight
@@ -597,14 +601,12 @@ export default function SettingsPage() {
                 <h2 className="text-xl font-black tracking-[-0.03em] text-zinc-100">
                   {activeItem.label}
                 </h2>
-                <p className="mt-1 text-sm text-zinc-600">
-                  {activeItem.description}
-                </p>
               </div>
 
               {activeSection !== "appearance" &&
                 activeSection !== "account" &&
-                activeSection !== "music" && (
+                activeSection !== "music" &&
+                activeSection !== "profile" && (
                   <button
                     onClick={saveProfile}
                     disabled={saving}
@@ -625,23 +627,48 @@ export default function SettingsPage() {
               />
             )}
 
-            {activeSection === "profile" && (
-              <ProfilePanel
-                form={form}
-                update={update}
-                avatarPreview={avatarPreview}
-                bannerPreview={bannerPreview}
-                selectAvatar={selectAvatar}
-                selectBanner={selectBanner}
-                isPrivate={isPrivate}
-                privacySaving={privacySaving}
-                updatePrivacy={updatePrivacy}
-                followRequests={followRequests}
-                requestsLoading={requestsLoading}
-                acceptFollowRequest={acceptFollowRequest}
-                rejectFollowRequest={rejectFollowRequest}
-              />
-            )}
+            {activeSection === "profile" &&
+              (profileEditorOpen ? (
+                <ProfileEditorPro
+                  userId={user?.id || ""}
+                  onBack={() => {
+                    setProfileEditorOpen(false);
+                    if (typeof window !== "undefined") {
+                      const url = new URL(window.location.href);
+                      url.searchParams.delete("edit");
+                      window.history.replaceState(
+                        window.history.state,
+                        "",
+                        url.pathname + url.search
+                      );
+                    }
+                  }}
+                  onSaved={getProfile}
+                />
+              ) : (
+                <ProfileSettingsHub
+                  isPrivate={isPrivate}
+                  privacySaving={privacySaving}
+                  updatePrivacy={updatePrivacy}
+                  followRequests={followRequests}
+                  requestsLoading={requestsLoading}
+                  acceptFollowRequest={acceptFollowRequest}
+                  rejectFollowRequest={rejectFollowRequest}
+                  onEditProfile={() => {
+                    setProfileEditorOpen(true);
+                    if (typeof window !== "undefined") {
+                      const url = new URL(window.location.href);
+                      url.searchParams.set("section", "profile");
+                      url.searchParams.set("edit", "1");
+                      window.history.replaceState(
+                        window.history.state,
+                        "",
+                        url.pathname + url.search
+                      );
+                    }
+                  }}
+                />
+              ))}
 
             {activeSection === "academic" && (
               <AcademicPanel
