@@ -4,9 +4,11 @@ import { useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import {
   Briefcase,
+  Clock3,
   GraduationCap,
   Heart,
   Link2,
+  LockKeyhole,
   MapPin,
   MessageCircle,
   Send,
@@ -39,6 +41,7 @@ export default function UserProfilePage() {
   const [posts, setPosts] = useState<any[]>([]);
   const [profileMusic, setProfileMusic] = useState<any>(null);
   const [following, setFollowing] = useState(false);
+  const [followRequestPending, setFollowRequestPending] = useState(false);
   const [openComments, setOpenComments] = useState<Record<number, boolean>>(
     {}
   );
@@ -159,8 +162,22 @@ export default function UserProfilePage() {
         .maybeSingle();
 
       setFollowing(Boolean(followData));
+
+      if (!followData && profileData.is_private) {
+        const { data: requestData } = await supabase
+          .from("follow_requests")
+          .select("id")
+          .eq("requester_id", user.id)
+          .eq("target_id", profileData.id)
+          .maybeSingle();
+
+        setFollowRequestPending(Boolean(requestData));
+      } else {
+        setFollowRequestPending(false);
+      }
     } else {
       setFollowing(false);
+      setFollowRequestPending(false);
     }
 
     setLoading(false);
@@ -183,10 +200,29 @@ export default function UserProfilePage() {
 
       setFollowing(false);
       setFollowers((value) => Math.max(0, value - 1));
-    } else {
-      const { error } = await supabase.from("follows").insert({
-        follower_id: user.id,
-        following_id: profile.id,
+      return;
+    }
+
+    if (profile.is_private) {
+      if (followRequestPending) {
+        const { error } = await supabase
+          .from("follow_requests")
+          .delete()
+          .eq("requester_id", user.id)
+          .eq("target_id", profile.id);
+
+        if (error) {
+          alert(error.message);
+          return;
+        }
+
+        setFollowRequestPending(false);
+        return;
+      }
+
+      const { error } = await supabase.from("follow_requests").insert({
+        requester_id: user.id,
+        target_id: profile.id,
       });
 
       if (error) {
@@ -194,15 +230,30 @@ export default function UserProfilePage() {
         return;
       }
 
-      await supabase.from("notifications").insert({
-        user_id: profile.id,
-        actor_id: user.id,
-        type: "follow",
-      });
-
-      setFollowing(true);
-      setFollowers((value) => value + 1);
+      setFollowRequestPending(true);
+      return;
     }
+
+    const { error } = await supabase.from("follows").insert({
+      follower_id: user.id,
+      following_id: profile.id,
+    });
+
+    if (error) {
+      alert(error.message);
+      return;
+    }
+
+    await supabase.from("notifications").insert({
+      user_id: profile.id,
+      actor_id: user.id,
+      type: "follow",
+      target_type: "profile",
+      target_id: user.id,
+    });
+
+    setFollowing(true);
+    setFollowers((value) => value + 1);
   }
 
   async function toggleLike(postId: number, liked: boolean) {
@@ -380,6 +431,10 @@ export default function UserProfilePage() {
   }
 
   const ownProfile = user?.id === profile.id;
+  const privateLocked =
+    Boolean(profile.is_private) &&
+    !ownProfile &&
+    !following;
 
   return (
     <AppShell>
@@ -456,17 +511,23 @@ export default function UserProfilePage() {
                   <button
                     onClick={toggleFollow}
                     className={`flex h-10 items-center gap-2 rounded-xl px-4 text-xs font-black transition ${
-                      following
+                      following || followRequestPending
                         ? "bg-white/[0.07] text-zinc-300 hover:bg-white/[0.1]"
                         : "bg-[#6d7cff] text-white hover:bg-[#7b87ff]"
-                    }`}
+                    }}`}
                   >
                     {following ? (
                       <UserCheck size={15} />
+                    ) : followRequestPending ? (
+                      <Clock3 size={15} />
                     ) : (
                       <UserPlus size={15} />
                     )}
-                    {following ? "Siguiendo" : "Seguir"}
+                    {following
+                      ? "Siguiendo"
+                      : followRequestPending
+                      ? "Solicitado"
+                      : "Seguir"}
                   </button>
 
                   <button
@@ -529,6 +590,28 @@ export default function UserProfilePage() {
           </div>
         </section>
 
+        {privateLocked ? (
+          <section className="alumni-private-lock py-14 text-center">
+            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-[var(--app-soft)] text-[var(--app-muted)]">
+              <LockKeyhole size={23} />
+            </div>
+
+            <h2 className="mt-4 text-base font-black text-[var(--app-text)]">
+              Esta cuenta es privada
+            </h2>
+
+            <p className="mx-auto mt-2 max-w-sm text-sm leading-6 text-[var(--app-muted-2)]">
+              Sigue a @{profile.username} para ver sus publicaciones e historias.
+            </p>
+
+            {followRequestPending && (
+              <p className="mt-3 text-xs font-bold text-[var(--app-accent)]">
+                Solicitud enviada
+              </p>
+            )}
+          </section>
+        ) : (
+          <>
         <div className="mt-6 flex items-center border-b border-white/[0.07]">
           <Tab
             active={tab === "posts"}
@@ -782,6 +865,8 @@ export default function UserProfilePage() {
               )}
             </InfoBlock>
           </section>
+        )}
+          </>
         )}
       </div>
     </AppShell>

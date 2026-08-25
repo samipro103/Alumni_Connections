@@ -11,11 +11,15 @@ import {
   GraduationCap,
   Globe,
   Link2,
+  LockKeyhole,
   LogOut,
   Palette,
   Save,
   Shield,
   User,
+  UserRoundCheck,
+  UserRoundX,
+  X,
   Music2,
 } from "lucide-react";
 import { useAuth } from "@/components/auth/AuthProvider";
@@ -113,6 +117,11 @@ export default function SettingsPage() {
   const [bannerPreview, setBannerPreview] = useState("");
   const [saving, setSaving] = useState(false);
   const [loadingProfile, setLoadingProfile] = useState(true);
+  const [isPrivate, setIsPrivate] = useState(false);
+  const [privacySaving, setPrivacySaving] = useState(false);
+  const [privacyModalOpen, setPrivacyModalOpen] = useState(false);
+  const [followRequests, setFollowRequests] = useState<any[]>([]);
+  const [requestsLoading, setRequestsLoading] = useState(false);
 
   useEffect(() => {
     if (!loading && !user) router.push("/login");
@@ -236,9 +245,145 @@ export default function SettingsPage() {
       setBannerUrl(data.banner_url || "");
       setAvatarPreview(data.avatar_url || "");
       setBannerPreview(data.banner_url || "");
+      setIsPrivate(Boolean(data.is_private));
     }
 
+    await loadFollowRequests();
     setLoadingProfile(false);
+  }
+
+  async function loadFollowRequests() {
+    if (!user) return;
+
+    setRequestsLoading(true);
+
+    const { data: requestsData, error } = await supabase
+      .from("follow_requests")
+      .select("id, requester_id, target_id, created_at")
+      .eq("target_id", user.id)
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      console.error("Error cargando solicitudes:", error);
+      setFollowRequests([]);
+      setRequestsLoading(false);
+      return;
+    }
+
+    const requesterIds = [
+      ...new Set(
+        (requestsData || []).map((request: any) => request.requester_id)
+      ),
+    ];
+
+    let profilesData: any[] = [];
+
+    if (requesterIds.length > 0) {
+      const { data } = await supabase
+        .from("profiles")
+        .select("id, username, avatar_url, full_name, university, career")
+        .in("id", requesterIds);
+
+      profilesData = data || [];
+    }
+
+    setFollowRequests(
+      (requestsData || []).map((request: any) => ({
+        ...request,
+        requester: profilesData.find(
+          (profile: any) => profile.id === request.requester_id
+        ),
+      }))
+    );
+
+    setRequestsLoading(false);
+  }
+
+  async function updatePrivacy(nextPrivate: boolean) {
+    if (!user || privacySaving) return;
+
+    if (nextPrivate && !isPrivate) {
+      setPrivacyModalOpen(true);
+      return;
+    }
+
+    setPrivacySaving(true);
+
+    try {
+      const { error } = await supabase.rpc("set_account_privacy", {
+        p_private: nextPrivate,
+      });
+
+      if (error) throw error;
+
+      setIsPrivate(nextPrivate);
+
+      if (!nextPrivate) {
+        setFollowRequests([]);
+      }
+    } catch (error: any) {
+      console.error(error);
+      alert(
+        error?.message ||
+          "No se pudo cambiar la privacidad de la cuenta."
+      );
+    } finally {
+      setPrivacySaving(false);
+    }
+  }
+
+  async function confirmPrivateAccount() {
+    if (!user || privacySaving) return;
+
+    setPrivacySaving(true);
+
+    try {
+      const { error } = await supabase.rpc("set_account_privacy", {
+        p_private: true,
+      });
+
+      if (error) throw error;
+
+      setIsPrivate(true);
+      setPrivacyModalOpen(false);
+    } catch (error: any) {
+      console.error(error);
+      alert(
+        error?.message ||
+          "No se pudo activar la cuenta privada."
+      );
+    } finally {
+      setPrivacySaving(false);
+    }
+  }
+
+  async function acceptFollowRequest(requestId: string) {
+    const { error } = await supabase.rpc("accept_follow_request", {
+      p_request_id: requestId,
+    });
+
+    if (error) {
+      alert(error.message);
+      return;
+    }
+
+    await loadFollowRequests();
+  }
+
+  async function rejectFollowRequest(requestId: string) {
+    const { error } = await supabase
+      .from("follow_requests")
+      .delete()
+      .eq("id", requestId);
+
+    if (error) {
+      alert(error.message);
+      return;
+    }
+
+    setFollowRequests((current) =>
+      current.filter((request) => request.id !== requestId)
+    );
   }
 
   async function saveProfile() {
@@ -488,6 +633,13 @@ export default function SettingsPage() {
                 bannerPreview={bannerPreview}
                 selectAvatar={selectAvatar}
                 selectBanner={selectBanner}
+                isPrivate={isPrivate}
+                privacySaving={privacySaving}
+                updatePrivacy={updatePrivacy}
+                followRequests={followRequests}
+                requestsLoading={requestsLoading}
+                acceptFollowRequest={acceptFollowRequest}
+                rejectFollowRequest={rejectFollowRequest}
               />
             )}
 
@@ -518,7 +670,88 @@ export default function SettingsPage() {
           </section>
         </div>
       </div>
+
+      {privacyModalOpen && (
+        <PrivacyModeModal
+          busy={privacySaving}
+          onClose={() => setPrivacyModalOpen(false)}
+          onConfirm={confirmPrivateAccount}
+        />
+      )}
     </AppShell>
+  );
+}
+
+function PrivacyModeModal({
+  busy,
+  onClose,
+  onConfirm,
+}: {
+  busy: boolean;
+  onClose: () => void;
+  onConfirm: () => void;
+}) {
+  return (
+    <div
+      className="fixed inset-0 z-[9999] flex items-end justify-center bg-black/70 p-0 backdrop-blur-sm sm:items-center sm:p-5"
+      role="dialog"
+      aria-modal="true"
+    >
+      <div className="w-full max-w-[460px] rounded-t-[28px] border border-white/[0.08] bg-[var(--app-surface)] p-5 pb-[max(20px,env(safe-area-inset-bottom))] shadow-[0_30px_100px_rgba(0,0,0,.5)] sm:rounded-[28px] sm:p-6">
+        <div className="flex items-start gap-4">
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[var(--app-accent-soft)] text-[var(--app-accent)]">
+            <LockKeyhole size={21} />
+          </div>
+
+          <div className="min-w-0 flex-1">
+            <h3 className="text-lg font-black tracking-[-0.03em] text-[var(--app-text)]">
+              Activar cuenta privada
+            </h3>
+            <p className="mt-2 text-sm leading-6 text-[var(--app-muted)]">
+              Las personas nuevas tendrán que enviarte una solicitud para seguirte.
+              Solo tus seguidores aceptados podrán ver tus publicaciones e historias.
+            </p>
+          </div>
+
+          <button
+            type="button"
+            onClick={onClose}
+            disabled={busy}
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-[var(--app-muted-2)] transition hover:bg-[var(--app-soft)]"
+            aria-label="Cerrar"
+          >
+            <X size={17} />
+          </button>
+        </div>
+
+        <div className="mt-5 space-y-3 border-y border-[var(--app-border)] py-4 text-xs leading-5 text-[var(--app-muted)]">
+          <p>• Tus seguidores actuales se mantienen.</p>
+          <p>• Las nuevas solicitudes tendrás que aceptarlas o rechazarlas.</p>
+          <p>• Tu perfil básico seguirá apareciendo para que puedan encontrarte.</p>
+          <p>• Puedes volver a cuenta pública cuando quieras.</p>
+        </div>
+
+        <div className="mt-5 flex gap-2">
+          <button
+            type="button"
+            onClick={onClose}
+            disabled={busy}
+            className="h-11 flex-1 rounded-xl border border-[var(--app-border)] bg-[var(--app-soft)] text-xs font-black text-[var(--app-text-soft)]"
+          >
+            Cancelar
+          </button>
+
+          <button
+            type="button"
+            onClick={onConfirm}
+            disabled={busy}
+            className="h-11 flex-1 rounded-xl bg-[var(--app-accent)] text-xs font-black text-[var(--app-on-accent)] disabled:opacity-50"
+          >
+            {busy ? "Activando..." : "Activar privacidad"}
+          </button>
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -609,9 +842,156 @@ function ProfilePanel({
   bannerPreview,
   selectAvatar,
   selectBanner,
+  isPrivate,
+  privacySaving,
+  updatePrivacy,
+  followRequests,
+  requestsLoading,
+  acceptFollowRequest,
+  rejectFollowRequest,
 }: any) {
   return (
     <div className="space-y-5">
+      <Panel>
+        <div className="flex items-start gap-4">
+          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-[var(--app-accent-soft)] text-[var(--app-accent)]">
+            <LockKeyhole size={19} />
+          </div>
+
+          <div className="min-w-0 flex-1">
+            <p className="text-sm font-black text-[var(--app-text)]">
+              Cuenta privada
+            </p>
+            <p className="mt-1 text-xs leading-5 text-[var(--app-muted-2)]">
+              Controla quién puede seguirte y ver tus publicaciones e historias.
+            </p>
+          </div>
+
+          <button
+            type="button"
+            role="switch"
+            aria-checked={isPrivate}
+            disabled={privacySaving}
+            onClick={() => updatePrivacy(!isPrivate)}
+            className={`relative h-7 w-12 shrink-0 rounded-full transition ${
+              isPrivate
+                ? "bg-[var(--app-accent)]"
+                : "bg-[var(--app-soft-strong)]"
+            } disabled:opacity-50`}
+          >
+            <span
+              className={`absolute top-1 h-5 w-5 rounded-full bg-white shadow-sm transition-transform ${
+                isPrivate ? "translate-x-6" : "translate-x-1"
+              }`}
+            />
+          </button>
+        </div>
+
+        <div className="mt-4 border-t border-[var(--app-border)] pt-4">
+          <p className="text-[11px] leading-5 text-[var(--app-muted-2)]">
+            {isPrivate
+              ? "Privada: las personas deben enviarte una solicitud y esperar tu aprobación."
+              : "Pública: cualquier persona puede seguirte inmediatamente y ver tu contenido público."}
+          </p>
+        </div>
+      </Panel>
+
+      {isPrivate && (
+        <Panel>
+          <div className="flex items-end justify-between gap-3">
+            <div>
+              <p className="text-sm font-black text-[var(--app-text)]">
+                Solicitudes de seguimiento
+              </p>
+              <p className="mt-1 text-xs text-[var(--app-muted-2)]">
+                Tú decides quién entra a tu comunidad.
+              </p>
+            </div>
+
+            {followRequests.length > 0 && (
+              <span className="rounded-full bg-[var(--app-accent-soft)] px-2.5 py-1 text-[10px] font-black text-[var(--app-accent)]">
+                {followRequests.length}
+              </span>
+            )}
+          </div>
+
+          {requestsLoading ? (
+            <p className="mt-5 text-xs text-[var(--app-muted-2)]">
+              Cargando solicitudes...
+            </p>
+          ) : followRequests.length === 0 ? (
+            <p className="mt-5 text-xs text-[var(--app-muted-2)]">
+              No tienes solicitudes pendientes.
+            </p>
+          ) : (
+            <div className="mt-4 divide-y divide-[var(--app-border)]">
+              {followRequests.map((request: any) => {
+                const person = request.requester;
+
+                return (
+                  <div
+                    key={request.id}
+                    className="flex items-center gap-3 py-3"
+                  >
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[var(--app-soft-strong)] text-xs font-black text-[var(--app-text)]">
+                      {person?.avatar_url ? (
+                        <img
+                          src={person.avatar_url}
+                          alt=""
+                          className="h-full w-full object-cover"
+                        />
+                      ) : (
+                        person?.username?.charAt(0)?.toUpperCase() || "U"
+                      )}
+                    </div>
+
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-xs font-black text-[var(--app-text)]">
+                        @{person?.username || "usuario"}
+                      </p>
+                      <p className="mt-0.5 truncate text-[10px] text-[var(--app-muted-2)]">
+                        {[person?.career, person?.university]
+                          .filter(Boolean)
+                          .join(" · ") || "Comunidad Alumni"}
+                      </p>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => acceptFollowRequest(request.id)}
+                      className="flex h-9 w-9 items-center justify-center rounded-full bg-[var(--app-accent-soft)] text-[var(--app-accent)]"
+                      aria-label="Aceptar solicitud"
+                      title="Aceptar"
+                    >
+                      <UserRoundCheck size={16} />
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => rejectFollowRequest(request.id)}
+                      className="flex h-9 w-9 items-center justify-center rounded-full bg-[var(--app-soft)] text-[var(--app-muted)]"
+                      aria-label="Rechazar solicitud"
+                      title="Rechazar"
+                    >
+                      <UserRoundX size={16} />
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </Panel>
+      )}
+
+      <div className="pt-2">
+        <p className="text-[11px] font-black uppercase tracking-[0.14em] text-[var(--app-muted-3)]">
+          Modificación de perfil
+        </p>
+        <p className="mt-1 text-sm text-[var(--app-muted-2)]">
+          Portada, foto e información que aparece en tu perfil.
+        </p>
+      </div>
+
       <Panel>
         <p className="text-sm font-black text-zinc-200">
           Foto y portada

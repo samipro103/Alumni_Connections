@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   Bell,
+  Clock3,
   Heart,
   MessageCircle,
   UserPlus,
@@ -198,6 +199,27 @@ export default function NotificationsPage() {
   }, [filtered]);
 
   function notificationMeta(group: NotificationGroup) {
+    if (group.type === "follow_request") {
+      return {
+        icon: Clock3,
+        action:
+          group.items.length === 1
+            ? "quiere seguirte"
+            : "quieren seguirte",
+        tone: "text-[#8d98ff]",
+        background: "bg-[#6d7cff]/10",
+      };
+    }
+
+    if (group.type === "follow_request_accepted") {
+      return {
+        icon: UserPlus,
+        action: "aceptó tu solicitud de seguimiento",
+        tone: "text-emerald-400",
+        background: "bg-emerald-500/10",
+      };
+    }
+
     if (group.type === "follow") {
       return {
         icon: UserPlus,
@@ -279,6 +301,17 @@ export default function NotificationsPage() {
   }
 
   async function openNotification(group: NotificationGroup) {
+    if (group.type === "follow_request") {
+      router.push("/settings?section=profile");
+      return;
+    }
+
+    if (group.type === "follow_request_accepted") {
+      const username = group.actors[0]?.username;
+      if (username) router.push(`/u/${username}`);
+      return;
+    }
+
     if (group.type === "follow") {
       const username = group.actors[0]?.username;
       if (username) router.push(`/u/${username}`);
