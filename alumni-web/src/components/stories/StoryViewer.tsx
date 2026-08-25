@@ -897,13 +897,26 @@ export default function StoryViewer({
             className="h-full w-full object-cover sm:object-contain"
           />
         ) : (
-          <img
+          <div
             key={story.id}
-            src={story.media_url}
-            alt={`Historia de @${group.username}`}
-            className="h-full w-full object-cover sm:object-contain"
-            loading="eager"
-          />
+            className="alumni-story-photo-no-crop absolute inset-0 overflow-hidden bg-black"
+          >
+            <img
+              src={story.media_url}
+              alt=""
+              aria-hidden="true"
+              className="absolute inset-0 h-full w-full scale-110 object-cover opacity-60 blur-3xl"
+            />
+            <div className="absolute inset-0 bg-black/15" />
+            <img
+              src={story.media_url}
+              alt={`Historia de @${group.username}`}
+              draggable={false}
+              className="relative z-[1] h-full w-full object-contain"
+              loading="eager"
+              decoding="async"
+            />
+          </div>
         )}
 
         <StoryDesignOverlay

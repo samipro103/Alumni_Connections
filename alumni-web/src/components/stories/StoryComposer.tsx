@@ -342,6 +342,54 @@ function drawCover(
   );
 }
 
+/* ALUMNI_1_0_19_NO_CROP */
+function drawPhotoNoCrop(
+  ctx: CanvasRenderingContext2D,
+  image: HTMLImageElement,
+  x: number,
+  y: number,
+  w: number,
+  h: number
+) {
+  ctx.save();
+  ctx.beginPath();
+  ctx.rect(x, y, w, h);
+  ctx.clip();
+
+  ctx.filter = "blur(30px)";
+  ctx.globalAlpha = 0.72;
+  drawCover(ctx, image, x - 42, y - 42, w + 84, h + 84);
+
+  ctx.filter = "none";
+  ctx.globalAlpha = 1;
+  ctx.fillStyle = "rgba(0,0,0,.16)";
+  ctx.fillRect(x, y, w, h);
+
+  const fitScale = Math.min(
+    w / image.naturalWidth,
+    h / image.naturalHeight
+  );
+  const scale = Math.min(1, fitScale);
+  const dw = image.naturalWidth * scale;
+  const dh = image.naturalHeight * scale;
+  const dx = x + (w - dw) / 2;
+  const dy = y + (h - dh) / 2;
+
+  ctx.drawImage(
+    image,
+    0,
+    0,
+    image.naturalWidth,
+    image.naturalHeight,
+    dx,
+    dy,
+    dw,
+    dh
+  );
+
+  ctx.restore();
+}
+
 async function generateStoryBackground({
   file,
   kind,
@@ -374,6 +422,9 @@ async function generateStoryBackground({
       "No se pudo crear la historia."
     );
   }
+
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = "high";
 
   const accentMap:
     Record<string, string> = {
@@ -589,7 +640,7 @@ async function generateStoryBackground({
       if (
         photoStyle === "full"
       ) {
-        drawCover(
+        drawPhotoNoCrop(
           ctx,
           image,
           0,
@@ -658,7 +709,7 @@ async function generateStoryBackground({
           ctx.shadowColor =
             "transparent";
 
-          drawCover(
+          drawPhotoNoCrop(
             ctx,
             image,
             frame.x,
@@ -685,7 +736,7 @@ async function generateStoryBackground({
           );
           ctx.clip();
 
-          drawCover(
+          drawPhotoNoCrop(
             ctx,
             image,
             150,
@@ -723,7 +774,7 @@ async function generateStoryBackground({
           );
           ctx.clip();
 
-          drawCover(
+          drawPhotoNoCrop(
             ctx,
             image,
             frame.x,
@@ -787,7 +838,7 @@ async function generateStoryBackground({
           );
         },
         "image/jpeg",
-        0.94
+        0.98
       );
     }
   );
@@ -1413,11 +1464,21 @@ export default function StoryComposer({
                   className="h-full w-full object-cover"
                 />
               ) : (
-                <img
-                  src={previewUrl}
-                  alt=""
-                  className="h-full w-full object-cover"
-                />
+                <>
+                  <img
+                    src={previewUrl}
+                    alt=""
+                    aria-hidden="true"
+                    className="absolute inset-0 h-full w-full scale-110 object-cover opacity-60 blur-3xl"
+                  />
+                  <div className="absolute inset-0 bg-black/15" />
+                  <img
+                    src={previewUrl}
+                    alt=""
+                    draggable={false}
+                    className="relative z-[1] h-full w-full object-contain"
+                  />
+                </>
               )}
 
               <button
@@ -2010,7 +2071,15 @@ function StoryCanvasBackground({
             <img
               src={previewUrl}
               alt=""
-              className="absolute inset-0 h-full w-full object-cover"
+              aria-hidden="true"
+              className="absolute inset-0 h-full w-full scale-110 object-cover opacity-60 blur-3xl"
+            />
+            <div className="absolute inset-0 bg-black/10" />
+            <img
+              src={previewUrl}
+              alt=""
+              draggable={false}
+              className="absolute inset-0 h-full w-full object-contain"
             />
             <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-black/5 to-black/80" />
           </>
@@ -2020,7 +2089,15 @@ function StoryCanvasBackground({
             <img
               src={previewUrl}
               alt=""
-              className="h-full w-full object-cover"
+              aria-hidden="true"
+              className="absolute inset-0 h-full w-full scale-110 object-cover opacity-60 blur-2xl"
+            />
+            <div className="absolute inset-0 bg-black/10" />
+            <img
+              src={previewUrl}
+              alt=""
+              draggable={false}
+              className="relative h-full w-full object-contain"
             />
           </div>
         ) : (
@@ -2035,16 +2112,21 @@ function StoryCanvasBackground({
                 : "rounded-[26px] border border-white/10"
             }`}
           >
-            <img
-              src={previewUrl}
-              alt=""
-              className={`w-full object-cover ${
-                photoStyle ===
-                "polaroid"
-                  ? "aspect-[4/5]"
-                  : "aspect-[4/5]"
-              }`}
-            />
+            <div className="relative aspect-[4/5] w-full overflow-hidden bg-black">
+              <img
+                src={previewUrl}
+                alt=""
+                aria-hidden="true"
+                className="absolute inset-0 h-full w-full scale-110 object-cover opacity-60 blur-2xl"
+              />
+              <div className="absolute inset-0 bg-black/10" />
+              <img
+                src={previewUrl}
+                alt=""
+                draggable={false}
+                className="relative h-full w-full object-contain"
+              />
+            </div>
           </div>
         )
       ) : (
