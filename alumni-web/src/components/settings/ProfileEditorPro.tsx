@@ -20,7 +20,7 @@ import { supabase } from "@/lib/supabase";
 import { uploadImage } from "@/lib/storage";
 import { COUNTRIES, flagEmoji, type CountryOption } from "@/lib/profileCatalog";
 import { careersForUniversity } from "@/data/academicCatalog";
-import MonochromeBrandMark from "@/components/profile/MonochromeBrandMark";
+import OriginalMonochromeLogo from "@/components/profile/OriginalMonochromeLogo";
 
 type Institution = {
   id: string | null;
@@ -557,10 +557,10 @@ function PickerRow({
         className="flex min-w-0 flex-1 items-center gap-2 text-left"
       >
         {value && brandKind ? (
-          <MonochromeBrandMark
+          <OriginalMonochromeLogo
+            src={logo}
             name={value}
-            kind={brandKind}
-            size={30}
+            size={32}
             className="text-[var(--app-text-soft)]"
           />
         ) : (
@@ -625,10 +625,10 @@ function InstitutionPicker({
             onClick={() => onPick(item)}
             className="flex w-full items-center gap-3 border-b border-[var(--app-border)] py-3 text-left"
           >
-            <MonochromeBrandMark
+            <OriginalMonochromeLogo
+              src={item.logo_url}
               name={item.name}
-              kind={item.kind === "program" ? "program" : "university"}
-              size={36}
+              size={40}
               className="text-[var(--app-text-soft)]"
             />
 

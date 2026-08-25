@@ -189,7 +189,7 @@ export default function ProfilePage() {
 
   return (
     <AppShell>
-      <div className="alumni-profile-page mx-auto w-full max-w-[920px]">
+      <div className="alumni-profile-page mx-auto w-full max-w-[980px]">
         <section className="alumni-profile-hero">
           <div className="alumni-profile-banner overflow-hidden rounded-[24px]">
             <div className="relative h-48 bg-[#151a23] sm:h-60">

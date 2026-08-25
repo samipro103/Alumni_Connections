@@ -439,9 +439,9 @@ export default function UserProfilePage() {
 
   return (
     <AppShell>
-      <div className="mx-auto w-full max-w-[900px]">
-        <section className="relative">
-<div className="overflow-hidden rounded-[24px]">
+      <div className="alumni-profile-page mx-auto w-full max-w-[980px]">
+        <section className="alumni-profile-hero relative">
+<div className="alumni-profile-banner overflow-hidden rounded-[24px]">
             <div className="h-48 bg-[#151a23] sm:h-60">
               {profile.banner_url ? (
                 <HDProfileImage
@@ -456,9 +456,9 @@ export default function UserProfilePage() {
             </div>
           </div>
 
-          <div className="px-5 pb-6 pt-5 sm:px-7 sm:pt-6">
-            <div className="flex flex-col gap-5 sm:flex-row sm:items-center">
-              <div className="flex h-24 w-24 shrink-0 items-center justify-center overflow-hidden rounded-full border border-white/[0.09] bg-[#1a1f29] text-2xl font-black shadow-[0_10px_28px_rgba(0,0,0,.16)] sm:h-28 sm:w-28">
+          <div className="alumni-profile-body px-5 pb-6 pt-5 sm:px-7 sm:pt-6">
+            <div className="alumni-profile-identity flex flex-col gap-5 sm:flex-row sm:items-center">
+              <div className="alumni-profile-avatar flex h-24 w-24 shrink-0 items-center justify-center overflow-hidden rounded-full border border-white/[0.09] bg-[#1a1f29] text-2xl font-black shadow-[0_10px_28px_rgba(0,0,0,.16)] sm:h-28 sm:w-28">
                 {profile.avatar_url ? (
                   <HDProfileImage
                     src={profile.avatar_url}

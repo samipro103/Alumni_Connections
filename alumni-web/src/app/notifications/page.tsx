@@ -4,10 +4,13 @@ import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   Bell,
+  Check,
   Clock3,
   Heart,
+  Loader2,
   MessageCircle,
   UserPlus,
+  X,
 } from "lucide-react";
 import {
   formatDistanceToNow,
@@ -36,6 +39,10 @@ export default function NotificationsPage() {
   const { user, loading } = useAuth();
 
   const [notifications, setNotifications] = useState<any[]>([]);
+  const [pendingRequests, setPendingRequests] = useState<Record<string, boolean>>(
+    {}
+  );
+  const [requestBusy, setRequestBusy] = useState<string | null>(null);
   const [loadingNotifications, setLoadingNotifications] = useState(true);
   const [filter, setFilter] = useState<FilterType>("all");
 
@@ -44,7 +51,7 @@ export default function NotificationsPage() {
   }, [user, loading, router]);
 
   useEffect(() => {
-    if (user) loadNotifications();
+    if (user) void loadNotifications();
   }, [user?.id]);
 
   useEffect(() => {
@@ -55,12 +62,12 @@ export default function NotificationsPage() {
       .on(
         "postgres_changes",
         {
-          event: "INSERT",
+          event: "*",
           schema: "public",
           table: "notifications",
           filter: `user_id=eq.${user.id}`,
         },
-        () => loadNotifications(false)
+        () => void loadNotifications(false)
       )
       .subscribe();
 
@@ -74,11 +81,20 @@ export default function NotificationsPage() {
 
     setLoadingNotifications(true);
 
-    const { data: notificationsData, error } = await supabase
-      .from("notifications")
-      .select("*")
-      .eq("user_id", user.id)
-      .order("created_at", { ascending: false });
+    const [
+      { data: notificationsData, error },
+      { data: requestsData, error: requestsError },
+    ] = await Promise.all([
+      supabase
+        .from("notifications")
+        .select("*")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false }),
+      supabase
+        .from("follow_requests")
+        .select("id")
+        .eq("target_id", user.id),
+    ]);
 
     if (error || !notificationsData) {
       console.error(error);
@@ -86,6 +102,16 @@ export default function NotificationsPage() {
       setLoadingNotifications(false);
       return;
     }
+
+    if (requestsError) {
+      console.error("Error cargando solicitudes pendientes:", requestsError);
+    }
+
+    const requestMap: Record<string, boolean> = {};
+    (requestsData || []).forEach((request: any) => {
+      requestMap[String(request.id)] = true;
+    });
+    setPendingRequests(requestMap);
 
     const actorIds = [
       ...new Set(
@@ -100,7 +126,7 @@ export default function NotificationsPage() {
     if (actorIds.length > 0) {
       const { data } = await supabase
         .from("profiles")
-        .select("id, username, avatar_url, university, career")
+        .select("id, username, full_name, avatar_url, university, career")
         .in("id", actorIds);
 
       profilesData = data || [];
@@ -126,23 +152,89 @@ export default function NotificationsPage() {
     setLoadingNotifications(false);
   }
 
+  async function clearRequestNotification(requestId: string) {
+    if (!user) return;
+
+    await supabase
+      .from("notifications")
+      .delete()
+      .eq("user_id", user.id)
+      .eq("type", "follow_request")
+      .eq("target_id", requestId);
+  }
+
+  async function acceptFollowRequest(requestId: string) {
+    if (!user || requestBusy) return;
+
+    setRequestBusy(requestId);
+
+    try {
+      const { error } = await supabase.rpc("accept_follow_request", {
+        p_request_id: requestId,
+      });
+
+      if (error) throw error;
+
+      await clearRequestNotification(requestId);
+      await loadNotifications(false);
+    } catch (error: any) {
+      console.error(error);
+      alert(error?.message || "No se pudo aceptar la solicitud.");
+    } finally {
+      setRequestBusy(null);
+    }
+  }
+
+  async function rejectFollowRequest(requestId: string) {
+    if (!user || requestBusy) return;
+
+    setRequestBusy(requestId);
+
+    try {
+      const { error } = await supabase
+        .from("follow_requests")
+        .delete()
+        .eq("id", requestId)
+        .eq("target_id", user.id);
+
+      if (error) throw error;
+
+      await clearRequestNotification(requestId);
+      await loadNotifications(false);
+    } catch (error: any) {
+      console.error(error);
+      alert(error?.message || "No se pudo rechazar la solicitud.");
+    } finally {
+      setRequestBusy(null);
+    }
+  }
+
   const groupedNotifications = useMemo(() => {
     const map = new Map<string, NotificationGroup>();
 
     notifications.forEach((item: any) => {
       const targetType =
         item.target_type ||
-        (item.post_id ? "post" : item.type === "follow" ? "profile" : "other");
+        (item.post_id
+          ? "post"
+          : item.type === "follow"
+          ? "profile"
+          : "other");
 
       const targetId =
         item.target_id ||
-        (item.post_id ? String(item.post_id) : item.type === "follow" ? "followers" : String(item.id));
+        (item.post_id
+          ? String(item.post_id)
+          : item.type === "follow"
+          ? "followers"
+          : String(item.id));
 
       const key = `${item.type}:${targetType}:${targetId}`;
       const current = map.get(key);
 
       if (current) {
         current.items.push(item);
+
         if (
           item.profile &&
           !current.actors.some((actor) => actor.id === item.profile.id)
@@ -169,12 +261,22 @@ export default function NotificationsPage() {
   }, [notifications]);
 
   const filtered = useMemo(() => {
+    const connectionTypes = new Set([
+      "follow",
+      "follow_request",
+      "follow_request_accepted",
+    ]);
+
     if (filter === "connections") {
-      return groupedNotifications.filter((group) => group.type === "follow");
+      return groupedNotifications.filter((group) =>
+        connectionTypes.has(group.type)
+      );
     }
 
     if (filter === "activity") {
-      return groupedNotifications.filter((group) => group.type !== "follow");
+      return groupedNotifications.filter(
+        (group) => !connectionTypes.has(group.type)
+      );
     }
 
     return groupedNotifications;
@@ -203,11 +305,8 @@ export default function NotificationsPage() {
       return {
         icon: Clock3,
         action:
-          group.items.length === 1
-            ? "quiere seguirte"
-            : "quieren seguirte",
-        tone: "text-[#8d98ff]",
-        background: "bg-[#6d7cff]/10",
+          group.items.length === 1 ? "quiere seguirte" : "quieren seguirte",
+        tone: "text-[var(--app-accent)]",
       };
     }
 
@@ -216,27 +315,28 @@ export default function NotificationsPage() {
         icon: UserPlus,
         action: "aceptó tu solicitud de seguimiento",
         tone: "text-emerald-400",
-        background: "bg-emerald-500/10",
       };
     }
 
     if (group.type === "follow") {
       return {
         icon: UserPlus,
-        action: group.items.length === 1 ? "comenzó a seguirte" : "comenzaron a seguirte",
-        tone: "text-[#8d98ff]",
-        background: "bg-[#6d7cff]/10",
+        action:
+          group.items.length === 1
+            ? "comenzó a seguirte"
+            : "comenzaron a seguirte",
+        tone: "text-[var(--app-accent)]",
       };
     }
 
     if (group.type === "story_reply") {
       return {
         icon: MessageCircle,
-        action: group.items.length === 1
-          ? "respondió a tu historia"
-          : "respondieron a tu historia",
-        tone: "text-[#8d98ff]",
-        background: "bg-[#6d7cff]/10",
+        action:
+          group.items.length === 1
+            ? "respondió a tu historia"
+            : "respondieron a tu historia",
+        tone: "text-[var(--app-accent)]",
       };
     }
 
@@ -248,31 +348,6 @@ export default function NotificationsPage() {
             ? "comentó tu publicación"
             : "comentaron tu publicación",
         tone: "text-emerald-400",
-        background: "bg-emerald-500/10",
-      };
-    }
-
-    if (group.targetType === "comment") {
-      return {
-        icon: Heart,
-        action:
-          group.items.length === 1
-            ? "le dio me gusta a tu comentario"
-            : "le dieron me gusta a tu comentario",
-        tone: "text-red-400",
-        background: "bg-red-500/10",
-      };
-    }
-
-    if (group.targetType === "story") {
-      return {
-        icon: Heart,
-        action:
-          group.items.length === 1
-            ? "le dio me gusta a tu historia"
-            : "le dieron me gusta a tu historia",
-        tone: "text-pink-400",
-        background: "bg-pink-500/10",
       };
     }
 
@@ -280,10 +355,14 @@ export default function NotificationsPage() {
       icon: Heart,
       action:
         group.items.length === 1
-          ? "le dio me gusta a tu publicación"
-          : "le dieron me gusta a tu publicación",
-      tone: "text-red-400",
-      background: "bg-red-500/10",
+          ? group.targetType === "comment"
+            ? "le dio me gusta a tu comentario"
+            : group.targetType === "story"
+            ? "le dio me gusta a tu historia"
+            : "le dio me gusta a tu publicación"
+          : "interactuaron con tu contenido",
+      tone:
+        group.targetType === "story" ? "text-pink-400" : "text-red-400",
     };
   }
 
@@ -297,22 +376,22 @@ export default function NotificationsPage() {
     if (names.length === 2) return `@${names[0]} y @${names[1]}`;
 
     const remaining = Math.max(group.items.length - 2, names.length - 2);
-    return `@${names[0]}, @${names[1]} y ${remaining} ${remaining === 1 ? "persona más" : "personas más"}`;
+    return `@${names[0]}, @${names[1]} y ${remaining} ${
+      remaining === 1 ? "persona más" : "personas más"
+    }`;
   }
 
   async function openNotification(group: NotificationGroup) {
     if (group.type === "follow_request") {
-      router.push("/settings?section=profile");
-      return;
-    }
-
-    if (group.type === "follow_request_accepted") {
       const username = group.actors[0]?.username;
       if (username) router.push(`/u/${username}`);
       return;
     }
 
-    if (group.type === "follow") {
+    if (
+      group.type === "follow_request_accepted" ||
+      group.type === "follow"
+    ) {
       const username = group.actors[0]?.username;
       if (username) router.push(`/u/${username}`);
       return;
@@ -340,9 +419,7 @@ export default function NotificationsPage() {
         .maybeSingle();
 
       if (comment) {
-        router.push(
-          `/feed?post=${comment.post_id}&comment=${comment.id}`
-        );
+        router.push(`/feed?post=${comment.post_id}&comment=${comment.id}`);
       }
 
       return;
@@ -358,126 +435,205 @@ export default function NotificationsPage() {
     }
   }
 
-
   return (
     <AppShell>
-      <div className="alumni-notifications-page mx-auto w-full max-w-[800px]">
-        <div className="mb-6 pt-2">
-          <h1 className="text-[30px] font-black tracking-[-0.04em]">
+      <div className="alumni-notifications-page mx-auto w-full max-w-[820px]">
+        <header className="mb-7 pt-2">
+          <p className="mb-2 text-[10px] font-black uppercase tracking-[0.22em] text-[var(--app-muted-3)]">
+            Centro de actividad
+          </p>
+          <h1 className="text-[32px] font-black tracking-[-0.045em] text-[var(--app-text)]">
             Notificaciones
           </h1>
-          <p className="mt-1 text-sm text-zinc-600">
-            Me gusta, comentarios y nuevas conexiones en un solo lugar.
+          <p className="mt-2 max-w-xl text-sm leading-6 text-[var(--app-muted)]">
+            Conexiones, reacciones y conversaciones importantes, sin ruido.
           </p>
-        </div>
+        </header>
 
-        <div className="alumni-section-tabs mb-5 flex gap-2 border-b border-white/[0.07] pb-3">
+        <div className="mb-7 flex items-center gap-5 border-b border-[var(--app-border)]">
           {[
             ["all", "Todas"],
             ["connections", "Conexiones"],
             ["activity", "Actividad"],
-          ].map(([id, label]) => (
-            <button
-              key={id}
-              onClick={() => setFilter(id as FilterType)}
-              className={`rounded-xl px-3 py-2 text-xs font-bold transition ${
-                filter === id
-                  ? "bg-white/[0.07] text-zinc-200"
-                  : "text-zinc-600 hover:bg-white/[0.035] hover:text-zinc-300"
-              }`}
-            >
-              {label}
-            </button>
-          ))}
+          ].map(([id, label]) => {
+            const active = filter === id;
+
+            return (
+              <button
+                key={id}
+                type="button"
+                onClick={() => setFilter(id as FilterType)}
+                className={`relative pb-3 text-xs font-black transition ${
+                  active
+                    ? "text-[var(--app-text)]"
+                    : "text-[var(--app-muted-2)] hover:text-[var(--app-text-soft)]"
+                }`}
+              >
+                {label}
+                {active && (
+                  <span className="absolute inset-x-0 bottom-0 h-0.5 rounded-full bg-[var(--app-accent)]" />
+                )}
+              </button>
+            );
+          })}
         </div>
 
         {loadingNotifications ? (
-          <div className="py-16 text-center text-sm text-zinc-600">
-            Cargando actividad...
+          <div className="flex min-h-[280px] items-center justify-center">
+            <Loader2
+              size={20}
+              className="animate-spin text-[var(--app-muted)]"
+            />
           </div>
         ) : filtered.length === 0 ? (
-          <div className="alumni-empty-state rounded-[24px] border border-dashed border-white/[0.09] px-6 py-16 text-center">
-            <Bell size={26} className="mx-auto text-zinc-700" />
-            <p className="mt-4 font-bold text-zinc-300">
-              Todo está tranquilo por aquí
+          <div className="py-20 text-center">
+            <Bell size={27} className="mx-auto text-[var(--app-muted-3)]" />
+            <p className="mt-4 text-sm font-black text-[var(--app-text-soft)]">
+              Todo está tranquilo
             </p>
-            <p className="mt-2 text-sm text-zinc-600">
-              Las nuevas interacciones aparecerán en esta sección.
+            <p className="mt-1 text-xs text-[var(--app-muted-2)]">
+              Las nuevas interacciones aparecerán aquí.
             </p>
           </div>
         ) : (
-          <div className="space-y-7">
+          <div className="space-y-9">
             {Object.entries(groupedByDate).map(([label, groups]) => {
               if (groups.length === 0) return null;
 
               return (
                 <section key={label}>
-                  <p className="mb-3 px-1 text-[11px] font-black uppercase tracking-[0.14em] text-zinc-700">
-                    {label}
-                  </p>
+                  <div className="mb-2 flex items-center gap-3">
+                    <p className="text-[10px] font-black uppercase tracking-[0.18em] text-[var(--app-muted-3)]">
+                      {label}
+                    </p>
+                    <span className="h-px flex-1 bg-[var(--app-border)]" />
+                  </div>
 
-                  <div className="alumni-open-list overflow-hidden rounded-[24px] border border-white/[0.07] bg-[#101318]/95">
-                    <div className="divide-y divide-white/[0.06]">
-                      {groups.map((group) => {
-                        const meta = notificationMeta(group);
-                        const Icon = meta.icon;
-                        const visibleActors = group.actors.slice(0, 3);
-                        const unread = group.items.some(
-                          (item: any) => !item.read_at
-                        );
+                  <div>
+                    {groups.map((group) => {
+                      const meta = notificationMeta(group);
+                      const Icon = meta.icon;
+                      const actor = group.actors[0];
+                      const requestPending =
+                        group.type === "follow_request" &&
+                        Boolean(pendingRequests[group.targetId]);
+                      const busy = requestBusy === group.targetId;
 
-                        return (
-                          <button
-                            key={group.key}
-                            type="button"
-                            onClick={() => openNotification(group)}
-                            className={`alumni-notification-row flex w-full gap-4 px-4 py-4 text-left transition hover:bg-white/[0.035] active:bg-white/[0.055] sm:px-5 ${unread ? "alumni-notification-unread" : ""}`}
-                          >
-                            <div className="relative h-12 w-[58px] shrink-0">
-                              {visibleActors.map((actor, index) => (
-                                <div
-                                  key={actor.id}
-                                  className="absolute top-0 flex h-11 w-11 items-center justify-center overflow-hidden rounded-full border-2 border-[#101318] bg-[#1a1f29] text-xs font-bold ring-1 ring-white/10"
-                                  style={{ left: `${index * 9}px`, zIndex: 10 - index }}
-                                >
-                                  {actor.avatar_url ? (
-                                    <img
-                                      src={actor.avatar_url}
-                                      alt={actor.username}
-                                      className="h-full w-full object-cover"
-                                    />
-                                  ) : (
-                                    actor.username?.charAt(0)?.toUpperCase() || "U"
-                                  )}
-                                </div>
-                              ))}
+                      return (
+                        <article
+                          key={group.key}
+                          className="group border-b border-[var(--app-border)] py-4.5 last:border-b-0"
+                        >
+                          <div className="flex gap-4">
+                            <button
+                              type="button"
+                              onClick={() => void openNotification(group)}
+                              className="relative h-12 w-12 shrink-0 text-left"
+                              aria-label="Abrir perfil"
+                            >
+                              <span className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-full bg-[var(--app-soft-strong)] text-xs font-black text-[var(--app-text-soft)] ring-1 ring-[var(--app-border)]">
+                                {actor?.avatar_url ? (
+                                  <img
+                                    src={actor.avatar_url}
+                                    alt=""
+                                    className="h-full w-full object-cover"
+                                  />
+                                ) : (
+                                  actor?.username?.charAt(0)?.toUpperCase() ||
+                                  "U"
+                                )}
+                              </span>
 
                               <span
-                                className={`absolute bottom-0 right-0 z-20 flex h-6 w-6 items-center justify-center rounded-full border-2 border-[#101318] ${meta.background} ${meta.tone}`}
+                                className={`absolute -bottom-1 -right-1 flex h-6 w-6 items-center justify-center rounded-full bg-[var(--app-bg)] ${meta.tone}`}
                               >
-                                <Icon size={12} />
+                                <Icon size={13} strokeWidth={2} />
                               </span>
-                            </div>
+                            </button>
 
                             <div className="min-w-0 flex-1">
-                              <p className="text-sm leading-5 text-zinc-400">
-                                <span className="font-black text-zinc-100">
-                                  {actorsText(group)}
-                                </span>{" "}
-                                {meta.action}.
-                              </p>
+                              <button
+                                type="button"
+                                onClick={() => void openNotification(group)}
+                                className="block w-full text-left"
+                              >
+                                <p className="text-[13px] leading-5 text-[var(--app-muted)]">
+                                  <span className="font-black text-[var(--app-text)]">
+                                    {actorsText(group)}
+                                  </span>{" "}
+                                  {meta.action}.
+                                </p>
 
-                              <p className="mt-1.5 text-[11px] text-zinc-700">
-                                {formatDistanceToNow(new Date(group.latestAt), {
-                                  addSuffix: true,
-                                  locale: es,
-                                })}
-                              </p>
+                                {actor?.full_name && (
+                                  <p className="mt-0.5 truncate text-[11px] text-[var(--app-muted-2)]">
+                                    {actor.full_name}
+                                  </p>
+                                )}
+
+                                <p className="mt-1.5 text-[10px] font-bold text-[var(--app-muted-3)]">
+                                  {formatDistanceToNow(
+                                    new Date(group.latestAt),
+                                    {
+                                      addSuffix: true,
+                                      locale: es,
+                                    }
+                                  )}
+                                </p>
+                              </button>
+
+                              {group.type === "follow_request" && (
+                                <div className="mt-3 flex flex-wrap items-center gap-2">
+                                  {requestPending ? (
+                                    <>
+                                      <button
+                                        type="button"
+                                        disabled={busy}
+                                        onClick={(event) => {
+                                          event.stopPropagation();
+                                          void acceptFollowRequest(
+                                            group.targetId
+                                          );
+                                        }}
+                                        className="inline-flex h-9 items-center gap-1.5 rounded-full bg-[var(--app-accent)] px-4 text-[11px] font-black text-[var(--app-on-accent)] transition hover:brightness-105 disabled:opacity-50"
+                                      >
+                                        {busy ? (
+                                          <Loader2
+                                            size={13}
+                                            className="animate-spin"
+                                          />
+                                        ) : (
+                                          <Check size={13} />
+                                        )}
+                                        Aceptar
+                                      </button>
+
+                                      <button
+                                        type="button"
+                                        disabled={busy}
+                                        onClick={(event) => {
+                                          event.stopPropagation();
+                                          void rejectFollowRequest(
+                                            group.targetId
+                                          );
+                                        }}
+                                        className="inline-flex h-9 items-center gap-1.5 rounded-full px-4 text-[11px] font-black text-[var(--app-muted)] ring-1 ring-inset ring-[var(--app-border)] transition hover:bg-[var(--app-soft)] hover:text-[var(--app-text)] disabled:opacity-50"
+                                      >
+                                        <X size={13} />
+                                        Rechazar
+                                      </button>
+                                    </>
+                                  ) : (
+                                    <span className="text-[10px] font-bold text-[var(--app-muted-3)]">
+                                      Solicitud gestionada
+                                    </span>
+                                  )}
+                                </div>
+                              )}
                             </div>
-                          </button>
-                        );
-                      })}
-                    </div>
+                          </div>
+                        </article>
+                      );
+                    })}
                   </div>
                 </section>
               );
