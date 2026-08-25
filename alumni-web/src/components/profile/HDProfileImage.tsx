@@ -101,6 +101,7 @@ export default function HDProfileImage({
     <>
       <button
         type="button"
+        data-pull-refresh-pass="true"
         onClick={openViewer}
         disabled={opening}
         className={`group relative block h-full w-full overflow-hidden ${

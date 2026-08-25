@@ -6,8 +6,20 @@ import {
   useState,
 } from "react";
 
-const TRIGGER_DISTANCE = 78;
-const MAX_PULL = 118;
+const TRIGGER_DISTANCE = 80;
+const MAX_PULL = 120;
+const HOLD_OFFSET = 72;
+
+function clamp(
+  value: number,
+  min = 0,
+  max = 1
+) {
+  return Math.min(
+    max,
+    Math.max(min, value)
+  );
+}
 
 function blockedTarget(
   target: EventTarget | null
@@ -19,10 +31,18 @@ function blockedTarget(
   }
 
   /*
-    Dejamos pasar imágenes, banners y zonas
-    de perfil. Solo bloqueamos controles
-    realmente interactivos o flujos delicados.
+    Banner y avatar HD son botones para abrir
+    el visor, pero también deben permitir iniciar
+    Pull-to-Refresh cuando el usuario arrastra.
   */
+  if (
+    target.closest(
+      '[data-pull-refresh-pass="true"]'
+    )
+  ) {
+    return false;
+  }
+
   return Boolean(
     target.closest(
       [
@@ -30,6 +50,7 @@ function blockedTarget(
         "textarea",
         "select",
         "button",
+        "a",
         '[contenteditable="true"]',
         '[role="dialog"]',
         '[data-pull-refresh-lock="true"]',
@@ -40,34 +61,11 @@ function blockedTarget(
   );
 }
 
-function brandStage(
-  progress: number
+function clearShellStyles(
+  shell: HTMLElement
 ) {
-  if (progress < 0.58) {
-    return "Alumni.";
-  }
-
-  if (progress < 0.68) {
-    return "lumni.";
-  }
-
-  if (progress < 0.76) {
-    return "umni.";
-  }
-
-  if (progress < 0.84) {
-    return "mni.";
-  }
-
-  if (progress < 0.90) {
-    return "ni.";
-  }
-
-  if (progress < 0.96) {
-    return "i.";
-  }
-
-  return ".";
+  shell.style.transition = "";
+  shell.style.transform = "";
 }
 
 function setShellOffset(
@@ -81,16 +79,404 @@ function setShellOffset(
 
   if (!shell) return;
 
+  const next =
+    Math.max(0, value);
+
+  if (next === 0 && !animate) {
+    clearShellStyles(shell);
+    return;
+  }
+
   shell.style.transition =
     animate
-      ? "transform 220ms cubic-bezier(.22,.8,.24,1)"
+      ? "transform 240ms cubic-bezier(.22,.8,.24,1)"
       : "none";
 
   shell.style.transform =
-    `translate3d(0, ${Math.max(
-      0,
-      value
-    )}px, 0)`;
+    `translate3d(0, ${next}px, 0)`;
+
+  /*
+    Muy importante:
+    al terminar el gesto quitamos transform
+    por completo. Dejar transform: translateY(0)
+    alteraría el comportamiento de elementos fixed.
+  */
+  if (
+    next === 0 &&
+    animate
+  ) {
+    window.setTimeout(
+      () => {
+        if (
+          shell.style.transform ===
+          "translate3d(0, 0px, 0)"
+        ) {
+          clearShellStyles(
+            shell
+          );
+        }
+      },
+      260
+    );
+  }
+}
+
+function AnimatedBrand({
+  progress,
+  refreshing,
+}: {
+  progress: number;
+  refreshing: boolean;
+}) {
+  const letters =
+    "Alumni".split("");
+
+  /*
+    La marca completa permanece durante casi
+    todo el gesto. Solo cerca del umbral se
+    empieza a desmaterializar de izquierda
+    a derecha hasta dejar el punto.
+  */
+  const erase =
+    clamp(
+      (progress - 0.70) /
+        0.30
+    );
+
+  const reveal =
+    clamp(
+      progress / 0.28
+    );
+
+  return (
+    <div className="alumni-refresh-mark-wrap">
+      <div
+        className={`alumni-refresh-mark ${
+          refreshing
+            ? "is-refreshing"
+            : ""
+        }`}
+        style={{
+          opacity:
+            refreshing
+              ? 1
+              : 0.38 +
+                reveal * 0.62,
+          transform:
+            `translate3d(0, ${
+              refreshing
+                ? 0
+                : (1 - reveal) *
+                  7
+            }px, 0) scale(${
+              0.97 +
+              reveal * 0.03
+            })`,
+        }}
+      >
+        {!refreshing && (
+          <span
+            className="alumni-refresh-word"
+            aria-label="Alumni."
+          >
+            {letters.map(
+              (
+                letter,
+                index
+              ) => {
+                const localErase =
+                  clamp(
+                    erase * 6 -
+                      index
+                  );
+
+                return (
+                  <span
+                    key={`${letter}-${index}`}
+                    aria-hidden="true"
+                    className="alumni-refresh-letter"
+                    style={{
+                      opacity:
+                        1 -
+                        localErase,
+                      maxWidth:
+                        `${
+                          1 -
+                          localErase
+                        }em`,
+                      transform:
+                        `translate3d(0, ${
+                          -3 *
+                          localErase
+                        }px, 0)`,
+                      filter:
+                        `blur(${
+                          localErase *
+                          3
+                        }px)`,
+                    }}
+                  >
+                    {letter}
+                  </span>
+                );
+              }
+            )}
+
+            <span
+              aria-hidden="true"
+              className="alumni-refresh-dot"
+              style={{
+                transform:
+                  `scale(${
+                    1 +
+                    erase * 0.16
+                  })`,
+              }}
+            >
+              .
+            </span>
+          </span>
+        )}
+
+        {refreshing && (
+          <span
+            className="alumni-refresh-orbit"
+            aria-label="Actualizando Alumni"
+          >
+            <span className="alumni-refresh-orbit-dot" />
+          </span>
+        )}
+      </div>
+
+      {!refreshing && (
+        <span
+          aria-hidden="true"
+          className="alumni-refresh-accent-line"
+          style={{
+            width:
+              `${
+                14 +
+                progress * 34
+              }px`,
+            opacity:
+              0.12 +
+              progress * 0.34,
+          }}
+        />
+      )}
+
+      <style jsx>{`
+        .alumni-refresh-mark-wrap {
+          position: relative;
+          display: flex;
+          min-width: 108px;
+          min-height: 50px;
+          align-items: center;
+          justify-content: center;
+        }
+
+        .alumni-refresh-mark {
+          position: relative;
+          display: flex;
+          min-height: 34px;
+          align-items: center;
+          justify-content: center;
+          transform-origin: 50% 55%;
+          transition:
+            opacity 90ms linear,
+            transform 90ms linear;
+        }
+
+        .alumni-refresh-word {
+          display: inline-flex;
+          align-items: baseline;
+          justify-content: center;
+          font-size: 22px;
+          font-weight: 900;
+          letter-spacing: -0.055em;
+          line-height: 1;
+          color: var(--app-text);
+          text-rendering: geometricPrecision;
+          -webkit-font-smoothing: antialiased;
+        }
+
+        .alumni-refresh-letter {
+          display: inline-block;
+          overflow: hidden;
+          flex: 0 1 auto;
+          transition:
+            opacity 80ms linear,
+            max-width 80ms linear,
+            transform 80ms linear,
+            filter 80ms linear;
+        }
+
+        .alumni-refresh-dot {
+          display: inline-block;
+          margin-left: 0.015em;
+          color:
+            color-mix(
+              in srgb,
+              var(--app-accent) 64%,
+              var(--app-text) 36%
+            );
+          text-shadow:
+            0 0 13px
+              color-mix(
+                in srgb,
+                var(--app-accent) 18%,
+                transparent
+              );
+          transform-origin: center;
+          transition:
+            transform 90ms linear;
+        }
+
+        .alumni-refresh-accent-line {
+          position: absolute;
+          bottom: 3px;
+          left: 50%;
+          height: 1px;
+          transform:
+            translateX(-50%);
+          border-radius: 999px;
+          background:
+            linear-gradient(
+              90deg,
+              transparent,
+              color-mix(
+                in srgb,
+                var(--app-accent) 58%,
+                var(--app-text) 42%
+              ),
+              transparent
+            );
+          transition:
+            width 90ms linear,
+            opacity 90ms linear;
+        }
+
+        .alumni-refresh-orbit {
+          position: relative;
+          display: inline-flex;
+          width: 25px;
+          height: 25px;
+          align-items: center;
+          justify-content: center;
+          border-radius: 999px;
+        }
+
+        .alumni-refresh-orbit::before {
+          content: "";
+          position: absolute;
+          inset: 1px;
+          border-radius: inherit;
+          border: 1.7px solid
+            color-mix(
+              in srgb,
+              var(--app-border) 86%,
+              transparent
+            );
+          border-top-color:
+            color-mix(
+              in srgb,
+              var(--app-accent) 72%,
+              var(--app-text) 28%
+            );
+          border-right-color:
+            color-mix(
+              in srgb,
+              var(--app-accent) 36%,
+              var(--app-text) 64%
+            );
+          animation:
+            alumni-refresh-orbit-spin
+            0.78s
+            cubic-bezier(.5,.1,.5,.9)
+            infinite;
+        }
+
+        .alumni-refresh-orbit::after {
+          content: "";
+          position: absolute;
+          inset: 6px;
+          border-radius: inherit;
+          background:
+            color-mix(
+              in srgb,
+              var(--app-accent) 8%,
+              transparent
+            );
+        }
+
+        .alumni-refresh-orbit-dot {
+          position: relative;
+          z-index: 1;
+          width: 4px;
+          height: 4px;
+          border-radius: 999px;
+          background:
+            color-mix(
+              in srgb,
+              var(--app-accent) 58%,
+              var(--app-text) 42%
+            );
+          box-shadow:
+            0 0 12px
+              color-mix(
+                in srgb,
+                var(--app-accent) 28%,
+                transparent
+              );
+          animation:
+            alumni-refresh-dot-breathe
+            0.9s ease-in-out
+            infinite alternate;
+        }
+
+        @keyframes alumni-refresh-orbit-spin {
+          to {
+            transform:
+              rotate(360deg);
+          }
+        }
+
+        @keyframes alumni-refresh-dot-breathe {
+          from {
+            transform:
+              scale(.82);
+            opacity: .72;
+          }
+
+          to {
+            transform:
+              scale(1.18);
+            opacity: 1;
+          }
+        }
+
+        @media
+          (prefers-reduced-motion:
+            reduce) {
+          .alumni-refresh-letter,
+          .alumni-refresh-mark,
+          .alumni-refresh-dot,
+          .alumni-refresh-accent-line {
+            transition: none;
+          }
+
+          .alumni-refresh-orbit::before {
+            animation-duration:
+              1.5s;
+          }
+
+          .alumni-refresh-orbit-dot {
+            animation: none;
+          }
+        }
+      `}</style>
+    </div>
+  );
 }
 
 export default function GlobalPullToRefresh() {
@@ -271,19 +657,27 @@ export default function GlobalPullToRefresh() {
 
         setRefreshing(true);
 
-        pullRef.current = 70;
-        setPull(70);
+        pullRef.current =
+          HOLD_OFFSET;
+
+        setPull(
+          HOLD_OFFSET
+        );
 
         setShellOffset(
-          70,
+          HOLD_OFFSET,
           true
         );
 
+        /*
+          Se deja tiempo suficiente para ver
+          la transición punto -> loader.
+        */
         window.setTimeout(
           () => {
             window.location.reload();
           },
-          680
+          760
         );
 
         return;
@@ -339,10 +733,16 @@ export default function GlobalPullToRefresh() {
       body.style.overscrollBehaviorY =
         previousBody;
 
-      setShellOffset(
-        0,
-        false
-      );
+      const shell =
+        document.getElementById(
+          "alumni-global-shell"
+        );
+
+      if (shell) {
+        clearShellStyles(
+          shell
+        );
+      }
 
       window.removeEventListener(
         "touchstart",
@@ -371,18 +771,14 @@ export default function GlobalPullToRefresh() {
   }, []);
 
   const progress =
-    Math.min(
-      1,
+    clamp(
       pull /
         TRIGGER_DISTANCE
     );
 
   const visible =
     refreshing ||
-    pull > 3;
-
-  const stage =
-    brandStage(progress);
+    pull > 2;
 
   return (
     <div
@@ -398,132 +794,21 @@ export default function GlobalPullToRefresh() {
           : "opacity-0"
       }`}
       style={{
-        height: `${Math.max(
-          0,
-          pull
-        )}px`,
+        height:
+          `${Math.max(
+            0,
+            pull
+          )}px`,
         paddingTop:
-          "max(10px, env(safe-area-inset-top))",
+          "max(7px, env(safe-area-inset-top))",
       }}
     >
-      <div
-        className="flex min-h-12 items-center justify-center"
-        style={{
-          opacity:
-            Math.min(
-              1,
-              pull / 22
-            ),
-        }}
-      >
-        {refreshing ? (
-          <span
-            className="alumni-refresh-dot-spinner"
-            aria-label="Actualizando Alumni"
-          >
-            <span className="alumni-refresh-dot-core" />
-          </span>
-        ) : (
-          <span
-            className="alumni-refresh-brand select-none whitespace-pre"
-            style={{
-              transform:
-                `translateY(${Math.max(
-                  0,
-                  7 -
-                    progress * 7
-                )}px)`,
-            }}
-          >
-            {stage}
-          </span>
-        )}
-      </div>
-
-      <style jsx>{`
-        .alumni-refresh-brand {
-          font-size: 17px;
-          font-weight: 900;
-          letter-spacing: -0.045em;
-          color: var(--app-text);
-          background-image: linear-gradient(
-            90deg,
-            var(--app-text) 0%,
-            var(--app-text) 72%,
-            color-mix(
-                in srgb,
-                var(--app-accent) 42%,
-                var(--app-text) 58%
-              )
-              100%
-          );
-          -webkit-background-clip: text;
-          background-clip: text;
-          -webkit-text-fill-color: transparent;
-          text-shadow: 0 1px 0
-            color-mix(
-              in srgb,
-              var(--app-accent) 12%,
-              transparent
-            );
+      <AnimatedBrand
+        progress={progress}
+        refreshing={
+          refreshing
         }
-
-        .alumni-refresh-dot-spinner {
-          position: relative;
-          display: inline-flex;
-          width: 22px;
-          height: 22px;
-          align-items: center;
-          justify-content: center;
-          animation:
-            alumni-refresh-spin 0.78s linear infinite;
-        }
-
-        .alumni-refresh-dot-spinner::before {
-          content: "";
-          position: absolute;
-          inset: 1px;
-          border-radius: 999px;
-          border: 2px solid
-            var(--app-border);
-          border-top-color:
-            var(--app-accent);
-          border-right-color:
-            color-mix(
-              in srgb,
-              var(--app-accent) 70%,
-              var(--app-text) 30%
-            );
-        }
-
-        .alumni-refresh-dot-core {
-          width: 4px;
-          height: 4px;
-          border-radius: 999px;
-          background:
-            color-mix(
-              in srgb,
-              var(--app-accent) 35%,
-              var(--app-text) 65%
-            );
-        }
-
-        @keyframes alumni-refresh-spin {
-          to {
-            transform:
-              rotate(360deg);
-          }
-        }
-
-        @media
-          (prefers-reduced-motion:
-            reduce) {
-          .alumni-refresh-dot-spinner {
-            animation-duration:
-              1.6s;
-          }
-        }
-      `}</style>
+      />
     </div>
   );
 }
