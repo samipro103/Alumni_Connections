@@ -3,9 +3,10 @@ import type { MetadataRoute } from "next";
 export default function manifest(): MetadataRoute.Manifest {
   return {
     id: "/",
-    name: "AlumniConnections",
-    short_name: "Alumni",
-    description: "Conecta con estudiantes y alumni.",
+    name: "Alumni.",
+    short_name: "Alumni.",
+    description:
+      "Comparte logros, conecta talento y descubre oportunidades.",
     start_url: "/feed",
     scope: "/",
     display: "standalone",

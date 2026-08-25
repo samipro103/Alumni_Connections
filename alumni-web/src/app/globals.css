@@ -1122,3 +1122,83 @@ a,
     transition: none !important;
   }
 }
+
+
+/* ALUMNI v1.0.6 — BRANDING + PULIDO GLOBAL */
+
+.alumni-brand {
+  line-height: 1;
+  text-rendering: geometricPrecision;
+  font-feature-settings: "kern" 1, "liga" 1;
+}
+
+.alumni-brand-dot {
+  display: inline-block;
+  margin-left: .045em;
+  color: var(--app-accent);
+  transform-origin: center bottom;
+}
+
+.alumni-brand-dot-animated {
+  animation: alumniBrandDotPulse 2.2s ease-in-out infinite;
+  text-shadow:
+    0 0 16px color-mix(in srgb, var(--app-accent) 52%, transparent);
+}
+
+@keyframes alumniBrandDotPulse {
+  0%,
+  100% {
+    opacity: .82;
+    transform: scale(1);
+  }
+
+  50% {
+    opacity: 1;
+    transform: scale(1.18);
+  }
+}
+
+/* Inputs profesionales en móvil:
+   evita zoom accidental de iOS y saltos de layout. */
+@media (max-width: 767px) {
+  input,
+  textarea,
+  select {
+    font-size: 16px;
+  }
+
+  button,
+  a,
+  input,
+  textarea,
+  select {
+    min-touch-target-size: 44px;
+  }
+
+  body {
+    overscroll-behavior-y: none;
+  }
+}
+
+/* Mejor comportamiento para superficies desplazables. */
+.scrollbar-thin,
+.alumni-story-studio-panel,
+.alumni-chat-scroll {
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Jerarquía visual más consistente entre módulos. */
+main {
+  min-width: 0;
+}
+
+img,
+video {
+  max-width: 100%;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .alumni-brand-dot-animated {
+    animation: none !important;
+  }
+}

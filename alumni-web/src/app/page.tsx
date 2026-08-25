@@ -117,7 +117,7 @@ function MobileLanding() {
         <header className="flex min-h-12 items-center">
           <Link
             href="/"
-            aria-label="Alumni"
+            aria-label="Alumni."
             className="relative flex h-11 w-11 items-center justify-center rounded-[15px] border border-white/[0.08] bg-white/[0.035] shadow-[0_12px_35px_rgba(0,0,0,.22)]"
           >
             <span className="text-[23px] font-black tracking-[-0.06em] text-white">
@@ -222,8 +222,12 @@ function DesktopLanding() {
     <main className="hidden min-h-screen overflow-hidden bg-[#090b0f] text-white md:block">
       <header className="border-b border-white/[0.07]">
         <div className="mx-auto flex h-[72px] max-w-7xl items-center px-5 sm:px-8">
-          <Link href="/" className="text-xl font-black tracking-[-0.04em]">
-            AlumniConnections<span className="text-[#7f8cff]">.</span>
+          <Link
+            href="/"
+            className="alumni-brand inline-flex text-xl font-black tracking-[-0.055em]"
+            aria-label="Alumni."
+          >
+            Alumni<span className="alumni-brand-dot">.</span>
           </Link>
 
           <div className="ml-auto flex items-center gap-2">
@@ -307,7 +311,7 @@ export default function LandingPage() {
   if (loading || user) {
     return (
       <main className="flex min-h-screen items-center justify-center bg-[#090b0f] text-sm text-zinc-600">
-        Cargando AlumniConnections...
+        Cargando Alumni...
       </main>
     );
   }

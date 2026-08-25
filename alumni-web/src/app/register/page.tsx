@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { AtSign, Eye, EyeOff, LockKeyhole, Mail } from "lucide-react";
 import { supabase } from "@/lib/supabase";
+import BrandMark from "@/components/brand/BrandMark";
 
 export default function RegisterPage() {
   const [username, setUsername] = useState("");
@@ -69,8 +70,8 @@ export default function RegisterPage() {
       <div className="grid min-h-screen lg:grid-cols-2">
         <section className="flex items-center justify-center px-5 py-12 sm:px-8">
           <div className="w-full max-w-md">
-            <Link href="/" className="mb-10 inline-block text-xl font-black tracking-[-0.04em]">
-              AlumniConnections<span className="text-[#7f8cff]">.</span>
+            <Link href="/" className="mb-10 inline-block" aria-label="Alumni.">
+              <BrandMark className="text-xl text-white" />
             </Link>
 
             <p className="text-xs font-bold uppercase tracking-[0.16em] text-[#8d98ff]">Empieza tu red</p>
@@ -116,7 +117,7 @@ export default function RegisterPage() {
           <div className="absolute bottom-[5%] right-[-5%] h-96 w-96 rounded-full bg-[#6d7cff]/12 blur-[140px]" />
 
           <div className="relative m-auto max-w-lg px-12">
-            <p className="text-xs font-bold uppercase tracking-[0.16em] text-[#8d98ff]">AlumniConnections</p>
+            <BrandMark className="text-sm text-[#8d98ff]" />
             <h2 className="mt-5 text-5xl font-black leading-[1.04] tracking-[-0.05em]">
               Tu carrera cambia. Tu red puede crecer contigo.
             </h2>

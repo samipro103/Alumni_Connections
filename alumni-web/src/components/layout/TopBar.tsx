@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { supabase } from "@/lib/supabase";
+import BrandMark from "@/components/brand/BrandMark";
 
 export default function TopBar() {
   const router = useRouter();
@@ -80,11 +81,16 @@ export default function TopBar() {
       <div className="mx-auto flex h-full w-full max-w-[1500px] items-center gap-5 px-4 sm:px-6 lg:px-8">
         <Link
           href="/feed"
-          className="shrink-0 text-[21px] font-black tracking-[-0.04em] text-white"
+          className="shrink-0"
+          aria-label="Alumni."
         >
-          <span className="hidden sm:inline">AlumniConnections</span>
-          <span className="sm:hidden">Alumni</span>
-          <span className="text-[#7f8cff]">.</span>
+          <BrandMark
+            className="hidden text-[22px] text-[var(--app-text)] sm:inline-flex"
+          />
+          <BrandMark
+            compact
+            className="text-[24px] text-[var(--app-text)] sm:hidden"
+          />
         </Link>
 
         <form onSubmit={submitSearch} className="mx-auto hidden w-full max-w-[540px] md:block">

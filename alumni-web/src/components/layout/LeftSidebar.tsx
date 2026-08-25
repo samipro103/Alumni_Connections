@@ -49,7 +49,7 @@ export default function LeftSidebar() {
 
       <div className="mt-7 border-t border-white/[0.07] pt-5">
         <p className="px-3 text-xs font-semibold uppercase tracking-[0.14em] text-zinc-700">
-          Alumni network
+          Red Alumni.
         </p>
         <p className="mt-2 px-3 text-xs leading-5 text-zinc-600">
           Conecta con personas de tu universidad, carrera y comunidad profesional.

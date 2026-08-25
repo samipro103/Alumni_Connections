@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { Eye, EyeOff, LockKeyhole, Mail } from "lucide-react";
 import { supabase } from "@/lib/supabase";
+import BrandMark from "@/components/brand/BrandMark";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -40,8 +41,8 @@ export default function LoginPage() {
           <div className="absolute bottom-[5%] right-[-5%] h-96 w-96 rounded-full bg-violet-600/10 blur-[140px]" />
 
           <div className="relative m-auto max-w-lg px-12">
-            <Link href="/" className="text-xl font-black tracking-[-0.04em]">
-              AlumniConnections<span className="text-[#7f8cff]">.</span>
+            <Link href="/" aria-label="Alumni.">
+              <BrandMark className="text-xl text-white" />
             </Link>
 
             <h1 className="mt-10 text-5xl font-black leading-[1.04] tracking-[-0.05em]">
@@ -56,8 +57,8 @@ export default function LoginPage() {
 
         <section className="flex items-center justify-center px-5 py-12 sm:px-8">
           <div className="w-full max-w-md">
-            <Link href="/" className="mb-10 inline-block text-xl font-black tracking-[-0.04em] lg:hidden">
-              AlumniConnections<span className="text-[#7f8cff]">.</span>
+            <Link href="/" className="mb-10 inline-block lg:hidden" aria-label="Alumni.">
+              <BrandMark className="text-xl text-white" />
             </Link>
 
             <p className="text-xs font-bold uppercase tracking-[0.16em] text-[#8d98ff]">Bienvenido de nuevo</p>

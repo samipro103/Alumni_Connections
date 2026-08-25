@@ -17,8 +17,18 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "AlumniConnections",
-  description: "Connect students and alumni around the world",
+  title: {
+    default: "Alumni.",
+    template: "%s · Alumni.",
+  },
+  applicationName: "Alumni.",
+  description:
+    "La red para compartir logros, conectar talento y descubrir oportunidades.",
+  appleWebApp: {
+    capable: true,
+    title: "Alumni.",
+    statusBarStyle: "black-translucent",
+  },
 };
 
 const themeScript = `
@@ -56,7 +66,7 @@ export default function RootLayout({
 
         <ThemeProvider>
           <AuthProvider>
-            <div className="min-h-screen">
+            <div className="min-h-[100dvh]">
               {children}
             </div>
           </AuthProvider>
