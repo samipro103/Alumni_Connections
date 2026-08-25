@@ -7,6 +7,7 @@ import {
   useRef,
   useState,
 } from "react";
+import { createPortal } from "react-dom";
 import {
   Award,
   Bookmark,
@@ -159,6 +160,17 @@ export default function StoryViewer({
   useEffect(() => {
     pausedRef.current = paused || replyFocused;
   }, [paused, replyFocused]);
+
+  useEffect(() => {
+    if (!open) return;
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [open]);
 
   useEffect(() => {
     if (!open) return;
@@ -757,8 +769,8 @@ export default function StoryViewer({
     return null;
   }
 
-  return (
-    <div data-theme-lock="dark" className="alumni-story-viewer fixed inset-0 z-[110] flex items-center justify-center bg-black">
+  return createPortal(
+    <div data-theme-lock="dark" className="alumni-story-viewer fixed inset-0 z-[110] flex items-center justify-center overflow-hidden bg-black">
       <div className="relative flex h-[100dvh] w-full max-w-[560px] items-center justify-center overflow-hidden bg-[#050506] sm:h-[calc(100dvh-24px)] sm:rounded-[30px] sm:border sm:border-white/[0.08] sm:shadow-[0_30px_100px_rgba(0,0,0,.5)]">
         <div className="absolute left-3 right-3 top-[max(10px,env(safe-area-inset-top))] z-40 px-1">
           <div className="flex gap-1">
@@ -1198,6 +1210,7 @@ export default function StoryViewer({
           </div>
         )}
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
