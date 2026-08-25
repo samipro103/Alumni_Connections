@@ -23,6 +23,7 @@ import ProfileMusicCard from "@/components/profile/ProfileMusicCard";
 import HDProfileImage from "@/components/profile/HDProfileImage";
 import ProfileSocialLinks from "@/components/profile/ProfileSocialLinks";
 import ProfileIdentityMeta from "@/components/profile/ProfileIdentityMeta";
+import ProfileHeaderFacts from "@/components/profile/ProfileHeaderFacts";
 
 
 type ProfileTab = "posts" | "about";
@@ -250,6 +251,8 @@ export default function ProfilePage() {
                 </button>
               </div>
             </div>
+
+            <ProfileHeaderFacts profile={profile} />
 
             {profile.bio && (
               <p className="mt-5 max-w-2xl whitespace-pre-wrap text-sm leading-6 text-zinc-400">
