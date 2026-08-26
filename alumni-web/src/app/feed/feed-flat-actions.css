@@ -16,6 +16,7 @@
 }
 
 .alumni-feed-page .alumni-post-footer {
+  padding-top: 2px !important;
   background: transparent !important;
   box-shadow: none !important;
 }
@@ -27,6 +28,10 @@
   border-radius: 0 !important;
   background: transparent !important;
   box-shadow: none !important;
+}
+
+.alumni-feed-page .alumni-post-media-wrap {
+  position: relative !important;
 }
 
 .alumni-feed-page .alumni-post-media img {
@@ -49,9 +54,9 @@
   align-items: center !important;
   justify-content: flex-start !important;
   width: 100% !important;
-  min-height: 48px;
-  gap: 6px !important;
-  padding: 4px 0 0 !important;
+  min-height: 44px;
+  gap: 7px !important;
+  padding: 0 !important;
   border: 0 !important;
   background: transparent !important;
   box-shadow: none !important;
@@ -147,8 +152,17 @@
 
 /* Three dots on top-right of media. */
 .alumni-feed-page .alumni-post-menu-zone {
-  position: relative;
   z-index: 25;
+}
+
+/* Exact placement requested: OVER the image, top-right. */
+.alumni-feed-page .alumni-post-media-wrap > .alumni-post-menu-zone {
+  position: absolute !important;
+  top: 12px !important;
+  right: 12px !important;
+  bottom: auto !important;
+  left: auto !important;
+  margin: 0 !important;
 }
 
 .alumni-feed-page .alumni-post-menu-trigger {
@@ -179,7 +193,11 @@
   stroke-width: 2;
 }
 
-/* On text-only posts, the same trigger is quiet in the header. */
+/* On text-only posts, the same trigger stays in the header. */
+.alumni-feed-page .alumni-post-menu-zone[data-text-only="true"] {
+  position: relative !important;
+}
+
 .alumni-feed-page .alumni-post-menu-zone[data-text-only="true"] .alumni-post-menu-trigger {
   color: var(--app-muted) !important;
   background: transparent !important;
@@ -249,9 +267,13 @@
     border-radius: 0 !important;
   }
 
+  .alumni-feed-page .alumni-post-footer {
+    padding-top: 0 !important;
+  }
+
   .alumni-feed-page .alumni-post-actions {
-    gap: 4px !important;
-    min-height: 48px;
+    gap: 6px !important;
+    min-height: 43px;
   }
 
   .alumni-feed-page .alumni-post-actions > button {
@@ -267,9 +289,16 @@
     height: 23px;
   }
 
+  .alumni-feed-page .alumni-post-media-wrap > .alumni-post-menu-zone {
+    top: 10px !important;
+    right: 10px !important;
+  }
+
   .alumni-feed-page .alumni-post-menu-popover {
     width: 205px;
   }
 }
 
 /* ALUMNI_1_3_8_3_IG_ACTIONS_OVERFLOW_MENU */
+
+/* ALUMNI_1_3_8_4_MENU_POSITION_AND_TIGHT_SPACING */
