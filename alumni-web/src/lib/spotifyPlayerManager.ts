@@ -11,14 +11,11 @@ type Snapshot = {
   error: string;
 };
 
-type Listener = (
-  snapshot: Snapshot
-) => void;
+type Listener = (snapshot: Snapshot) => void;
 
 let player: any = null;
-let connectPromise:
-  | Promise<void>
-  | null = null;
+let playerReadyPromise: Promise<string> | null = null;
+let playerGeneration = 0;
 
 let snapshot: Snapshot = {
   ready: false,
@@ -28,278 +25,271 @@ let snapshot: Snapshot = {
   error: "",
 };
 
-const listeners =
-  new Set<Listener>();
+const listeners = new Set<Listener>();
 
 async function getAlumniAccessToken() {
   const {
     data: { session },
-  } =
-    await supabase.auth.getSession();
+  } = await supabase.auth.getSession();
 
   if (!session?.access_token) {
-    throw new Error(
-      "Inicia sesión en Alumni."
-    );
+    throw new Error("Inicia sesión en Alumni.");
   }
 
   return session.access_token;
 }
 
 async function getSpotifyAccessToken() {
-  const alumniToken =
-    await getAlumniAccessToken();
+  const alumniToken = await getAlumniAccessToken();
 
-  const response =
-    await fetch(
-      "/api/music/spotify/token",
-      {
-        headers: {
-          Authorization:
-            `Bearer ${alumniToken}`,
-        },
-        cache:
-          "no-store",
-      }
-    );
+  const response = await fetch("/api/music/spotify/token", {
+    headers: {
+      Authorization: `Bearer ${alumniToken}`,
+    },
+    cache: "no-store",
+  });
 
-  const data =
-    await response
-      .json()
-      .catch(() => ({}));
+  const data = await response.json().catch(() => ({}));
 
-  if (
-    !response.ok ||
-    !data?.access_token
-  ) {
+  if (!response.ok || !data?.access_token) {
     throw new Error(
-      data?.error ||
-        "Conecta Spotify Premium."
+      data?.error || "Conecta Spotify Premium."
     );
   }
 
-  return String(
-    data.access_token
-  );
+  return String(data.access_token);
 }
 
-function emit(
-  patch: Partial<Snapshot>
-) {
+function emit(patch: Partial<Snapshot>) {
   snapshot = {
     ...snapshot,
     ...patch,
   };
 
-  for (
-    const listener
-    of listeners
-  ) {
+  for (const listener of listeners) {
     listener(snapshot);
   }
 }
 
-function destroyPlayer() {
-  try {
-    player?.disconnect?.();
-  } catch {}
-
+function disconnectCurrentPlayer() {
+  const current = player;
   player = null;
-  connectPromise = null;
+
+  if (current) {
+    try {
+      current.disconnect?.();
+    } catch {}
+  }
+}
+
+function resetPlayer({
+  preserveError = false,
+}: {
+  preserveError?: boolean;
+} = {}) {
+  playerGeneration += 1;
+  disconnectCurrentPlayer();
+  playerReadyPromise = null;
 
   emit({
     ready: false,
     deviceId: "",
     isPlaying: false,
+    ...(preserveError ? {} : { error: "" }),
   });
 }
 
-async function createPlayer() {
-  const Spotify =
-    await loadSpotifyWebPlaybackSdk();
+async function createPlayerAndWaitReady(): Promise<string> {
+  const generation = ++playerGeneration;
+  const Spotify = await loadSpotifyWebPlaybackSdk();
 
-  const nextPlayer =
-    new Spotify.Player({
-      name:
-        "Alumni Music",
-      getOAuthToken:
-        async (
-          callback: (
-            token: string
-          ) => void
-        ) => {
-          try {
-            callback(
-              await getSpotifyAccessToken()
-            );
-          } catch (
-            tokenError: any
-          ) {
-            emit({
-              error:
-                tokenError
-                  ?.message ||
-                "Vuelve a conectar Spotify.",
-            });
-          }
-        },
+  return new Promise<string>(async (resolve, reject) => {
+    let settled = false;
+    let timeoutId: number | null = null;
+
+    const nextPlayer = new Spotify.Player({
+      name: "Alumni Music",
+      getOAuthToken: async (
+        callback: (token: string) => void
+      ) => {
+        try {
+          callback(await getSpotifyAccessToken());
+        } catch (tokenError: any) {
+          emit({
+            error:
+              tokenError?.message ||
+              "Vuelve a conectar Spotify.",
+          });
+        }
+      },
       volume: 0.72,
     });
 
-  nextPlayer.addListener(
-    "ready",
-    ({
-      device_id,
-    }: {
-      device_id: string;
-    }) => {
-      emit({
-        ready: true,
-        deviceId:
-          device_id,
-        error: "",
-      });
-    }
-  );
+    player = nextPlayer;
 
-  nextPlayer.addListener(
-    "not_ready",
-    () => {
-      /*
-       * Spotify confirma que este device quedó offline.
-       * Limpiamos el ID inmediatamente para no volver a mandar
-       * un device_id muerto al Web API.
-       */
+    function currentGeneration() {
+      return (
+        generation === playerGeneration &&
+        player === nextPlayer
+      );
+    }
+
+    function finishError(message: string) {
+      if (settled || !currentGeneration()) return;
+
+      settled = true;
+
+      if (timeoutId !== null) {
+        window.clearTimeout(timeoutId);
+      }
+
+      try {
+        nextPlayer.disconnect?.();
+      } catch {}
+
+      if (player === nextPlayer) player = null;
+
       emit({
         ready: false,
         deviceId: "",
         isPlaying: false,
+        error: message,
       });
+
+      reject(new Error(message));
     }
-  );
 
-  nextPlayer.addListener(
-    "player_state_changed",
-    (state: any) => {
-      if (!state) return;
+    nextPlayer.addListener(
+      "ready",
+      ({ device_id }: { device_id: string }) => {
+        if (settled || !currentGeneration()) return;
 
-      emit({
-        isPlaying:
-          !state.paused,
-        positionMs:
-          Number(
-            state.position || 0
-          ),
-      });
-    }
-  );
+        settled = true;
 
-  nextPlayer.addListener(
-    "account_error",
-    ({
-      message,
-    }: {
-      message: string;
-    }) => {
-      emit({
-        error:
+        if (timeoutId !== null) {
+          window.clearTimeout(timeoutId);
+        }
+
+        emit({
+          ready: true,
+          deviceId: device_id,
+          isPlaying: false,
+          error: "",
+        });
+
+        resolve(device_id);
+      }
+    );
+
+    nextPlayer.addListener(
+      "not_ready",
+      ({ device_id }: { device_id?: string } = {}) => {
+        if (!currentGeneration()) return;
+
+        if (!device_id || device_id === snapshot.deviceId) {
+          emit({
+            ready: false,
+            deviceId: "",
+            isPlaying: false,
+          });
+        }
+      }
+    );
+
+    nextPlayer.addListener(
+      "player_state_changed",
+      (state: any) => {
+        if (!state || !currentGeneration()) return;
+
+        emit({
+          isPlaying: !state.paused,
+          positionMs: Number(state.position || 0),
+          error: !state.paused ? "" : snapshot.error,
+        });
+      }
+    );
+
+    nextPlayer.addListener(
+      "account_error",
+      ({ message }: { message: string }) => {
+        finishError(
+          message || "Spotify Premium es obligatorio."
+        );
+      }
+    );
+
+    nextPlayer.addListener(
+      "authentication_error",
+      ({ message }: { message: string }) => {
+        finishError(
+          message || "Vuelve a conectar Spotify."
+        );
+      }
+    );
+
+    nextPlayer.addListener(
+      "initialization_error",
+      ({ message }: { message: string }) => {
+        finishError(
           message ||
-          "Spotify Premium es obligatorio.",
-      });
-    }
-  );
+            "Este navegador no pudo iniciar Spotify."
+        );
+      }
+    );
 
-  nextPlayer.addListener(
-    "authentication_error",
-    ({
-      message,
-    }: {
-      message: string;
-    }) => {
-      emit({
-        error:
-          message ||
-          "Vuelve a conectar Spotify.",
-      });
-    }
-  );
+    nextPlayer.addListener(
+      "playback_error",
+      ({ message }: { message: string }) => {
+        if (!currentGeneration()) return;
 
-  nextPlayer.addListener(
-    "initialization_error",
-    ({
-      message,
-    }: {
-      message: string;
-    }) => {
-      emit({
-        error:
-          message ||
-          "No se pudo iniciar Spotify.",
-      });
-    }
-  );
+        emit({
+          isPlaying: false,
+          error: message || "Spotify no pudo reproducir.",
+        });
+      }
+    );
 
-  nextPlayer.addListener(
-    "playback_error",
-    ({
-      message,
-    }: {
-      message: string;
-    }) => {
-      emit({
-        error:
-          message ||
-          "Spotify no pudo reproducir.",
-      });
-    }
-  );
+    nextPlayer.addListener("autoplay_failed", () => {
+      if (!currentGeneration()) return;
 
-  nextPlayer.addListener(
-    "autoplay_failed",
-    () => {
       emit({
         isPlaying: false,
         error:
-          "El navegador bloqueó el inicio automático. Toca Play otra vez.",
+          "El navegador bloqueó el audio. Toca Play nuevamente.",
       });
+    });
+
+    timeoutId = window.setTimeout(() => {
+      finishError(
+        "Spotify no logró activar el reproductor en este dispositivo."
+      );
+    }, 10000);
+
+    try {
+      const connected = await nextPlayer.connect();
+
+      if (!connected) {
+        finishError(
+          "Spotify no pudo conectar el reproductor."
+        );
+      }
+    } catch (connectionError: any) {
+      finishError(
+        connectionError?.message ||
+          "Spotify no pudo conectar el reproductor."
+      );
     }
-  );
-
-  player =
-    nextPlayer;
-
-  const connected =
-    await nextPlayer.connect();
-
-  if (!connected) {
-    throw new Error(
-      "Spotify no pudo conectar el reproductor."
-    );
-  }
+  });
 }
 
 export function subscribeSpotifyPlayer(
   listener: Listener
 ) {
   listeners.add(listener);
-
   listener(snapshot);
 
   return () => {
-    listeners.delete(
-      listener
-    );
-
-    /*
-     * OJO:
-     * NO desconectamos Spotify cuando un componente se desmonta.
-     *
-     * Antes cada selector/tarjeta creaba y destruía su propio
-     * Spotify.Player. Cada Player es un Spotify Connect device.
-     * Eso generaba IDs nuevos/offline y terminaba en Device not found.
-     *
-     * Ahora existe UN SOLO device durante toda la sesión de Alumni.
-     */
+    listeners.delete(listener);
   };
 }
 
@@ -316,108 +306,61 @@ export async function ensureSpotifyPlayer() {
     return snapshot.deviceId;
   }
 
-  /*
-   * A stale Spotify.Player can exist without ever reaching ready.
-   * Reusing that object leaves the profile button spinning forever.
-   * A user retry now creates one clean Connect device.
-   */
+  if (playerReadyPromise) {
+    return await playerReadyPromise;
+  }
+
   if (
     player &&
-    !connectPromise &&
-    (!snapshot.ready ||
-      !snapshot.deviceId)
+    (!snapshot.ready || !snapshot.deviceId)
   ) {
-    destroyPlayer();
+    disconnectCurrentPlayer();
+
+    emit({
+      ready: false,
+      deviceId: "",
+      isPlaying: false,
+    });
   }
 
-  if (!connectPromise) {
-    connectPromise =
-      createPlayer()
-        .catch(
-          (error) => {
-            destroyPlayer();
+  let creation: Promise<string>;
 
-            emit({
-              error:
-                error?.message ||
-                "No se pudo iniciar Spotify.",
-            });
+  creation = createPlayerAndWaitReady()
+    .catch((error: any) => {
+      disconnectCurrentPlayer();
 
-            throw error;
-          }
-        )
-        .finally(() => {
-          connectPromise =
-            null;
-        });
-  }
+      emit({
+        ready: false,
+        deviceId: "",
+        isPlaying: false,
+        error:
+          error?.message ||
+          "No se pudo iniciar Spotify.",
+      });
 
-  await connectPromise;
+      throw error;
+    })
+    .finally(() => {
+      if (playerReadyPromise === creation) {
+        playerReadyPromise = null;
+      }
+    });
 
-  if (
-    snapshot.ready &&
-    snapshot.deviceId
-  ) {
-    return snapshot.deviceId;
-  }
+  playerReadyPromise = creation;
 
-  /*
-   * connect() puede resolver un instante antes de ready.
-   * Esperamos solo al evento REAL del SDK.
-   */
-  return new Promise<string>(
-    (
-      resolve,
-      reject
-    ) => {
-      const started =
-        Date.now();
+  return await creation;
+}
 
-      const interval =
-        window.setInterval(
-          () => {
-            if (
-              snapshot.ready &&
-              snapshot.deviceId
-            ) {
-              window.clearInterval(
-                interval
-              );
-
-              resolve(
-                snapshot.deviceId
-              );
-
-              return;
-            }
-
-            if (
-              Date.now() -
-                started >
-              6000
-            ) {
-              window.clearInterval(
-                interval
-              );
-
-              reject(
-                new Error(
-                  "Spotify tardó demasiado en activar el reproductor."
-                )
-              );
-            }
-          },
-          80
-        );
-    }
-  );
+export async function retrySpotifyPlayer() {
+  resetPlayer();
+  return await ensureSpotifyPlayer();
 }
 
 export async function activateSpotifyElement() {
   if (
     !player ||
-    typeof player.activateElement !==
-      "function"
+    !snapshot.ready ||
+    typeof player.activateElement !== "function"
   ) {
     return false;
   }
@@ -431,8 +374,10 @@ export async function activateSpotifyElement() {
 }
 
 export async function spotifyPause() {
+  if (!player) return;
+
   try {
-    await player?.pause?.();
+    await player.pause?.();
   } catch {}
 
   emit({
@@ -441,48 +386,27 @@ export async function spotifyPause() {
 }
 
 export async function spotifyResume() {
-  if (
-    !player ||
-    typeof player.resume !==
-      "function"
-  ) {
+  if (!player || typeof player.resume !== "function") {
     return false;
   }
 
   try {
     await player.resume();
 
-    for (
-      let attempt = 0;
-      attempt < 4;
-      attempt++
-    ) {
-      await new Promise<void>(
-        (resolve) =>
-          window.setTimeout(
-            resolve,
-            attempt === 0
-              ? 70
-              : 120
-          )
-      );
+    const started = Date.now();
 
+    while (Date.now() - started < 1800) {
       try {
-        const state =
-          await player.getCurrentState?.();
+        const state = await player.getCurrentState?.();
 
-        if (
-          state &&
-          !state.paused
-        ) {
+        if (state && !state.paused) {
           emit({
             isPlaying: true,
-            positionMs:
-              Number(
-                state.position ||
-                  snapshot.positionMs ||
-                  0
-              ),
+            positionMs: Number(
+              state.position ||
+                snapshot.positionMs ||
+                0
+            ),
             error: "",
           });
 
@@ -490,11 +414,13 @@ export async function spotifyResume() {
         }
       } catch {}
 
-      if (
-        snapshot.isPlaying
-      ) {
+      if (snapshot.isPlaying) {
         return true;
       }
+
+      await new Promise<void>((resolve) =>
+        window.setTimeout(resolve, 120)
+      );
     }
 
     return false;
@@ -503,25 +429,13 @@ export async function spotifyResume() {
   }
 }
 
-export async function spotifySeek(
-  positionMs: number
-) {
-  if (!player) {
-    return false;
-  }
+export async function spotifySeek(positionMs: number) {
+  if (!player) return false;
 
   try {
-    const safe =
-      Math.max(
-        0,
-        Math.round(
-          positionMs
-        )
-      );
+    const safe = Math.max(0, Math.round(positionMs));
 
-    await player.seek(
-      safe
-    );
+    await player.seek(safe);
 
     emit({
       positionMs: safe,
@@ -539,8 +453,4 @@ export function clearSpotifyPlayerError() {
   });
 }
 
-/* ALUMNI_1_3_5_MEDIA_MODAL_SPOTIFY_FIX:SPOTIFY */
-
-/* ALUMNI_1_3_6_CHAT_STABILITY_MEDIA_SPOTIFY:SPOTIFY_MANAGER */
-
-/* ALUMNI_1_3_7_MESSAGING_GLOBAL_STABILITY:SPOTIFY_MANAGER */
+/* ALUMNI_1_3_7_1_SPOTIFY_SINGLETON_READY */

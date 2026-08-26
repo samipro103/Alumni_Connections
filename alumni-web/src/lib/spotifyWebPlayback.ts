@@ -7,6 +7,8 @@ declare global {
   }
 }
 
+const SDK_SRC = "https://sdk.scdn.co/spotify-player.js";
+
 let sdkPromise: Promise<any> | null = null;
 
 export function loadSpotifyWebPlaybackSdk() {
@@ -20,63 +22,66 @@ export function loadSpotifyWebPlaybackSdk() {
     return Promise.resolve(window.Spotify);
   }
 
-  if (sdkPromise) {
-    return sdkPromise;
-  }
+  if (sdkPromise) return sdkPromise;
 
   sdkPromise = new Promise((resolve, reject) => {
-    const existing = document.querySelector(
-      'script[src="https://sdk.scdn.co/spotify-player.js"]'
-    );
+    let settled = false;
+    let timeoutId: number | null = null;
 
-    const previous =
-      window.onSpotifyWebPlaybackSDKReady;
+    const previous = window.onSpotifyWebPlaybackSDKReady;
 
-    window.onSpotifyWebPlaybackSDKReady = () => {
-      try {
-        previous?.();
-      } catch {}
-
-      if (window.Spotify?.Player) {
-        resolve(window.Spotify);
-      } else {
-        reject(
-          new Error(
-            "Spotify Web Playback SDK no inició."
-          )
-        );
-      }
-    };
-
-    if (!existing) {
-      const script =
-        document.createElement("script");
-
-      script.src =
-        "https://sdk.scdn.co/spotify-player.js";
-      script.async = true;
-
-      script.onerror = () => {
-        sdkPromise = null;
-
-        reject(
-          new Error(
-            "No se pudo cargar el reproductor de Spotify."
-          )
-        );
-      };
-
-      document.body.appendChild(
-        script
-      );
+    function finish() {
+      if (settled || !window.Spotify?.Player) return;
+      settled = true;
+      if (timeoutId !== null) window.clearTimeout(timeoutId);
+      resolve(window.Spotify);
     }
 
-    window.setTimeout(() => {
+    function fail(message: string) {
+      if (settled) return;
+      settled = true;
+      if (timeoutId !== null) window.clearTimeout(timeoutId);
+      sdkPromise = null;
+      reject(new Error(message));
+    }
+
+    window.onSpotifyWebPlaybackSDKReady = () => {
+      try { previous?.(); } catch {}
+      finish();
+    };
+
+    let script = document.querySelector(
+      `script[src="${SDK_SRC}"]`
+    ) as HTMLScriptElement | null;
+
+    if (!script) {
+      script = document.createElement("script");
+      script.src = SDK_SRC;
+      script.async = true;
+      script.dataset.alumniSpotifySdk = "true";
+      document.body.appendChild(script);
+    }
+
+    script.addEventListener("load", finish, { once: true });
+    script.addEventListener(
+      "error",
+      () => fail("No se pudo cargar el reproductor de Spotify."),
+      { once: true }
+    );
+
+    timeoutId = window.setTimeout(() => {
       if (window.Spotify?.Player) {
-        resolve(window.Spotify);
+        finish();
+        return;
       }
-    }, 1200);
+
+      fail("Spotify tardó demasiado en cargar el reproductor.");
+    }, 10000);
+
+    window.setTimeout(finish, 0);
   });
 
   return sdkPromise;
 }
+
+/* ALUMNI_1_3_7_1_SPOTIFY_SDK_LOADER */

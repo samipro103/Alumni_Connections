@@ -5,6 +5,7 @@ import {
   Loader2,
   Pause,
   Play,
+  RotateCcw,
 } from "lucide-react";
 import {
   useEffect,
@@ -20,6 +21,9 @@ import {
 import {
   useSpotifyPremiumPlayer,
 } from "@/hooks/useSpotifyPremiumPlayer";
+import {
+  retrySpotifyPlayer,
+} from "@/lib/spotifyPlayerManager";
 
 type Props = {
   track:
@@ -35,51 +39,29 @@ export default function ProfileMusicCard({
   className = "",
   enablePlayback = true,
 }: Props) {
-  const [
-    premiumReady,
-    setPremiumReady,
-  ] =
+  const [premiumReady, setPremiumReady] =
     useState(false);
-
-  const [
-    sessionChecked,
-    setSessionChecked,
-  ] =
+  const [sessionChecked, setSessionChecked] =
     useState(false);
-
-  const [
-    starting,
-    setStarting,
-  ] =
+  const [starting, setStarting] =
+    useState(false);
+  const [retrying, setRetrying] =
     useState(false);
 
   useEffect(() => {
-    setSessionChecked(
-      false
-    );
+    setSessionChecked(false);
+    setPremiumReady(false);
 
-    setPremiumReady(
-      false
-    );
-
-    if (
-      !track ||
-      !enablePlayback
-    ) {
-      setSessionChecked(
-        true
-      );
+    if (!track || !enablePlayback) {
+      setSessionChecked(true);
       return;
     }
 
-    let cancelled =
-      false;
+    let cancelled = false;
 
     void getSpotifyPremiumSession()
       .then((session) => {
-        if (cancelled) {
-          return;
-        }
+        if (cancelled) return;
 
         setPremiumReady(
           Boolean(
@@ -90,16 +72,12 @@ export default function ProfileMusicCard({
       })
       .catch(() => {
         if (!cancelled) {
-          setPremiumReady(
-            false
-          );
+          setPremiumReady(false);
         }
       })
       .finally(() => {
         if (!cancelled) {
-          setSessionChecked(
-            true
-          );
+          setSessionChecked(true);
         }
       });
 
@@ -112,6 +90,7 @@ export default function ProfileMusicCard({
   ]);
 
   const {
+    ready,
     isPlaying,
     error,
     playFragment,
@@ -160,12 +139,32 @@ export default function ProfileMusicCard({
     );
   }
 
+  async function retryPlayer() {
+    if (
+      retrying ||
+      starting
+    ) {
+      return;
+    }
+
+    setRetrying(true);
+
+    try {
+      await retrySpotifyPlayer();
+    } catch {
+      // The manager publishes the exact error.
+    } finally {
+      setRetrying(false);
+    }
+  }
+
   async function mainAction() {
     const currentTrack =
       track;
 
     if (
       starting ||
+      retrying ||
       !sessionChecked ||
       !currentTrack
     ) {
@@ -180,6 +179,11 @@ export default function ProfileMusicCard({
       return;
     }
 
+    if (!ready) {
+      await retryPlayer();
+      return;
+    }
+
     if (isPlaying) {
       await pause();
       return;
@@ -188,12 +192,13 @@ export default function ProfileMusicCard({
     setStarting(true);
 
     try {
-      /*
-       * iOS requires the Spotify audio element
-       * to be activated from the user's click.
-       * Await it before starting playback.
-       */
-      await activateElement();
+      const activated =
+        await activateElement();
+
+      if (!activated) {
+        await retryPlayer();
+        return;
+      }
 
       await playFragment({
         trackId:
@@ -207,6 +212,11 @@ export default function ProfileMusicCard({
       setStarting(false);
     }
   }
+
+  const preparing =
+    premiumReady &&
+    !ready &&
+    !error;
 
   return (
     <div
@@ -229,9 +239,7 @@ export default function ProfileMusicCard({
 
         <div className="min-w-0 flex-1">
           <p className="truncate text-sm font-black text-[var(--app-text)]">
-            {
-              track.track_title
-            }
+            {track.track_title}
           </p>
 
           <p className="mt-0.5 truncate text-[11px] text-[var(--app-muted-2)]">
@@ -253,40 +261,48 @@ export default function ProfileMusicCard({
           }
           disabled={
             !sessionChecked ||
-            starting
+            starting ||
+            retrying ||
+            preparing
           }
           className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[var(--app-soft)] text-[var(--app-text)] ring-1 ring-[var(--app-border)] transition hover:bg-[var(--app-soft-strong)] disabled:cursor-wait disabled:text-[var(--app-muted-3)]"
           aria-label={
-            premiumReady
-              ? isPlaying
-                ? "Pausar"
-                : error
-                ? "Reintentar Spotify"
-                : "Reproducir"
-              : "Abrir en Spotify"
+            !premiumReady
+              ? "Abrir en Spotify"
+              : !ready &&
+                error
+              ? "Reintentar reproductor Spotify"
+              : isPlaying
+              ? "Pausar"
+              : "Reproducir"
           }
         >
           {!sessionChecked ||
-          starting ? (
+          starting ||
+          retrying ||
+          preparing ? (
             <Loader2
               size={15}
               className="animate-spin"
             />
-          ) : premiumReady ? (
-            isPlaying ? (
-              <Pause
-                size={15}
-                fill="currentColor"
-              />
-            ) : (
-              <Play
-                size={15}
-                fill="currentColor"
-              />
-            )
-          ) : (
+          ) : !premiumReady ? (
             <ExternalLink
               size={15}
+            />
+          ) : !ready &&
+            error ? (
+            <RotateCcw
+              size={15}
+            />
+          ) : isPlaying ? (
+            <Pause
+              size={15}
+              fill="currentColor"
+            />
+          ) : (
+            <Play
+              size={15}
+              fill="currentColor"
             />
           )}
         </button>
@@ -297,16 +313,23 @@ export default function ProfileMusicCard({
           <button
             type="button"
             onClick={
-              mainAction
+              retryPlayer
             }
-            className="mt-1 block max-w-full truncate text-left text-[10px] font-semibold text-[var(--app-muted-2)] transition hover:text-[var(--app-text)]"
+            disabled={
+              retrying
+            }
+            className="mt-1 block max-w-full truncate text-left text-[10px] font-semibold text-[var(--app-muted-2)] transition hover:text-[var(--app-text)] disabled:opacity-60"
             title={error}
           >
-            {error} · Toca para reintentar
+            {error}
+            {" · "}
+            Reintentar reproductor
           </button>
         )}
     </div>
   );
 }
 
-/* ALUMNI_1_3_7_SPOTIFY_PROFILE */
+/* ALUMNI_1_3_7_1_SPOTIFY_PROFILE_READY */
+
+/* ALUMNI_1_3_7_2_SPOTIFY_TS_HOTFIX */
