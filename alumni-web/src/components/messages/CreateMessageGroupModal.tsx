@@ -2,6 +2,7 @@
 
 import {
   Check,
+  Crown,
   Loader2,
   Search,
   Users,
@@ -45,25 +46,31 @@ export default function CreateMessageGroupModal({
 }) {
   const { user } =
     useAuth();
+
   const router =
     useRouter();
 
   const [name, setName] =
     useState("");
+
   const [search, setSearch] =
     useState("");
+
   const [people, setPeople] =
     useState<
       FollowedPerson[]
     >([]);
+
   const [
     selected,
     setSelected,
   ] = useState<
     Set<string>
   >(new Set());
+
   const [loading, setLoading] =
     useState(false);
+
   const [creating, setCreating] =
     useState(false);
 
@@ -95,9 +102,7 @@ export default function CreateMessageGroupModal({
             user.id
           );
 
-      if (
-        !active
-      ) {
+      if (!active) {
         return;
       }
 
@@ -112,10 +117,17 @@ export default function CreateMessageGroupModal({
 
       const ids = (
         follows || []
-      ).map(
-        (item: any) =>
-          item.following_id
-      );
+      )
+        .map(
+          (item: any) =>
+            item.following_id
+        )
+        .filter(
+          (id: string) =>
+            id &&
+            id !==
+              user.id
+        );
 
       if (!ids.length) {
         setPeople([]);
@@ -326,30 +338,55 @@ export default function CreateMessageGroupModal({
       aria-modal="true"
       data-pull-refresh-lock="true"
     >
-      <div className="flex max-h-[88dvh] w-full max-w-[560px] flex-col overflow-hidden rounded-t-[30px] border border-white/[0.08] bg-[var(--app-surface)] shadow-2xl sm:rounded-[30px]">
-        <header className="flex shrink-0 items-center gap-3 border-b border-[var(--app-border)] px-5 py-4">
-          <span className="flex h-10 w-10 items-center justify-center rounded-full bg-[var(--app-accent-soft)] text-[var(--app-accent)]">
-            <Users size={18} />
-          </span>
+      <div className="flex h-[min(88dvh,760px)] w-full max-w-[560px] flex-col overflow-hidden rounded-t-[30px] border border-white/[0.08] bg-[var(--app-surface)] shadow-2xl sm:rounded-[30px]">
+        <header className="shrink-0 border-b border-[var(--app-border)] px-5 py-4">
+          <div className="flex items-center gap-3">
+            <span className="flex h-10 w-10 items-center justify-center rounded-full bg-[var(--app-accent-soft)] text-[var(--app-accent)]">
+              <Users
+                size={18}
+              />
+            </span>
 
-          <div className="min-w-0 flex-1">
-            <h2 className="text-[18px] font-black tracking-[-0.025em] text-[var(--app-text)]">
-              Nuevo grupo
-            </h2>
-            <p className="mt-0.5 text-[11px] text-[var(--app-muted-2)]">
-              Elige personas que ya sigues.
-            </p>
+            <div className="min-w-0 flex-1">
+              <h2 className="text-[18px] font-black tracking-[-0.025em] text-[var(--app-text)]">
+                Nuevo grupo
+              </h2>
+
+              <p className="mt-0.5 text-[11px] text-[var(--app-muted-2)]">
+                Tú ya estás incluido como creador.
+              </p>
+            </div>
+
+            <button
+              type="button"
+              onClick={
+                onClose
+              }
+              className="flex h-9 w-9 items-center justify-center rounded-full text-[var(--app-muted)] hover:bg-[var(--app-soft)]"
+            >
+              <X
+                size={16}
+              />
+            </button>
           </div>
 
-          <button
-            type="button"
-            onClick={
-              onClose
-            }
-            className="flex h-9 w-9 items-center justify-center rounded-full text-[var(--app-muted)] hover:bg-[var(--app-soft)]"
-          >
-            <X size={16} />
-          </button>
+          <div className="mt-4 flex items-center gap-3 rounded-[14px] bg-[var(--app-accent-soft)] px-3 py-2.5">
+            <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[var(--app-accent)] text-[var(--app-on-accent)]">
+              <Crown
+                size={14}
+              />
+            </span>
+
+            <div>
+              <p className="text-[11px] font-black text-[var(--app-text)]">
+                Tú · Creador
+              </p>
+
+              <p className="mt-0.5 text-[10px] text-[var(--app-muted-2)]">
+                Admin principal del grupo
+              </p>
+            </div>
+          </div>
         </header>
 
         <div className="shrink-0 px-5 pt-4">
@@ -374,6 +411,7 @@ export default function CreateMessageGroupModal({
               size={16}
               className="text-[var(--app-muted-2)]"
             />
+
             <input
               value={search}
               onChange={(
@@ -383,11 +421,12 @@ export default function CreateMessageGroupModal({
                   event.target.value
                 )
               }
-              placeholder="Buscar personas"
+              placeholder="Buscar personas que sigues"
               className="min-w-0 flex-1 bg-transparent text-[15px] text-[var(--app-text)] outline-none placeholder:text-[var(--app-muted-3)]"
             />
-            <span className="text-[10px] font-black text-[var(--app-accent)]">
-              {selected.size} seleccionados
+
+            <span className="shrink-0 text-[10px] font-black text-[var(--app-accent)]">
+              {selected.size}
             </span>
           </div>
         </div>
@@ -449,6 +488,7 @@ export default function CreateMessageGroupModal({
                             person.username
                           }
                         </p>
+
                         <p className="mt-0.5 truncate text-[11px] text-[var(--app-muted-2)]">
                           {[
                             person.career,
@@ -485,6 +525,7 @@ export default function CreateMessageGroupModal({
               <p className="text-[14px] font-black text-[var(--app-text-soft)]">
                 No encontramos personas
               </p>
+
               <p className="mt-2 text-[12px] leading-5 text-[var(--app-muted-2)]">
                 Sigue personas desde Explorar para poder agregarlas a un grupo.
               </p>
@@ -492,7 +533,7 @@ export default function CreateMessageGroupModal({
           )}
         </div>
 
-        <footer className="shrink-0 border-t border-[var(--app-border)] px-5 py-4 pb-[max(16px,env(safe-area-inset-bottom))]">
+        <footer className="sticky bottom-0 z-20 shrink-0 border-t border-[var(--app-border)] bg-[color-mix(in_srgb,var(--app-surface)_97%,transparent)] px-5 py-4 pb-[max(16px,env(safe-area-inset-bottom))] backdrop-blur-xl">
           <button
             type="button"
             onClick={() =>
@@ -506,7 +547,7 @@ export default function CreateMessageGroupModal({
               selected.size <
                 1
             }
-            className="alumni-accent-button flex h-12 w-full items-center justify-center gap-2 rounded-[16px] text-[13px] font-black disabled:opacity-40"
+            className="alumni-accent-button flex h-[52px] w-full items-center justify-center gap-2 rounded-[16px] text-[13px] font-black disabled:opacity-40"
           >
             {creating && (
               <Loader2
@@ -514,8 +555,13 @@ export default function CreateMessageGroupModal({
                 className="animate-spin"
               />
             )}
+
             Crear grupo
           </button>
+
+          <p className="mt-2 text-center text-[10px] text-[var(--app-muted-3)]">
+            Selecciona al menos una persona además de ti.
+          </p>
         </footer>
       </div>
     </div>

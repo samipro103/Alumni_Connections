@@ -6,10 +6,12 @@ import {
   Image as ImageIcon,
   Loader2,
   Play,
+  Settings2,
   X,
 } from "lucide-react";
 import {
   useEffect,
+  useRef,
   useState,
 } from "react";
 import {
@@ -18,6 +20,34 @@ import {
 import {
   formatMediaSize,
 } from "@/lib/messageMedia";
+
+const MEDIA_PREF_KEY =
+  "alumni_media_save_preference_v1";
+
+type MediaPreference =
+  | "ask"
+  | "view"
+  | "save";
+
+function readPreference(): MediaPreference {
+  if (
+    typeof window ===
+    "undefined"
+  ) {
+    return "ask";
+  }
+
+  const value =
+    window.localStorage.getItem(
+      MEDIA_PREF_KEY
+    );
+
+  return value ===
+    "save" ||
+    value === "view"
+    ? value
+    : "ask";
+}
 
 export default function DeferredMessageMedia({
   bucket,
@@ -45,23 +75,50 @@ export default function DeferredMessageMedia({
     | number
     | null;
 }) {
-  const [menuOpen, setMenuOpen] =
+  const [decisionOpen, setDecisionOpen] =
     useState(false);
+
   const [viewerOpen, setViewerOpen] =
     useState(false);
+
   const [viewerUrl, setViewerUrl] =
     useState("");
+
   const [busy, setBusy] =
     useState<
       "view" | "save" | null
     >(null);
+
   const [error, setError] =
     useState("");
 
+  const [preference, setPreference] =
+    useState<MediaPreference>(
+      "ask"
+    );
+
+  const mountedRef =
+    useRef(false);
+
   const video =
     mediaType === "video";
+
   const sizeLabel =
     formatMediaSize(size);
+
+  useEffect(() => {
+    mountedRef.current =
+      true;
+
+    setPreference(
+      readPreference()
+    );
+
+    return () => {
+      mountedRef.current =
+        false;
+    };
+  }, []);
 
   useEffect(() => {
     return () => {
@@ -76,6 +133,32 @@ export default function DeferredMessageMedia({
       }
     };
   }, [viewerUrl]);
+
+  function remember(
+    next: Exclude<
+      MediaPreference,
+      "ask"
+    >
+  ) {
+    setPreference(next);
+
+    window.localStorage.setItem(
+      MEDIA_PREF_KEY,
+      next
+    );
+  }
+
+  function resetPreference() {
+    setPreference("ask");
+
+    window.localStorage.removeItem(
+      MEDIA_PREF_KEY
+    );
+
+    setDecisionOpen(
+      true
+    );
+  }
 
   async function signedUrl() {
     if (!path) {
@@ -111,9 +194,7 @@ export default function DeferredMessageMedia({
     return data.signedUrl;
   }
 
-  async function viewNow() {
-    if (busy) return;
-
+  async function openViewer() {
     setBusy("view");
     setError("");
 
@@ -121,20 +202,36 @@ export default function DeferredMessageMedia({
       const url =
         await signedUrl();
 
+      if (
+        !mountedRef.current
+      ) {
+        return;
+      }
+
       setViewerUrl(url);
-      setMenuOpen(false);
-      setViewerOpen(true);
+      setDecisionOpen(
+        false
+      );
+      setViewerOpen(
+        true
+      );
     } catch (cause: any) {
       setError(
         cause?.message ||
           "No se pudo abrir."
       );
     } finally {
-      setBusy(null);
+      if (
+        mountedRef.current
+      ) {
+        setBusy(null);
+      }
     }
   }
 
-  async function saveNow() {
+  async function saveToDevice({
+    alsoView = false,
+  } = {}) {
     if (
       busy ||
       !path
@@ -202,11 +299,20 @@ export default function DeferredMessageMedia({
         });
 
       if (canNativeShare) {
-        await navigator.share({
-          files: [file],
-          title:
-            "Guardar archivo de Alumni",
-        });
+        try {
+          await navigator.share({
+            files: [file],
+            title:
+              "Guardar en dispositivo",
+          });
+        } catch (cause: any) {
+          if (
+            cause?.name !==
+            "AbortError"
+          ) {
+            throw cause;
+          }
+        }
       } else {
         const url =
           URL.createObjectURL(
@@ -234,26 +340,90 @@ export default function DeferredMessageMedia({
             URL.revokeObjectURL(
               url
             ),
-          1000
+          1500
         );
       }
 
-      setMenuOpen(false);
-    } catch (cause: any) {
       if (
-        cause?.name ===
-        "AbortError"
+        alsoView &&
+        mountedRef.current
       ) {
-        return;
+        const url =
+          await signedUrl();
+
+        setViewerUrl(url);
+        setViewerOpen(true);
       }
 
-      setError(
-        cause?.message ||
-          "No se pudo guardar."
+      setDecisionOpen(
+        false
       );
+    } catch (cause: any) {
+      if (
+        cause?.name !==
+        "AbortError"
+      ) {
+        setError(
+          cause?.message ||
+            "No se pudo guardar."
+        );
+      }
     } finally {
-      setBusy(null);
+      if (
+        mountedRef.current
+      ) {
+        setBusy(null);
+      }
     }
+  }
+
+  async function handleMediaTap() {
+    if (
+      busy ||
+      !path
+    ) {
+      return;
+    }
+
+    const current =
+      readPreference();
+
+    setPreference(
+      current
+    );
+
+    if (
+      current === "ask"
+    ) {
+      setDecisionOpen(
+        true
+      );
+      return;
+    }
+
+    if (
+      current === "save"
+    ) {
+      await saveToDevice({
+        alsoView: true,
+      });
+      return;
+    }
+
+    await openViewer();
+  }
+
+  async function chooseViewOnly() {
+    remember("view");
+    await openViewer();
+  }
+
+  async function chooseSaveAlways() {
+    remember("save");
+
+    await saveToDevice({
+      alsoView: true,
+    });
   }
 
   return (
@@ -261,13 +431,13 @@ export default function DeferredMessageMedia({
       <button
         type="button"
         onClick={() =>
-          setMenuOpen(true)
+          void handleMediaTap()
         }
-        className="group/media relative block min-h-[150px] w-full overflow-hidden bg-[var(--app-bg-2)] text-left"
+        className="group/media relative block min-h-[175px] w-full overflow-hidden bg-[var(--app-surface-2)] text-left"
         aria-label={
           video
-            ? "Abrir video"
-            : "Abrir foto"
+            ? "Descargar y ver video"
+            : "Descargar y ver foto"
         }
       >
         {preview ? (
@@ -275,36 +445,41 @@ export default function DeferredMessageMedia({
             src={preview}
             alt=""
             aria-hidden="true"
-            className="absolute inset-[-12%] h-[124%] w-[124%] scale-110 object-cover blur-xl saturate-75"
+            className="absolute inset-0 h-full w-full scale-110 object-cover blur-[18px] saturate-75 brightness-[0.72]"
           />
         ) : (
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,color-mix(in_srgb,var(--app-accent)_16%,transparent),transparent_42%),linear-gradient(145deg,var(--app-surface-2),var(--app-bg))]" />
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_28%_18%,color-mix(in_srgb,var(--app-accent)_18%,transparent),transparent_44%),linear-gradient(145deg,var(--app-surface-2),var(--app-bg))]" />
         )}
 
-        <div className="absolute inset-0 bg-black/20" />
+        <div className="absolute inset-0 bg-black/18" />
 
-        <div className="relative flex min-h-[150px] flex-col items-center justify-center gap-2 px-5 py-8 text-center">
-          <span className="flex h-11 w-11 items-center justify-center rounded-full border border-white/10 bg-black/35 text-white backdrop-blur-md">
-            {video ? (
+        <div className="relative flex min-h-[175px] flex-col items-center justify-center gap-2 px-5 py-8 text-center">
+          <span className="flex h-12 w-12 items-center justify-center rounded-full border border-white/15 bg-black/42 text-white shadow-[0_10px_30px_rgba(0,0,0,.25)] backdrop-blur-md transition group-active/media:scale-95">
+            {busy ? (
+              <Loader2
+                size={19}
+                className="animate-spin"
+              />
+            ) : video ? (
               <Play
                 size={19}
                 fill="currentColor"
               />
             ) : (
-              <ImageIcon
-                size={19}
+              <Download
+                size={18}
               />
             )}
           </span>
 
           <p className="text-[13px] font-black text-white">
             {video
-              ? "Video privado"
-              : "Foto privada"}
+              ? "Video"
+              : "Foto"}
           </p>
 
-          <p className="text-[10px] font-semibold text-white/65">
-            Toca para ver
+          <p className="text-[10px] font-semibold text-white/70">
+            Toca para descargar
             {sizeLabel
               ? ` · ${sizeLabel}`
               : ""}
@@ -312,48 +487,35 @@ export default function DeferredMessageMedia({
         </div>
       </button>
 
-      {menuOpen && (
+      {decisionOpen && (
         <div
-          className="fixed inset-0 z-[2147483200] flex items-end justify-center bg-black/72 p-0 backdrop-blur-sm sm:items-center sm:p-5"
+          className="fixed inset-0 z-[2147483200] flex items-end justify-center bg-black/72 backdrop-blur-md sm:items-center sm:p-5"
           role="dialog"
           aria-modal="true"
           data-pull-refresh-lock="true"
-          onMouseDown={(
-            event
-          ) => {
-            if (
-              event.target ===
-              event.currentTarget
-            ) {
-              setMenuOpen(
-                false
-              );
-            }
-          }}
         >
-          <div className="w-full max-w-[430px] rounded-t-[28px] border border-white/[0.08] bg-[var(--app-surface)] p-5 pb-[max(20px,env(safe-area-inset-bottom))] shadow-2xl sm:rounded-[28px]">
+          <div className="w-full max-w-[440px] rounded-t-[30px] border border-white/[0.08] bg-[var(--app-surface)] p-5 pb-[max(22px,env(safe-area-inset-bottom))] shadow-2xl sm:rounded-[30px]">
             <div className="flex items-start gap-3">
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[var(--app-accent-soft)] text-[var(--app-accent)]">
+                <Download
+                  size={18}
+                />
+              </div>
+
               <div className="min-w-0 flex-1">
-                <p className="text-[10px] font-black uppercase tracking-[0.13em] text-[var(--app-accent)]">
-                  Multimedia privada
-                </p>
-                <h3 className="mt-1 truncate text-[17px] font-black text-[var(--app-text)]">
-                  {name ||
-                    (video
-                      ? "Video"
-                      : "Foto")}
+                <h3 className="text-[18px] font-black tracking-[-0.025em] text-[var(--app-text)]">
+                  Fotos y videos
                 </h3>
-                {sizeLabel && (
-                  <p className="mt-1 text-[11px] text-[var(--app-muted-2)]">
-                    {sizeLabel}
-                  </p>
-                )}
+
+                <p className="mt-1 text-[12px] leading-5 text-[var(--app-muted)]">
+                  ¿Quieres que los archivos que abras se guarden también en tu dispositivo?
+                </p>
               </div>
 
               <button
                 type="button"
                 onClick={() =>
-                  setMenuOpen(
+                  setDecisionOpen(
                     false
                   )
                 }
@@ -363,48 +525,22 @@ export default function DeferredMessageMedia({
               </button>
             </div>
 
-            <p className="mt-4 text-[12px] leading-5 text-[var(--app-muted)]">
-              El archivo original no se descarga hasta que tú lo decidas.
-            </p>
-
             {error && (
-              <p className="mt-3 text-[11px] font-bold text-red-400">
+              <p className="mt-4 rounded-xl bg-red-500/10 px-3 py-2 text-[11px] font-bold text-red-400">
                 {error}
               </p>
             )}
 
-            <div className="mt-5 grid grid-cols-2 gap-2">
+            <div className="mt-6 space-y-2">
               <button
                 type="button"
                 onClick={() =>
-                  void viewNow()
+                  void chooseSaveAlways()
                 }
                 disabled={
                   Boolean(busy)
                 }
-                className="flex h-12 items-center justify-center gap-2 rounded-[15px] border border-[var(--app-border)] bg-[var(--app-soft)] text-[12px] font-black text-[var(--app-text)] disabled:opacity-50"
-              >
-                {busy ===
-                "view" ? (
-                  <Loader2
-                    size={16}
-                    className="animate-spin"
-                  />
-                ) : (
-                  <Eye size={16} />
-                )}
-                Solo ver
-              </button>
-
-              <button
-                type="button"
-                onClick={() =>
-                  void saveNow()
-                }
-                disabled={
-                  Boolean(busy)
-                }
-                className="alumni-accent-button flex h-12 items-center justify-center gap-2 rounded-[15px] text-[12px] font-black disabled:opacity-50"
+                className="alumni-accent-button flex h-13 w-full items-center justify-center gap-2 rounded-[16px] text-[13px] font-black disabled:opacity-50"
               >
                 {busy ===
                 "save" ? (
@@ -417,12 +553,36 @@ export default function DeferredMessageMedia({
                     size={16}
                   />
                 )}
-                Guardar
+                Guardar automáticamente
+              </button>
+
+              <button
+                type="button"
+                onClick={() =>
+                  void chooseViewOnly()
+                }
+                disabled={
+                  Boolean(busy)
+                }
+                className="flex h-13 w-full items-center justify-center gap-2 rounded-[16px] border border-[var(--app-border)] bg-[var(--app-soft)] text-[13px] font-black text-[var(--app-text)] disabled:opacity-50"
+              >
+                {busy ===
+                "view" ? (
+                  <Loader2
+                    size={16}
+                    className="animate-spin"
+                  />
+                ) : (
+                  <Eye
+                    size={16}
+                  />
+                )}
+                Solo ver
               </button>
             </div>
 
-            <p className="mt-3 text-center text-[10px] leading-4 text-[var(--app-muted-3)]">
-              En teléfonos compatibles se abrirán las opciones nativas del dispositivo.
+            <p className="mt-4 text-center text-[10px] leading-4 text-[var(--app-muted-3)]">
+              Puedes cambiar esta decisión desde cualquier foto o video abierto.
             </p>
           </div>
         </div>
@@ -431,55 +591,87 @@ export default function DeferredMessageMedia({
       {viewerOpen &&
         viewerUrl && (
           <div
-            className="fixed inset-0 z-[2147483300] flex flex-col bg-black"
+            className="fixed inset-0 z-[2147483300] overflow-hidden bg-black"
             role="dialog"
             aria-modal="true"
             data-pull-refresh-lock="true"
           >
-            <div className="flex h-14 shrink-0 items-center justify-between px-3 pt-[env(safe-area-inset-top)]">
-              <p className="max-w-[75%] truncate text-[12px] font-bold text-white/70">
-                {name ||
-                  (video
-                    ? "Video"
-                    : "Foto")}
-              </p>
-
-              <button
-                type="button"
-                onClick={() => {
-                  setViewerOpen(
-                    false
-                  );
-                  setViewerUrl(
-                    ""
-                  );
-                }}
-                className="flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white"
-                aria-label="Cerrar"
-              >
-                <X size={18} />
-              </button>
-            </div>
-
-            <div className="flex min-h-0 flex-1 items-center justify-center p-3">
-              {video ? (
-                <video
-                  src={viewerUrl}
-                  controls
-                  autoPlay
-                  playsInline
-                  className="max-h-full max-w-full object-contain"
-                />
-              ) : (
+            {!video && (
+              <>
                 <img
                   src={viewerUrl}
-                  alt={
-                    name ||
-                    "Foto"
-                  }
-                  className="max-h-full max-w-full object-contain"
+                  alt=""
+                  aria-hidden="true"
+                  className="absolute inset-[-8%] h-[116%] w-[116%] scale-110 object-cover blur-[42px] brightness-[0.42] saturate-75"
                 />
-              )}
+                <div className="absolute inset-0 bg-black/24" />
+              </>
+            )}
+
+            {video && (
+              <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,color-mix(in_srgb,var(--app-accent)_8%,black),black_72%)]" />
+            )}
+
+            <div className="relative z-10 flex h-full flex-col">
+              <header className="flex min-h-[58px] shrink-0 items-center gap-2 px-3 pt-[env(safe-area-inset-top)]">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setViewerOpen(
+                      false
+                    );
+                    setViewerUrl(
+                      ""
+                    );
+                  }}
+                  className="flex h-10 w-10 items-center justify-center rounded-full bg-black/35 text-white backdrop-blur-md"
+                  aria-label="Cerrar"
+                >
+                  <X size={18} />
+                </button>
+
+                <p className="min-w-0 flex-1 truncate text-[12px] font-bold text-white/75">
+                  {name ||
+                    (video
+                      ? "Video"
+                      : "Foto")}
+                </p>
+
+                <button
+                  type="button"
+                  onClick={
+                    resetPreference
+                  }
+                  className="flex h-10 w-10 items-center justify-center rounded-full bg-black/35 text-white backdrop-blur-md"
+                  aria-label="Cambiar preferencia de descarga"
+                  title="Preferencia de descarga"
+                >
+                  <Settings2
+                    size={17}
+                  />
+                </button>
+              </header>
+
+              <div className="flex min-h-0 flex-1 items-center justify-center px-2 pb-[max(8px,env(safe-area-inset-bottom))]">
+                {video ? (
+                  <video
+                    src={viewerUrl}
+                    controls
+                    autoPlay
+                    playsInline
+                    className="max-h-full max-w-full rounded-[10px] object-contain"
+                  />
+                ) : (
+                  <img
+                    src={viewerUrl}
+                    alt={
+                      name ||
+                      "Foto"
+                    }
+                    className="max-h-full max-w-full object-contain drop-shadow-[0_20px_60px_rgba(0,0,0,.35)]"
+                  />
+                )}
+              </div>
             </div>
           </div>
         )}

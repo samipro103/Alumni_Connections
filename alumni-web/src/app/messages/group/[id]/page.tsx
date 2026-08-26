@@ -6,6 +6,7 @@ import {
   CheckCheck,
   ImagePlus,
   Loader2,
+  MoreHorizontal,
   Send,
   Users,
   X,
@@ -26,6 +27,7 @@ import {
 } from "@/components/auth/AuthProvider";
 import AppShell from "@/components/layout/AppShell";
 import DeferredMessageMedia from "@/components/messages/DeferredMessageMedia";
+import GroupAdminPanel from "@/components/messages/GroupAdminPanel";
 import MessageProTools from "@/components/messages/MessageProTools";
 import {
   ComposerReplyPreview,
@@ -104,6 +106,11 @@ export default function GroupChatPage() {
     useState("");
   const [typingName, setTypingName] =
     useState("");
+
+  const [
+    groupInfoOpen,
+    setGroupInfoOpen,
+  ] = useState(false);
 
   const fileRef =
     useRef<HTMLInputElement>(
@@ -1048,15 +1055,40 @@ export default function GroupChatPage() {
               />
             </span>
 
-            <div className="min-w-0 flex-1">
+            <button
+              type="button"
+              onClick={() =>
+                setGroupInfoOpen(
+                  true
+                )
+              }
+              className="min-w-0 flex-1 text-left"
+              aria-label="Información del grupo"
+            >
               <h1 className="truncate text-[16px] font-black text-[var(--app-text)]">
                 {group?.name ||
                   "Grupo"}
               </h1>
+
               <p className="mt-0.5 text-[11px] text-[var(--app-muted-2)]">
                 {memberText}
               </p>
-            </div>
+            </button>
+
+            <button
+              type="button"
+              onClick={() =>
+                setGroupInfoOpen(
+                  true
+                )
+              }
+              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-[var(--app-muted-2)] hover:bg-[var(--app-soft)]"
+              aria-label="Opciones del grupo"
+            >
+              <MoreHorizontal
+                size={19}
+              />
+            </button>
           </div>
         </header>
 
@@ -1395,7 +1427,28 @@ export default function GroupChatPage() {
             </button>
           </div>
         </form>
+        <GroupAdminPanel
+          open={
+            groupInfoOpen
+          }
+          onClose={() =>
+            setGroupInfoOpen(
+              false
+            )
+          }
+          group={
+            group
+          }
+          members={
+            members
+          }
+          onChanged={() =>
+            load(false)
+          }
+        />
       </div>
     </AppShell>
   );
 }
+
+/* ALUMNI_1_3_1_GROUP_ADMIN_MEDIA_UX:GROUP_PAGE */
