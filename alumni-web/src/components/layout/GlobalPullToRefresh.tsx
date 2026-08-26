@@ -5,6 +5,9 @@ import {
   useRef,
   useState,
 } from "react";
+import {
+  usePathname,
+} from "next/navigation";
 
 const TRIGGER_DISTANCE = 80;
 const MAX_PULL = 122;
@@ -778,6 +781,27 @@ function AnimatedBrand({
 }
 
 export default function GlobalPullToRefresh() {
+  const pathname =
+    usePathname();
+
+  /*
+   * Chats own their vertical gesture.
+   * Pull-to-refresh is disabled ONLY
+   * inside an actual conversation:
+   * /messages/[username]
+   * /messages/group/[id]
+   *
+   * /messages inbox and the rest of Alumni
+   * keep the global refresh.
+   */
+  const chatRefreshDisabled =
+    Boolean(
+      pathname &&
+      pathname.startsWith(
+        "/messages/"
+      )
+    );
+
   const [
     pull,
     setPull,
@@ -797,6 +821,14 @@ export default function GlobalPullToRefresh() {
   const activeRef =
     useRef(false);
 
+  const candidateRef =
+    useRef(false);
+
+  const gestureRef =
+    useRef<
+      "pending" | "pull" | "scroll"
+    >("pending");
+
   const pullRef =
     useRef(0);
 
@@ -809,6 +841,32 @@ export default function GlobalPullToRefresh() {
   }, [refreshing]);
 
   useEffect(() => {
+    if (
+      chatRefreshDisabled
+    ) {
+      activeRef.current =
+        false;
+
+      pullRef.current = 0;
+
+      refreshingRef.current =
+        false;
+
+      setPull(0);
+      setRefreshing(false);
+
+      const target =
+        refreshTarget();
+
+      if (target) {
+        clearTargetStyles(
+          target
+        );
+      }
+
+      return;
+    }
+
     const html =
       document.documentElement;
 
@@ -832,6 +890,15 @@ export default function GlobalPullToRefresh() {
     function reset(
       animate = true
     ) {
+      const hadPull =
+        pullRef.current > 0;
+
+      candidateRef.current =
+        false;
+
+      gestureRef.current =
+        "pending";
+
       activeRef.current =
         false;
 
@@ -840,7 +907,7 @@ export default function GlobalPullToRefresh() {
 
       setContentOffset(
         0,
-        animate
+        animate && hadPull
       );
     }
 
@@ -849,7 +916,7 @@ export default function GlobalPullToRefresh() {
     ) {
       if (
         refreshingRef.current ||
-        window.scrollY > 0 ||
+        window.scrollY > 1 ||
         event.touches.length !== 1 ||
         blockedTarget(
           event.target
@@ -858,6 +925,8 @@ export default function GlobalPullToRefresh() {
           '[data-pull-refresh-lock="true"]'
         )
       ) {
+        candidateRef.current =
+          false;
         activeRef.current =
           false;
         return;
@@ -872,20 +941,22 @@ export default function GlobalPullToRefresh() {
       startXRef.current =
         touch.clientX;
 
-      activeRef.current = true;
-      pullRef.current = 0;
+      candidateRef.current =
+        true;
 
-      setContentOffset(
-        0,
-        false
-      );
+      gestureRef.current =
+        "pending";
+
+      activeRef.current =
+        false;
+
+      pullRef.current = 0;
     }
 
     function onTouchMove(
       event: TouchEvent
     ) {
       if (
-        !activeRef.current ||
         event.touches.length !== 1
       ) {
         return;
@@ -902,30 +973,89 @@ export default function GlobalPullToRefresh() {
         touch.clientX -
         startXRef.current;
 
+      const absY =
+        Math.abs(deltaY);
+
+      const absX =
+        Math.abs(deltaX);
+
       if (
-        Math.abs(deltaX) >
-        Math.abs(deltaY) *
-          0.8
+        candidateRef.current &&
+        !activeRef.current
       ) {
-        reset();
+        if (
+          Math.max(
+            absX,
+            absY
+          ) < 10
+        ) {
+          return;
+        }
+
+        const verticalPull =
+          deltaY > 10 &&
+          absY >
+            absX * 1.2 &&
+          window.scrollY <= 1;
+
+        if (!verticalPull) {
+          candidateRef.current =
+            false;
+
+          gestureRef.current =
+            "scroll";
+
+          return;
+        }
+
+        activeRef.current =
+          true;
+
+        gestureRef.current =
+          "pull";
+      }
+
+      if (
+        !activeRef.current ||
+        gestureRef.current !==
+          "pull"
+      ) {
+        return;
+      }
+
+      if (
+        absX >
+        absY * 0.8
+      ) {
+        reset(false);
         return;
       }
 
       if (
         deltaY <= 0 ||
-        window.scrollY > 0
+        window.scrollY > 1
       ) {
-        reset();
+        reset(false);
         return;
       }
 
       event.preventDefault();
 
+      const effectiveDelta =
+        Math.max(
+          0,
+          deltaY - 8
+        );
+
       const distance =
         Math.min(
           MAX_PULL,
-          deltaY * 0.5
+          effectiveDelta * 0.5
         );
+
+      if (distance < 1) {
+        return;
+      }
 
       pullRef.current =
         distance;
@@ -939,9 +1069,14 @@ export default function GlobalPullToRefresh() {
     }
 
     function onTouchEnd() {
+      candidateRef.current =
+        false;
+
       if (
         !activeRef.current
       ) {
+        gestureRef.current =
+          "pending";
         return;
       }
 
@@ -1062,7 +1197,15 @@ export default function GlobalPullToRefresh() {
         true
       );
     };
-  }, []);
+  }, [
+    chatRefreshDisabled,
+  ]);
+
+  if (
+    chatRefreshDisabled
+  ) {
+    return null;
+  }
 
   const progress =
     clamp(
@@ -1120,3 +1263,7 @@ export default function GlobalPullToRefresh() {
     </div>
   );
 }
+
+/* ALUMNI_1_2_3_SCROLL_MESSAGES_STABILITY:PULL_REFRESH */
+
+/* ALUMNI_1_3_6_1_CHAT_NO_PULL_REFRESH */
