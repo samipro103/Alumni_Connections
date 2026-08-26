@@ -2,7 +2,7 @@
 
 import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import "./feed-actions.css";
+import "./feed-flat-actions.css";
 import {
   Heart,
   MessageCircle,
@@ -1002,10 +1002,7 @@ const formattedPosts = mediaReadyPosts.map((post: any) => {
                 <article
                   id={`post-${post.id}`}
                   key={post.id}
-                  className={`alumni-post-card relative overflow-visible bg-transparent py-5 transition-[background-color] duration-500 first:pt-2 ${focusedPostId === post.id
-                      ? "bg-[var(--app-accent-soft)]"
-                      : ""
-                    }`}
+                  className="alumni-post-card relative overflow-visible py-5 first:pt-2"
                 >
                   <div className="px-0 pb-3 pt-0 sm:px-1">
                     <div className="flex items-start gap-3">
@@ -1085,45 +1082,23 @@ const formattedPosts = mediaReadyPosts.map((post: any) => {
                             : "auto"
                         }
                         draggable={false}
-                        className="block max-h-[760px] w-full bg-transparent object-cover sm:rounded-[2px] sm:object-contain"
+                        className="block max-h-[760px] w-full bg-transparent object-cover sm:object-contain"
                       />
                     </button>
                   )}
 
                   <div className="alumni-post-footer px-0 pb-0 pt-3 sm:px-1">
-                    {(post.likesCount > 0 ||
-                      (post.comments?.length || 0) > 0 ||
-                      (post.repostsCount || 0) > 0) && (
-                      <div className="alumni-post-stats mb-2 flex items-center gap-3 px-1 text-[11px] font-semibold text-[var(--app-muted-2)]">
-                        {post.likesCount > 0 && (
-                          <span>
-                            {post.likesCount} me gusta
-                          </span>
-                        )}
-
-                        <span className="ml-auto flex items-center gap-3">
-                          {(post.comments?.length || 0) > 0 && (
-                            <span>
-                              {post.comments.length} {post.comments.length === 1 ? "comentario" : "comentarios"}
-                            </span>
-                          )}
-
-                          {(post.repostsCount || 0) > 0 && (
-                            <span>
-                              {post.repostsCount} {post.repostsCount === 1 ? "compartido" : "compartidos"}
-                            </span>
-                          )}
-                        </span>
-                      </div>
-                    )}
-
-                    <div className="alumni-post-actions flex items-center gap-1 border-b border-[var(--app-border)] pb-3">
+                    <div className="alumni-post-actions">
                       <button
                         onClick={() => toggleLike(post.id, post.liked)}
-                        className={`flex h-9 items-center gap-2 rounded-xl px-3 text-sm font-semibold transition ${post.liked
-                            ? "bg-red-500/10 text-red-400"
-                            : "text-[var(--app-muted)] hover:bg-[var(--app-soft)] hover:text-[var(--app-text)]"
-                          }`}
+                        data-active={post.liked ? "true" : "false"}
+                        className="alumni-like-action"
+                        aria-label={
+                          post.liked
+                            ? "Quitar Me gusta"
+                            : "Me gusta"
+                        }
+                        title="Me gusta"
                       >
                         <Heart fill={post.liked ? "currentColor" : "none"} size={18} />
                         <span>{post.likesCount}</span>
@@ -1136,7 +1111,8 @@ const formattedPosts = mediaReadyPosts.map((post: any) => {
                             [post.id]: !current[post.id],
                           }))
                         }
-                        className="flex h-9 items-center gap-2 rounded-xl px-3 text-sm font-semibold text-zinc-500 transition hover:bg-white/[0.04] hover:text-zinc-200"
+                        aria-label="Comentarios"
+                        title="Comentarios"
                       >
                         <MessageCircle size={18} />
                         <span>{post.comments?.length || 0}</span>
@@ -1152,11 +1128,8 @@ const formattedPosts = mediaReadyPosts.map((post: any) => {
                             )
                           )
                         }
-                        className={`flex h-9 items-center gap-2 rounded-xl px-3 text-sm font-semibold transition ${
-                          post.reposted
-                            ? "bg-emerald-500/10 text-emerald-400"
-                            : "text-[var(--app-muted)] hover:bg-[var(--app-soft)] hover:text-[var(--app-text)]"
-                        }`}
+                        data-active={post.reposted ? "true" : "false"}
+                        className="alumni-repost-action"
                         aria-label={
                           post.reposted
                             ? "Quitar compartido"
@@ -1178,7 +1151,7 @@ const formattedPosts = mediaReadyPosts.map((post: any) => {
                             post
                           )
                         }
-                        className="ml-auto flex h-9 items-center justify-center rounded-xl px-2.5 text-[var(--app-muted)] transition hover:bg-[var(--app-soft)] hover:text-[var(--app-accent)]"
+                        className="alumni-action-right-start"
                         aria-label="Compartir en historia"
                         title="Compartir en historia"
                       >
@@ -1189,12 +1162,39 @@ const formattedPosts = mediaReadyPosts.map((post: any) => {
 
                       <button
                         onClick={() => sharePost(post)}
-                        className="flex h-9 items-center gap-2 rounded-xl px-3 text-sm font-semibold text-[var(--app-muted)] transition hover:bg-[var(--app-soft)] hover:text-[var(--app-text)]"
+                        aria-label="Compartir publicación"
+                        title="Compartir"
                       >
                         <Share2 size={18} />
                         <span className="hidden sm:inline">Compartir</span>
                       </button>
                     </div>
+
+                    {(post.likesCount > 0 ||
+                      (post.comments?.length || 0) > 0 ||
+                      (post.repostsCount || 0) > 0) && (
+                      <div className="alumni-post-stats">
+                        {post.likesCount > 0 && (
+                          <span className="alumni-stat-primary">
+                            {post.likesCount} me gusta
+                          </span>
+                        )}
+
+                        <span className="alumni-stat-tail">
+                          {(post.comments?.length || 0) > 0 && (
+                            <span>
+                              {post.comments.length} {post.comments.length === 1 ? "comentario" : "comentarios"}
+                            </span>
+                          )}
+
+                          {(post.repostsCount || 0) > 0 && (
+                            <span>
+                              {post.repostsCount} {post.repostsCount === 1 ? "compartido" : "compartidos"}
+                            </span>
+                          )}
+                        </span>
+                      </div>
+                    )}
 
                     {commentsOpen && (
                       <div className="pt-4">
@@ -1327,3 +1327,5 @@ export default function FeedPage() {
 /* ALUMNI_1_3_8_OPEN_FEED_REPOSTS */
 
 /* ALUMNI_1_3_8_1_FEED_ACTIONS_POLISH */
+
+/* ALUMNI_1_3_8_2_FLAT_FEED_ACTION_LAYOUT */
