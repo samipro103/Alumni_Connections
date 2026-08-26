@@ -1,9 +1,9 @@
 /*
- * ALUMNI 1.3.8.2 — Flat Feed + Professional Actions
- * Scoped only to /feed through .alumni-feed-page.
+ * ALUMNI 1.3.8.3 — Instagram-style feed actions + overflow menu
+ * Scoped only to /feed.
  */
 
-/* Kill the legacy global card treatment completely. */
+/* Feed posts must stay fully flat. */
 .alumni-feed-page .alumni-post-card,
 .alumni-feed-page .alumni-post-card:hover {
   border: 0 !important;
@@ -15,15 +15,14 @@
   filter: none !important;
 }
 
-/* No hidden panel behind the footer/content either. */
 .alumni-feed-page .alumni-post-footer {
   background: transparent !important;
   box-shadow: none !important;
 }
 
-/* The image really reaches the feed edges on mobile. */
-.alumni-feed-page .alumni-post-media {
-  padding-inline: 0 !important;
+.alumni-feed-page .alumni-post-media,
+.alumni-feed-page .alumni-post-media-wrap {
+  padding: 0 !important;
   border: 0 !important;
   border-radius: 0 !important;
   background: transparent !important;
@@ -32,34 +31,44 @@
 
 .alumni-feed-page .alumni-post-media img {
   border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
   box-shadow: none !important;
 }
 
 /*
- * Editorial action row:
- * left = Like / Comment / Repost
- * right = Story / Native share
+ * IMPORTANT:
+ * globals.css forces .alumni-post-actions to a 3-column GRID !important.
+ * This rule intentionally overrides it inside Feed.
  */
 .alumni-feed-page .alumni-post-actions {
-  display: flex;
-  align-items: center;
-  width: 100%;
-  min-height: 44px;
-  gap: 4px !important;
-  padding: 2px 0 0 !important;
+  display: flex !important;
+  grid-template-columns: none !important;
+  grid-auto-flow: unset !important;
+  flex-wrap: nowrap !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  width: 100% !important;
+  min-height: 48px;
+  gap: 6px !important;
+  padding: 4px 0 0 !important;
   border: 0 !important;
   background: transparent !important;
   box-shadow: none !important;
+  overflow: visible !important;
 }
 
 .alumni-feed-page .alumni-post-actions > button {
   position: relative;
   display: inline-flex !important;
-  align-items: center;
-  justify-content: center;
-  width: 40px;
-  min-width: 40px;
-  height: 40px !important;
+  align-items: center !important;
+  justify-content: center !important;
+  flex: 0 0 42px !important;
+  width: 42px !important;
+  min-width: 42px !important;
+  max-width: 42px !important;
+  height: 42px !important;
+  margin: 0 !important;
   padding: 0 !important;
   border: 0 !important;
   border-radius: 999px !important;
@@ -68,8 +77,8 @@
   color: var(--app-muted) !important;
   transition:
     color 150ms ease,
-    transform 120ms ease,
-    background-color 150ms ease !important;
+    background-color 150ms ease,
+    transform 120ms ease !important;
 }
 
 .alumni-feed-page .alumni-post-actions > button:hover {
@@ -81,7 +90,6 @@
   transform: scale(.9);
 }
 
-/* No duplicate counters inside the icons. */
 .alumni-feed-page .alumni-post-actions > button > span {
   position: absolute !important;
   width: 1px !important;
@@ -93,12 +101,11 @@
 }
 
 .alumni-feed-page .alumni-post-actions svg {
-  width: 22px;
-  height: 22px;
-  stroke-width: 1.8;
+  width: 23px;
+  height: 23px;
+  stroke-width: 1.75;
 }
 
-/* Active states are just color: no colored pills. */
 .alumni-feed-page .alumni-post-actions .alumni-like-action[data-active="true"] {
   color: #f05b72 !important;
   background: transparent !important;
@@ -109,19 +116,14 @@
   background: transparent !important;
 }
 
-/* Right-side utilities. */
-.alumni-feed-page .alumni-post-actions .alumni-action-right-start {
-  margin-left: auto !important;
-}
-
-/* Stats now sit UNDER the icon row, Instagram-style. */
+/* Stats under actions, like Instagram. */
 .alumni-feed-page .alumni-post-stats {
-  display: flex;
+  display: flex !important;
   align-items: center;
   flex-wrap: wrap;
   gap: 6px 12px !important;
   min-height: 20px;
-  margin: 3px 0 0 !important;
+  margin: 1px 0 0 !important;
   padding: 0 2px !important;
   border: 0 !important;
   color: var(--app-muted-2) !important;
@@ -133,7 +135,7 @@
 
 .alumni-feed-page .alumni-post-stats .alumni-stat-primary {
   color: var(--app-text-soft) !important;
-  font-weight: 750 !important;
+  font-weight: 760 !important;
 }
 
 .alumni-feed-page .alumni-post-stats .alumni-stat-tail {
@@ -143,20 +145,121 @@
   gap: 12px;
 }
 
+/* Three dots on top-right of media. */
+.alumni-feed-page .alumni-post-menu-zone {
+  position: relative;
+  z-index: 25;
+}
+
+.alumni-feed-page .alumni-post-menu-trigger {
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  width: 36px !important;
+  min-width: 36px !important;
+  height: 36px !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 999px !important;
+  color: #fff !important;
+  background: rgba(5, 7, 11, .58) !important;
+  box-shadow: none !important;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.alumni-feed-page .alumni-post-menu-trigger:hover,
+.alumni-feed-page .alumni-post-menu-trigger:active {
+  background: rgba(5, 7, 11, .72) !important;
+}
+
+.alumni-feed-page .alumni-post-menu-trigger svg {
+  width: 21px;
+  height: 21px;
+  stroke-width: 2;
+}
+
+/* On text-only posts, the same trigger is quiet in the header. */
+.alumni-feed-page .alumni-post-menu-zone[data-text-only="true"] .alumni-post-menu-trigger {
+  color: var(--app-muted) !important;
+  background: transparent !important;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+.alumni-feed-page .alumni-post-menu-zone[data-text-only="true"] .alumni-post-menu-trigger:hover {
+  color: var(--app-text) !important;
+  background: var(--app-soft) !important;
+}
+
+.alumni-feed-page .alumni-post-menu-popover {
+  position: absolute;
+  right: 0;
+  top: 44px;
+  z-index: 60;
+  width: 218px;
+  overflow: hidden;
+  border: 1px solid var(--app-border);
+  border-radius: 16px;
+  background: color-mix(in srgb, var(--app-surface) 96%, transparent);
+  box-shadow: 0 16px 42px rgba(0, 0, 0, .24);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+}
+
+.alumni-feed-page .alumni-post-menu-item {
+  display: flex;
+  width: 100%;
+  min-height: 46px;
+  align-items: center;
+  gap: 11px;
+  padding: 0 14px;
+  border: 0;
+  background: transparent;
+  color: var(--app-text-soft);
+  font-size: 12px;
+  font-weight: 720;
+  text-align: left;
+}
+
+.alumni-feed-page .alumni-post-menu-item:hover {
+  background: var(--app-soft);
+}
+
+.alumni-feed-page .alumni-post-menu-item + .alumni-post-menu-item {
+  border-top: 1px solid var(--app-border);
+}
+
+.alumni-feed-page .alumni-post-menu-item svg {
+  width: 17px;
+  height: 17px;
+  color: var(--app-muted);
+}
+
+.alumni-feed-page .alumni-post-menu-item[data-danger="true"] {
+  color: #ef6b75;
+}
+
+.alumni-feed-page .alumni-post-menu-item[data-danger="true"] svg {
+  color: #ef6b75;
+}
+
 @media (max-width: 639px) {
   .alumni-feed-page .alumni-post-card {
     border-radius: 0 !important;
   }
 
   .alumni-feed-page .alumni-post-actions {
-    min-height: 46px;
-    gap: 2px !important;
+    gap: 4px !important;
+    min-height: 48px;
   }
 
   .alumni-feed-page .alumni-post-actions > button {
-    width: 42px;
-    min-width: 42px;
-    height: 42px !important;
+    flex-basis: 41px !important;
+    width: 41px !important;
+    min-width: 41px !important;
+    max-width: 41px !important;
+    height: 41px !important;
   }
 
   .alumni-feed-page .alumni-post-actions svg {
@@ -164,9 +267,9 @@
     height: 23px;
   }
 
-  .alumni-feed-page .alumni-post-stats {
-    padding-inline: 1px !important;
+  .alumni-feed-page .alumni-post-menu-popover {
+    width: 205px;
   }
 }
 
-/* ALUMNI_1_3_8_2_FLAT_FEED_ACTION_LAYOUT */
+/* ALUMNI_1_3_8_3_IG_ACTIONS_OVERFLOW_MENU */

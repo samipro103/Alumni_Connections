@@ -8,6 +8,7 @@ import {
   MessageCircle,
   Share2,
   Repeat2,
+  MoreHorizontal,
   Sparkles,
   Trash2,
   X,
@@ -35,6 +36,7 @@ function FeedContent() {
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [openComments, setOpenComments] = useState<Record<number, boolean>>({});
+  const [openPostMenuId, setOpenPostMenuId] = useState<number | null>(null);
   const [followingIds, setFollowingIds] = useState<string[]>([]);
   const [feedMode, setFeedMode] = useState<FeedMode>("for-you");
   const [loading, setLoading] = useState(true);
@@ -84,6 +86,35 @@ const feedRequestRef = useRef(0);
 };
 
   }, []);
+
+  useEffect(() => {
+    if (openPostMenuId === null) return;
+
+    function closePostMenuOnOutsidePress(event: PointerEvent) {
+      const target = event.target;
+
+      if (
+        target instanceof Element &&
+        target.closest("[data-alumni-post-menu]")
+      ) {
+        return;
+      }
+
+      setOpenPostMenuId(null);
+    }
+
+    document.addEventListener(
+      "pointerdown",
+      closePostMenuOnOutsidePress
+    );
+
+    return () => {
+      document.removeEventListener(
+        "pointerdown",
+        closePostMenuOnOutsidePress
+      );
+    };
+  }, [openPostMenuId]);
 
   useEffect(() => {
     if (loading) return;
@@ -997,6 +1028,8 @@ const formattedPosts = mediaReadyPosts.map((post: any) => {
           <div className="divide-y divide-[var(--app-border)]">
             {visiblePosts.map((post: any, postIndex: number) => {
               const commentsOpen = Boolean(openComments[post.id]);
+              const postMenuOpen = openPostMenuId === post.id;
+              const ownPost = post.user_id === currentUser?.id;
 
               return (
                 <article
@@ -1044,14 +1077,62 @@ const formattedPosts = mediaReadyPosts.map((post: any) => {
                         </p>
                       </div>
 
-                      {post.user_id === currentUser?.id && (
-                        <button
-                          onClick={() => deletePost(post.id)}
-                          className="flex h-9 w-9 items-center justify-center rounded-xl text-zinc-700 transition hover:bg-red-500/10 hover:text-red-400"
-                          aria-label="Eliminar publicación"
+                      {!post.image_url && (
+                        <div
+                          className="alumni-post-menu-zone shrink-0"
+                          data-alumni-post-menu
+                          data-text-only="true"
                         >
-                          <Trash2 size={17} />
-                        </button>
+                          <button
+                            type="button"
+                            className="alumni-post-menu-trigger"
+                            onClick={() =>
+                              setOpenPostMenuId(
+                                postMenuOpen ? null : post.id
+                              )
+                            }
+                            aria-label="Más opciones"
+                            aria-expanded={postMenuOpen}
+                          >
+                            <MoreHorizontal size={20} />
+                          </button>
+
+                          {postMenuOpen && (
+                            <div
+                              className="alumni-post-menu-popover"
+                              role="menu"
+                            >
+                              <button
+                                type="button"
+                                className="alumni-post-menu-item"
+                                onClick={() => {
+                                  setOpenPostMenuId(null);
+                                  sharePostToStory(post);
+                                }}
+                                role="menuitem"
+                              >
+                                <Sparkles size={17} />
+                                Compartir en historia
+                              </button>
+
+                              {ownPost && (
+                                <button
+                                  type="button"
+                                  className="alumni-post-menu-item"
+                                  data-danger="true"
+                                  onClick={() => {
+                                    setOpenPostMenuId(null);
+                                    void deletePost(post.id);
+                                  }}
+                                  role="menuitem"
+                                >
+                                  <Trash2 size={17} />
+                                  Eliminar publicación
+                                </button>
+                              )}
+                            </div>
+                          )}
+                        </div>
                       )}
                     </div>
 
@@ -1063,28 +1144,85 @@ const formattedPosts = mediaReadyPosts.map((post: any) => {
                   </div>
 
                   {post.image_url && (
-                    <button
-                      onClick={() => setSelectedImage(post.image_url)}
-                      className="alumni-post-media -mx-4 block w-[calc(100%+2rem)] sm:mx-0 sm:w-full"
-                    >
-                      <img
-                        src={post.image_url}
-                        alt="Publicación"
-                        loading={
-                          postIndex < 2
-                            ? "eager"
-                            : "lazy"
-                        }
-                        decoding="async"
-                        fetchPriority={
-                          postIndex === 0
-                            ? "high"
-                            : "auto"
-                        }
-                        draggable={false}
-                        className="block max-h-[760px] w-full bg-transparent object-cover sm:object-contain"
-                      />
-                    </button>
+                    <div className="alumni-post-media-wrap relative -mx-4 w-[calc(100%+2rem)] sm:mx-0 sm:w-full">
+                      <button
+                        onClick={() => setSelectedImage(post.image_url)}
+                        className="alumni-post-media block w-full"
+                      >
+                        <img
+                          src={post.image_url}
+                          alt="Publicación"
+                          loading={
+                            postIndex < 2
+                              ? "eager"
+                              : "lazy"
+                          }
+                          decoding="async"
+                          fetchPriority={
+                            postIndex === 0
+                              ? "high"
+                              : "auto"
+                          }
+                          draggable={false}
+                          className="block max-h-[760px] w-full bg-transparent object-cover sm:object-contain"
+                        />
+                      </button>
+
+                      <div
+                        className="alumni-post-menu-zone absolute right-3 top-3"
+                        data-alumni-post-menu
+                      >
+                        <button
+                          type="button"
+                          className="alumni-post-menu-trigger"
+                          onClick={() =>
+                            setOpenPostMenuId(
+                              postMenuOpen ? null : post.id
+                            )
+                          }
+                          aria-label="Más opciones"
+                          aria-expanded={postMenuOpen}
+                        >
+                          <MoreHorizontal size={20} />
+                        </button>
+
+                        {postMenuOpen && (
+                          <div
+                            className="alumni-post-menu-popover"
+                            role="menu"
+                          >
+                            <button
+                              type="button"
+                              className="alumni-post-menu-item"
+                              onClick={() => {
+                                setOpenPostMenuId(null);
+                                sharePostToStory(post);
+                              }}
+                              role="menuitem"
+                            >
+                              <Sparkles size={17} />
+                              Compartir en historia
+                            </button>
+
+                            {ownPost && (
+                              <button
+                                type="button"
+                                className="alumni-post-menu-item"
+                                data-danger="true"
+                                onClick={() => {
+                                  setOpenPostMenuId(null);
+                                  void deletePost(post.id);
+                                }}
+                                role="menuitem"
+                              >
+                                <Trash2 size={17} />
+                                Eliminar publicación
+                              </button>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    </div>
                   )}
 
                   <div className="alumni-post-footer px-0 pb-0 pt-3 sm:px-1">
@@ -1145,22 +1283,7 @@ const formattedPosts = mediaReadyPosts.map((post: any) => {
                       </button>
 
                       <button
-                        type="button"
-                        onClick={() =>
-                          sharePostToStory(
-                            post
-                          )
-                        }
-                        className="alumni-action-right-start"
-                        aria-label="Compartir en historia"
-                        title="Compartir en historia"
-                      >
-                        <Sparkles
-                          size={17}
-                        />
-                      </button>
-
-                      <button
+                        className="alumni-share-action"
                         onClick={() => sharePost(post)}
                         aria-label="Compartir publicación"
                         title="Compartir"
@@ -1329,3 +1452,5 @@ export default function FeedPage() {
 /* ALUMNI_1_3_8_1_FEED_ACTIONS_POLISH */
 
 /* ALUMNI_1_3_8_2_FLAT_FEED_ACTION_LAYOUT */
+
+/* ALUMNI_1_3_8_3_IG_ACTIONS_OVERFLOW_MENU */
