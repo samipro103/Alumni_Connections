@@ -1987,7 +1987,7 @@ setMessages(
                             className={`max-w-[80%] overflow-hidden rounded-[18px] border sm:max-w-[66%] ${
                               mine
                                 ? "border-[color-mix(in_srgb,var(--app-accent)_24%,transparent)] bg-[var(--app-accent-soft)]"
-                                : "border-[var(--app-border)] bg-[var(--app-surface)]"
+                                : "bg-[var(--app-surface)]"
                             }`}
                           >
                             {message.is_forwarded && (
@@ -2047,7 +2047,7 @@ setMessages(
                           </div>
                         ) : media ? (
                           <div
-                            className={`max-w-[82%] overflow-hidden rounded-[18px] border sm:max-w-[66%] ${
+                            className={`w-fit max-w-[82%] overflow-hidden rounded-[16px] sm:max-w-[66%] ${
                               mine
                                 ? "alumni-message-media-mine"
                                 : "border-[var(--app-border)] bg-[var(--app-surface)]"
@@ -2255,12 +2255,6 @@ setMessages(
               </div>
 
               <div className="min-w-0 flex-1">
-                <p className="truncate text-[12px] font-black text-[var(--app-text-soft)]">
-                  {
-                    mediaFile.name
-                  }
-                </p>
-
                 <p className="mt-0.5 text-[10px] text-[var(--app-muted-3)]">
                   {mediaFile.type.startsWith(
                     "video/"
@@ -2533,3 +2527,5 @@ setMessages(
 /* ALUMNI_1_3_0_GROUPS_MEDIA_PRO:DIRECT_CHAT */
 
 /* ALUMNI_1_3_2_MESSAGING_POLISH:DIRECT */
+
+/* ALUMNI_1_3_4_GROUP_MODAL_MEDIA_POLISH:DIRECT */

@@ -1281,7 +1281,7 @@ export default function GroupChatPage() {
                             />
 
                             {message.media_path && (
-                              <div className="-mx-3 -mt-0.5 mb-2 overflow-hidden">
+                              <div className="-mx-3 -mt-0.5 mb-2 w-fit max-w-full overflow-hidden rounded-[14px]">
                                 <DeferredMessageMedia
                                   bucket={
                                     BUCKET
@@ -1464,11 +1464,7 @@ export default function GroupChatPage() {
                 )}
               </div>
 
-              <p className="min-w-0 flex-1 truncate text-[12px] font-bold text-[var(--app-text-soft)]">
-                {
-                  mediaFile.name
-                }
-              </p>
+              <div className="min-w-0 flex-1" />
 
               <button
                 type="button"
@@ -1602,3 +1598,5 @@ export default function GroupChatPage() {
 /* ALUMNI_1_3_1_GROUP_ADMIN_MEDIA_UX:GROUP_PAGE */
 
 /* ALUMNI_1_3_2_MESSAGING_POLISH:GROUP */
+
+/* ALUMNI_1_3_4_GROUP_MODAL_MEDIA_POLISH:GROUP */

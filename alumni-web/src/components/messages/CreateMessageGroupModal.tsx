@@ -2,7 +2,6 @@
 
 import {
   Check,
-  Crown,
   Loader2,
   Search,
   Users,
@@ -333,7 +332,7 @@ export default function CreateMessageGroupModal({
 
   return (
     <div
-      className="fixed inset-0 z-[2147483000] flex items-end justify-center bg-black/72 backdrop-blur-sm sm:items-center sm:p-5"
+      className="fixed inset-0 z-[2147483600] flex items-end justify-center bg-black/72 backdrop-blur-sm sm:items-center sm:p-5"
       role="dialog"
       aria-modal="true"
       data-pull-refresh-lock="true"
@@ -352,9 +351,7 @@ export default function CreateMessageGroupModal({
                 Nuevo grupo
               </h2>
 
-              <p className="mt-0.5 text-[11px] text-[var(--app-muted-2)]">
-                Tú ya estás incluido como creador.
-              </p>
+
             </div>
 
             <button
@@ -370,23 +367,7 @@ export default function CreateMessageGroupModal({
             </button>
           </div>
 
-          <div className="mt-4 flex items-center gap-3 rounded-[14px] bg-[var(--app-accent-soft)] px-3 py-2.5">
-            <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[var(--app-accent)] text-[var(--app-on-accent)]">
-              <Crown
-                size={14}
-              />
-            </span>
 
-            <div>
-              <p className="text-[11px] font-black text-[var(--app-text)]">
-                Tú · Creador
-              </p>
-
-              <p className="mt-0.5 text-[10px] text-[var(--app-muted-2)]">
-                Admin principal del grupo
-              </p>
-            </div>
-          </div>
         </header>
 
         <div className="px-5 pt-4">
@@ -533,7 +514,7 @@ export default function CreateMessageGroupModal({
           )}
         </div>
 
-        <footer className="relative z-40 border-t border-[var(--app-border)] bg-[var(--app-surface)] px-5 py-3 pb-[max(14px,env(safe-area-inset-bottom))] shadow-[0_-14px_36px_var(--app-shadow)]">
+        <footer className="relative z-40 border-t border-[var(--app-border)] bg-[var(--app-surface)] px-5 py-3 pb-[max(18px,env(safe-area-inset-bottom))]">
           <button
             type="button"
             onClick={() =>
@@ -569,3 +550,5 @@ export default function CreateMessageGroupModal({
 }
 
 /* ALUMNI_1_3_3_CREATE_MODAL_GRID */
+
+/* ALUMNI_1_3_4_GROUP_MODAL_CLEAN */

@@ -579,14 +579,10 @@ export default function DeferredMessageMedia({
         onClick={() =>
           void handleMediaTap()
         }
-        className="group/media relative block max-w-full overflow-hidden bg-[var(--app-soft-strong)] text-left"
+        className="group/media relative block max-w-full overflow-hidden rounded-[14px] bg-transparent text-left"
         style={{
           width:
             displayWidth,
-          aspectRatio:
-            String(
-              displayRatio
-            ),
         }}
         aria-label={
           video
@@ -594,7 +590,7 @@ export default function DeferredMessageMedia({
             : "Ver foto"
         }
       >
-        <div className="absolute inset-0 overflow-hidden">
+        <div className="relative overflow-hidden rounded-[14px]">
           {inlineUrl ? (
             video ? (
               <>
@@ -603,7 +599,7 @@ export default function DeferredMessageMedia({
                     src={preview}
                     alt=""
                     aria-hidden="true"
-                    className="absolute inset-0 h-full w-full object-cover"
+                    className="block h-auto w-full object-contain"
                   />
                 )}
 
@@ -622,16 +618,13 @@ export default function DeferredMessageMedia({
                         .videoHeight
                     )
                   }
-                  className="absolute inset-0 h-full w-full object-cover"
+                  className="block h-auto w-full object-contain"
                 />
               </>
             ) : (
               <img
                 src={inlineUrl}
-                alt={
-                  name ||
-                  "Foto"
-                }
+                alt="Foto"
                 onLoad={(
                   event
                 ) =>
@@ -660,14 +653,14 @@ export default function DeferredMessageMedia({
                     .naturalHeight
                 )
               }
-              className="absolute inset-0 h-full w-full object-cover blur-[15px] saturate-75 brightness-[0.74]"
+              className="block h-auto w-full object-contain blur-[14px] saturate-75 brightness-[0.74]"
             />
           ) : (
-            <div className="absolute inset-0 bg-[var(--app-soft-strong)]" />
+            <div className="aspect-[4/3] w-full bg-[var(--app-soft-strong)]" />
           )}
 
           {!inlineUrl && (
-            <div className="absolute inset-0 bg-black/10" />
+            <div className="pointer-events-none absolute inset-0 bg-black/10" />
           )}
 
           <span
@@ -819,12 +812,7 @@ export default function DeferredMessageMedia({
                 <X size={18} />
               </button>
 
-              <p className="min-w-0 flex-1 truncate text-[12px] font-bold text-[var(--app-text-soft)]">
-                {name ||
-                  (video
-                    ? "Video"
-                    : "Foto")}
-              </p>
+              <div className="min-w-0 flex-1" />
 
               <div className="relative">
                 <button
@@ -921,8 +909,7 @@ export default function DeferredMessageMedia({
                 <img
                   src={viewerUrl}
                   alt={
-                    name ||
-                    "Foto"
+"Foto"
                   }
                   className="block max-h-full max-w-full object-contain"
                 />
@@ -959,3 +946,5 @@ export default function DeferredMessageMedia({
 }
 
 /* ALUMNI_1_3_3_MEDIA_ASPECT_POLISH */
+
+/* ALUMNI_1_3_4_MEDIA_NATURAL_FORMAT */
