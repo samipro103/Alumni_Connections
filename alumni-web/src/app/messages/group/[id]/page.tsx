@@ -1281,7 +1281,7 @@ export default function GroupChatPage() {
                             />
 
                             {message.media_path && (
-                              <div className="-mx-3 -mt-0.5 mb-2 w-fit max-w-full overflow-hidden rounded-[14px]">
+                              <div className="mb-2 w-fit max-w-full overflow-hidden rounded-[14px]">
                                 <DeferredMessageMedia
                                   bucket={
                                     BUCKET
@@ -1600,3 +1600,5 @@ export default function GroupChatPage() {
 /* ALUMNI_1_3_2_MESSAGING_POLISH:GROUP */
 
 /* ALUMNI_1_3_4_GROUP_MODAL_MEDIA_POLISH:GROUP */
+
+/* ALUMNI_1_3_5_MEDIA_MODAL_SPOTIFY_FIX:GROUP */

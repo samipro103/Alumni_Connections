@@ -305,6 +305,20 @@ export async function ensureSpotifyPlayer() {
     return snapshot.deviceId;
   }
 
+  /*
+   * A stale Spotify.Player can exist without ever reaching ready.
+   * Reusing that object leaves the profile button spinning forever.
+   * A user retry now creates one clean Connect device.
+   */
+  if (
+    player &&
+    !connectPromise &&
+    (!snapshot.ready ||
+      !snapshot.deviceId)
+  ) {
+    destroyPlayer();
+  }
+
   if (!connectPromise) {
     connectPromise =
       createPlayer()
@@ -454,3 +468,5 @@ export function clearSpotifyPlayerError() {
     error: "",
   });
 }
+
+/* ALUMNI_1_3_5_MEDIA_MODAL_SPOTIFY_FIX:SPOTIFY */

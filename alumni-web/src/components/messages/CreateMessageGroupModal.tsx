@@ -16,6 +16,9 @@ import {
   useRouter,
 } from "next/navigation";
 import {
+  createPortal,
+} from "react-dom";
+import {
   useAuth,
 } from "@/components/auth/AuthProvider";
 import {
@@ -72,6 +75,39 @@ export default function CreateMessageGroupModal({
 
   const [creating, setCreating] =
     useState(false);
+
+  const [
+    portalReady,
+    setPortalReady,
+  ] = useState(false);
+
+  useEffect(() => {
+    setPortalReady(true);
+
+    return () => {
+      setPortalReady(false);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!open) {
+      return;
+    }
+
+    const body =
+      document.body;
+
+    const previousOverflow =
+      body.style.overflow;
+
+    body.style.overflow =
+      "hidden";
+
+    return () => {
+      body.style.overflow =
+        previousOverflow;
+    };
+  }, [open]);
 
   useEffect(() => {
     if (
@@ -219,7 +255,10 @@ export default function CreateMessageGroupModal({
       search,
     ]);
 
-  if (!open) {
+  if (
+    !open ||
+    !portalReady
+  ) {
     return null;
   }
 
@@ -330,14 +369,14 @@ export default function CreateMessageGroupModal({
     }
   }
 
-  return (
+  return createPortal(
     <div
-      className="fixed inset-0 z-[2147483600] flex items-end justify-center bg-black/72 backdrop-blur-sm sm:items-center sm:p-5"
+      className="fixed inset-0 z-[2147483646] flex items-end justify-center bg-black/72 backdrop-blur-sm sm:items-center sm:p-5"
       role="dialog"
       aria-modal="true"
       data-pull-refresh-lock="true"
     >
-      <div className="grid h-[100dvh] max-h-[100dvh] w-full max-w-[560px] grid-rows-[auto_auto_minmax(0,1fr)_auto] overflow-hidden rounded-none bg-[var(--app-surface)] shadow-2xl sm:h-[min(88dvh,760px)] sm:max-h-[88dvh] sm:rounded-[30px] sm:ring-1 sm:ring-[var(--app-border)]">
+      <div className="grid h-[calc(100dvh-env(safe-area-inset-top))] max-h-[100dvh] w-full max-w-[560px] grid-rows-[auto_auto_minmax(0,1fr)_auto] overflow-hidden rounded-t-[28px] bg-[var(--app-surface)] shadow-2xl sm:h-[min(88dvh,760px)] sm:max-h-[88dvh] sm:rounded-[30px] sm:ring-1 sm:ring-[var(--app-border)]">
         <header className="border-b border-[var(--app-border)] px-5 py-4">
           <div className="flex items-center gap-3">
             <span className="flex h-10 w-10 items-center justify-center rounded-full bg-[var(--app-accent-soft)] text-[var(--app-accent)]">
@@ -545,10 +584,13 @@ export default function CreateMessageGroupModal({
           </p>
         </footer>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
 
 /* ALUMNI_1_3_3_CREATE_MODAL_GRID */
 
 /* ALUMNI_1_3_4_GROUP_MODAL_CLEAN */
+
+/* ALUMNI_1_3_5_GROUP_MODAL_PORTAL */

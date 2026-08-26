@@ -34,6 +34,15 @@ type MediaPreference =
   | "view"
   | "save";
 
+type OpenedMediaEntry = {
+  url: string;
+  expiresAt: number;
+};
+
+const openedMediaCache =
+  new Map<string, OpenedMediaEntry>();
+
+
 function readPreference(): MediaPreference {
   if (
     typeof window ===
@@ -153,29 +162,33 @@ export default function DeferredMessageMedia({
   const sizeLabel =
     formatMediaSize(size);
 
-  const displayRatio =
-    Math.min(
-      1.9,
-      Math.max(
-        0.56,
-        Number.isFinite(
-          previewRatio
+  const naturalRatio =
+    Number.isFinite(
+      previewRatio
+    ) &&
+    previewRatio > 0
+      ? previewRatio
+      : 4 / 3;
+
+  /*
+   * WhatsApp-like media box:
+   * the media itself defines the shape.
+   * 320px max width / 410px max height.
+   */
+  const displayWidthPx =
+    Math.max(
+      118,
+      Math.min(
+        320,
+        Math.round(
+          410 *
+            naturalRatio
         )
-          ? previewRatio
-          : 4 / 3
       )
     );
 
   const displayWidth =
-    displayRatio <= 0.62
-      ? "min(210px, 62vw)"
-      : displayRatio <= 0.82
-      ? "min(240px, 68vw)"
-      : displayRatio <= 1.15
-      ? "min(280px, 72vw)"
-      : displayRatio <= 1.45
-      ? "min(300px, 74vw)"
-      : "min(320px, 76vw)";
+    `min(${displayWidthPx}px, 78vw)`;
 
   function rememberRatio(
     width: number,
@@ -195,11 +208,38 @@ export default function DeferredMessageMedia({
     mountedRef.current =
       true;
 
+    if (path) {
+      const key =
+        `${bucket}:${path}`;
+
+      const cached =
+        openedMediaCache.get(
+          key
+        );
+
+      if (
+        cached &&
+        cached.expiresAt >
+          Date.now()
+      ) {
+        setInlineUrl(
+          cached.url
+        );
+      } else if (cached) {
+        openedMediaCache.delete(
+          key
+        );
+      }
+    }
+
     return () => {
       mountedRef.current =
         false;
     };
-  }, []);
+  }, [
+    bucket,
+    path,
+  ]);
 
   useEffect(() => {
     return () => {
@@ -258,7 +298,22 @@ export default function DeferredMessageMedia({
       );
     }
 
-    return data.signedUrl;
+    const signed =
+      data.signedUrl;
+
+    if (path) {
+      openedMediaCache.set(
+        `${bucket}:${path}`,
+        {
+          url: signed,
+          expiresAt:
+            Date.now() +
+            9 * 60 * 1000,
+        }
+      );
+    }
+
+    return signed;
   }
 
   async function openViewer() {
@@ -599,7 +654,7 @@ export default function DeferredMessageMedia({
                     src={preview}
                     alt=""
                     aria-hidden="true"
-                    className="block h-auto w-full object-contain"
+                    className="absolute inset-0 h-full w-full object-cover"
                   />
                 )}
 
@@ -618,7 +673,7 @@ export default function DeferredMessageMedia({
                         .videoHeight
                     )
                   }
-                  className="block h-auto w-full object-contain"
+                  className="relative block h-auto max-h-[410px] w-full object-contain"
                 />
               </>
             ) : (
@@ -635,7 +690,7 @@ export default function DeferredMessageMedia({
                       .naturalHeight
                   )
                 }
-                className="absolute inset-0 h-full w-full object-cover"
+                className="block h-auto max-h-[410px] w-full object-contain"
               />
             )
           ) : preview ? (
@@ -653,7 +708,7 @@ export default function DeferredMessageMedia({
                     .naturalHeight
                 )
               }
-              className="block h-auto w-full object-contain blur-[14px] saturate-75 brightness-[0.74]"
+              className="block h-auto w-full object-contain blur-[13px] saturate-75 brightness-[0.74]"
             />
           ) : (
             <div className="aspect-[4/3] w-full bg-[var(--app-soft-strong)]" />
@@ -908,9 +963,7 @@ export default function DeferredMessageMedia({
               ) : (
                 <img
                   src={viewerUrl}
-                  alt={
-"Foto"
-                  }
+                  alt="Foto"
                   className="block max-h-full max-w-full object-contain"
                 />
               )}
@@ -948,3 +1001,5 @@ export default function DeferredMessageMedia({
 /* ALUMNI_1_3_3_MEDIA_ASPECT_POLISH */
 
 /* ALUMNI_1_3_4_MEDIA_NATURAL_FORMAT */
+
+/* ALUMNI_1_3_5_MEDIA_LAYOUT_FIX */

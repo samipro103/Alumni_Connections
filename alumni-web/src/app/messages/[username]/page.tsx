@@ -2050,7 +2050,7 @@ setMessages(
                             className={`w-fit max-w-[82%] overflow-hidden rounded-[16px] sm:max-w-[66%] ${
                               mine
                                 ? "alumni-message-media-mine"
-                                : "border-[var(--app-border)] bg-[var(--app-surface)]"
+                                : "bg-[var(--app-surface)]"
                             }`}
                           >
                             <MessageReplyQuote
@@ -2529,3 +2529,5 @@ setMessages(
 /* ALUMNI_1_3_2_MESSAGING_POLISH:DIRECT */
 
 /* ALUMNI_1_3_4_GROUP_MODAL_MEDIA_POLISH:DIRECT */
+
+/* ALUMNI_1_3_5_MEDIA_MODAL_SPOTIFY_FIX:DIRECT */

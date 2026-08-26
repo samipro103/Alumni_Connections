@@ -10,10 +10,16 @@ import {
   useEffect,
   useState,
 } from "react";
-import type { ProfileMusic } from "@/lib/profileMusic";
+import type {
+  ProfileMusic,
+} from "@/lib/profileMusic";
 import SpotifyLogo from "@/components/music/SpotifyLogo";
-import { getSpotifyPremiumSession } from "@/lib/spotifyClient";
-import { useSpotifyPremiumPlayer } from "@/hooks/useSpotifyPremiumPlayer";
+import {
+  getSpotifyPremiumSession,
+} from "@/lib/spotifyClient";
+import {
+  useSpotifyPremiumPlayer,
+} from "@/hooks/useSpotifyPremiumPlayer";
 
 type Props = {
   track:
@@ -41,7 +47,21 @@ export default function ProfileMusicCard({
   ] =
     useState(false);
 
+  const [
+    starting,
+    setStarting,
+  ] =
+    useState(false);
+
   useEffect(() => {
+    setSessionChecked(
+      false
+    );
+
+    setPremiumReady(
+      false
+    );
+
     if (
       !track ||
       !enablePlayback
@@ -49,7 +69,6 @@ export default function ProfileMusicCard({
       setSessionChecked(
         true
       );
-
       return;
     }
 
@@ -69,6 +88,13 @@ export default function ProfileMusicCard({
           )
         );
       })
+      .catch(() => {
+        if (!cancelled) {
+          setPremiumReady(
+            false
+          );
+        }
+      })
       .finally(() => {
         if (!cancelled) {
           setSessionChecked(
@@ -86,7 +112,6 @@ export default function ProfileMusicCard({
   ]);
 
   const {
-    ready,
     isPlaying,
     error,
     playFragment,
@@ -118,23 +143,43 @@ export default function ProfileMusicCard({
         30
     ) || 30;
 
-  async function mainAction() {
-    if (
-      !premiumReady ||
-      !track?.provider_track_id
-    ) {
-      window.open(
-        track!.track_url,
-        "_blank",
-        "noopener,noreferrer"
-      );
+  function openSpotify() {
+    const currentTrack =
+      track;
 
+    if (
+      !currentTrack?.track_url
+    ) {
       return;
     }
 
-    /*
-     * El gesto del botón desbloquea audio en iPhone.
-     */
+    window.open(
+      currentTrack.track_url,
+      "_blank",
+      "noopener,noreferrer"
+    );
+  }
+
+  async function mainAction() {
+    const currentTrack =
+      track;
+
+    if (
+      starting ||
+      !sessionChecked ||
+      !currentTrack
+    ) {
+      return;
+    }
+
+    if (
+      !premiumReady ||
+      !currentTrack.provider_track_id
+    ) {
+      openSpotify();
+      return;
+    }
+
     activateElement();
 
     if (isPlaying) {
@@ -142,14 +187,20 @@ export default function ProfileMusicCard({
       return;
     }
 
-    await playFragment({
-      trackId:
-        track.provider_track_id,
-      startSeconds:
-        start,
-      durationSeconds:
-        clipDuration,
-    });
+    setStarting(true);
+
+    try {
+      await playFragment({
+        trackId:
+          currentTrack.provider_track_id,
+        startSeconds:
+          start,
+        durationSeconds:
+          clipDuration,
+      });
+    } finally {
+      setStarting(false);
+    }
   }
 
   return (
@@ -195,31 +246,34 @@ export default function ProfileMusicCard({
           mainAction
         }
         disabled={
-          enablePlayback &&
-          premiumReady &&
-          !ready
+          !sessionChecked ||
+          starting
         }
         className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white/[0.06] text-zinc-100 transition hover:bg-white/[0.10] disabled:cursor-wait disabled:text-zinc-700"
         aria-label={
           premiumReady
             ? isPlaying
               ? "Pausar"
+              : error
+              ? "Reintentar Spotify"
               : "Reproducir"
             : "Abrir en Spotify"
         }
+        title={
+          error &&
+          premiumReady
+            ? "Toca para reintentar Spotify"
+            : undefined
+        }
       >
-        {!sessionChecked ? (
+        {!sessionChecked ||
+        starting ? (
           <Loader2
             size={15}
             className="animate-spin"
           />
         ) : premiumReady ? (
-          !ready ? (
-            <Loader2
-              size={15}
-              className="animate-spin"
-            />
-          ) : isPlaying ? (
+          isPlaying ? (
             <Pause
               size={15}
               fill="currentColor"
@@ -248,3 +302,5 @@ export default function ProfileMusicCard({
     </div>
   );
 }
+
+/* ALUMNI_1_3_5_1_SPOTIFY_TS_HOTFIX */
