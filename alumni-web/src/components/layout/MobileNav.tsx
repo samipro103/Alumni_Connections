@@ -98,8 +98,11 @@ export default function MobileNav() {
     let active = true;
 
     async function refreshUnread() {
-      const { count } =
-        await supabase
+      const [
+        directResult,
+        groupResult,
+      ] = await Promise.all([
+        supabase
           .from("messages")
           .select(
             "id",
@@ -115,11 +118,34 @@ export default function MobileNav() {
           .is(
             "read_at",
             null
-          );
+          ),
+        supabase.rpc(
+          "get_my_message_groups"
+        ),
+      ]);
+
+      const groupUnread =
+        (
+          groupResult.data ||
+          []
+        ).reduce(
+          (
+            total: number,
+            group: any
+          ) =>
+            total +
+            Number(
+              group.unread_count ||
+                0
+            ),
+          0
+        );
 
       if (active) {
         const next =
-          count || 0;
+          (directResult.count ||
+            0) +
+          groupUnread;
 
         unreadMessagesCache.set(
           currentUser.id,
@@ -147,6 +173,16 @@ export default function MobileNav() {
             table: "messages",
             filter:
               `receiver_id=eq.${currentUser.id}`,
+          },
+          refreshUnread
+        )
+        .on(
+          "postgres_changes",
+          {
+            event: "INSERT",
+            schema: "public",
+            table:
+              "group_messages",
           },
           refreshUnread
         )
@@ -243,3 +279,5 @@ export default function MobileNav() {
     </nav>
   );
 }
+
+/* ALUMNI_1_3_0_GROUPS_MEDIA_PRO:MOBILE_NAV */

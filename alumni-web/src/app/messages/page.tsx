@@ -3,6 +3,7 @@
 import {
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
 import Link from "next/link";
@@ -12,13 +13,16 @@ import {
   ChevronRight,
   Image as ImageIcon,
   MessageCircle,
+  Plus,
   Search,
   SquarePen,
+  Users,
   Video,
 } from "lucide-react";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { supabase } from "@/lib/supabase";
 import AppShell from "@/components/layout/AppShell";
+import CreateMessageGroupModal from "@/components/messages/CreateMessageGroupModal";
 
 type Conversation = {
   id: string;
@@ -46,6 +50,24 @@ export default function MessagesPage() {
     setLoadingConversations,
   ] = useState(true);
 
+  const [
+    groups,
+    setGroups,
+  ] = useState<any[]>([]);
+
+  const [
+    groupModalOpen,
+    setGroupModalOpen,
+  ] = useState(false);
+
+  const inboxRequestRef =
+    useRef(0);
+
+  const inboxRefreshTimerRef =
+    useRef<number | null>(
+      null
+    );
+
   useEffect(() => {
     if (!loading && !user) {
       router.push("/login");
@@ -55,19 +77,76 @@ export default function MessagesPage() {
   useEffect(() => {
     if (user) {
       void loadConversations(false);
+      void loadGroups();
     }
   }, [user?.id]);
+
+  async function loadGroups() {
+    if (!user) return;
+
+    const {
+      data,
+      error,
+    } =
+      await supabase.rpc(
+        "get_my_message_groups"
+      );
+
+    if (error) {
+      console.error(
+        "Groups:",
+        error
+      );
+      return;
+    }
+
+    setGroups(
+      data || []
+    );
+  }
 
   useEffect(() => {
     if (!user) return;
 
     const refresh = () => {
-      void loadConversations(true);
+      if (
+        inboxRefreshTimerRef.current !==
+        null
+      ) {
+        window.clearTimeout(
+          inboxRefreshTimerRef.current
+        );
+      }
+
+      inboxRefreshTimerRef.current =
+        window.setTimeout(
+          () => {
+            inboxRefreshTimerRef.current =
+              null;
+
+            void loadConversations(
+              true
+            );
+          },
+          100
+        );
     };
 
     const channel = supabase
       .channel(
         `message-inbox:${user.id}`
+      )
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table:
+            "group_messages",
+        },
+        () => {
+          void loadGroups();
+        }
       )
       .on(
         "postgres_changes",
@@ -112,6 +191,18 @@ export default function MessagesPage() {
       .subscribe();
 
     return () => {
+      if (
+        inboxRefreshTimerRef.current !==
+        null
+      ) {
+        window.clearTimeout(
+          inboxRefreshTimerRef.current
+        );
+      }
+
+      inboxRequestRef.current +=
+        1;
+
       supabase.removeChannel(channel);
     };
   }, [user?.id]);
@@ -120,6 +211,9 @@ export default function MessagesPage() {
     silent = false
   ) {
     if (!user) return;
+
+    const requestId =
+      ++inboxRequestRef.current;
 
     if (!silent) {
       setLoadingConversations(true);
@@ -135,6 +229,13 @@ export default function MessagesPage() {
         .order("created_at", {
           ascending: false,
         });
+
+    if (
+      requestId !==
+      inboxRequestRef.current
+    ) {
+      return;
+    }
 
     if (error) {
       console.error(error);
@@ -201,6 +302,13 @@ export default function MessagesPage() {
         )
         .in("id", ids);
 
+    if (
+      requestId !==
+      inboxRequestRef.current
+    ) {
+      return;
+    }
+
     if (profilesError) {
       console.error(profilesError);
       setLoadingConversations(false);
@@ -230,6 +338,13 @@ export default function MessagesPage() {
           ).getTime()
       ) as Conversation[];
 
+    if (
+      requestId !==
+      inboxRequestRef.current
+    ) {
+      return;
+    }
+
     setConversations(merged);
     setLoadingConversations(false);
   }
@@ -240,9 +355,63 @@ export default function MessagesPage() {
         (total, item) =>
           total + item.unreadCount,
         0
+      ) +
+      groups.reduce(
+        (total, item) =>
+          total +
+          Number(
+            item.unread_count ||
+              0
+          ),
+        0
       ),
-    [conversations]
+    [conversations, groups]
   );
+
+  const visibleGroups =
+    useMemo(() => {
+      const value =
+        search
+          .trim()
+          .toLowerCase();
+
+      return groups.filter(
+        (group) => {
+          if (
+            filter ===
+              "unread" &&
+            Number(
+              group.unread_count ||
+                0
+            ) === 0
+          ) {
+            return false;
+          }
+
+          if (!value) {
+            return true;
+          }
+
+          return [
+            group.name,
+            group.last_message_content,
+            group.last_sender_username,
+          ]
+            .filter(Boolean)
+            .some((field) =>
+              String(field)
+                .toLowerCase()
+                .includes(
+                  value
+                )
+            );
+        }
+      );
+    }, [
+      groups,
+      search,
+      filter,
+    ]);
 
   const filteredConversations =
     useMemo(() => {
@@ -441,16 +610,34 @@ export default function MessagesPage() {
             </p>
           </div>
 
-          <Link
-            href="/explore"
-            className="alumni-message-new flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[var(--app-accent)] text-[var(--app-on-accent)] shadow-[0_10px_28px_color-mix(in_srgb,var(--app-accent)_24%,transparent)] transition active:scale-95"
-            aria-label="Nuevo mensaje"
-            title="Nuevo mensaje"
-          >
-            <SquarePen
-              size={18}
-            />
-          </Link>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() =>
+                setGroupModalOpen(
+                  true
+                )
+              }
+              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-[var(--app-border)] bg-[var(--app-soft)] text-[var(--app-accent)] transition hover:bg-[var(--app-accent-soft)] active:scale-95"
+              aria-label="Crear grupo"
+              title="Crear grupo"
+            >
+              <Users
+                size={18}
+              />
+            </button>
+
+            <Link
+              href="/explore"
+              className="alumni-message-new flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[var(--app-accent)] text-[var(--app-on-accent)] shadow-[0_10px_28px_color-mix(in_srgb,var(--app-accent)_24%,transparent)] transition active:scale-95"
+              aria-label="Nuevo mensaje"
+              title="Nuevo mensaje"
+            >
+              <SquarePen
+                size={18}
+              />
+            </Link>
+          </div>
         </div>
 
         <div className="alumni-messages-search flex h-12 items-center gap-2 border-b border-[var(--app-border)]">
@@ -477,7 +664,7 @@ export default function MessagesPage() {
             onClick={() =>
               setFilter("all")
             }
-            className={`relative py-1 text-[12px] font-black transition ${
+            className={`relative py-1 text-[13px] font-black transition ${
               filter === "all"
                 ? "text-[var(--app-text)]"
                 : "text-[var(--app-muted-2)]"
@@ -495,7 +682,7 @@ export default function MessagesPage() {
             onClick={() =>
               setFilter("unread")
             }
-            className={`relative py-1 text-[12px] font-black transition ${
+            className={`relative py-1 text-[13px] font-black transition ${
               filter ===
               "unread"
                 ? "text-[var(--app-text)]"
@@ -509,6 +696,99 @@ export default function MessagesPage() {
             )}
           </button>
         </div>
+
+        {visibleGroups.length > 0 && (
+          <section className="border-b border-[var(--app-border)] py-3">
+            <div className="mb-1 flex items-center justify-between">
+              <p className="text-[10px] font-black uppercase tracking-[0.13em] text-[var(--app-muted-2)]">
+                Grupos
+              </p>
+              <button
+                type="button"
+                onClick={() =>
+                  setGroupModalOpen(
+                    true
+                  )
+                }
+                className="flex items-center gap-1 text-[11px] font-black text-[var(--app-accent)]"
+              >
+                <Plus size={13} />
+                Crear
+              </button>
+            </div>
+
+            <div className="divide-y divide-[var(--app-border)]">
+              {visibleGroups.map(
+                (group) => {
+                  const unread =
+                    Number(
+                      group.unread_count ||
+                        0
+                    );
+
+                  const preview =
+                    group.last_message_type ===
+                    "image"
+                      ? "Foto"
+                      : group.last_message_type ===
+                        "video"
+                      ? "Video"
+                      : group.last_message_content ||
+                        "Grupo creado";
+
+                  return (
+                    <Link
+                      key={
+                        group.group_id
+                      }
+                      href={`/messages/group/${group.group_id}`}
+                      className="flex items-center gap-3 py-3.5"
+                    >
+                      <span className="flex h-[50px] w-[50px] shrink-0 items-center justify-center rounded-full bg-[var(--app-accent-soft)] text-[var(--app-accent)] ring-1 ring-[color-mix(in_srgb,var(--app-accent)_18%,transparent)]">
+                        <Users
+                          size={20}
+                        />
+                      </span>
+
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-baseline gap-2">
+                          <p className="truncate text-[15px] font-black text-[var(--app-text)]">
+                            {
+                              group.name
+                            }
+                          </p>
+
+                          {unread >
+                            0 && (
+                            <span className="ml-auto inline-flex min-w-5 items-center justify-center rounded-full bg-[var(--app-accent)] px-1.5 py-0.5 text-[9px] font-black text-[var(--app-on-accent)]">
+                              {unread >
+                              9
+                                ? "9+"
+                                : unread}
+                            </span>
+                          )}
+                        </div>
+
+                        <p className="mt-0.5 truncate text-[11px] text-[var(--app-muted-2)]">
+                          {
+                            group.member_count
+                          } miembros
+                          {group.last_sender_username
+                            ? ` · @${group.last_sender_username}`
+                            : ""}
+                        </p>
+
+                        <p className="mt-1 truncate text-[13px] text-[var(--app-muted)]">
+                          {preview}
+                        </p>
+                      </div>
+                    </Link>
+                  );
+                }
+              )}
+            </div>
+          </section>
+        )}
 
         {loadingConversations ? (
           <div className="divide-y divide-[var(--app-border)]">
@@ -619,7 +899,7 @@ export default function MessagesPage() {
                     <div className="min-w-0 flex-1">
                       <div className="flex items-baseline gap-2">
                         <p
-                          className={`truncate text-[14px] ${
+                          className={`truncate text-[15px] ${
                             unread
                               ? "font-black text-[var(--app-text)]"
                               : "font-bold text-[var(--app-text-soft)]"
@@ -632,7 +912,7 @@ export default function MessagesPage() {
                         </p>
 
                         <span
-                          className={`ml-auto shrink-0 text-[10px] ${
+                          className={`ml-auto shrink-0 text-[11px] ${
                             unread
                               ? "font-black text-[var(--app-accent)]"
                               : "text-[var(--app-muted-3)]"
@@ -646,7 +926,7 @@ export default function MessagesPage() {
                         </span>
                       </div>
 
-                      <p className="mt-0.5 truncate text-[10px] text-[var(--app-muted-3)]">
+                      <p className="mt-0.5 truncate text-[11px] text-[var(--app-muted-3)]">
                         {[
                           conversation.career,
                           conversation.university,
@@ -674,7 +954,7 @@ export default function MessagesPage() {
                         )}
 
                         <p
-                          className={`truncate text-[13px] ${
+                          className={`truncate text-[14px] ${
                             unread
                               ? "font-semibold text-[var(--app-text-soft)]"
                               : "text-[var(--app-muted)]"
@@ -707,6 +987,20 @@ export default function MessagesPage() {
           </div>
         )}
       </div>
+      <CreateMessageGroupModal
+        open={
+          groupModalOpen
+        }
+        onClose={() =>
+          setGroupModalOpen(
+            false
+          )
+        }
+      />
     </AppShell>
   );
 }
+
+/* ALUMNI_1_2_3_SCROLL_MESSAGES_STABILITY:INBOX */
+
+/* ALUMNI_1_3_0_GROUPS_MEDIA_PRO:INBOX */

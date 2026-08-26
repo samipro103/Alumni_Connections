@@ -29,6 +29,8 @@ import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/components/auth/AuthProvider";
 import AppShell from "@/components/layout/AppShell";
 import MessageProTools from "@/components/messages/MessageProTools";
+import DeferredMessageMedia from "@/components/messages/DeferredMessageMedia";
+import { createMessageMediaPreview } from "@/lib/messageMedia";
 import {
   ComposerReplyPreview,
   MessageReplyQuote,
@@ -229,6 +231,36 @@ export default function ChatPage() {
 const loadChatRequestRef =
   useRef(0);
 
+const receiverRef =
+  useRef<any>(null);
+
+const refreshTimerRef =
+  useRef<number | null>(
+    null
+  );
+
+const suppressOwnInsertUntilRef =
+  useRef(0);
+
+const viewportMetricsRef =
+  useRef({
+    height: 0,
+    offsetTop: 0,
+  });
+
+const mediaUrlCacheRef =
+  useRef<
+    Map<
+      string,
+      {
+        url:
+          | string
+          | null;
+        expiresAt: number;
+      }
+    >
+  >(new Map());
+
 
   useEffect(() => {
     if (
@@ -248,11 +280,73 @@ const loadChatRequestRef =
 
     void loadChat(true);
 
-    const refresh =
-      () =>
-        void loadChat(
-          false
+    const refresh = (
+      payload: any
+    ) => {
+      const row =
+        payload?.new ||
+        payload?.old;
+
+      const peerId =
+        receiverRef.current
+          ?.id;
+
+      if (
+        peerId &&
+        row &&
+        !(
+          (row.sender_id ===
+            user.id &&
+            row.receiver_id ===
+              peerId) ||
+          (row.sender_id ===
+            peerId &&
+            row.receiver_id ===
+              user.id)
+        )
+      ) {
+        return;
+      }
+
+      if (
+        payload?.eventType ===
+          "UPDATE" &&
+        row?.sender_id ===
+          user.id
+      ) {
+        setMessages(
+          (current) =>
+            current.map(
+              (message) =>
+                message.id ===
+                row.id
+                  ? {
+                      ...message,
+                      read_at:
+                        row.read_at,
+                    }
+                  : message
+            )
         );
+
+        return;
+      }
+
+      if (
+        payload?.eventType ===
+          "INSERT" &&
+        row?.sender_id ===
+          user.id &&
+        Date.now() <
+          suppressOwnInsertUntilRef.current
+      ) {
+        return;
+      }
+
+      scheduleChatRefresh(
+        80
+      );
+    };
 
     const channel =
       supabase
@@ -280,18 +374,6 @@ const loadChatRequestRef =
             table:
               "messages",
             filter: `sender_id=eq.${user.id}`,
-          },
-          refresh
-        )
-        .on(
-          "postgres_changes",
-          {
-            event: "UPDATE",
-            schema:
-              "public",
-            table:
-              "messages",
-            filter: `receiver_id=eq.${user.id}`,
           },
           refresh
         )
@@ -339,6 +421,15 @@ const loadChatRequestRef =
       ) {
         window.clearTimeout(
           typingTimerRef.current
+        );
+      }
+
+      if (
+        refreshTimerRef.current !==
+        null
+      ) {
+        window.clearTimeout(
+          refreshTimerRef.current
         );
       }
 
@@ -430,30 +521,53 @@ const loadChatRequestRef =
       const viewport =
         window.visualViewport;
 
-      const height =
-        viewport?.height ||
-        window.innerHeight;
-
-      const offsetTop =
-        viewport?.offsetTop ||
-        0;
-
-      setVisualHeight(
+      const nextHeight =
         Math.max(
           320,
           Math.round(
-            height
+            viewport?.height ||
+              window.innerHeight
           )
-        )
-      );
+        );
 
-      setVisualOffsetTop(
+      const nextOffsetTop =
         Math.max(
           0,
           Math.round(
-            offsetTop
+            viewport?.offsetTop ||
+              0
           )
-        )
+        );
+
+      const previous =
+        viewportMetricsRef.current;
+
+      const changed =
+        Math.abs(
+          previous.height -
+            nextHeight
+        ) > 2 ||
+        Math.abs(
+          previous.offsetTop -
+            nextOffsetTop
+        ) > 2;
+
+      if (!changed) {
+        return;
+      }
+
+      viewportMetricsRef.current = {
+        height: nextHeight,
+        offsetTop:
+          nextOffsetTop,
+      };
+
+      setVisualHeight(
+        nextHeight
+      );
+
+      setVisualOffsetTop(
+        nextOffsetTop
       );
 
       window.requestAnimationFrame(
@@ -462,15 +576,6 @@ const loadChatRequestRef =
             "auto"
           );
         }
-      );
-
-      window.setTimeout(
-        () => {
-          scrollToBottom(
-            "auto"
-          );
-        },
-        90
       );
     }
 
@@ -695,56 +800,34 @@ const loadChatRequestRef =
       )}px`;
   }
 
+  function scheduleChatRefresh(
+    delay = 80
+  ) {
+    if (
+      refreshTimerRef.current !==
+      null
+    ) {
+      window.clearTimeout(
+        refreshTimerRef.current
+      );
+    }
+
+    refreshTimerRef.current =
+      window.setTimeout(
+        () => {
+          refreshTimerRef.current =
+            null;
+
+          void loadChat(false);
+        },
+        delay
+      );
+  }
+
   async function hydrateMedia(
     rows: any[]
   ) {
-    const paths = [
-      ...new Set(
-        rows
-          .map(
-            (
-              message: any
-            ) =>
-              message.media_path
-          )
-          .filter(Boolean)
-      ),
-    ];
-
-    if (!paths.length) {
-      return rows;
-    }
-
-    const { data } =
-      await supabase.storage
-        .from(BUCKET)
-        .createSignedUrls(
-          paths,
-          3600
-        );
-
-    const map =
-      new Map(
-        (data || []).map(
-          (item: any) => [
-            item.path,
-            item.signedUrl ||
-              null,
-          ]
-        )
-      );
-
-    return rows.map(
-      (message: any) => ({
-        ...message,
-        media_url:
-          message.media_path
-            ? map.get(
-                message.media_path
-              ) || null
-            : null,
-      })
-    );
+    return rows;
   }
 
   async function loadChat(
@@ -762,52 +845,69 @@ const loadChatRequestRef =
       );
     }
 
-    const {
-      data:
-        receiverData,
-      error:
-        receiverError,
-    } = await supabase
-      .from("profiles")
-      .select(
-        "id, username, avatar_url, university, career"
-      )
-      .eq(
-        "username",
+    let receiverData =
+      receiverRef.current;
+
+    if (
+      !receiverData ||
+      receiverData.username !==
         username
-      )
+    ) {
+      const {
+        data:
+          freshReceiver,
+        error:
+          receiverError,
+      } = await supabase
+        .from("profiles")
+        .select(
+          "id, username, avatar_url, university, career"
+        )
+        .eq(
+          "username",
+          username
+        )
         .maybeSingle();
 
-if (
-  requestId !==
-  loadChatRequestRef.current
-) {
-  return;
-}
-
-if (
-  receiverError ||
-  !receiverData
-) {
-
       if (
-        receiverError
+        requestId !==
+        loadChatRequestRef.current
       ) {
-        console.error(
-          receiverError
-        );
+        return;
       }
 
-      setReceiver(null);
-      setLoadingChat(
-        false
-      );
-      return;
-    }
+      if (
+        receiverError ||
+        !freshReceiver
+      ) {
+        if (
+          receiverError
+        ) {
+          console.error(
+            receiverError
+          );
+        }
 
-    setReceiver(
-      receiverData
-    );
+        receiverRef.current =
+          null;
+
+        setReceiver(null);
+        setLoadingChat(
+          false
+        );
+        return;
+      }
+
+      receiverData =
+        freshReceiver;
+
+      receiverRef.current =
+        freshReceiver;
+
+      setReceiver(
+        freshReceiver
+      );
+    }
 
     const {
       data,
@@ -874,46 +974,143 @@ if (messageIds.length) {
     reactionsData || [];
 }
 
-setMessages(
+const reactionsByMessage =
+  new Map<
+    number,
+    any[]
+  >();
+
+for (
+  const reaction of
+  reactionRows
+) {
+  const current =
+    reactionsByMessage.get(
+      reaction.message_id
+    ) || [];
+
+  current.push(
+    reaction
+  );
+
+  reactionsByMessage.set(
+    reaction.message_id,
+    current
+  );
+}
+
+const nextMessages =
   hydrated.map(
     (message: any) => ({
       ...message,
       reactions:
-        reactionRows.filter(
-          (reaction: any) =>
-            reaction.message_id ===
-            message.id
-        ),
+        reactionsByMessage.get(
+          message.id
+        ) || [],
     })
-  )
+  );
+
+setMessages(
+  (current) => {
+    const same =
+      current.length ===
+        nextMessages.length &&
+      current.every(
+        (
+          message,
+          index
+        ) => {
+          const next =
+            nextMessages[index];
+
+          if (
+            !next ||
+            message.id !==
+              next.id ||
+            message.read_at !==
+              next.read_at ||
+            message.content !==
+              next.content ||
+            message.media_url !==
+              next.media_url ||
+            message.reply_to_id !==
+              next.reply_to_id
+          ) {
+            return false;
+          }
+
+          const currentReactions =
+            message.reactions ||
+            [];
+
+          const nextReactions =
+            next.reactions ||
+            [];
+
+          return (
+            currentReactions.length ===
+              nextReactions.length &&
+            currentReactions.every(
+              (
+                reaction: any,
+                reactionIndex: number
+              ) =>
+                reaction.user_id ===
+                  nextReactions[
+                    reactionIndex
+                  ]?.user_id &&
+                reaction.emoji ===
+                  nextReactions[
+                    reactionIndex
+                  ]?.emoji
+            )
+          );
+        }
+      );
+
+    return same
+      ? current
+      : nextMessages;
+  }
 );
 
-      const {
-        error:
-          readError,
-      } = await supabase
-        .from("messages")
-        .update({
-          read_at:
-            new Date().toISOString(),
-        })
-        .eq(
-          "receiver_id",
-          user.id
-        )
-        .eq(
-          "sender_id",
-          receiverData.id
-        )
-        .is(
-          "read_at",
-          null
-        );
+      const unreadIds =
+        nextMessages
+          .filter(
+            (message: any) =>
+              message.receiver_id ===
+                user.id &&
+              message.sender_id ===
+                receiverData.id &&
+              !message.read_at
+          )
+          .map(
+            (message: any) =>
+              message.id
+          );
 
-      if (readError) {
-        console.error(
-          readError
-        );
+      if (
+        unreadIds.length
+      ) {
+        const {
+          error:
+            readError,
+        } = await supabase
+          .from("messages")
+          .update({
+            read_at:
+              new Date().toISOString(),
+          })
+          .in(
+            "id",
+            unreadIds
+          );
+
+        if (readError) {
+          console.error(
+            readError
+          );
+        }
       }
       } else {
     console.error(error);
@@ -1041,6 +1238,11 @@ setMessages(
           type
       )}`;
 
+    const preview =
+      await createMessageMediaPreview(
+        file
+      );
+
     const { error } =
       await supabase.storage
         .from(BUCKET)
@@ -1065,6 +1267,9 @@ setMessages(
       name:
         file.name ||
         null,
+      preview,
+      size:
+        file.size,
     };
   }
 
@@ -1084,6 +1289,9 @@ setMessages(
     }
 
     setSending(true);
+
+    suppressOwnInsertUntilRef.current =
+      Date.now() + 650;
 
     let uploaded:
       | string
@@ -1128,6 +1336,12 @@ setMessages(
             media_name:
               media?.name ||
               null,
+            media_preview:
+              media?.preview ||
+              null,
+            media_size:
+              media?.size ||
+              null,
             reply_to_id:
               replyingTo?.id ||
               null,
@@ -1142,7 +1356,9 @@ setMessages(
       clearMedia();
       broadcastTyping(false);
 
-      await loadChat(false);
+      scheduleChatRefresh(
+        40
+      );
 
       window.requestAnimationFrame(
         () => {
@@ -1429,13 +1645,13 @@ setMessages(
               </div>
 
               <div className="min-w-0">
-                <h1 className="truncate text-[14px] font-black text-[var(--app-text)]">
+                <h1 className="truncate text-[15px] font-black text-[var(--app-text)]">
                   @
                   {receiver?.username ||
                     username}
                 </h1>
 
-                <p className="mt-0.5 truncate text-[10px] text-[var(--app-muted-2)]">
+                <p className="mt-0.5 truncate text-[11px] text-[var(--app-muted-2)]">
                   {[
                     receiver?.career,
                     receiver?.university,
@@ -1558,7 +1774,7 @@ setMessages(
                   )
                 }
                 placeholder="Buscar en esta conversación"
-                className="alumni-mobile-input h-9 min-w-0 flex-1 bg-transparent text-[16px] text-[var(--app-text)] outline-none placeholder:text-[var(--app-muted-3)] sm:text-[13px]"
+                className="alumni-mobile-input h-9 min-w-0 flex-1 bg-transparent text-[16px] text-[var(--app-text)] outline-none placeholder:text-[var(--app-muted-3)] sm:text-[14px]"
               />
 
               {chatSearch && (
@@ -1590,11 +1806,11 @@ setMessages(
           className="alumni-chat-scroll alumni-chat-wallpaper scrollbar-thin min-h-0 flex-1 overscroll-contain overflow-y-auto px-2.5 py-3 sm:px-5 sm:py-4"
           style={{
             backgroundImage:
-              "radial-gradient(circle at 18% 16%, color-mix(in srgb,var(--app-accent) 7%,transparent) 0 1px, transparent 1.35px), radial-gradient(circle at 80% 72%, color-mix(in srgb,var(--app-text) 4%,transparent) 0 1px, transparent 1.3px), linear-gradient(180deg, color-mix(in srgb,var(--app-bg) 96%,var(--app-surface)), var(--app-bg))",
+              "radial-gradient(circle at 12% 0%, color-mix(in srgb,var(--app-accent) 7%,transparent), transparent 34%), radial-gradient(circle at 88% 100%, color-mix(in srgb,var(--app-accent) 4%,transparent), transparent 30%), linear-gradient(180deg, color-mix(in srgb,var(--app-bg) 97%,var(--app-surface)), var(--app-bg))",
             backgroundSize:
-              "29px 29px, 37px 37px, 100% 100%",
+              "100% 100%",
             backgroundPosition:
-              "0 0, 12px 10px, 0 0",
+              "0 0",
           }}
         >
           {loadingChat ? (
@@ -1740,7 +1956,7 @@ setMessages(
                     >
                       {showDay && (
                         <div className="my-3 flex items-center justify-center">
-                          <span className="rounded-full border border-[var(--app-border)] bg-[color-mix(in_srgb,var(--app-surface)_88%,transparent)] px-3 py-1.5 text-[9px] font-black text-[var(--app-muted-2)] backdrop-blur-xl">
+                          <span className="rounded-full border border-[var(--app-border)] bg-[color-mix(in_srgb,var(--app-surface)_88%,transparent)] px-3 py-1.5 text-[10px] font-black text-[var(--app-muted-2)] backdrop-blur-xl">
                             {dayLabel(
                               message.created_at
                             )}
@@ -1799,7 +2015,7 @@ setMessages(
                             )}
 
                             <div className="px-3.5 py-3">
-                              <p className="text-[13px] leading-[1.4] text-[var(--app-text-soft)]">
+                              <p className="text-[15px] leading-[1.45] text-[var(--app-text-soft)]">
                                 {
                                   message.content
                                 }
@@ -1838,48 +2054,28 @@ setMessages(
                               peerUsername={receiver?.username}
                             />
 
-                            {message.media_url ? (
-                              message.media_type ===
-                              "video" ? (
-                                <video
-                                  src={
-                                    message.media_url
-                                  }
-                                  controls
-                                  playsInline
-                                  preload="metadata"
-                                  className="max-h-[42dvh] w-full bg-black object-contain"
-                                />
-                              ) : (
-                                <a
-                                  href={
-                                    message.media_url
-                                  }
-                                  target="_blank"
-                                  rel="noreferrer"
-                                  className="block bg-black/15"
-                                >
-                                  <img
-                                    src={
-                                      message.media_url
-                                    }
-                                    alt={
-                                      message.media_name ||
-                                      "Foto enviada"
-                                    }
-                                    className="max-h-[44dvh] w-full object-contain"
-                                  />
-                                </a>
-                              )
-                            ) : (
-                              <div className="px-5 py-10 text-center text-xs text-[var(--app-muted-2)]">
-                                Archivo no disponible.
-                              </div>
-                            )}
+                            <DeferredMessageMedia
+                              bucket={BUCKET}
+                              path={
+                                message.media_path
+                              }
+                              preview={
+                                message.media_preview
+                              }
+                              mediaType={
+                                message.media_type
+                              }
+                              name={
+                                message.media_name
+                              }
+                              size={
+                                message.media_size
+                              }
+                            />
 
                             <div className="px-3.5 py-2.5">
                               {message.content && (
-                                <p className="text-[13px] leading-[1.4] text-[var(--app-text-soft)]">
+                                <p className="text-[15px] leading-[1.45] text-[var(--app-text-soft)]">
                                   {
                                     message.content
                                   }
@@ -1927,7 +2123,7 @@ setMessages(
                               peerUsername={receiver?.username}
                             />
 
-                            <p className="whitespace-pre-wrap break-words text-[13.5px] leading-[1.4]">
+                            <p className="whitespace-pre-wrap break-words text-[15px] leading-[1.45]">
                               {
                                 message.content
                               }
@@ -1940,7 +2136,7 @@ setMessages(
                                   : "text-[var(--app-muted-3)]"
                               }`}
                             >
-                              <span className="text-[9px]">
+                              <span className="text-[10px]">
                                 {time(
                                   message.created_at
                                 )}
@@ -1984,7 +2180,7 @@ setMessages(
                         isLastOwn &&
                         message.read_at &&
                         !searchOpen && (
-                          <p className="mt-1.5 pr-1 text-right text-[9px] font-semibold text-[var(--app-muted-3)]">
+                          <p className="mt-1.5 pr-1 text-right text-[10px] font-semibold text-[var(--app-muted-3)]">
                             Visto
                           </p>
                         )}
@@ -1997,7 +2193,7 @@ setMessages(
         </div>
 
         {receiverTyping && (
-          <div className="shrink-0 px-4 pb-1 text-[10px] font-semibold text-[var(--app-muted-2)]">
+          <div className="shrink-0 px-4 pb-1.5 text-[12px] font-semibold text-[var(--app-muted-2)]">
             @{receiver?.username || username} está escribiendo…
           </div>
         )}
@@ -2043,13 +2239,13 @@ setMessages(
               </div>
 
               <div className="min-w-0 flex-1">
-                <p className="truncate text-[11px] font-black text-[var(--app-text-soft)]">
+                <p className="truncate text-[12px] font-black text-[var(--app-text-soft)]">
                   {
                     mediaFile.name
                   }
                 </p>
 
-                <p className="mt-0.5 text-[9px] text-[var(--app-muted-3)]">
+                <p className="mt-0.5 text-[10px] text-[var(--app-muted-3)]">
                   {mediaFile.type.startsWith(
                     "video/"
                   )
@@ -2177,7 +2373,7 @@ setMessages(
                   ? "Añade un mensaje..."
                   : "Escribe un mensaje"
               }
-              className="alumni-mobile-input min-h-[38px] min-w-0 flex-1 resize-none overflow-y-auto bg-transparent px-1.5 py-[9px] text-[16px] leading-5 text-[var(--app-text)] outline-none placeholder:text-[var(--app-muted-2)] sm:text-[14px]"
+              className="alumni-mobile-input min-h-[38px] min-w-0 flex-1 resize-none overflow-y-auto bg-transparent px-1.5 py-[9px] text-[16px] leading-5 text-[var(--app-text)] outline-none placeholder:text-[var(--app-muted-2)] sm:text-[15px]"
             />
 
             <button
@@ -2315,3 +2511,7 @@ setMessages(
 /* ALUMNI_1_2_0_1_MESSAGING_PRO_CONTINUATION */
 
 /* ALUMNI_1_2_1_MESSAGING_EXPERIENCE */
+
+/* ALUMNI_1_2_3_SCROLL_MESSAGES_STABILITY:CHAT */
+
+/* ALUMNI_1_3_0_GROUPS_MEDIA_PRO:DIRECT_CHAT */
