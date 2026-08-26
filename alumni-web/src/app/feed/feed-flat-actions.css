@@ -121,6 +121,17 @@
   background: transparent !important;
 }
 
+/*
+ * Repeat2 tiene más aire interno que Heart/MessageCircle/Share2.
+ * Se escala ópticamente, no cambia el hit-area del botón.
+ */
+.alumni-feed-page .alumni-post-actions .alumni-repost-action svg {
+  width: 24px !important;
+  height: 24px !important;
+  transform: scale(1.05);
+  transform-origin: center;
+}
+
 /* Stats under actions, like Instagram. */
 .alumni-feed-page .alumni-post-stats {
   display: flex !important;
@@ -302,3 +313,5 @@
 /* ALUMNI_1_3_8_3_IG_ACTIONS_OVERFLOW_MENU */
 
 /* ALUMNI_1_3_8_4_MENU_POSITION_AND_TIGHT_SPACING */
+
+/* ALUMNI_1_3_8_5_REPOST_ICON_OPTICAL_SIZE */
