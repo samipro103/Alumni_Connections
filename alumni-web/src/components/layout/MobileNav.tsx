@@ -4,6 +4,9 @@ import {
   useEffect,
   useState,
 } from "react";
+import {
+  createPortal,
+} from "react-dom";
 import Link from "next/link";
 import {
   usePathname,
@@ -22,7 +25,6 @@ import {
   supabase,
 } from "@/lib/supabase";
 
-/* ALUMNI_1_2_2_NAV_STABILITY:MOBILE_NAV */
 const unreadMessagesCache =
   new Map<string, number>();
 
@@ -64,6 +66,11 @@ export default function MobileNav() {
     useAuth();
 
   const [
+    portalReady,
+    setPortalReady,
+  ] = useState(false);
+
+  const [
     unreadMessages,
     setUnreadMessages,
   ] = useState(
@@ -73,6 +80,14 @@ export default function MobileNav() {
         ) || 0
       : 0
   );
+
+  useEffect(() => {
+    setPortalReady(true);
+
+    return () => {
+      setPortalReady(false);
+    };
+  }, []);
 
   useEffect(() => {
     if (!user) {
@@ -94,7 +109,9 @@ export default function MobileNav() {
       );
     }
 
-    const currentUser = user;
+    const currentUser =
+      user;
+
     let active = true;
 
     async function refreshUnread() {
@@ -207,10 +224,16 @@ export default function MobileNav() {
     };
   }, [user?.id]);
 
-  return (
+  if (
+    !portalReady
+  ) {
+    return null;
+  }
+
+  return createPortal(
     <nav
       data-alumni-mobile-nav="true"
-      className="fixed inset-x-0 bottom-0 z-[90] border-t border-white/[0.08] bg-[#0b0e13]/95 px-2 pb-[max(8px,env(safe-area-inset-bottom))] pt-2 backdrop-blur-xl lg:hidden"
+      className="fixed inset-x-0 bottom-0 z-[2147482000] border-t border-[var(--app-border)] bg-[color-mix(in_srgb,var(--app-surface)_96%,transparent)] px-2 pb-[max(8px,env(safe-area-inset-bottom))] pt-2 shadow-[0_-10px_30px_var(--app-shadow)] backdrop-blur-2xl [backface-visibility:hidden] [transform:translateZ(0)] lg:hidden"
     >
       <div className="mx-auto grid max-w-lg grid-cols-5">
         {items.map(
@@ -240,10 +263,10 @@ export default function MobileNav() {
                 <span
                   className={`relative flex h-9 w-11 items-center justify-center rounded-xl transition ${
                     create
-                      ? "bg-[#6d7cff] text-white shadow-[0_8px_25px_rgba(109,124,255,.25)]"
+                      ? "bg-[var(--app-accent)] text-[var(--app-on-accent)] shadow-[0_8px_25px_color-mix(in_srgb,var(--app-accent)_25%,transparent)]"
                       : active
-                      ? "bg-white/[0.07] text-white"
-                      : "text-zinc-500"
+                      ? "bg-[var(--app-soft)] text-[var(--app-text)]"
+                      : "text-[var(--app-muted-2)]"
                   }`}
                 >
                   <Icon
@@ -253,7 +276,7 @@ export default function MobileNav() {
                   {messages &&
                     unreadMessages >
                       0 && (
-                      <span className="absolute right-0.5 top-0 flex min-h-4 min-w-4 items-center justify-center rounded-full bg-[#6d7cff] px-1 text-[9px] font-black leading-none text-white ring-2 ring-[#0b0e13]">
+                      <span className="absolute right-0.5 top-0 flex min-h-4 min-w-4 items-center justify-center rounded-full bg-[var(--app-accent)] px-1 text-[9px] font-black leading-none text-[var(--app-on-accent)] ring-2 ring-[var(--app-surface)]">
                         {unreadMessages >
                         99
                           ? "99+"
@@ -265,8 +288,8 @@ export default function MobileNav() {
                 <span
                   className={`text-[10px] ${
                     active
-                      ? "text-white"
-                      : "text-zinc-600"
+                      ? "font-bold text-[var(--app-text)]"
+                      : "text-[var(--app-muted-2)]"
                   }`}
                 >
                   {label}
@@ -276,8 +299,9 @@ export default function MobileNav() {
           }
         )}
       </div>
-    </nav>
+    </nav>,
+    document.body
   );
 }
 
-/* ALUMNI_1_3_0_GROUPS_MEDIA_PRO:MOBILE_NAV */
+/* ALUMNI_1_3_7_MOBILE_NAV_PORTAL */

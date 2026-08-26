@@ -180,8 +180,6 @@ export default function ProfileMusicCard({
       return;
     }
 
-    activateElement();
-
     if (isPlaying) {
       await pause();
       return;
@@ -190,6 +188,13 @@ export default function ProfileMusicCard({
     setStarting(true);
 
     try {
+      /*
+       * iOS requires the Spotify audio element
+       * to be activated from the user's click.
+       * Await it before starting playback.
+       */
+      await activateElement();
+
       await playFragment({
         trackId:
           currentTrack.provider_track_id,
@@ -205,102 +210,103 @@ export default function ProfileMusicCard({
 
   return (
     <div
-      className={`flex min-w-0 items-center gap-3 py-2 ${className}`}
+      className={`min-w-0 ${className}`}
     >
-      <div className="h-12 w-12 shrink-0 overflow-hidden rounded-xl bg-white/[0.05]">
-        {track.artwork_url ? (
-          <img
-            src={
-              track.artwork_url
-            }
-            alt={`Portada de ${track.track_title}`}
-            className="h-full w-full object-cover"
-          />
-        ) : (
-          <div className="h-full w-full bg-white/[0.04]" />
-        )}
-      </div>
-
-      <div className="min-w-0 flex-1">
-        <p className="truncate text-sm font-black text-zinc-100">
-          {
-            track.track_title
-          }
-        </p>
-
-        <p className="mt-0.5 truncate text-[11px] text-zinc-600">
-          {track.artist_name ||
-            "Spotify"}
-        </p>
-      </div>
-
-      <span className="shrink-0 text-[#1ed760]">
-        <SpotifyLogo
-          size={20}
-        />
-      </span>
-
-      <button
-        type="button"
-        onClick={
-          mainAction
-        }
-        disabled={
-          !sessionChecked ||
-          starting
-        }
-        className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white/[0.06] text-zinc-100 transition hover:bg-white/[0.10] disabled:cursor-wait disabled:text-zinc-700"
-        aria-label={
-          premiumReady
-            ? isPlaying
-              ? "Pausar"
-              : error
-              ? "Reintentar Spotify"
-              : "Reproducir"
-            : "Abrir en Spotify"
-        }
-        title={
-          error &&
-          premiumReady
-            ? "Toca para reintentar Spotify"
-            : undefined
-        }
-      >
-        {!sessionChecked ||
-        starting ? (
-          <Loader2
-            size={15}
-            className="animate-spin"
-          />
-        ) : premiumReady ? (
-          isPlaying ? (
-            <Pause
-              size={15}
-              fill="currentColor"
+      <div className="flex min-w-0 items-center gap-3 py-2">
+        <div className="h-12 w-12 shrink-0 overflow-hidden rounded-xl bg-[var(--app-soft)]">
+          {track.artwork_url ? (
+            <img
+              src={
+                track.artwork_url
+              }
+              alt={`Portada de ${track.track_title}`}
+              className="h-full w-full object-cover"
             />
           ) : (
-            <Play
-              size={15}
-              fill="currentColor"
-            />
-          )
-        ) : (
-          <ExternalLink
-            size={15}
-          />
-        )}
-      </button>
+            <div className="h-full w-full bg-[var(--app-soft)]" />
+          )}
+        </div>
 
-      {error && (
-        <span
-          className="sr-only"
-          role="status"
-        >
-          {error}
+        <div className="min-w-0 flex-1">
+          <p className="truncate text-sm font-black text-[var(--app-text)]">
+            {
+              track.track_title
+            }
+          </p>
+
+          <p className="mt-0.5 truncate text-[11px] text-[var(--app-muted-2)]">
+            {track.artist_name ||
+              "Spotify"}
+          </p>
+        </div>
+
+        <span className="shrink-0 text-[#1ed760]">
+          <SpotifyLogo
+            size={20}
+          />
         </span>
-      )}
+
+        <button
+          type="button"
+          onClick={
+            mainAction
+          }
+          disabled={
+            !sessionChecked ||
+            starting
+          }
+          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[var(--app-soft)] text-[var(--app-text)] ring-1 ring-[var(--app-border)] transition hover:bg-[var(--app-soft-strong)] disabled:cursor-wait disabled:text-[var(--app-muted-3)]"
+          aria-label={
+            premiumReady
+              ? isPlaying
+                ? "Pausar"
+                : error
+                ? "Reintentar Spotify"
+                : "Reproducir"
+              : "Abrir en Spotify"
+          }
+        >
+          {!sessionChecked ||
+          starting ? (
+            <Loader2
+              size={15}
+              className="animate-spin"
+            />
+          ) : premiumReady ? (
+            isPlaying ? (
+              <Pause
+                size={15}
+                fill="currentColor"
+              />
+            ) : (
+              <Play
+                size={15}
+                fill="currentColor"
+              />
+            )
+          ) : (
+            <ExternalLink
+              size={15}
+            />
+          )}
+        </button>
+      </div>
+
+      {error &&
+        premiumReady && (
+          <button
+            type="button"
+            onClick={
+              mainAction
+            }
+            className="mt-1 block max-w-full truncate text-left text-[10px] font-semibold text-[var(--app-muted-2)] transition hover:text-[var(--app-text)]"
+            title={error}
+          >
+            {error} · Toca para reintentar
+          </button>
+        )}
     </div>
   );
 }
 
-/* ALUMNI_1_3_5_1_SPOTIFY_TS_HOTFIX */
+/* ALUMNI_1_3_7_SPOTIFY_PROFILE */

@@ -413,11 +413,21 @@ export async function ensureSpotifyPlayer() {
   );
 }
 
-export function activateSpotifyElement() {
+export async function activateSpotifyElement() {
+  if (
+    !player ||
+    typeof player.activateElement !==
+      "function"
+  ) {
+    return false;
+  }
+
   try {
-    void player
-      ?.activateElement?.();
-  } catch {}
+    await player.activateElement();
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 export async function spotifyPause() {
@@ -431,14 +441,63 @@ export async function spotifyPause() {
 }
 
 export async function spotifyResume() {
+  if (
+    !player ||
+    typeof player.resume !==
+      "function"
+  ) {
+    return false;
+  }
+
   try {
-    await player?.resume?.();
+    await player.resume();
 
-    emit({
-      isPlaying: true,
-    });
+    for (
+      let attempt = 0;
+      attempt < 4;
+      attempt++
+    ) {
+      await new Promise<void>(
+        (resolve) =>
+          window.setTimeout(
+            resolve,
+            attempt === 0
+              ? 70
+              : 120
+          )
+      );
 
-    return true;
+      try {
+        const state =
+          await player.getCurrentState?.();
+
+        if (
+          state &&
+          !state.paused
+        ) {
+          emit({
+            isPlaying: true,
+            positionMs:
+              Number(
+                state.position ||
+                  snapshot.positionMs ||
+                  0
+              ),
+            error: "",
+          });
+
+          return true;
+        }
+      } catch {}
+
+      if (
+        snapshot.isPlaying
+      ) {
+        return true;
+      }
+    }
+
+    return false;
   } catch {
     return false;
   }
@@ -483,3 +542,5 @@ export function clearSpotifyPlayerError() {
 /* ALUMNI_1_3_5_MEDIA_MODAL_SPOTIFY_FIX:SPOTIFY */
 
 /* ALUMNI_1_3_6_CHAT_STABILITY_MEDIA_SPOTIFY:SPOTIFY_MANAGER */
+
+/* ALUMNI_1_3_7_MESSAGING_GLOBAL_STABILITY:SPOTIFY_MANAGER */

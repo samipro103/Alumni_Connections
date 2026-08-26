@@ -218,6 +218,9 @@ export default function ChatPage() {
       null
     );
 
+  const stickToBottomRef =
+    useRef(true);
+
   const searchInputRef =
     useRef<HTMLInputElement>(
       null
@@ -335,11 +338,97 @@ const mediaUrlCacheRef =
       if (
         payload?.eventType ===
           "INSERT" &&
-        row?.sender_id ===
-          user.id &&
-        Date.now() <
-          suppressOwnInsertUntilRef.current
+        row
       ) {
+        if (!peerId) {
+          scheduleChatRefresh(
+            40
+          );
+          return;
+        }
+
+        if (
+          row.sender_id ===
+            user.id &&
+          Date.now() <
+            suppressOwnInsertUntilRef.current
+        ) {
+          return;
+        }
+
+        setMessages(
+          (current) => {
+            if (
+              current.some(
+                (message) =>
+                  message.id ===
+                  row.id
+              )
+            ) {
+              return current;
+            }
+
+            return [
+              ...current,
+              {
+                ...row,
+                reactions: [],
+              },
+            ];
+          }
+        );
+
+        if (
+          row.receiver_id ===
+            user.id &&
+          row.sender_id ===
+            peerId &&
+          !row.read_at
+        ) {
+          const readAt =
+            new Date()
+              .toISOString();
+
+          setMessages(
+            (current) =>
+              current.map(
+                (message) =>
+                  message.id ===
+                  row.id
+                    ? {
+                        ...message,
+                        read_at:
+                          readAt,
+                      }
+                    : message
+              )
+          );
+
+          void supabase
+            .from(
+              "messages"
+            )
+            .update({
+              read_at:
+                readAt,
+            })
+            .eq(
+              "id",
+              row.id
+            );
+        }
+
+        if (
+          stickToBottomRef.current
+        ) {
+          window.requestAnimationFrame(
+            () =>
+              scrollToBottom(
+                "smooth"
+              )
+          );
+        }
+
         return;
       }
 
@@ -619,7 +708,8 @@ const mediaUrlCacheRef =
 
   useEffect(() => {
     if (
-      messages.length
+      messages.length &&
+      stickToBottomRef.current
     ) {
       window.requestAnimationFrame(
         () =>
@@ -1288,10 +1378,114 @@ setMessages(
       return;
     }
 
+    const textToSend =
+      newMessage.trim();
+
+    const fileToSend =
+      mediaFile;
+
+    const replyToSend =
+      replyingTo;
+
+    const optimisticId =
+      -Date.now();
+
+    const optimisticLocalPreview =
+      fileToSend
+        ? URL.createObjectURL(
+            fileToSend
+          )
+        : "";
+
+    const optimisticMediaType =
+      fileToSend
+        ? fileToSend.type
+            .startsWith(
+              "video/"
+            )
+          ? "video"
+          : "image"
+        : null;
+
+    const optimisticMessage = {
+      id:
+        optimisticId,
+      sender_id:
+        user.id,
+      receiver_id:
+        receiver.id,
+      content:
+        textToSend ||
+        null,
+      message_type:
+        optimisticMediaType ||
+        "text",
+      media_path:
+        null,
+      media_type:
+        optimisticMediaType,
+      media_mime:
+        fileToSend?.type ||
+        null,
+      media_name:
+        null,
+      media_preview:
+        optimisticLocalPreview ||
+        null,
+      media_size:
+        fileToSend?.size ||
+        null,
+      reply_to_id:
+        replyToSend?.id ||
+        null,
+      created_at:
+        new Date()
+          .toISOString(),
+      read_at:
+        null,
+      reactions: [],
+      _pending:
+        true,
+    };
+
     setSending(true);
 
     suppressOwnInsertUntilRef.current =
-      Date.now() + 650;
+      Date.now() + 3000;
+
+    stickToBottomRef.current =
+      true;
+
+    setMessages(
+      (current) => [
+        ...current,
+        optimisticMessage,
+      ]
+    );
+
+    setNewMessage("");
+    setReplyingTo(null);
+
+    if (fileToSend) {
+      setMediaFile(null);
+      setMediaPreview("");
+
+      if (
+        fileInputRef.current
+      ) {
+        fileInputRef.current.value =
+          "";
+      }
+    }
+
+    broadcastTyping(false);
+
+    window.requestAnimationFrame(
+      () =>
+        scrollToBottom(
+          "smooth"
+        )
+    );
 
     let uploaded:
       | string
@@ -1299,9 +1493,9 @@ setMessages(
 
     try {
       const media =
-        mediaFile
+        fileToSend
           ? await uploadMedia(
-              mediaFile
+              fileToSend
             )
           : null;
 
@@ -1309,7 +1503,14 @@ setMessages(
         media?.path ||
         null;
 
-      const { error } =
+      suppressOwnInsertUntilRef.current =
+        Date.now() + 5000;
+
+      const {
+        data:
+          inserted,
+        error,
+      } =
         await supabase
           .from("messages")
           .insert({
@@ -1318,7 +1519,7 @@ setMessages(
             receiver_id:
               receiver.id,
             content:
-              newMessage.trim() ||
+              textToSend ||
               null,
             message_type:
               media
@@ -1343,35 +1544,61 @@ setMessages(
               media?.size ||
               null,
             reply_to_id:
-              replyingTo?.id ||
+              replyToSend?.id ||
               null,
-          });
+          })
+          .select("*")
+          .single();
 
-      if (error) {
-        throw error;
+      if (
+        error ||
+        !inserted
+      ) {
+        throw (
+          error ||
+          new Error(
+            "No se pudo confirmar el mensaje."
+          )
+        );
       }
 
-      setNewMessage("");
-      setReplyingTo(null);
-      clearMedia();
-      broadcastTyping(false);
-
-      scheduleChatRefresh(
-        40
+      setMessages(
+        (current) =>
+          current.map(
+            (message) =>
+              message.id ===
+              optimisticId
+                ? {
+                    ...inserted,
+                    reactions: [],
+                  }
+                : message
+          )
       );
 
-      window.requestAnimationFrame(
-        () => {
-          scrollToBottom(
-            "smooth"
-          );
-
-          textareaRef.current?.focus();
-        }
-      );
+      if (
+        optimisticLocalPreview
+      ) {
+        window.setTimeout(
+          () =>
+            URL.revokeObjectURL(
+              optimisticLocalPreview
+            ),
+          250
+        );
+      }
     } catch (
       error: any
     ) {
+      setMessages(
+        (current) =>
+          current.filter(
+            (message) =>
+              message.id !==
+              optimisticId
+          )
+      );
+
       if (uploaded) {
         await supabase.storage
           .from(BUCKET)
@@ -1380,12 +1607,46 @@ setMessages(
           ]);
       }
 
+      if (
+        optimisticLocalPreview
+      ) {
+        URL.revokeObjectURL(
+          optimisticLocalPreview
+        );
+      }
+
+      setNewMessage(
+        textToSend
+      );
+
+      setReplyingTo(
+        replyToSend
+      );
+
+      if (fileToSend) {
+        setMediaFile(
+          fileToSend
+        );
+
+        setMediaPreview(
+          URL.createObjectURL(
+            fileToSend
+          )
+        );
+      }
+
       alert(
         error?.message ||
           "No se pudo enviar el mensaje."
       );
     } finally {
       setSending(false);
+
+      window.requestAnimationFrame(
+        () => {
+          textareaRef.current?.focus();
+        }
+      );
     }
   }
 
@@ -1803,6 +2064,16 @@ setMessages(
 
         <div
           ref={scrollRef}
+          onScroll={(event) => {
+            const target =
+              event.currentTarget;
+
+            stickToBottomRef.current =
+              target.scrollHeight -
+                target.scrollTop -
+                target.clientHeight <
+              160;
+          }}
           className="alumni-chat-scroll alumni-chat-wallpaper scrollbar-thin min-h-0 flex-1 overscroll-contain overflow-y-auto px-2.5 py-3 sm:px-5 sm:py-4"
           style={{
             backgroundImage:
@@ -2531,3 +2802,5 @@ setMessages(
 /* ALUMNI_1_3_4_GROUP_MODAL_MEDIA_POLISH:DIRECT */
 
 /* ALUMNI_1_3_5_MEDIA_MODAL_SPOTIFY_FIX:DIRECT */
+
+/* ALUMNI_1_3_7_MESSAGING_GLOBAL_STABILITY:DIRECT_CHAT */

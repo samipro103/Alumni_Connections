@@ -1,5 +1,5 @@
 const ALUMNI_VERSION =
-  "alumni-pwa-1.1.0-d";
+  "alumni-pwa-1.3.7";
 
 self.addEventListener(
   "install",
@@ -41,6 +41,75 @@ async function clearBadge() {
         .clearAppBadge();
     }
   } catch {}
+}
+
+function normalizedPath(
+  value
+) {
+  try {
+    const parsed =
+      new URL(
+        value,
+        self.location.origin
+      );
+
+    const pathname =
+      parsed.pathname
+        .replace(
+          /\/+$/,
+          ""
+        ) || "/";
+
+    return pathname;
+  } catch {
+    return "/";
+  }
+}
+
+async function targetChatIsVisible(
+  relativeUrl
+) {
+  const target =
+    normalizedPath(
+      relativeUrl
+    );
+
+  if (
+    !target.startsWith(
+      "/messages/"
+    )
+  ) {
+    return false;
+  }
+
+  try {
+    const windows =
+      await self.clients
+        .matchAll({
+          type: "window",
+          includeUncontrolled:
+            true,
+        });
+
+    return windows.some(
+      (client) => {
+        if (
+          client.visibilityState !==
+          "visible"
+        ) {
+          return false;
+        }
+
+        return (
+          normalizedPath(
+            client.url
+          ) === target
+        );
+      }
+    );
+  } catch {
+    return false;
+  }
 }
 
 self.addEventListener(
@@ -98,37 +167,58 @@ self.addEventListener(
         : "/notifications";
 
     event.waitUntil(
-      Promise.all([
-        self.registration
-          .showNotification(
-            title,
-            {
-              body,
-              icon:
-                "/icons/alumni-192.png",
-              badge:
-                "/icons/alumni-badge-96.png",
-              tag:
-                data.type &&
-                data.target_id
-                  ? `alumni-${data.type}-${data.target_id}`
-                  : `alumni-${Date.now()}`,
-              renotify: false,
-              data: {
-                url,
-                type:
-                  data.type ||
-                  "notification",
-                target_id:
-                  data.target_id ||
-                  "",
-                version:
-                  ALUMNI_VERSION,
-              },
-            }
-          ),
-        setBadge(),
-      ])
+      (async () => {
+        /*
+         * If Alumni is visible in the exact
+         * conversation receiving this message,
+         * the chat itself is the notification.
+         * Do not duplicate it with a system push.
+         *
+         * If Alumni is hidden/backgrounded OR the
+         * user is somewhere else in the app, push
+         * works normally.
+         */
+        if (
+          await targetChatIsVisible(
+            url
+          )
+        ) {
+          return;
+        }
+
+        await Promise.all([
+          self.registration
+            .showNotification(
+              title,
+              {
+                body,
+                icon:
+                  "/icons/alumni-192.png",
+                badge:
+                  "/icons/alumni-badge-96.png",
+                tag:
+                  data.type &&
+                  data.target_id
+                    ? `alumni-${data.type}-${data.target_id}`
+                    : `alumni-${Date.now()}`,
+                renotify:
+                  false,
+                data: {
+                  url,
+                  type:
+                    data.type ||
+                    "notification",
+                  target_id:
+                    data.target_id ||
+                    "",
+                  version:
+                    ALUMNI_VERSION,
+                },
+              }
+            ),
+          setBadge(),
+        ]);
+      })()
     );
   }
 );
@@ -212,8 +302,6 @@ self.addEventListener(
 );
 
 /*
-  Intencionalmente NO existe fetch cache.
-  Alumni siempre pide los bundles/páginas
-  actuales y evita quedarse atrapada en
-  una versión vieja de la aplicación.
+  No fetch cache on purpose.
+  Alumni always requests current bundles/pages.
 */

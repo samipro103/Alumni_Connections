@@ -207,9 +207,12 @@ export function useSpotifyPremiumPlayer({
   ]);
 
   const activateElement =
-    useCallback(() => {
-      activateSpotifyElement();
+    useCallback(async () => {
       clearSpotifyPlayerError();
+
+      return (
+        await activateSpotifyElement()
+      );
     }, []);
 
   const pause =
@@ -306,6 +309,13 @@ export function useSpotifyPremiumPlayer({
         try {
           const currentDeviceId =
             await ensureSpotifyPlayer();
+
+          /*
+           * If the player became ready after the
+           * profile button was tapped, activate it
+           * again before requesting playback.
+           */
+          await activateSpotifyElement();
 
           await callPlayApi({
             trackId,
@@ -584,3 +594,5 @@ export function useSpotifyPremiumPlayer({
 }
 
 /* ALUMNI_1_3_6_CHAT_STABILITY_MEDIA_SPOTIFY:SPOTIFY */
+
+/* ALUMNI_1_3_7_MESSAGING_GLOBAL_STABILITY:SPOTIFY_HOOK */

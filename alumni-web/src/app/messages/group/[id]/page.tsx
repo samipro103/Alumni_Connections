@@ -130,6 +130,12 @@ export default function GroupChatPage() {
     useRef<HTMLDivElement>(
       null
     );
+
+  const stickToBottomRef =
+    useRef(true);
+
+  const suppressOwnInsertUntilRef =
+    useRef(0);
   const channelRef =
     useRef<any>(null);
   const typingTimerRef =
@@ -184,8 +190,24 @@ export default function GroupChatPage() {
             filter:
               `group_id=eq.${groupId}`,
           },
-          () =>
-            scheduleRefresh()
+          (payload: any) => {
+            const row =
+              payload?.new ||
+              payload?.old;
+
+            if (
+              payload?.eventType ===
+                "INSERT" &&
+              row?.sender_id ===
+                user.id &&
+              Date.now() <
+                suppressOwnInsertUntilRef.current
+            ) {
+              return;
+            }
+
+            scheduleRefresh();
+          }
         )
         .on(
           "postgres_changes",
@@ -266,7 +288,8 @@ export default function GroupChatPage() {
 
   useEffect(() => {
     if (
-      messages.length
+      messages.length &&
+      stickToBottomRef.current
     ) {
       window.requestAnimationFrame(
         () =>
@@ -777,7 +800,133 @@ export default function GroupChatPage() {
       return;
     }
 
+    const textToSend =
+      text.trim();
+
+    const fileToSend =
+      mediaFile;
+
+    const replyToSend =
+      replyingTo;
+
+    const optimisticId =
+      -Date.now();
+
+    const localPreview =
+      fileToSend
+        ? URL.createObjectURL(
+            fileToSend
+          )
+        : "";
+
+    const optimisticType =
+      fileToSend
+        ? fileToSend.type
+            .startsWith(
+              "video/"
+            )
+          ? "video"
+          : "image"
+        : "text";
+
+    const me =
+      members.find(
+        (member) =>
+          member.user_id ===
+          user.id
+      );
+
+    const optimistic = {
+      id:
+        optimisticId,
+      group_id:
+        groupId,
+      sender_id:
+        user.id,
+      content:
+        textToSend ||
+        null,
+      message_type:
+        optimisticType,
+      media_path:
+        null,
+      media_type:
+        fileToSend
+          ? optimisticType
+          : null,
+      media_mime:
+        fileToSend?.type ||
+        null,
+      media_name:
+        null,
+      media_preview:
+        localPreview ||
+        null,
+      media_size:
+        fileToSend?.size ||
+        null,
+      reply_to_id:
+        replyToSend?.id ||
+        null,
+      created_at:
+        new Date()
+          .toISOString(),
+      sender_profile:
+        me
+          ? {
+              id:
+                me.user_id,
+              username:
+                me.username,
+              avatar_url:
+                me.avatar_url,
+            }
+          : null,
+      reactions: [],
+      _pending:
+        true,
+    };
+
     setSending(true);
+
+    suppressOwnInsertUntilRef.current =
+      Date.now() + 3000;
+
+    stickToBottomRef.current =
+      true;
+
+    setMessages(
+      (current) => [
+        ...current,
+        optimistic,
+      ]
+    );
+
+    setText("");
+    setReplyingTo(
+      null
+    );
+
+    if (fileToSend) {
+      setMediaFile(null);
+      setMediaPreview("");
+
+      if (fileRef.current) {
+        fileRef.current.value =
+          "";
+      }
+    }
+
+    broadcastTyping(
+      false
+    );
+
+    window.requestAnimationFrame(
+      () =>
+        scrollBottom(
+          "smooth"
+        )
+    );
 
     let uploadedPath:
       | string
@@ -785,9 +934,9 @@ export default function GroupChatPage() {
 
     try {
       const media =
-        mediaFile
+        fileToSend
           ? await uploadMedia(
-              mediaFile
+              fileToSend
             )
           : null;
 
@@ -795,7 +944,12 @@ export default function GroupChatPage() {
         media?.path ||
         null;
 
+      suppressOwnInsertUntilRef.current =
+        Date.now() + 5000;
+
       const {
+        data:
+          inserted,
         error,
       } =
         await supabase
@@ -808,7 +962,7 @@ export default function GroupChatPage() {
             sender_id:
               user.id,
             content:
-              text.trim() ||
+              textToSend ||
               null,
             message_type:
               media
@@ -833,36 +987,61 @@ export default function GroupChatPage() {
               media?.size ||
               null,
             reply_to_id:
-              replyingTo?.id ||
+              replyToSend?.id ||
               null,
-          });
+          })
+          .select("*")
+          .single();
 
-      if (error) {
-        throw error;
+      if (
+        error ||
+        !inserted
+      ) {
+        throw (
+          error ||
+          new Error(
+            "No se pudo confirmar el mensaje."
+          )
+        );
       }
 
-      setText("");
-      setReplyingTo(
-        null
-      );
-      clearMedia();
-      broadcastTyping(
-        false
+      setMessages(
+        (current) =>
+          current.map(
+            (message) =>
+              message.id ===
+              optimisticId
+                ? {
+                    ...inserted,
+                    sender_profile:
+                      optimistic.sender_profile,
+                    reactions: [],
+                  }
+                : message
+          )
       );
 
-      scheduleRefresh();
-
-      window.requestAnimationFrame(
-        () => {
-          scrollBottom(
-            "smooth"
-          );
-          textareaRef.current?.focus();
-        }
-      );
+      if (localPreview) {
+        window.setTimeout(
+          () =>
+            URL.revokeObjectURL(
+              localPreview
+            ),
+          250
+        );
+      }
     } catch (
       error: any
     ) {
+      setMessages(
+        (current) =>
+          current.filter(
+            (message) =>
+              message.id !==
+              optimisticId
+          )
+      );
+
       if (
         uploadedPath
       ) {
@@ -873,12 +1052,43 @@ export default function GroupChatPage() {
           ]);
       }
 
+      if (localPreview) {
+        URL.revokeObjectURL(
+          localPreview
+        );
+      }
+
+      setText(
+        textToSend
+      );
+
+      setReplyingTo(
+        replyToSend
+      );
+
+      if (fileToSend) {
+        setMediaFile(
+          fileToSend
+        );
+
+        setMediaPreview(
+          URL.createObjectURL(
+            fileToSend
+          )
+        );
+      }
+
       alert(
         error?.message ||
           "No se pudo enviar."
       );
     } finally {
       setSending(false);
+
+      window.requestAnimationFrame(
+        () =>
+          textareaRef.current?.focus()
+      );
     }
   }
 
@@ -1154,6 +1364,16 @@ export default function GroupChatPage() {
 
         <div
           ref={scrollRef}
+          onScroll={(event) => {
+            const target =
+              event.currentTarget;
+
+            stickToBottomRef.current =
+              target.scrollHeight -
+                target.scrollTop -
+                target.clientHeight <
+              160;
+          }}
           className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-2.5 py-3 sm:px-5 sm:py-4"
           style={{
             backgroundImage:
@@ -1602,3 +1822,5 @@ export default function GroupChatPage() {
 /* ALUMNI_1_3_4_GROUP_MODAL_MEDIA_POLISH:GROUP */
 
 /* ALUMNI_1_3_5_MEDIA_MODAL_SPOTIFY_FIX:GROUP */
+
+/* ALUMNI_1_3_7_MESSAGING_GLOBAL_STABILITY:GROUP_CHAT */

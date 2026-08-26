@@ -1225,7 +1225,7 @@ export default function GlobalPullToRefresh() {
           ? undefined
           : true
       }
-      className={`pointer-events-none fixed inset-x-0 top-0 z-[40] flex justify-center overflow-hidden transition-opacity duration-150 ${
+      className={`pointer-events-none fixed inset-x-0 top-0 z-[160] flex justify-center overflow-hidden transition-opacity duration-150 ${
         visible
           ? "opacity-100"
           : "opacity-0"
@@ -1267,3 +1267,5 @@ export default function GlobalPullToRefresh() {
 /* ALUMNI_1_2_3_SCROLL_MESSAGES_STABILITY:PULL_REFRESH */
 
 /* ALUMNI_1_3_6_1_CHAT_NO_PULL_REFRESH */
+
+/* ALUMNI_1_3_7_MESSAGING_GLOBAL_STABILITY:REFRESH_LAYER */
