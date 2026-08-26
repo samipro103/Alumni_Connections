@@ -1,23 +1,41 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import { Globe2, ImagePlus, Send, X } from "lucide-react";
+import {
+  Globe2,
+  ImagePlus,
+  Play,
+  Plus,
+  Send,
+  X,
+} from "lucide-react";
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { supabase } from "@/lib/supabase";
+import { validatePostMediaFiles } from "@/lib/feedMedia";
 
 interface Props {
   content: string;
-  setContent: (v: string) => void;
-  image: File | null;
-  setImage: (file: File | null) => void;
+  setContent: (value: string) => void;
+  mediaFiles: File[];
+  setMediaFiles: (files: File[]) => void;
   createPost: () => boolean | Promise<boolean>;
 }
+
+type Preview = {
+  file: File;
+  url: string;
+};
 
 export default function PostComposer({
   content,
   setContent,
-  image,
-  setImage,
+  mediaFiles,
+  setMediaFiles,
   createPost,
 }: Props) {
   const inputRef = useRef<HTMLInputElement>(null);
@@ -25,61 +43,84 @@ export default function PostComposer({
   const { user } = useAuth();
 
   const [profile, setProfile] = useState<any>(null);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [expanded, setExpanded] = useState(false);
   const [publishing, setPublishing] = useState(false);
+  const [previews, setPreviews] = useState<Preview[]>([]);
 
   useEffect(() => {
-  if (!user) {
-    setProfile(null);
-    return;
-  }
-
-  const userId = user.id;
-  let active = true;
-
-  async function loadProfile() {
-    const { data } = await supabase
-      .from("profiles")
-      .select("username, avatar_url")
-      .eq("id", userId)
-      .maybeSingle();
-
-    if (active) {
-      setProfile(data);
-    }
-  }
-
-  void loadProfile();
-
-  return () => {
-    active = false;
-  };
-}, [user?.id]);
-
-
-  useEffect(() => {
-    if (!image) {
-      setPreviewUrl(null);
+    if (!user) {
+      setProfile(null);
       return;
     }
 
-    const url = URL.createObjectURL(image);
-    setPreviewUrl(url);
-    setExpanded(true);
+    let active = true;
 
-    return () => URL.revokeObjectURL(url);
-  }, [image]);
+    void supabase
+      .from("profiles")
+      .select("username,avatar_url")
+      .eq("id", user.id)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (active) setProfile(data || null);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [user?.id]);
+
+  useEffect(() => {
+    const next = mediaFiles.map((file) => ({
+      file,
+      url: URL.createObjectURL(file),
+    }));
+
+    setPreviews(next);
+
+    if (mediaFiles.length) {
+      setExpanded(true);
+    }
+
+    return () => {
+      for (const preview of next) {
+        URL.revokeObjectURL(preview.url);
+      }
+    };
+  }, [mediaFiles]);
 
   useEffect(() => {
     const textarea = textareaRef.current;
     if (!textarea || !expanded) return;
 
     textarea.style.height = "auto";
-    textarea.style.height = `${Math.min(Math.max(textarea.scrollHeight, 96), 240)}px`;
+    textarea.style.height = `${Math.min(
+      Math.max(textarea.scrollHeight, 96),
+      260
+    )}px`;
   }, [content, expanded]);
 
-  const canPublish = Boolean(content.trim() || image);
+  const canPublish = Boolean(content.trim() || mediaFiles.length);
+
+  const mediaLabel = useMemo(() => {
+    if (!mediaFiles.length) return "Foto o video";
+
+    const photos = mediaFiles.filter((file) =>
+      file.type.startsWith("image/")
+    ).length;
+    const videos = mediaFiles.length - photos;
+
+    const parts = [];
+
+    if (photos) {
+      parts.push(`${photos} ${photos === 1 ? "foto" : "fotos"}`);
+    }
+
+    if (videos) {
+      parts.push(`${videos} ${videos === 1 ? "video" : "videos"}`);
+    }
+
+    return parts.join(" · ");
+  }, [mediaFiles]);
 
   function openComposer() {
     if (!user) {
@@ -88,185 +129,224 @@ export default function PostComposer({
     }
 
     setExpanded(true);
-    window.setTimeout(() => textareaRef.current?.focus(), 40);
+
+    window.setTimeout(() => {
+      textareaRef.current?.focus();
+    }, 50);
+  }
+
+  function addFiles(list: FileList | null) {
+    if (!list?.length) return;
+
+    try {
+      const next = [...mediaFiles, ...Array.from(list)].slice(0, 10);
+      validatePostMediaFiles(next);
+      setMediaFiles(next);
+    } catch (error: any) {
+      alert(error?.message || "No se pudieron agregar los archivos.");
+    } finally {
+      if (inputRef.current) {
+        inputRef.current.value = "";
+      }
+    }
+  }
+
+  function removeFile(index: number) {
+    setMediaFiles(
+      mediaFiles.filter((_, current) => current !== index)
+    );
   }
 
   async function publish() {
-  if (!canPublish || publishing) return;
+    if (!canPublish || publishing) return;
 
-  setPublishing(true);
+    setPublishing(true);
 
-  try {
-    const published =
-      await createPost();
+    try {
+      const ok = await createPost();
 
-    if (published) {
-      setExpanded(false);
+      if (ok) {
+        setExpanded(false);
+      }
+    } catch (error) {
+      console.error("Post publish error:", error);
+    } finally {
+      setPublishing(false);
     }
-  } catch (error) {
-    console.error(
-      "Post publish error:",
-      error
-    );
-  } finally {
-    setPublishing(false);
   }
-}
 
-
-  function cancelComposer() {
-    setExpanded(false);
+  function cancel() {
     setContent("");
-    setImage(null);
+    setMediaFiles([]);
+    setExpanded(false);
   }
 
   return (
     <section
       id="composer"
+      className="alumni-pro-composer"
       data-pull-refresh-lock={
-        expanded &&
-        Boolean(
-          content.trim() ||
-            image
-        )
-          ? "true"
-          : undefined
+        expanded && canPublish ? "true" : undefined
       }
-      className="alumni-composer mb-6 scroll-mt-24 overflow-hidden rounded-[24px] border"
     >
-      <div className="p-4 sm:p-5">
-        <div className="flex items-start gap-3">
-          <div className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[var(--app-surface-2)] text-sm font-black text-[var(--app-text)] ring-1 ring-[var(--app-border)]">
-            {profile?.avatar_url ? (
-              <img
-                src={profile.avatar_url}
-                alt="Perfil"
-                className="h-full w-full object-cover"
-              />
-            ) : (
-              profile?.username?.charAt(0)?.toUpperCase() || "A"
-            )}
-          </div>
-
-          {!expanded ? (
-            <div className="flex min-w-0 flex-1 items-center gap-2">
-              <button
-                type="button"
-                onClick={openComposer}
-                className="min-w-0 flex-1 rounded-[18px] border border-[var(--app-border)] bg-[var(--app-soft)] px-4 py-3.5 text-left text-sm text-[var(--app-muted)] transition hover:bg-[var(--app-soft-strong)]"
-              >
-                ¿Qué quieres compartir hoy?
-              </button>
-
-              <button
-                type="button"
-                onClick={() => {
-                  openComposer();
-                  window.setTimeout(() => inputRef.current?.click(), 80);
-                }}
-                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[15px] text-[var(--app-accent)] transition hover:bg-[var(--app-accent-soft)]"
-                aria-label="Agregar foto"
-                title="Agregar foto"
-              >
-                <ImagePlus size={20} />
-              </button>
-            </div>
+      <div className="alumni-pro-composer-row">
+        <div className="alumni-pro-composer-avatar">
+          {profile?.avatar_url ? (
+            <img
+              src={profile.avatar_url}
+              alt=""
+            />
           ) : (
-            <div className="min-w-0 flex-1">
-              <div className="mb-2 flex items-center gap-2">
-                <p className="truncate text-sm font-black text-[var(--app-text)]">
-                  @{profile?.username || "alumni"}
-                </p>
+            profile?.username?.charAt(0)?.toUpperCase() || "A"
+          )}
+        </div>
 
-                <span className="flex items-center gap-1 rounded-full border border-[var(--app-border)] bg-[var(--app-soft)] px-2 py-1 text-[10px] font-bold text-[var(--app-muted)]">
-                  <Globe2 size={11} />
-                  Comunidad Alumni
-                </span>
-              </div>
+        {!expanded ? (
+          <>
+            <button
+              type="button"
+              className="alumni-pro-composer-open"
+              onClick={openComposer}
+            >
+              ¿Qué quieres compartir hoy?
+            </button>
 
-              <textarea
-                ref={textareaRef}
-                rows={3}
-                value={content}
-                placeholder="Comparte una idea, un logro, una pregunta o algo que quieras contar..."
-                onChange={(event) => setContent(event.target.value)}
-                className="min-h-24 w-full resize-none overflow-y-auto bg-transparent py-2 text-[16px] leading-6 text-[var(--app-text)] outline-none placeholder:text-[var(--app-muted-2)]"
-              />
+            <button
+              type="button"
+              className="alumni-pro-composer-media-shortcut"
+              onClick={() => {
+                openComposer();
+                window.setTimeout(
+                  () => inputRef.current?.click(),
+                  80
+                );
+              }}
+              aria-label="Agregar fotos o videos"
+            >
+              <ImagePlus size={21} />
+            </button>
+          </>
+        ) : (
+          <div className="alumni-pro-composer-main">
+            <div className="alumni-pro-composer-meta">
+              <strong>@{profile?.username || "alumni"}</strong>
+              <span>
+                <Globe2 size={12} />
+                Comunidad Alumni
+              </span>
+            </div>
 
-              {previewUrl && (
-                <div className="relative mt-3 overflow-hidden rounded-[20px] border border-[var(--app-border)] bg-[var(--app-bg-2)]">
-                  <img
-                    src={previewUrl}
-                    alt="Vista previa"
-                    loading="eager"
-                    decoding="async"
-                    fetchPriority="high"
-                    draggable={false}
-                    className="max-h-[520px] w-full object-contain"
-                  />
+            <textarea
+              ref={textareaRef}
+              rows={3}
+              value={content}
+              placeholder="Comparte una idea, un logro, una pregunta o algo que quieras contar..."
+              onChange={(event) => setContent(event.target.value)}
+            />
 
+            {previews.length > 0 && (
+              <div className="alumni-pro-composer-previews">
+                {previews.map((preview, index) => (
+                  <div
+                    key={`${preview.file.name}-${index}`}
+                    className="alumni-pro-composer-preview"
+                  >
+                    {preview.file.type.startsWith("video/") ? (
+                      <>
+                        <video
+                          src={preview.url}
+                          muted
+                          playsInline
+                          preload="metadata"
+                        />
+                        <span className="alumni-pro-composer-video-badge">
+                          <Play size={14} fill="currentColor" />
+                        </span>
+                      </>
+                    ) : (
+                      <img
+                        src={preview.url}
+                        alt=""
+                      />
+                    )}
+
+                    <button
+                      type="button"
+                      onClick={() => removeFile(index)}
+                      aria-label="Quitar archivo"
+                    >
+                      <X size={15} />
+                    </button>
+
+                    {previews.length > 1 && (
+                      <span className="alumni-pro-composer-order">
+                        {index + 1}
+                      </span>
+                    )}
+                  </div>
+                ))}
+
+                {previews.length < 10 && (
                   <button
                     type="button"
-                    onClick={() => setImage(null)}
-                    className="absolute right-3 top-3 flex h-9 w-9 items-center justify-center rounded-full bg-black/65 text-white backdrop-blur-xl"
-                    aria-label="Quitar imagen"
+                    className="alumni-pro-composer-add-more"
+                    onClick={() => inputRef.current?.click()}
                   >
-                    <X size={17} />
+                    <Plus size={22} />
+                    <span>Agregar</span>
                   </button>
-                </div>
-              )}
+                )}
+              </div>
+            )}
 
-              <div className="mt-4 flex items-center gap-2 border-t border-[var(--app-border)] pt-3">
+            <div className="alumni-pro-composer-footer">
+              <button
+                type="button"
+                className="alumni-pro-composer-media-button"
+                onClick={() => inputRef.current?.click()}
+              >
+                <ImagePlus size={18} />
+                {mediaLabel}
+              </button>
+
+              <span className="alumni-pro-composer-limit">
+                Hasta 10 archivos
+              </span>
+
+              <div className="alumni-pro-composer-submit">
                 <button
                   type="button"
-                  onClick={() => inputRef.current?.click()}
-                  className="flex h-10 items-center gap-2 rounded-xl px-3 text-xs font-bold text-[var(--app-accent)] transition hover:bg-[var(--app-accent-soft)]"
+                  onClick={cancel}
+                  disabled={publishing}
                 >
-                  <ImagePlus size={17} />
-                  Foto
+                  Cancelar
                 </button>
 
-                <span className="hidden text-[10px] text-[var(--app-muted-3)] sm:inline">
-                  Las publicaciones son visibles para la comunidad.
-                </span>
-
-                <div className="ml-auto flex items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={cancelComposer}
-                    disabled={publishing}
-                    className="h-10 rounded-xl px-3 text-xs font-bold text-[var(--app-muted)] transition hover:bg-[var(--app-soft)] hover:text-[var(--app-text-soft)] disabled:opacity-50"
-                  >
-                    Cancelar
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={publish}
-                    disabled={!canPublish || publishing}
-                    className="alumni-accent-button flex h-10 items-center gap-2 rounded-xl px-4 text-xs font-black transition disabled:cursor-not-allowed disabled:opacity-40"
-                  >
-                    <Send size={15} />
-                    {publishing ? "Publicando..." : "Publicar"}
-                  </button>
-                </div>
+                <button
+                  type="button"
+                  className="is-primary"
+                  onClick={publish}
+                  disabled={!canPublish || publishing}
+                >
+                  <Send size={15} />
+                  {publishing ? "Publicando..." : "Publicar"}
+                </button>
               </div>
             </div>
-          )}
+          </div>
+        )}
 
-          <input
-            ref={inputRef}
-            hidden
-            type="file"
-            accept="image/*"
-            onChange={(event) => {
-              if (event.target.files?.[0]) {
-                setImage(event.target.files[0]);
-              }
-            }}
-          />
-        </div>
+        <input
+          ref={inputRef}
+          hidden
+          multiple
+          type="file"
+          accept="image/jpeg,image/png,image/webp,video/mp4,video/webm,video/quicktime"
+          onChange={(event) => addFiles(event.target.files)}
+        />
       </div>
     </section>
   );
 }
+
+/* ALUMNI_1_4_0_MULTI_MEDIA_COMPOSER */
