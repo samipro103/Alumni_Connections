@@ -6,6 +6,7 @@ import {
   Heart,
   MessageCircle,
   Share2,
+  Repeat2,
   Sparkles,
   Trash2,
   X,
@@ -63,6 +64,11 @@ const feedRequestRef = useRef(0);
         "postgres_changes",
         { event: "*", schema: "public", table: "comments" },
         () => schedulePostsRefresh()
+      )
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "post_reposts" },
+        () => schedulePostsRefresh(80)
       )
       .subscribe();
 
@@ -235,10 +241,23 @@ if (!postsData) {
       return;
     }
 
-    const { data: commentsData } = await supabase
-  .from("comments")
-  .select("*")
-  .order("created_at", { ascending: true });
+    const [
+      { data: commentsData },
+      { data: repostRows },
+    ] = await Promise.all([
+      supabase
+        .from("comments")
+        .select("*")
+        .order("created_at", {
+          ascending: true,
+        }),
+      supabase
+        .from("post_reposts")
+        .select("post_id,user_id,created_at")
+        .order("created_at", {
+          ascending: false,
+        }),
+    ]);
 
 if (
   requestId !==
@@ -327,11 +346,34 @@ const formattedPosts = mediaReadyPosts.map((post: any) => {
           profile: commentProfiles.find((profile) => profile.id === comment.user_id),
         }));
 
+      const postReposts =
+        (repostRows || []).filter(
+          (repost: any) =>
+            repost.post_id === post.id
+        );
+
+      const currentUserReposted =
+        postReposts.some(
+          (repost: any) =>
+            repost.user_id ===
+            user?.id
+        );
+
+      const latestRepostAt =
+        postReposts[0]
+          ?.created_at ||
+        null;
+
       return {
         ...post,
         likesCount: (post.likes || []).length,
         liked,
         comments: postComments,
+        repostsCount:
+          postReposts.length,
+        reposted:
+          currentUserReposted,
+        latestRepostAt,
       };
     });
 
@@ -699,6 +741,133 @@ const formattedPosts = mediaReadyPosts.map((post: any) => {
     schedulePostsRefresh(220);
   }
 
+  async function toggleRepost(
+    postId: number,
+    reposted: boolean
+  ) {
+    if (!currentUser) {
+      window.location.href =
+        "/login";
+      return;
+    }
+
+    setPosts((current) =>
+      current.map((item: any) =>
+        item.id === postId
+          ? {
+              ...item,
+              reposted:
+                !reposted,
+              repostsCount:
+                Math.max(
+                  0,
+                  Number(
+                    item.repostsCount ||
+                      0
+                  ) +
+                    (reposted
+                      ? -1
+                      : 1)
+                ),
+              latestRepostAt:
+                reposted
+                  ? item.latestRepostAt
+                  : new Date()
+                      .toISOString(),
+            }
+          : item
+      )
+    );
+
+    if (reposted) {
+      const { error } =
+        await supabase
+          .from(
+            "post_reposts"
+          )
+          .delete()
+          .eq(
+            "post_id",
+            postId
+          )
+          .eq(
+            "user_id",
+            currentUser.id
+          );
+
+      if (error) {
+        setPosts((current) =>
+          current.map(
+            (item: any) =>
+              item.id ===
+              postId
+                ? {
+                    ...item,
+                    reposted:
+                      true,
+                    repostsCount:
+                      Number(
+                        item.repostsCount ||
+                          0
+                      ) + 1,
+                  }
+                : item
+          )
+        );
+
+        alert(
+          error.message
+        );
+        return;
+      }
+    } else {
+      const { error } =
+        await supabase
+          .from(
+            "post_reposts"
+          )
+          .insert({
+            post_id:
+              postId,
+            user_id:
+              currentUser.id,
+          });
+
+      if (error) {
+        setPosts((current) =>
+          current.map(
+            (item: any) =>
+              item.id ===
+              postId
+                ? {
+                    ...item,
+                    reposted:
+                      false,
+                    repostsCount:
+                      Math.max(
+                        0,
+                        Number(
+                          item.repostsCount ||
+                            0
+                        ) - 1
+                      ),
+                  }
+                : item
+          )
+        );
+
+        alert(
+          error.message
+        );
+        return;
+      }
+    }
+
+    schedulePostsRefresh(
+      180
+    );
+  }
+
   function sharePostToStory(
     post: any
   ) {
@@ -753,11 +922,31 @@ const formattedPosts = mediaReadyPosts.map((post: any) => {
   const visiblePosts = useMemo(() => {
     if (feedMode === "following") {
       return posts
-        .filter((post: any) => followingIds.includes(post.user_id))
+        .filter(
+          (post: any) =>
+            followingIds.includes(
+              post.user_id
+            )
+        )
         .sort(
-          (a: any, b: any) =>
-            new Date(b.created_at).getTime() -
-            new Date(a.created_at).getTime()
+          (a: any, b: any) => {
+            const aActivity =
+              new Date(
+                a.latestRepostAt ||
+                  a.created_at
+              ).getTime();
+
+            const bActivity =
+              new Date(
+                b.latestRepostAt ||
+                  b.created_at
+              ).getTime();
+
+            return (
+              bActivity -
+              aActivity
+            );
+          }
         );
     }
 
@@ -804,7 +993,7 @@ const formattedPosts = mediaReadyPosts.map((post: any) => {
             </p>
           </div>
         ) : (
-          <div className="space-y-4">
+          <div className="divide-y divide-[var(--app-border)]">
             {visiblePosts.map((post: any, postIndex: number) => {
               const commentsOpen = Boolean(openComments[post.id]);
 
@@ -812,12 +1001,12 @@ const formattedPosts = mediaReadyPosts.map((post: any) => {
                 <article
                   id={`post-${post.id}`}
                   key={post.id}
-                  className={`alumni-post-card overflow-hidden rounded-[24px] border transition-[border-color,box-shadow,background-color] duration-500 ${focusedPostId === post.id
-                      ? "border-[#8d98ff]/70 bg-[#6d7cff]/[0.06] shadow-[0_0_0_3px_rgba(109,124,255,.10),0_16px_45px_rgba(0,0,0,.18)]"
-                      : "border-white/[0.07]"
+                  className={`alumni-post-card relative overflow-visible bg-transparent py-5 transition-[background-color] duration-500 first:pt-2 ${focusedPostId === post.id
+                      ? "bg-[var(--app-accent-soft)]"
+                      : ""
                     }`}
                 >
-                  <div className="p-4 sm:p-5">
+                  <div className="px-0 pb-3 pt-0 sm:px-1">
                     <div className="flex items-start gap-3">
                       <a
                         href={`/u/${post.profiles?.username}`}
@@ -878,7 +1067,7 @@ const formattedPosts = mediaReadyPosts.map((post: any) => {
                   {post.image_url && (
                     <button
                       onClick={() => setSelectedImage(post.image_url)}
-                      className="alumni-post-media block w-full"
+                      className="alumni-post-media -mx-4 block w-[calc(100%+2rem)] sm:mx-0 sm:w-full"
                     >
                       <img
                         src={post.image_url}
@@ -895,33 +1084,44 @@ const formattedPosts = mediaReadyPosts.map((post: any) => {
                             : "auto"
                         }
                         draggable={false}
-                        className="max-h-[680px] w-full object-contain"
+                        className="block max-h-[760px] w-full bg-transparent object-cover sm:rounded-[2px] sm:object-contain"
                       />
                     </button>
                   )}
 
-                  <div className="alumni-post-footer px-4 pb-4 pt-3 sm:px-5">
-                    {(post.likesCount > 0 || (post.comments?.length || 0) > 0) && (
-                      <div className="alumni-post-stats mb-2 flex items-center gap-3 px-1 text-[11px] font-semibold">
+                  <div className="alumni-post-footer px-0 pb-0 pt-3 sm:px-1">
+                    {(post.likesCount > 0 ||
+                      (post.comments?.length || 0) > 0 ||
+                      (post.repostsCount || 0) > 0) && (
+                      <div className="alumni-post-stats mb-2 flex items-center gap-3 px-1 text-[11px] font-semibold text-[var(--app-muted-2)]">
                         {post.likesCount > 0 && (
                           <span>
-                            {post.likesCount} {post.likesCount === 1 ? "me gusta" : "me gusta"}
+                            {post.likesCount} me gusta
                           </span>
                         )}
-                        {(post.comments?.length || 0) > 0 && (
-                          <span className="ml-auto">
-                            {post.comments.length} {post.comments.length === 1 ? "comentario" : "comentarios"}
-                          </span>
-                        )}
+
+                        <span className="ml-auto flex items-center gap-3">
+                          {(post.comments?.length || 0) > 0 && (
+                            <span>
+                              {post.comments.length} {post.comments.length === 1 ? "comentario" : "comentarios"}
+                            </span>
+                          )}
+
+                          {(post.repostsCount || 0) > 0 && (
+                            <span>
+                              {post.repostsCount} {post.repostsCount === 1 ? "compartido" : "compartidos"}
+                            </span>
+                          )}
+                        </span>
                       </div>
                     )}
 
-                    <div className="alumni-post-actions flex items-center gap-1 border-b border-white/[0.06] pb-3">
+                    <div className="alumni-post-actions flex items-center gap-1 border-b border-[var(--app-border)] pb-3">
                       <button
                         onClick={() => toggleLike(post.id, post.liked)}
                         className={`flex h-9 items-center gap-2 rounded-xl px-3 text-sm font-semibold transition ${post.liked
                             ? "bg-red-500/10 text-red-400"
-                            : "text-zinc-500 hover:bg-white/[0.04] hover:text-zinc-200"
+                            : "text-[var(--app-muted)] hover:bg-[var(--app-soft)] hover:text-[var(--app-text)]"
                           }`}
                       >
                         <Heart fill={post.liked ? "currentColor" : "none"} size={18} />
@@ -944,24 +1144,51 @@ const formattedPosts = mediaReadyPosts.map((post: any) => {
                       <button
                         type="button"
                         onClick={() =>
-                          sharePostToStory(
-                            post
+                          void toggleRepost(
+                            post.id,
+                            Boolean(
+                              post.reposted
+                            )
                           )
                         }
-                        className="ml-auto flex h-9 items-center gap-2 rounded-xl px-2.5 text-sm font-semibold text-zinc-500 transition hover:bg-white/[0.04] hover:text-[#aeb6ff]"
-                        aria-label="Compartir en historia"
+                        className={`flex h-9 items-center gap-2 rounded-xl px-3 text-sm font-semibold transition ${
+                          post.reposted
+                            ? "bg-emerald-500/10 text-emerald-400"
+                            : "text-[var(--app-muted)] hover:bg-[var(--app-soft)] hover:text-[var(--app-text)]"
+                        }`}
+                        aria-label={
+                          post.reposted
+                            ? "Quitar compartido"
+                            : "Compartir en Alumni"
+                        }
                       >
-                        <Sparkles
-                          size={17}
+                        <Repeat2
+                          size={18}
                         />
-                        <span className="hidden sm:inline">
-                          Historia
+                        <span>
+                          {post.repostsCount || 0}
                         </span>
                       </button>
 
                       <button
+                        type="button"
+                        onClick={() =>
+                          sharePostToStory(
+                            post
+                          )
+                        }
+                        className="ml-auto flex h-9 items-center justify-center rounded-xl px-2.5 text-[var(--app-muted)] transition hover:bg-[var(--app-soft)] hover:text-[var(--app-accent)]"
+                        aria-label="Compartir en historia"
+                        title="Compartir en historia"
+                      >
+                        <Sparkles
+                          size={17}
+                        />
+                      </button>
+
+                      <button
                         onClick={() => sharePost(post)}
-                        className="flex h-9 items-center gap-2 rounded-xl px-3 text-sm font-semibold text-zinc-500 transition hover:bg-white/[0.04] hover:text-zinc-200"
+                        className="flex h-9 items-center gap-2 rounded-xl px-3 text-sm font-semibold text-[var(--app-muted)] transition hover:bg-[var(--app-soft)] hover:text-[var(--app-text)]"
                       >
                         <Share2 size={18} />
                         <span className="hidden sm:inline">Compartir</span>
@@ -1095,3 +1322,5 @@ export default function FeedPage() {
 
 
 /* ALUMNI_1_2_0_TRUST_BLOCK:FEED_PRIVATE_MEDIA */
+
+/* ALUMNI_1_3_8_OPEN_FEED_REPOSTS */
