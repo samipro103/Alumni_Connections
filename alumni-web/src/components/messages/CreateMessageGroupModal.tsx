@@ -533,7 +533,7 @@ export default function CreateMessageGroupModal({
           )}
         </div>
 
-        <footer className="sticky bottom-0 z-20 shrink-0 border-t border-[var(--app-border)] bg-[color-mix(in_srgb,var(--app-surface)_97%,transparent)] px-5 py-4 pb-[max(16px,env(safe-area-inset-bottom))] backdrop-blur-xl">
+        <footer className="relative z-30 shrink-0 border-t border-[var(--app-border)] bg-[var(--app-surface)] px-5 py-4 pb-[max(16px,env(safe-area-inset-bottom))]">
           <button
             type="button"
             onClick={() =>
@@ -567,3 +567,5 @@ export default function CreateMessageGroupModal({
     </div>
   );
 }
+
+/* ALUMNI_1_3_2_MESSAGING_POLISH:CREATE */

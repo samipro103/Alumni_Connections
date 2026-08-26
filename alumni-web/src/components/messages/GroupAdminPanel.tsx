@@ -1,9 +1,9 @@
 "use client";
 
 import {
+  Camera,
   Crown,
   Loader2,
-  MoreHorizontal,
   ShieldCheck,
   UserMinus,
   Users,
@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import {
   useMemo,
+  useRef,
   useState,
 } from "react";
 import {
@@ -22,6 +23,9 @@ import {
 import {
   supabase,
 } from "@/lib/supabase";
+
+const GROUP_BUCKET =
+  "group-message-media";
 
 export default function GroupAdminPanel({
   open,
@@ -42,6 +46,11 @@ export default function GroupAdminPanel({
 
   const router =
     useRouter();
+
+  const photoInputRef =
+    useRef<HTMLInputElement>(
+      null
+    );
 
   const [busyKey, setBusyKey] =
     useState("");
@@ -71,6 +80,122 @@ export default function GroupAdminPanel({
 
   if (!open) {
     return null;
+  }
+
+  async function updatePhoto(
+    file?: File
+  ) {
+    if (
+      !file ||
+      !user ||
+      !isAdmin
+    ) {
+      return;
+    }
+
+    if (
+      !file.type.startsWith(
+        "image/"
+      )
+    ) {
+      alert(
+        "Selecciona una imagen."
+      );
+      return;
+    }
+
+    if (
+      file.size >
+      8 * 1024 * 1024
+    ) {
+      alert(
+        "La foto debe pesar 8 MB o menos."
+      );
+      return;
+    }
+
+    setBusyKey(
+      "photo"
+    );
+
+    let uploadedPath =
+      "";
+
+    try {
+      const safe =
+        file.name
+          .normalize("NFKD")
+          .replace(
+            /[^\w.\-]+/g,
+            "_"
+          )
+          .slice(-100);
+
+      uploadedPath =
+        `${group.id}/${user.id}/group-avatar-${Date.now()}-${safe}`;
+
+      const {
+        error:
+          uploadError,
+      } =
+        await supabase.storage
+          .from(
+            GROUP_BUCKET
+          )
+          .upload(
+            uploadedPath,
+            file,
+            {
+              upsert: false,
+              contentType:
+                file.type,
+            }
+          );
+
+      if (uploadError) {
+        throw uploadError;
+      }
+
+      const {
+        error,
+      } =
+        await supabase.rpc(
+          "set_message_group_photo",
+          {
+            p_group_id:
+              group.id,
+            p_path:
+              uploadedPath,
+          }
+        );
+
+      if (error) {
+        throw error;
+      }
+
+      await onChanged();
+    } catch (
+      error: any
+    ) {
+      if (
+        uploadedPath
+      ) {
+        await supabase.storage
+          .from(
+            GROUP_BUCKET
+          )
+          .remove([
+            uploadedPath,
+          ]);
+      }
+
+      alert(
+        error?.message ||
+          "No se pudo cambiar la foto."
+      );
+    } finally {
+      setBusyKey("");
+    }
   }
 
   async function setRole(
@@ -194,7 +319,6 @@ export default function GroupAdminPanel({
       }
 
       onClose();
-
       router.replace(
         "/messages"
       );
@@ -213,7 +337,7 @@ export default function GroupAdminPanel({
         )
       ) {
         alert(
-          "El creador no puede abandonar el grupo mientras haya otros miembros. Primero debes gestionar el grupo."
+          "El creador no puede abandonar el grupo mientras haya otros miembros."
         );
       } else {
         alert(
@@ -228,48 +352,104 @@ export default function GroupAdminPanel({
 
   return (
     <div
-      className="fixed inset-0 z-[2147483100] flex items-end justify-center bg-black/72 backdrop-blur-sm sm:items-center sm:p-5"
+      className="fixed inset-0 z-[2147483100] flex items-end justify-center bg-black/70 backdrop-blur-sm sm:items-center sm:p-5"
       role="dialog"
       aria-modal="true"
       data-pull-refresh-lock="true"
     >
-      <div className="flex max-h-[88dvh] w-full max-w-[520px] flex-col overflow-hidden rounded-t-[30px] border border-white/[0.08] bg-[var(--app-surface)] shadow-2xl sm:rounded-[30px]">
-        <header className="flex shrink-0 items-center gap-3 border-b border-[var(--app-border)] px-5 py-4">
-          <span className="flex h-10 w-10 items-center justify-center rounded-full bg-[var(--app-accent-soft)] text-[var(--app-accent)]">
-            <Users
-              size={18}
-            />
-          </span>
-
-          <div className="min-w-0 flex-1">
-            <h2 className="truncate text-[18px] font-black tracking-[-0.025em] text-[var(--app-text)]">
-              {
-                group?.name
+      <div className="flex h-[min(88dvh,760px)] w-full max-w-[520px] flex-col overflow-hidden rounded-t-[28px] bg-[var(--app-surface)] shadow-2xl sm:rounded-[28px]">
+        <header className="shrink-0 border-b border-[var(--app-border)] px-5 py-4">
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={() =>
+                isAdmin &&
+                photoInputRef.current?.click()
               }
-            </h2>
+              disabled={
+                !isAdmin ||
+                busyKey ===
+                  "photo"
+              }
+              className="relative flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[var(--app-accent-soft)] text-[var(--app-accent)] ring-1 ring-[var(--app-border)] disabled:opacity-80"
+              aria-label="Cambiar foto del grupo"
+            >
+              {group?.avatar_url ? (
+                <img
+                  src={
+                    group.avatar_url
+                  }
+                  alt=""
+                  className="h-full w-full object-cover"
+                />
+              ) : (
+                <Users
+                  size={21}
+                />
+              )}
 
-            <p className="mt-0.5 text-[11px] text-[var(--app-muted-2)]">
-              {members.length} miembros
-            </p>
+              {isAdmin && (
+                <span className="absolute bottom-0 right-0 flex h-5 w-5 items-center justify-center rounded-full bg-[var(--app-accent)] text-[var(--app-on-accent)] ring-2 ring-[var(--app-surface)]">
+                  {busyKey ===
+                  "photo" ? (
+                    <Loader2
+                      size={10}
+                      className="animate-spin"
+                    />
+                  ) : (
+                    <Camera
+                      size={10}
+                    />
+                  )}
+                </span>
+              )}
+            </button>
+
+            <input
+              ref={
+                photoInputRef
+              }
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              className="hidden"
+              onChange={(
+                event
+              ) => {
+                void updatePhoto(
+                  event.target
+                    .files?.[0]
+                );
+                event.target.value =
+                  "";
+              }}
+            />
+
+            <div className="min-w-0 flex-1">
+              <h2 className="truncate text-[18px] font-black text-[var(--app-text)]">
+                {
+                  group?.name
+                }
+              </h2>
+
+              <p className="mt-0.5 text-[11px] text-[var(--app-muted-2)]">
+                {members.length} miembros
+              </p>
+            </div>
+
+            <button
+              type="button"
+              onClick={onClose}
+              className="flex h-9 w-9 items-center justify-center rounded-full text-[var(--app-muted)] hover:bg-[var(--app-soft)]"
+            >
+              <X size={16} />
+            </button>
           </div>
-
-          <button
-            type="button"
-            onClick={
-              onClose
-            }
-            className="flex h-9 w-9 items-center justify-center rounded-full text-[var(--app-muted)] hover:bg-[var(--app-soft)]"
-          >
-            <X size={16} />
-          </button>
         </header>
 
         <div className="min-h-0 flex-1 overflow-y-auto px-5 py-3">
-          <div className="mb-3">
-            <p className="text-[10px] font-black uppercase tracking-[0.13em] text-[var(--app-muted-3)]">
-              Miembros
-            </p>
-          </div>
+          <p className="mb-2 text-[10px] font-black uppercase tracking-[0.13em] text-[var(--app-muted-3)]">
+            Miembros
+          </p>
 
           <div className="divide-y divide-[var(--app-border)]">
             {members.map(
@@ -321,9 +501,7 @@ export default function GroupAdminPanel({
                         />
                       ) : (
                         member.username
-                          ?.charAt(
-                            0
-                          )
+                          ?.charAt(0)
                           ?.toUpperCase() ||
                         "U"
                       )}
@@ -340,14 +518,14 @@ export default function GroupAdminPanel({
                         {owner && (
                           <Crown
                             size={13}
-                            className="shrink-0 text-[var(--app-accent)]"
+                            className="text-[var(--app-accent)]"
                           />
                         )}
 
                         {admin && (
                           <ShieldCheck
                             size={13}
-                            className="shrink-0 text-[var(--app-accent)]"
+                            className="text-[var(--app-accent)]"
                           />
                         )}
                       </div>
@@ -414,19 +592,10 @@ export default function GroupAdminPanel({
                               )
                             }
                             className="flex h-9 w-9 items-center justify-center rounded-full text-red-400 hover:bg-red-500/10 disabled:opacity-40"
-                            aria-label="Quitar miembro"
                           >
-                            {busyKey ===
-                            `remove:${member.user_id}` ? (
-                              <Loader2
-                                size={14}
-                                className="animate-spin"
-                              />
-                            ) : (
-                              <UserMinus
-                                size={15}
-                              />
-                            )}
+                            <UserMinus
+                              size={15}
+                            />
                           </button>
                         )}
                       </div>
@@ -438,7 +607,7 @@ export default function GroupAdminPanel({
           </div>
         </div>
 
-        <footer className="shrink-0 border-t border-[var(--app-border)] px-5 py-4 pb-[max(16px,env(safe-area-inset-bottom))]">
+        <footer className="relative z-20 shrink-0 border-t border-[var(--app-border)] bg-[var(--app-surface)] px-5 py-4 pb-[max(16px,env(safe-area-inset-bottom))]">
           <button
             type="button"
             onClick={() =>
@@ -451,13 +620,12 @@ export default function GroupAdminPanel({
             className="flex h-11 w-full items-center justify-center gap-2 rounded-[14px] bg-red-500/10 text-[12px] font-black text-red-400 disabled:opacity-40"
           >
             {busyKey ===
-            "leave" && (
+              "leave" && (
               <Loader2
                 size={14}
                 className="animate-spin"
               />
             )}
-
             Salir del grupo
           </button>
         </footer>

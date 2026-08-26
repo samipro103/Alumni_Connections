@@ -1990,6 +1990,12 @@ setMessages(
                                 : "border-[var(--app-border)] bg-[var(--app-surface)]"
                             }`}
                           >
+                            {message.is_forwarded && (
+                              <p className="mb-1.5 text-[10px] font-bold italic text-[var(--app-muted-2)]">
+                                Reenviado
+                              </p>
+                            )}
+
                             <MessageReplyQuote
                               message={message}
                               messages={messages}
@@ -2065,12 +2071,22 @@ setMessages(
                               mediaType={
                                 message.media_type
                               }
+                              mediaMime={
+                                message.media_mime
+                              }
                               name={
                                 message.media_name
                               }
                               size={
                                 message.media_size
                               }
+                              messageId={
+                                message.id
+                              }
+                              senderId={
+                                message.sender_id
+                              }
+                              reportType="message"
                             />
 
                             <div className="px-3.5 py-2.5">
@@ -2515,3 +2531,5 @@ setMessages(
 /* ALUMNI_1_2_3_SCROLL_MESSAGES_STABILITY:CHAT */
 
 /* ALUMNI_1_3_0_GROUPS_MEDIA_PRO:DIRECT_CHAT */
+
+/* ALUMNI_1_3_2_MESSAGING_POLISH:DIRECT */

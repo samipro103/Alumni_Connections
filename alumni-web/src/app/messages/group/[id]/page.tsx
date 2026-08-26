@@ -47,6 +47,7 @@ const BUCKET =
 type Member = {
   user_id: string;
   role: string;
+  last_read_at: string;
   username: string;
   avatar_url:
     | string
@@ -86,6 +87,11 @@ export default function GroupChatPage() {
 
   const [group, setGroup] =
     useState<any>(null);
+
+  const [
+    groupAvatarUrl,
+    setGroupAvatarUrl,
+  ] = useState("");
   const [members, setMembers] =
     useState<Member[]>([]);
   const [messages, setMessages] =
@@ -175,6 +181,20 @@ export default function GroupChatPage() {
               "public",
             table:
               "group_messages",
+            filter:
+              `group_id=eq.${groupId}`,
+          },
+          () =>
+            scheduleRefresh()
+        )
+        .on(
+          "postgres_changes",
+          {
+            event: "UPDATE",
+            schema:
+              "public",
+            table:
+              "message_group_members",
             filter:
               `group_id=eq.${groupId}`,
           },
@@ -321,7 +341,7 @@ export default function GroupChatPage() {
           "message_groups"
         )
         .select(
-          "id,name,created_by,created_at"
+          "id,name,created_by,created_at,avatar_path,avatar_updated_at"
         )
         .eq(
           "id",
@@ -333,7 +353,7 @@ export default function GroupChatPage() {
           "message_group_members"
         )
         .select(
-          "user_id,role"
+          "user_id,role,last_read_at"
         )
         .eq(
           "group_id",
@@ -534,8 +554,38 @@ export default function GroupChatPage() {
       );
     }
 
-    setGroup(
+    let nextGroupAvatarUrl =
+      "";
+
+    if (
       groupResult.data
+        .avatar_path
+    ) {
+      const {
+        data:
+          avatarSigned,
+      } =
+        await supabase.storage
+          .from(BUCKET)
+          .createSignedUrl(
+            groupResult.data
+              .avatar_path,
+            3600
+          );
+
+      nextGroupAvatarUrl =
+        avatarSigned?.signedUrl ||
+        "";
+    }
+
+    setGroup({
+      ...groupResult.data,
+      avatar_url:
+        nextGroupAvatarUrl,
+    });
+
+    setGroupAvatarUrl(
+      nextGroupAvatarUrl
     );
 
     setMembers(
@@ -1049,10 +1099,20 @@ export default function GroupChatPage() {
               />
             </Link>
 
-            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[var(--app-accent-soft)] text-[var(--app-accent)] ring-1 ring-[color-mix(in_srgb,var(--app-accent)_18%,transparent)]">
-              <Users
-                size={19}
-              />
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[var(--app-accent-soft)] text-[var(--app-accent)] ring-1 ring-[var(--app-border)]">
+              {groupAvatarUrl ? (
+                <img
+                  src={
+                    groupAvatarUrl
+                  }
+                  alt=""
+                  className="h-full w-full object-cover"
+                />
+              ) : (
+                <Users
+                  size={19}
+                />
+              )}
             </span>
 
             <button
@@ -1115,6 +1175,50 @@ export default function GroupChatPage() {
                     message.sender_id ===
                     user?.id;
 
+                  const system =
+                    message.message_type ===
+                    "system";
+
+                  const otherMembers =
+                    members.filter(
+                      (member) =>
+                        member.user_id !==
+                        user?.id
+                    );
+
+                  const seenCount =
+                    mine
+                      ? otherMembers.filter(
+                          (member) =>
+                            new Date(
+                              member.last_read_at
+                            ).getTime() >=
+                            new Date(
+                              message.created_at
+                            ).getTime()
+                        ).length
+                      : 0;
+
+                  const seenByAll =
+                    mine &&
+                    otherMembers.length >
+                      0 &&
+                    seenCount ===
+                      otherMembers.length;
+
+                  if (system) {
+                    return (
+                      <div
+                        key={message.id}
+                        className="my-3 flex justify-center px-5"
+                      >
+                        <span className="rounded-full bg-[var(--app-soft)] px-3 py-1.5 text-center text-[10px] font-bold text-[var(--app-muted-2)] ring-1 ring-[var(--app-border)]">
+                          {message.content}
+                        </span>
+                      </div>
+                    );
+                  }
+
                   return (
                     <div
                       key={
@@ -1153,6 +1257,12 @@ export default function GroupChatPage() {
                               </p>
                             )}
 
+                            {message.is_forwarded && (
+                              <p className="mb-1.5 text-[10px] font-bold italic text-[var(--app-muted-2)]">
+                                Reenviado
+                              </p>
+                            )}
+
                             <MessageReplyQuote
                               message={
                                 message
@@ -1185,12 +1295,22 @@ export default function GroupChatPage() {
                                   mediaType={
                                     message.media_type
                                   }
+                                  mediaMime={
+                                    message.media_mime
+                                  }
                                   name={
                                     message.media_name
                                   }
                                   size={
                                     message.media_size
                                   }
+                                  messageId={
+                                    message.id
+                                  }
+                                  senderId={
+                                    message.sender_id
+                                  }
+                                  reportType="group_message"
                                 />
                               </div>
                             )}
@@ -1207,15 +1327,37 @@ export default function GroupChatPage() {
                               {time(
                                 message.created_at
                               )}
-                              {mine && (
-                                <Check
-                                  size={12}
-                                />
-                              )}
+                              {mine &&
+                                (seenByAll ? (
+                                  <CheckCheck
+                                    size={13}
+                                    className="text-[var(--app-accent)]"
+                                  />
+                                ) : (
+                                  <Check
+                                    size={12}
+                                  />
+                                ))}
                             </div>
                           </div>
                         </div>
                       </SwipeToReply>
+
+                      {mine &&
+                        message.id ===
+                          messages[
+                            messages.length -
+                              1
+                          ]?.id &&
+                        otherMembers.length >
+                          0 && (
+                          <p className="mt-1 pr-1 text-right text-[10px] font-semibold text-[var(--app-muted-3)]">
+                            {seenCount >
+                            0
+                              ? `Visto por ${seenCount} de ${otherMembers.length}`
+                              : "Enviado"}
+                          </p>
+                        )}
 
                       <MessageProTools
                         message={
@@ -1438,6 +1580,12 @@ export default function GroupChatPage() {
           }
           group={
             group
+              ? {
+                  ...group,
+                  avatar_url:
+                    groupAvatarUrl,
+                }
+              : group
           }
           members={
             members
@@ -1452,3 +1600,5 @@ export default function GroupChatPage() {
 }
 
 /* ALUMNI_1_3_1_GROUP_ADMIN_MEDIA_UX:GROUP_PAGE */
+
+/* ALUMNI_1_3_2_MESSAGING_POLISH:GROUP */
