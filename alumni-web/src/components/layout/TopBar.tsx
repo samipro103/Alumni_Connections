@@ -8,19 +8,56 @@ import { useAuth } from "@/components/auth/AuthProvider";
 import { supabase } from "@/lib/supabase";
 import BrandMark from "@/components/brand/BrandMark";
 
+/* ALUMNI_1_2_2_NAV_STABILITY:TOPBAR */
+type TopBarCachedState = {
+  profile: any;
+  unreadNotifications: number;
+};
+
+const topBarCache =
+  new Map<string, TopBarCachedState>();
+
 export default function TopBar() {
   const router = useRouter();
   const { user } = useAuth();
 
-  const [profile, setProfile] = useState<any>(null);
-  const [search, setSearch] = useState("");
-  const [unreadNotifications, setUnreadNotifications] = useState(0);
+  const cachedState =
+    user
+      ? topBarCache.get(user.id)
+      : undefined;
+
+  const [profile, setProfile] =
+    useState<any>(
+      cachedState?.profile || null
+    );
+
+  const [search, setSearch] =
+    useState("");
+
+  const [
+    unreadNotifications,
+    setUnreadNotifications,
+  ] = useState(
+    cachedState?.unreadNotifications || 0
+  );
 
   useEffect(() => {
     if (!user) {
       setProfile(null);
       setUnreadNotifications(0);
       return;
+    }
+
+    const cached =
+      topBarCache.get(user.id);
+
+    if (cached) {
+      setProfile(
+        cached.profile
+      );
+      setUnreadNotifications(
+        cached.unreadNotifications
+      );
     }
 
     const currentUser = user;
@@ -41,8 +78,23 @@ export default function TopBar() {
       ]);
 
       if (!active) return;
-      setProfile(profileData);
-      setUnreadNotifications(nCount || 0);
+
+      const next = {
+        profile:
+          profileData || null,
+        unreadNotifications:
+          nCount || 0,
+      };
+
+      topBarCache.set(
+        currentUser.id,
+        next
+      );
+
+      setProfile(next.profile);
+      setUnreadNotifications(
+        next.unreadNotifications
+      );
     }
 
     refresh();

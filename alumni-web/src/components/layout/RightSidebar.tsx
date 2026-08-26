@@ -7,10 +7,31 @@ import { useAuth } from "@/components/auth/AuthProvider";
 import { supabase } from "@/lib/supabase";
 import { getRecommendedProfiles, RecommendedProfile } from "@/lib/recommendations";
 
+/* ALUMNI_1_2_2_NAV_STABILITY:RIGHT_SIDEBAR */
+let cachedEvents: any[] | null =
+  null;
+
+const cachedSuggestions =
+  new Map<
+    string,
+    RecommendedProfile[]
+  >();
+
 export default function RightSidebar() {
   const { user } = useAuth();
-  const [suggestions, setSuggestions] = useState<RecommendedProfile[]>([]);
-  const [events, setEvents] = useState<any[]>([]);
+  const [suggestions, setSuggestions] =
+    useState<RecommendedProfile[]>(
+      user
+        ? cachedSuggestions.get(
+            user.id
+          ) || []
+        : []
+    );
+
+  const [events, setEvents] =
+    useState<any[]>(
+      cachedEvents || []
+    );
   const [busy, setBusy] = useState<string | null>(null);
 
   useEffect(() => {
@@ -20,7 +41,13 @@ export default function RightSidebar() {
       .gte("event_date", new Date().toISOString())
       .order("event_date", { ascending: true })
       .limit(2)
-      .then(({ data }) => setEvents(data || []));
+      .then(({ data }) => {
+        const next =
+          data || [];
+
+        cachedEvents = next;
+        setEvents(next);
+      });
   }, []);
 
   useEffect(() => {
@@ -28,7 +55,28 @@ export default function RightSidebar() {
       setSuggestions([]);
       return;
     }
-    getRecommendedProfiles(user.id, 4).then(setSuggestions);
+    const cached =
+      cachedSuggestions.get(
+        user.id
+      );
+
+    if (cached) {
+      setSuggestions(
+        cached
+      );
+    }
+
+    getRecommendedProfiles(
+      user.id,
+      4
+    ).then((next) => {
+      cachedSuggestions.set(
+        user.id,
+        next
+      );
+
+      setSuggestions(next);
+    });
   }, [user?.id]);
 
   async function follow(person: RecommendedProfile) {
@@ -48,7 +96,21 @@ export default function RightSidebar() {
         target_type: "profile",
         target_id: user.id,
       });
-      setSuggestions((old) => old.filter((item) => item.id !== person.id));
+      setSuggestions((old) => {
+        const next =
+          old.filter(
+            (item) =>
+              item.id !==
+              person.id
+          );
+
+        cachedSuggestions.set(
+          user.id,
+          next
+        );
+
+        return next;
+      });
     }
 
     setBusy(null);

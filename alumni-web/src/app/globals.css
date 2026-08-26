@@ -2678,3 +2678,14 @@ html[data-theme="executive"] .alumni-original-logo-image {
   }
 }
 
+
+
+/* ALUMNI_1_2_2_NAV_STABILITY:CSS */
+.alumni-profile-page,
+.alumni-feed-page,
+.alumni-explore-page,
+.alumni-notifications-page,
+.alumni-events-page,
+.alumni-settings-page {
+  animation: none !important;
+}

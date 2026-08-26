@@ -1,6 +1,11 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
@@ -30,6 +35,21 @@ import { hydratePostMedia } from "@/lib/privateMedia";
 
 type ProfileTab = "posts" | "about";
 
+/* ALUMNI_1_2_2_NAV_STABILITY:PROFILE */
+type ProfilePageCache = {
+  profile: any;
+  followers: number;
+  following: number;
+  posts: any[];
+  profileMusic: any;
+};
+
+const profilePageCache =
+  new Map<
+    string,
+    ProfilePageCache
+  >();
+
 export default function ProfilePage() {
   const router = useRouter();
   const { user, loading } = useAuth();
@@ -39,21 +59,73 @@ export default function ProfilePage() {
   const [following, setFollowing] = useState(0);
   const [posts, setPosts] = useState<any[]>([]);
   const [profileMusic, setProfileMusic] = useState<any>(null);
-  const [loadingProfile, setLoadingProfile] = useState(true);
-  const [tab, setTab] = useState<ProfileTab>("posts");
+  const [
+    loadingProfile,
+    setLoadingProfile,
+  ] = useState(true);
+
+  const [tab, setTab] =
+    useState<ProfileTab>(
+      "posts"
+    );
+
+  const profileRequestRef =
+    useRef(0);
 
   useEffect(() => {
     if (!loading && !user) router.push("/login");
   }, [user, loading, router]);
 
   useEffect(() => {
-    if (user) getProfile();
-  }, [user?.id]);
-
-  async function getProfile() {
     if (!user) return;
 
-    setLoadingProfile(true);
+    const cached =
+      profilePageCache.get(
+        user.id
+      );
+
+    if (cached) {
+      setProfile(
+        cached.profile
+      );
+      setFollowers(
+        cached.followers
+      );
+      setFollowing(
+        cached.following
+      );
+      setPosts(
+        cached.posts
+      );
+      setProfileMusic(
+        cached.profileMusic
+      );
+      setLoadingProfile(
+        false
+      );
+    }
+
+    void getProfile(
+      !cached
+    );
+
+    return () => {
+      profileRequestRef.current +=
+        1;
+    };
+  }, [user?.id]);
+
+  async function getProfile(
+    showLoader = true
+  ) {
+    if (!user) return;
+
+    const requestId =
+      ++profileRequestRef.current;
+
+    if (showLoader) {
+      setLoadingProfile(true);
+    }
 
     const currentUserId = user.id;
 
@@ -101,6 +173,13 @@ export default function ProfilePage() {
         (postsData || []) as any[]
       );
 
+    if (
+      requestId !==
+      profileRequestRef.current
+    ) {
+      return;
+    }
+
     const postIds =
       safePosts.map(
         (post: any) => post.id
@@ -121,17 +200,28 @@ export default function ProfilePage() {
       }
     }
 
-    setProfile(profileData || null);
-    setFollowers(followersData?.length || 0);
-    setFollowing(followingData?.length || 0);
-    setPosts(
-      safePosts.map((post: any) => ({
-        ...post,
-        comments: commentsData.filter(
-          (comment: any) => comment.post_id === post.id
-        ),
-      }))
-    );
+    if (
+      requestId !==
+      profileRequestRef.current
+    ) {
+      return;
+    }
+
+    const nextPosts =
+      safePosts.map(
+        (post: any) => ({
+          ...post,
+          comments:
+            commentsData.filter(
+              (
+                comment: any
+              ) =>
+                comment.post_id ===
+                post.id
+            ),
+        })
+      );
+
     const { data: musicData, error: musicError } = await supabase
       .from("profile_music")
       .select("*")
@@ -142,7 +232,48 @@ export default function ProfilePage() {
       console.error("Error cargando música del perfil:", musicError);
     }
 
-    setProfileMusic(musicData || null);
+    if (
+      requestId !==
+      profileRequestRef.current
+    ) {
+      return;
+    }
+
+    const nextState = {
+      profile:
+        profileData || null,
+      followers:
+        followersData?.length ||
+        0,
+      following:
+        followingData?.length ||
+        0,
+      posts:
+        nextPosts,
+      profileMusic:
+        musicData || null,
+    };
+
+    profilePageCache.set(
+      currentUserId,
+      nextState
+    );
+
+    setProfile(
+      nextState.profile
+    );
+    setFollowers(
+      nextState.followers
+    );
+    setFollowing(
+      nextState.following
+    );
+    setPosts(
+      nextState.posts
+    );
+    setProfileMusic(
+      nextState.profileMusic
+    );
     setLoadingProfile(false);
   }
 

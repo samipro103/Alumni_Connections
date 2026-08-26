@@ -22,6 +22,10 @@ import {
   supabase,
 } from "@/lib/supabase";
 
+/* ALUMNI_1_2_2_NAV_STABILITY:MOBILE_NAV */
+const unreadMessagesCache =
+  new Map<string, number>();
+
 const items = [
   {
     href: "/feed",
@@ -62,12 +66,32 @@ export default function MobileNav() {
   const [
     unreadMessages,
     setUnreadMessages,
-  ] = useState(0);
+  ] = useState(
+    user
+      ? unreadMessagesCache.get(
+          user.id
+        ) || 0
+      : 0
+  );
 
   useEffect(() => {
     if (!user) {
       setUnreadMessages(0);
       return;
+    }
+
+    const cached =
+      unreadMessagesCache.get(
+        user.id
+      );
+
+    if (
+      typeof cached ===
+      "number"
+    ) {
+      setUnreadMessages(
+        cached
+      );
     }
 
     const currentUser = user;
@@ -94,8 +118,16 @@ export default function MobileNav() {
           );
 
       if (active) {
+        const next =
+          count || 0;
+
+        unreadMessagesCache.set(
+          currentUser.id,
+          next
+        );
+
         setUnreadMessages(
-          count || 0
+          next
         );
       }
     }
