@@ -13,7 +13,6 @@ import {
   ChevronRight,
   Image as ImageIcon,
   MessageCircle,
-  Plus,
   Search,
   SquarePen,
   Users,
@@ -703,18 +702,7 @@ export default function MessagesPage() {
               <p className="text-[10px] font-black uppercase tracking-[0.13em] text-[var(--app-muted-2)]">
                 Grupos
               </p>
-              <button
-                type="button"
-                onClick={() =>
-                  setGroupModalOpen(
-                    true
-                  )
-                }
-                className="flex items-center gap-1 text-[11px] font-black text-[var(--app-accent)]"
-              >
-                <Plus size={13} />
-                Crear
-              </button>
+
             </div>
 
             <div className="divide-y divide-[var(--app-border)]">
@@ -1004,3 +992,5 @@ export default function MessagesPage() {
 /* ALUMNI_1_2_3_SCROLL_MESSAGES_STABILITY:INBOX */
 
 /* ALUMNI_1_3_0_GROUPS_MEDIA_PRO:INBOX */
+
+/* ALUMNI_1_3_3_VISUAL_UX_HOTFIX:INBOX */

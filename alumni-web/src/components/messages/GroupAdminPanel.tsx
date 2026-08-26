@@ -360,50 +360,51 @@ export default function GroupAdminPanel({
       <div className="flex h-[min(88dvh,760px)] w-full max-w-[520px] flex-col overflow-hidden rounded-t-[28px] bg-[var(--app-surface)] shadow-2xl sm:rounded-[28px]">
         <header className="shrink-0 border-b border-[var(--app-border)] px-5 py-4">
           <div className="flex items-center gap-3">
-            <button
-              type="button"
-              onClick={() =>
-                isAdmin &&
-                photoInputRef.current?.click()
-              }
-              disabled={
-                !isAdmin ||
-                busyKey ===
-                  "photo"
-              }
-              className="relative flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[var(--app-accent-soft)] text-[var(--app-accent)] ring-1 ring-[var(--app-border)] disabled:opacity-80"
-              aria-label="Cambiar foto del grupo"
-            >
-              {group?.avatar_url ? (
-                <img
-                  src={
-                    group.avatar_url
-                  }
-                  alt=""
-                  className="h-full w-full object-cover"
-                />
-              ) : (
-                <Users
-                  size={21}
-                />
-              )}
+            <div className="flex shrink-0 items-center gap-2">
+              <span className="flex h-14 w-14 items-center justify-center overflow-hidden rounded-full bg-[var(--app-accent-soft)] text-[var(--app-accent)] ring-1 ring-[var(--app-border)]">
+                {group?.avatar_url ? (
+                  <img
+                    src={
+                      group.avatar_url
+                    }
+                    alt=""
+                    className="h-full w-full object-cover"
+                  />
+                ) : (
+                  <Users
+                    size={21}
+                  />
+                )}
+              </span>
 
               {isAdmin && (
-                <span className="absolute bottom-0 right-0 flex h-5 w-5 items-center justify-center rounded-full bg-[var(--app-accent)] text-[var(--app-on-accent)] ring-2 ring-[var(--app-surface)]">
+                <button
+                  type="button"
+                  onClick={() =>
+                    photoInputRef.current?.click()
+                  }
+                  disabled={
+                    busyKey ===
+                    "photo"
+                  }
+                  className="flex h-10 w-10 items-center justify-center rounded-full bg-[var(--app-soft)] text-[var(--app-accent)] ring-1 ring-[var(--app-border)] transition hover:bg-[var(--app-accent-soft)] disabled:opacity-50"
+                  aria-label="Cambiar foto del grupo"
+                  title="Cambiar foto"
+                >
                   {busyKey ===
                   "photo" ? (
                     <Loader2
-                      size={10}
+                      size={15}
                       className="animate-spin"
                     />
                   ) : (
                     <Camera
-                      size={10}
+                      size={15}
                     />
                   )}
-                </span>
+                </button>
               )}
-            </button>
+            </div>
 
             <input
               ref={
@@ -633,3 +634,5 @@ export default function GroupAdminPanel({
     </div>
   );
 }
+
+/* ALUMNI_1_3_3_GROUP_CAMERA_OUTSIDE */

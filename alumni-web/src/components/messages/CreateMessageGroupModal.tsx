@@ -338,8 +338,8 @@ export default function CreateMessageGroupModal({
       aria-modal="true"
       data-pull-refresh-lock="true"
     >
-      <div className="flex h-[min(88dvh,760px)] w-full max-w-[560px] flex-col overflow-hidden rounded-t-[30px] border border-white/[0.08] bg-[var(--app-surface)] shadow-2xl sm:rounded-[30px]">
-        <header className="shrink-0 border-b border-[var(--app-border)] px-5 py-4">
+      <div className="grid h-[100dvh] max-h-[100dvh] w-full max-w-[560px] grid-rows-[auto_auto_minmax(0,1fr)_auto] overflow-hidden rounded-none bg-[var(--app-surface)] shadow-2xl sm:h-[min(88dvh,760px)] sm:max-h-[88dvh] sm:rounded-[30px] sm:ring-1 sm:ring-[var(--app-border)]">
+        <header className="border-b border-[var(--app-border)] px-5 py-4">
           <div className="flex items-center gap-3">
             <span className="flex h-10 w-10 items-center justify-center rounded-full bg-[var(--app-accent-soft)] text-[var(--app-accent)]">
               <Users
@@ -389,7 +389,7 @@ export default function CreateMessageGroupModal({
           </div>
         </header>
 
-        <div className="shrink-0 px-5 pt-4">
+        <div className="px-5 pt-4">
           <input
             value={name}
             onChange={(
@@ -431,7 +431,7 @@ export default function CreateMessageGroupModal({
           </div>
         </div>
 
-        <div className="min-h-0 flex-1 overflow-y-auto px-5 py-2">
+        <div className="min-h-0 overflow-y-auto overscroll-contain px-5 py-2">
           {loading ? (
             <div className="flex justify-center py-12">
               <Loader2
@@ -533,7 +533,7 @@ export default function CreateMessageGroupModal({
           )}
         </div>
 
-        <footer className="relative z-30 shrink-0 border-t border-[var(--app-border)] bg-[var(--app-surface)] px-5 py-4 pb-[max(16px,env(safe-area-inset-bottom))]">
+        <footer className="relative z-40 border-t border-[var(--app-border)] bg-[var(--app-surface)] px-5 py-3 pb-[max(14px,env(safe-area-inset-bottom))] shadow-[0_-14px_36px_var(--app-shadow)]">
           <button
             type="button"
             onClick={() =>
@@ -568,4 +568,4 @@ export default function CreateMessageGroupModal({
   );
 }
 
-/* ALUMNI_1_3_2_MESSAGING_POLISH:CREATE */
+/* ALUMNI_1_3_3_CREATE_MODAL_GRID */

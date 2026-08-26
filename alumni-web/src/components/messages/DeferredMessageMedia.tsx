@@ -133,6 +133,16 @@ export default function DeferredMessageMedia({
   const [error, setError] =
     useState("");
 
+  const [
+    inlineUrl,
+    setInlineUrl,
+  ] = useState("");
+
+  const [
+    previewRatio,
+    setPreviewRatio,
+  ] = useState(4 / 3);
+
   const mountedRef =
     useRef(false);
 
@@ -142,6 +152,44 @@ export default function DeferredMessageMedia({
 
   const sizeLabel =
     formatMediaSize(size);
+
+  const displayRatio =
+    Math.min(
+      1.9,
+      Math.max(
+        0.56,
+        Number.isFinite(
+          previewRatio
+        )
+          ? previewRatio
+          : 4 / 3
+      )
+    );
+
+  const displayWidth =
+    displayRatio <= 0.62
+      ? "min(210px, 62vw)"
+      : displayRatio <= 0.82
+      ? "min(240px, 68vw)"
+      : displayRatio <= 1.15
+      ? "min(280px, 72vw)"
+      : displayRatio <= 1.45
+      ? "min(300px, 74vw)"
+      : "min(320px, 76vw)";
+
+  function rememberRatio(
+    width: number,
+    height: number
+  ) {
+    if (
+      width > 0 &&
+      height > 0
+    ) {
+      setPreviewRatio(
+        width / height
+      );
+    }
+  }
 
   useEffect(() => {
     mountedRef.current =
@@ -230,6 +278,7 @@ export default function DeferredMessageMedia({
       }
 
       setViewerUrl(url);
+      setInlineUrl(url);
       setDecisionOpen(
         false
       );
@@ -373,6 +422,7 @@ export default function DeferredMessageMedia({
           mountedRef.current
         ) {
           setViewerUrl(url);
+          setInlineUrl(url);
           setViewerOpen(true);
         }
       }
@@ -529,33 +579,121 @@ export default function DeferredMessageMedia({
         onClick={() =>
           void handleMediaTap()
         }
-        className="group/media relative block w-full overflow-hidden bg-[var(--app-surface-2)] text-left"
+        className="group/media relative block max-w-full overflow-hidden bg-[var(--app-soft-strong)] text-left"
+        style={{
+          width:
+            displayWidth,
+          aspectRatio:
+            String(
+              displayRatio
+            ),
+        }}
         aria-label={
           video
             ? "Ver video"
             : "Ver foto"
         }
       >
-        <div className="relative overflow-hidden">
-          {preview ? (
+        <div className="absolute inset-0 overflow-hidden">
+          {inlineUrl ? (
+            video ? (
+              <>
+                {preview && (
+                  <img
+                    src={preview}
+                    alt=""
+                    aria-hidden="true"
+                    className="absolute inset-0 h-full w-full object-cover"
+                  />
+                )}
+
+                <video
+                  src={inlineUrl}
+                  muted
+                  playsInline
+                  preload="metadata"
+                  onLoadedMetadata={(
+                    event
+                  ) =>
+                    rememberRatio(
+                      event.currentTarget
+                        .videoWidth,
+                      event.currentTarget
+                        .videoHeight
+                    )
+                  }
+                  className="absolute inset-0 h-full w-full object-cover"
+                />
+              </>
+            ) : (
+              <img
+                src={inlineUrl}
+                alt={
+                  name ||
+                  "Foto"
+                }
+                onLoad={(
+                  event
+                ) =>
+                  rememberRatio(
+                    event.currentTarget
+                      .naturalWidth,
+                    event.currentTarget
+                      .naturalHeight
+                  )
+                }
+                className="absolute inset-0 h-full w-full object-cover"
+              />
+            )
+          ) : preview ? (
             <img
               src={preview}
               alt=""
               aria-hidden="true"
-              className="block h-auto max-h-[420px] w-full object-cover blur-[16px] saturate-75 brightness-[0.72]"
+              onLoad={(
+                event
+              ) =>
+                rememberRatio(
+                  event.currentTarget
+                    .naturalWidth,
+                  event.currentTarget
+                    .naturalHeight
+                )
+              }
+              className="absolute inset-0 h-full w-full object-cover blur-[15px] saturate-75 brightness-[0.74]"
             />
           ) : (
-            <div className="aspect-[4/3] w-full bg-[var(--app-soft-strong)]" />
+            <div className="absolute inset-0 bg-[var(--app-soft-strong)]" />
           )}
 
-          <div className="absolute inset-0 bg-black/12" />
+          {!inlineUrl && (
+            <div className="absolute inset-0 bg-black/10" />
+          )}
 
-          <span className="absolute left-1/2 top-1/2 flex h-12 w-12 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-black/44 text-white shadow-[0_8px_28px_rgba(0,0,0,.25)] backdrop-blur-sm transition group-active/media:scale-95">
+          <span
+            className={`absolute left-1/2 top-1/2 flex h-12 w-12 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-black/46 text-white shadow-[0_8px_28px_rgba(0,0,0,.24)] backdrop-blur-sm transition group-active/media:scale-95 ${
+              inlineUrl &&
+              !video
+                ? "opacity-0 group-hover/media:opacity-100"
+                : ""
+            }`}
+          >
             {busy ? (
               <Loader2
                 size={19}
                 className="animate-spin"
               />
+            ) : inlineUrl ? (
+              video ? (
+                <Play
+                  size={19}
+                  fill="currentColor"
+                />
+              ) : (
+                <Eye
+                  size={18}
+                />
+              )
             ) : video ? (
               <Play
                 size={19}
@@ -568,11 +706,12 @@ export default function DeferredMessageMedia({
             )}
           </span>
 
-          {sizeLabel && (
-            <span className="absolute bottom-2 right-2 rounded-full bg-black/42 px-2 py-1 text-[9px] font-black text-white/85 backdrop-blur-sm">
-              {sizeLabel}
-            </span>
-          )}
+          {!inlineUrl &&
+            sizeLabel && (
+              <span className="absolute bottom-2 right-2 rounded-full bg-black/42 px-2 py-1 text-[9px] font-black text-white/85 backdrop-blur-sm">
+                {sizeLabel}
+              </span>
+            )}
         </div>
       </button>
 
@@ -818,3 +957,5 @@ export default function DeferredMessageMedia({
     </>
   );
 }
+
+/* ALUMNI_1_3_3_MEDIA_ASPECT_POLISH */

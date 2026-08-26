@@ -249,7 +249,7 @@ function DesktopLanding() {
             </div>
 
             <h1 className="text-5xl font-black leading-[1.03] tracking-[-0.055em] sm:text-6xl lg:text-7xl">
-              Las conexiones que empiezan en la universidad pueden llegar mucho más lejos.
+              Conexiones que te llevan más lejos.
             </h1>
 
             <p className="mt-6 max-w-xl text-base leading-7 text-zinc-500 sm:text-lg">
@@ -320,3 +320,5 @@ export default function LandingPage() {
     </>
   );
 }
+
+/* ALUMNI_1_3_3_VISUAL_UX_HOTFIX:PC_HERO */
