@@ -5,40 +5,34 @@ import {
   X,
 } from "lucide-react";
 import {
+  useEffect,
   useRef,
   useState,
   type PointerEvent,
   type ReactNode,
 } from "react";
 
-const SWIPE_TRIGGER = 56;
+const SWIPE_TRIGGER = 54;
 const SWIPE_MAX = 82;
+const SETTLE_MS = 185;
 
 function messageSummary(
   message: any
 ) {
-  if (!message) {
-    return "Mensaje";
-  }
+  if (!message) return "Mensaje";
 
   if (
     message.content &&
     String(message.content).trim()
   ) {
-    return String(
-      message.content
-    ).trim();
+    return String(message.content).trim();
   }
 
-  if (
-    message.media_type === "image"
-  ) {
+  if (message.media_type === "image") {
     return "📷 Foto";
   }
 
-  if (
-    message.media_type === "video"
-  ) {
+  if (message.media_type === "video") {
     return "🎥 Video";
   }
 
@@ -49,10 +43,7 @@ function messageSummary(
     return "Respuesta a historia";
   }
 
-  return (
-    message.media_name ||
-    "Mensaje"
-  );
+  return "Mensaje";
 }
 
 export function SwipeToReply({
@@ -64,7 +55,11 @@ export function SwipeToReply({
 }) {
   const [offset, setOffset] =
     useState(0);
+
   const [dragging, setDragging] =
+    useState(false);
+
+  const [settling, setSettling] =
     useState(false);
 
   const startRef =
@@ -79,22 +74,84 @@ export function SwipeToReply({
       "x" | "y" | "blocked" | null
     >(null);
 
+  const offsetRef =
+    useRef(0);
+
   const armedRef =
     useRef(false);
 
   const suppressClickRef =
     useRef(false);
 
-  function reset() {
-    setOffset(0);
-    setDragging(false);
+  const settleTimerRef =
+    useRef<number | null>(
+      null
+    );
+
+  const clickTimerRef =
+    useRef<number | null>(
+      null
+    );
+
+  useEffect(() => {
+    return () => {
+      if (
+        settleTimerRef.current !==
+        null
+      ) {
+        window.clearTimeout(
+          settleTimerRef.current
+        );
+      }
+
+      if (
+        clickTimerRef.current !==
+        null
+      ) {
+        window.clearTimeout(
+          clickTimerRef.current
+        );
+      }
+    };
+  }, []);
+
+  function clearGestureRefs() {
     startRef.current = null;
     axisRef.current = null;
-    armedRef.current = false;
+    armedRef.current =
+      false;
+  }
+
+  function settleBack() {
+    offsetRef.current = 0;
+    setDragging(false);
+    setSettling(true);
+    setOffset(0);
+    clearGestureRefs();
+
+    if (
+      settleTimerRef.current !==
+      null
+    ) {
+      window.clearTimeout(
+        settleTimerRef.current
+      );
+    }
+
+    settleTimerRef.current =
+      window.setTimeout(
+        () => {
+          setSettling(false);
+          settleTimerRef.current =
+            null;
+        },
+        SETTLE_MS
+      );
   }
 
   function interactiveTarget(
-    target: EventTarget | null
+    target:
+      EventTarget | null
   ) {
     const element =
       target instanceof Element
@@ -103,13 +160,22 @@ export function SwipeToReply({
 
     return Boolean(
       element?.closest(
-        "button,input,textarea,select,video,audio"
+        [
+          "button",
+          "input",
+          "textarea",
+          "select",
+          "video",
+          "audio",
+          "[role='dialog']",
+        ].join(",")
       )
     );
   }
 
   function onPointerDown(
-    event: PointerEvent<HTMLDivElement>
+    event:
+      PointerEvent<HTMLDivElement>
   ) {
     if (
       !event.isPrimary ||
@@ -123,6 +189,22 @@ export function SwipeToReply({
       return;
     }
 
+    if (
+      settleTimerRef.current !==
+      null
+    ) {
+      window.clearTimeout(
+        settleTimerRef.current
+      );
+      settleTimerRef.current =
+        null;
+    }
+
+    setSettling(false);
+    setDragging(false);
+    setOffset(0);
+    offsetRef.current = 0;
+
     startRef.current = {
       x: event.clientX,
       y: event.clientY,
@@ -131,11 +213,13 @@ export function SwipeToReply({
     };
 
     axisRef.current = null;
-    armedRef.current = false;
+    armedRef.current =
+      false;
   }
 
   function onPointerMove(
-    event: PointerEvent<HTMLDivElement>
+    event:
+      PointerEvent<HTMLDivElement>
   ) {
     const start =
       startRef.current;
@@ -151,12 +235,14 @@ export function SwipeToReply({
     const dx =
       event.clientX -
       start.x;
+
     const dy =
       event.clientY -
       start.y;
 
     const absX =
       Math.abs(dx);
+
     const absY =
       Math.abs(dy);
 
@@ -166,12 +252,12 @@ export function SwipeToReply({
       Math.max(
         absX,
         absY
-      ) >= 7
+      ) >= 8
     ) {
       if (
         dx > 0 &&
         absX >
-          absY * 1.15
+          absY * 1.18
       ) {
         axisRef.current =
           "x";
@@ -181,9 +267,7 @@ export function SwipeToReply({
             .setPointerCapture(
               event.pointerId
             );
-        } catch {
-          // Pointer capture is optional.
-        }
+        } catch {}
       } else if (
         absY >= absX
       ) {
@@ -207,22 +291,28 @@ export function SwipeToReply({
     setDragging(true);
 
     const raw =
-      Math.max(0, dx);
+      Math.max(
+        0,
+        dx
+      );
 
     const resisted =
       raw <= SWIPE_TRIGGER
-        ? raw * 0.88
+        ? raw * 0.9
         : SWIPE_TRIGGER *
-            0.88 +
+            0.9 +
           (raw -
             SWIPE_TRIGGER) *
-            0.22;
+            0.2;
 
     const next =
       Math.min(
         SWIPE_MAX,
         resisted
       );
+
+    offsetRef.current =
+      next;
 
     setOffset(next);
 
@@ -234,53 +324,26 @@ export function SwipeToReply({
       armedRef.current =
         true;
 
-      if (
-        typeof navigator !==
-          "undefined" &&
-        "vibrate" in navigator
-      ) {
+      try {
         navigator.vibrate?.(
           8
         );
-      }
+      } catch {}
     }
 
     if (
       next <
-      SWIPE_TRIGGER - 8
+      SWIPE_TRIGGER - 9
     ) {
       armedRef.current =
         false;
     }
   }
 
-  function finish(
-    event: PointerEvent<HTMLDivElement>
+  function releaseCapture(
+    event:
+      PointerEvent<HTMLDivElement>
   ) {
-    const horizontal =
-      axisRef.current ===
-      "x";
-
-    const shouldReply =
-      horizontal &&
-      offset >=
-        SWIPE_TRIGGER;
-
-    if (shouldReply) {
-      suppressClickRef.current =
-        true;
-
-      onReply();
-
-      window.setTimeout(
-        () => {
-          suppressClickRef.current =
-            false;
-        },
-        80
-      );
-    }
-
     try {
       if (
         event.currentTarget
@@ -293,18 +356,73 @@ export function SwipeToReply({
             event.pointerId
           );
       }
-    } catch {
-      // Safe cleanup.
+    } catch {}
+  }
+
+  function onPointerUp(
+    event:
+      PointerEvent<HTMLDivElement>
+  ) {
+    const shouldReply =
+      axisRef.current ===
+        "x" &&
+      offsetRef.current >=
+        SWIPE_TRIGGER;
+
+    releaseCapture(
+      event
+    );
+
+    if (shouldReply) {
+      suppressClickRef.current =
+        true;
+
+      onReply();
+
+      if (
+        clickTimerRef.current !==
+        null
+      ) {
+        window.clearTimeout(
+          clickTimerRef.current
+        );
+      }
+
+      clickTimerRef.current =
+        window.setTimeout(
+          () => {
+            suppressClickRef.current =
+              false;
+            clickTimerRef.current =
+              null;
+          },
+          120
+        );
     }
 
-    reset();
+    settleBack();
   }
+
+  function onPointerCancel(
+    event:
+      PointerEvent<HTMLDivElement>
+  ) {
+    releaseCapture(
+      event
+    );
+    settleBack();
+  }
+
+  const hasTransform =
+    offset > 0 ||
+    settling;
 
   return (
     <div
       className="relative w-full"
       style={{
-        touchAction: "pan-y",
+        touchAction:
+          "pan-y",
       }}
       onPointerDown={
         onPointerDown
@@ -312,9 +430,11 @@ export function SwipeToReply({
       onPointerMove={
         onPointerMove
       }
-      onPointerUp={finish}
+      onPointerUp={
+        onPointerUp
+      }
       onPointerCancel={
-        finish
+        onPointerCancel
       }
       onClickCapture={(
         event
@@ -345,21 +465,28 @@ export function SwipeToReply({
             )})`,
         }}
       >
-        <Reply size={15} />
+        <Reply
+          size={15}
+        />
       </div>
 
       <div
         style={{
           transform:
-            `translate3d(${offset}px,0,0)`,
+            hasTransform
+              ? `translate3d(${offset}px,0,0)`
+              : undefined,
           transition:
             dragging
               ? "none"
-              : "transform 180ms cubic-bezier(.2,.8,.2,1)",
+              : settling
+              ? `transform ${SETTLE_MS}ms cubic-bezier(.2,.8,.2,1)`
+              : undefined,
           willChange:
-            offset
+            dragging ||
+            settling
               ? "transform"
-              : "auto",
+              : undefined,
           userSelect:
             dragging
               ? "none"
@@ -408,15 +535,15 @@ export function MessageReplyQuote({
         }`;
 
   return (
-    <div className="mb-2 flex min-w-0 overflow-hidden rounded-[10px] bg-[color-mix(in_srgb,var(--app-soft-strong)_78%,transparent)]">
+    <div className="mb-2 flex min-w-0 overflow-hidden rounded-[11px] bg-[var(--app-surface-2)] ring-1 ring-[var(--app-border)]">
       <span className="w-[3px] shrink-0 bg-[var(--app-accent)]" />
 
-      <div className="min-w-0 px-2.5 py-1.5">
-        <p className="truncate text-[9px] font-black text-[var(--app-accent)]">
+      <div className="min-w-0 px-2.5 py-2">
+        <p className="truncate text-[10px] font-black text-[var(--app-accent)]">
           {author}
         </p>
 
-        <p className="mt-0.5 max-w-[300px] truncate text-[10.5px] leading-4 text-[var(--app-muted)]">
+        <p className="mt-0.5 max-w-[300px] truncate text-[12px] leading-[1.35] text-[var(--app-text-soft)]">
           {messageSummary(
             reply
           )}
@@ -453,16 +580,16 @@ export function ComposerReplyPreview({
         }`;
 
   return (
-    <div className="mb-1 flex min-w-0 overflow-hidden rounded-[12px] bg-[color-mix(in_srgb,var(--app-soft-strong)_88%,transparent)]">
+    <div className="mb-1.5 flex min-w-0 overflow-hidden rounded-[13px] bg-[var(--app-surface-2)] ring-1 ring-[var(--app-border)]">
       <span className="w-[3px] shrink-0 bg-[var(--app-accent)]" />
 
       <div className="min-w-0 flex-1 px-3 py-2">
-        <p className="truncate text-[9px] font-black text-[var(--app-accent)]">
+        <p className="truncate text-[10px] font-black text-[var(--app-accent)]">
           Responder a{" "}
           {author}
         </p>
 
-        <p className="mt-0.5 truncate text-[11px] leading-4 text-[var(--app-muted)]">
+        <p className="mt-0.5 truncate text-[12px] leading-[1.35] text-[var(--app-text-soft)]">
           {messageSummary(
             message
           )}
@@ -475,7 +602,9 @@ export function ComposerReplyPreview({
         className="flex w-10 shrink-0 items-center justify-center text-[var(--app-muted-2)] transition hover:bg-[var(--app-soft)] hover:text-[var(--app-text)]"
         aria-label="Cancelar respuesta"
       >
-        <X size={14} />
+        <X
+          size={14}
+        />
       </button>
     </div>
   );

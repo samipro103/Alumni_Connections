@@ -254,6 +254,17 @@ async function createPlayer() {
     }
   );
 
+  nextPlayer.addListener(
+    "autoplay_failed",
+    () => {
+      emit({
+        isPlaying: false,
+        error:
+          "El navegador bloqueó el inicio automático. Toca Play otra vez.",
+      });
+    }
+  );
+
   player =
     nextPlayer;
 
@@ -470,3 +481,5 @@ export function clearSpotifyPlayerError() {
 }
 
 /* ALUMNI_1_3_5_MEDIA_MODAL_SPOTIFY_FIX:SPOTIFY */
+
+/* ALUMNI_1_3_6_CHAT_STABILITY_MEDIA_SPOTIFY:SPOTIFY_MANAGER */

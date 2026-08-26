@@ -99,8 +99,103 @@ export default function MessagesPage() {
       return;
     }
 
+    const rows =
+      data || [];
+
+    const groupIds =
+      rows
+        .map(
+          (group: any) =>
+            group.group_id
+        )
+        .filter(Boolean);
+
+    if (!groupIds.length) {
+      setGroups([]);
+      return;
+    }
+
+    const {
+      data:
+        groupRows,
+    } =
+      await supabase
+        .from(
+          "message_groups"
+        )
+        .select(
+          "id,avatar_path,avatar_updated_at"
+        )
+        .in(
+          "id",
+          groupIds
+        );
+
+    const avatarRows =
+      groupRows || [];
+
+    const avatarPaths =
+      avatarRows
+        .map(
+          (group: any) =>
+            group.avatar_path
+        )
+        .filter(Boolean);
+
+    const avatarUrlByPath =
+      new Map<string,string>();
+
+    if (avatarPaths.length) {
+      const {
+        data:
+          signedRows,
+      } =
+        await supabase.storage
+          .from(
+            "group-message-media"
+          )
+          .createSignedUrls(
+            avatarPaths,
+            3600
+          );
+
+      for (const signed of signedRows || []) {
+        if (
+          signed.path &&
+          signed.signedUrl
+        ) {
+          avatarUrlByPath.set(
+            signed.path,
+            signed.signedUrl
+          );
+        }
+      }
+    }
+
+    const avatarByGroup =
+      new Map<string,string>();
+
+    for (const group of avatarRows) {
+      if (group.avatar_path) {
+        avatarByGroup.set(
+          group.id,
+          avatarUrlByPath.get(
+            group.avatar_path
+          ) || ""
+        );
+      }
+    }
+
     setGroups(
-      data || []
+      rows.map(
+        (group: any) => ({
+          ...group,
+          avatar_url:
+            avatarByGroup.get(
+              group.group_id
+            ) || "",
+        })
+      )
     );
   }
 
@@ -142,6 +237,18 @@ export default function MessagesPage() {
           schema: "public",
           table:
             "group_messages",
+        },
+        () => {
+          void loadGroups();
+        }
+      )
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table:
+            "message_groups",
         },
         () => {
           void loadGroups();
@@ -732,10 +839,20 @@ export default function MessagesPage() {
                       href={`/messages/group/${group.group_id}`}
                       className="flex items-center gap-3 py-3.5"
                     >
-                      <span className="flex h-[50px] w-[50px] shrink-0 items-center justify-center rounded-full bg-[var(--app-accent-soft)] text-[var(--app-accent)] ring-1 ring-[color-mix(in_srgb,var(--app-accent)_18%,transparent)]">
-                        <Users
-                          size={20}
-                        />
+                      <span className="flex h-[50px] w-[50px] shrink-0 items-center justify-center overflow-hidden rounded-full bg-[var(--app-accent-soft)] text-[var(--app-accent)] ring-1 ring-[var(--app-border)]">
+                        {group.avatar_url ? (
+                          <img
+                            src={
+                              group.avatar_url
+                            }
+                            alt=""
+                            className="h-full w-full object-cover"
+                          />
+                        ) : (
+                          <Users
+                            size={20}
+                          />
+                        )}
                       </span>
 
                       <div className="min-w-0 flex-1">
@@ -994,3 +1111,5 @@ export default function MessagesPage() {
 /* ALUMNI_1_3_0_GROUPS_MEDIA_PRO:INBOX */
 
 /* ALUMNI_1_3_3_VISUAL_UX_HOTFIX:INBOX */
+
+/* ALUMNI_1_3_6_CHAT_STABILITY_MEDIA_SPOTIFY:GROUP_AVATAR */

@@ -314,6 +314,41 @@ export function useSpotifyPremiumPlayer({
             startSeconds,
           });
 
+          let resumed =
+            await spotifyResume();
+
+          if (!resumed) {
+            await new Promise<void>(
+              (resolve) =>
+                window.setTimeout(
+                  resolve,
+                  140
+                )
+            );
+
+            resumed =
+              await spotifyResume();
+          }
+
+          if (!resumed) {
+            await new Promise<void>(
+              (resolve) =>
+                window.setTimeout(
+                  resolve,
+                  220
+                )
+            );
+
+            resumed =
+              await spotifyResume();
+          }
+
+          if (!resumed) {
+            throw new Error(
+              "Spotify recibió la canción pero el navegador bloqueó el audio. Toca Play otra vez."
+            );
+          }
+
           setIsPlaying(true);
 
           setPositionMs(
@@ -547,3 +582,5 @@ export function useSpotifyPremiumPlayer({
     seekContinuousFragment,
   };
 }
+
+/* ALUMNI_1_3_6_CHAT_STABILITY_MEDIA_SPOTIFY:SPOTIFY */

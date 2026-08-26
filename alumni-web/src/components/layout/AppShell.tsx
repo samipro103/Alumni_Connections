@@ -22,25 +22,20 @@ export default function AppShell({
 }: Props) {
   return (
     <>
-      {/*
-        Este bloque es el que baja durante Pull-to-Refresh.
-        Los elementos fixed globales NO deben vivir aquí dentro,
-        porque un ancestro transformado cambia su containing block.
-      */}
+      <div
+        className={
+          immersiveMobile
+            ? "hidden lg:block"
+            : ""
+        }
+      >
+        <TopBar />
+      </div>
+
       <div
         id="alumni-global-shell"
         className="relative z-[41] min-h-[100dvh] overflow-x-clip bg-[var(--app-bg)] text-[var(--app-text)]"
       >
-        <div
-          className={
-            immersiveMobile
-              ? "hidden lg:block"
-              : ""
-          }
-        >
-          <TopBar />
-        </div>
-
         <div
           className={
             immersiveMobile
@@ -87,3 +82,5 @@ export default function AppShell({
     </>
   );
 }
+
+/* ALUMNI_1_3_6_CHAT_STABILITY_MEDIA_SPOTIFY:APP_SHELL */
