@@ -2,6 +2,7 @@
 
 import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
+import "./feed-actions.css";
 import {
   Heart,
   MessageCircle,
@@ -1324,3 +1325,5 @@ export default function FeedPage() {
 /* ALUMNI_1_2_0_TRUST_BLOCK:FEED_PRIVATE_MEDIA */
 
 /* ALUMNI_1_3_8_OPEN_FEED_REPOSTS */
+
+/* ALUMNI_1_3_8_1_FEED_ACTIONS_POLISH */
