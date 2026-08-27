@@ -242,37 +242,119 @@ function FeedContent() {
       setFollowingIds([]);
     }
 
-    const { data: postsData } = await supabase
+    const {
+      data: basePosts,
+      error: postsError,
+    } = await supabase
       .from("posts")
-      .select(`
-        *,
-        profiles (
-          username,
-          avatar_url,
-          full_name,
-          university,
-          education_institution_name,
-          education_program_name,
-          career,
-          city,
-          country,
-          residence_country_code
-        ),
-        likes (
-          user_id
-        )
-      `)
+      .select("*")
       .order("created_at", { ascending: false });
 
     if (requestId !== feedRequestRef.current) return;
 
-    if (!postsData) {
-      if (showLoader) {
-        setPosts([]);
-        setLoading(false);
-      }
+    if (postsError) {
+      console.error(
+        "[Alumni Feed] posts:",
+        postsError
+      );
+
+      setPosts([]);
+      setLoading(false);
+      showToast(
+        "No se pudieron cargar las publicaciones."
+      );
       return;
     }
+
+    const basePostIds = (basePosts || []).map(
+      (post: any) => post.id
+    );
+
+    const authorIds = [
+      ...new Set(
+        (basePosts || [])
+          .map((post: any) => post.user_id)
+          .filter(Boolean)
+      ),
+    ];
+
+    const [authorsResult, likesResult] =
+      await Promise.all([
+        authorIds.length
+          ? supabase
+              .from("profiles")
+              .select(
+                "id,username,avatar_url,full_name,university,education_institution_name,education_program_name,career,city,country,residence_country_code"
+              )
+              .in("id", authorIds)
+          : Promise.resolve({
+              data: [],
+              error: null,
+            } as any),
+
+        basePostIds.length
+          ? supabase
+              .from("likes")
+              .select("post_id,user_id")
+              .in("post_id", basePostIds)
+          : Promise.resolve({
+              data: [],
+              error: null,
+            } as any),
+      ]);
+
+    if (requestId !== feedRequestRef.current) return;
+
+    if (authorsResult.error) {
+      console.warn(
+        "[Alumni Feed] authors:",
+        authorsResult.error
+      );
+    }
+
+    if (likesResult.error) {
+      console.warn(
+        "[Alumni Feed] likes:",
+        likesResult.error
+      );
+    }
+
+    const authorById = new Map(
+      (authorsResult.data || []).map(
+        (profile: any) => [
+          profile.id,
+          profile,
+        ]
+      )
+    );
+
+    const likesByPost =
+      new Map<number, any[]>();
+
+    for (const like of likesResult.data || []) {
+      const postId = Number(like.post_id);
+      const current =
+        likesByPost.get(postId) || [];
+
+      current.push({
+        user_id: like.user_id,
+      });
+
+      likesByPost.set(
+        postId,
+        current
+      );
+    }
+
+    const postsData = (basePosts || []).map(
+      (post: any) => ({
+        ...post,
+        profiles:
+          authorById.get(post.user_id) || null,
+        likes:
+          likesByPost.get(Number(post.id)) || [],
+      })
+    );
 
     const postIds = (postsData as any[]).map(
       (post: any) => post.id
@@ -394,10 +476,31 @@ function FeedContent() {
       (post: any) => !mutedUserIds.has(post.user_id)
     );
 
-    const legacyReady = await hydratePostMedia(visibleBase);
-    const mediaRows = await hydratePostMediaItems(
-      (mediaRowsRaw || []) as any[]
-    );
+    let legacyReady = visibleBase;
+
+    try {
+      legacyReady =
+        await hydratePostMedia(visibleBase);
+    } catch (error) {
+      console.warn(
+        "[Alumni Feed] legacy media:",
+        error
+      );
+    }
+
+    let mediaRows: any[] = [];
+
+    try {
+      mediaRows =
+        await hydratePostMediaItems(
+          (mediaRowsRaw || []) as any[]
+        );
+    } catch (error) {
+      console.warn(
+        "[Alumni Feed] media items:",
+        error
+      );
+    }
 
     if (requestId !== feedRequestRef.current) return;
 
@@ -1293,3 +1396,5 @@ export default function FeedPage() {
 /* ALUMNI_1_4_2_THEME_CHAT_PROFILE_POLISH:FEED_NO_SAVED */
 
 /* ALUMNI_1_6_0_EXPLORE_DISCOVERY:FEED_SIGNALS */
+
+/* ALUMNI_2_3_3_PASSPORT_PROFILE_FEED_FIX:FEED_RESILIENT_LOAD */

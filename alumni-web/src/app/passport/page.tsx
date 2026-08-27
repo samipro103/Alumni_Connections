@@ -57,6 +57,27 @@ export default function PassportPage() {
   }, [user?.id]);
 
   useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const url = new URL(window.location.href);
+
+    if (url.searchParams.get("add") === "1") {
+      setCountryOpen(true);
+
+      url.searchParams.delete("add");
+
+      window.history.replaceState(
+        {},
+        "",
+        url.pathname +
+          (url.searchParams.toString()
+            ? `?${url.searchParams.toString()}`
+            : "")
+      );
+    }
+  }, []);
+
+  useEffect(() => {
     if (!countryOpen && !photoOpen) return;
     const previous = document.body.style.overflow;
     document.body.style.overflow = "hidden";
@@ -438,3 +459,5 @@ export default function PassportPage() {
 /* ALUMNI_2_2_3_PASSPORT_INNER_CONFIRM:PAGE */
 
 /* ALUMNI_2_2_4_PASSPORT_CREATE_BUTTON_VISIBLE:PAGE */
+
+/* ALUMNI_2_3_3_PASSPORT_PROFILE_FEED_FIX:PASSPORT_ADD_FROM_PROFILE */

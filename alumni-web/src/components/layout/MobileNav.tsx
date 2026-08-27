@@ -20,7 +20,6 @@ import {
   MoreHorizontal,
   Users,
   CalendarDays,
-  Globe2,
 } from "lucide-react";
 import {
   useAuth,
@@ -69,12 +68,6 @@ const moreItems = [
     label: "Eventos",
     description: "Planes y encuentros",
     icon: CalendarDays,
-  },
-  {
-    href: "/passport",
-    label: "Pasaporte",
-    description: "Países, álbumes y recuerdos",
-    icon: Globe2,
   },
   {
     href: "/settings",
@@ -288,10 +281,6 @@ export default function MobileNav() {
     pathname === "/events" ||
     pathname.startsWith(
       "/events/"
-    ) ||
-    pathname === "/passport" ||
-    pathname.startsWith(
-      "/passport/"
     ) ||
     pathname === "/settings" ||
     pathname.startsWith(
@@ -521,3 +510,5 @@ export default function MobileNav() {
 /* ALUMNI_2_2_0_FIX1_SAFE_ADDITIVE:MOBILE_NAV */
 
 /* ALUMNI_2_3_2_RECOVERY_PROFILE_PASSPORT_NAV:MOBILE_MORE */
+
+/* ALUMNI_2_3_3_PASSPORT_PROFILE_FEED_FIX:REMOVE_PASSPORT_FROM_MORE */
