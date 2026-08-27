@@ -329,3 +329,10 @@
 }
 
 /* ALUMNI_2_1_EVENTS_OPEN_DESIGN */
+
+/* ALUMNI_2_1_1_MOBILE_HEADER_SPACING */
+@media (max-width: 1023px) {
+  .alumni-events-2 {
+    padding-top: 12px;
+  }
+}

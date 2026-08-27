@@ -17,6 +17,9 @@ import {
   Plus,
   MessageCircle,
   Settings,
+  MoreHorizontal,
+  Users,
+  CalendarDays,
 } from "lucide-react";
 import {
   useAuth,
@@ -51,9 +54,25 @@ const items = [
     icon: MessageCircle,
     messages: true,
   },
+];
+
+const moreItems = [
+  {
+    href: "/community",
+    label: "Comunidades",
+    description: "Tus grupos y espacios",
+    icon: Users,
+  },
+  {
+    href: "/events",
+    label: "Eventos",
+    description: "Planes y encuentros",
+    icon: CalendarDays,
+  },
   {
     href: "/settings",
     label: "Ajustes",
+    description: "Cuenta y preferencias",
     icon: Settings,
   },
 ];
@@ -68,6 +87,11 @@ export default function MobileNav() {
   const [
     portalReady,
     setPortalReady,
+  ] = useState(false);
+
+  const [
+    moreOpen,
+    setMoreOpen,
   ] = useState(false);
 
   const [
@@ -88,6 +112,25 @@ export default function MobileNav() {
       setPortalReady(false);
     };
   }, []);
+
+  useEffect(() => {
+    setMoreOpen(false);
+  }, [pathname]);
+
+  useEffect(() => {
+    if (!moreOpen) return;
+
+    const previous =
+      document.body.style.overflow;
+
+    document.body.style.overflow =
+      "hidden";
+
+    return () => {
+      document.body.style.overflow =
+        previous;
+    };
+  }, [moreOpen]);
 
   useEffect(() => {
     if (!user) {
@@ -230,93 +273,236 @@ export default function MobileNav() {
     return null;
   }
 
+  const moreActive =
+    pathname === "/community" ||
+    pathname.startsWith(
+      "/community/"
+    ) ||
+    pathname === "/events" ||
+    pathname.startsWith(
+      "/events/"
+    ) ||
+    pathname === "/settings" ||
+    pathname.startsWith(
+      "/settings/"
+    );
+
   return createPortal(
-    <nav
-      data-alumni-mobile-nav="true"
-      className="fixed inset-x-0 bottom-0 z-[2147482000] border-t border-[var(--app-border)] bg-[color-mix(in_srgb,var(--app-surface)_96%,transparent)] px-2 pb-[max(8px,env(safe-area-inset-bottom))] pt-2 shadow-[0_-10px_30px_var(--app-shadow)] backdrop-blur-2xl [backface-visibility:hidden] [transform:translateZ(0)] lg:hidden"
-    >
-      <div className="mx-auto grid max-w-lg grid-cols-5">
-        {items.map(
-          ({
-            href,
-            label,
-            icon: Icon,
-            create,
-            messages,
-          }) => {
-            const active =
-              !create &&
-              (pathname ===
-                href ||
-                (href !==
-                  "/feed" &&
-                  pathname.startsWith(
-                    `${href}/`
-                  )));
+    <>
+      {moreOpen && (
+        <>
+          <button
+            type="button"
+            aria-label="Cerrar navegación"
+            onClick={() =>
+              setMoreOpen(false)
+            }
+            className="fixed inset-0 z-[2147481997] bg-black/35 lg:hidden"
+          />
 
-            return (
-              <Link
-                key={label}
-                href={href}
-                onClick={(event) => {
-                  if (
-                    label === "Inicio" &&
-                    pathname === "/feed"
-                  ) {
-                    event.preventDefault();
+          <section
+            aria-label="Más secciones"
+            className="fixed inset-x-0 bottom-[calc(72px+env(safe-area-inset-bottom))] z-[2147481999] border-y border-[var(--app-border)] bg-[color-mix(in_srgb,var(--app-surface)_98%,transparent)] backdrop-blur-2xl lg:hidden"
+          >
+            <div className="mx-auto w-full max-w-lg px-4 py-2">
+              <div className="flex min-h-9 items-center justify-between border-b border-[var(--app-border)]">
+                <span className="text-[9px] font-black uppercase tracking-[0.15em] text-[var(--app-muted-2)]">
+                  Más en Alumni
+                </span>
 
-                    window.scrollTo({
-                      top: 0,
-                      behavior: "smooth",
-                    });
+                <button
+                  type="button"
+                  onClick={() =>
+                    setMoreOpen(false)
                   }
-                }}
-                className="flex min-h-12 flex-col items-center justify-center gap-1"
-              >
-                <span
-                  className={`relative flex h-9 w-11 items-center justify-center rounded-xl transition ${
-                    create
-                      ? "bg-[var(--app-accent)] text-[var(--app-on-accent)] shadow-[0_8px_25px_color-mix(in_srgb,var(--app-accent)_25%,transparent)]"
-                      : active
-                      ? "bg-[var(--app-soft)] text-[var(--app-text)]"
-                      : "text-[var(--app-muted-2)]"
-                  }`}
+                  className="text-[10px] font-bold text-[var(--app-muted-2)]"
                 >
-                  <Icon
-                    size={20}
-                  />
+                  Cerrar
+                </button>
+              </div>
 
-                  {messages &&
-                    unreadMessages >
-                      0 && (
-                      <span className="absolute right-0.5 top-0 flex min-h-4 min-w-4 items-center justify-center rounded-full bg-[var(--app-accent)] px-1 text-[9px] font-black leading-none text-[var(--app-on-accent)] ring-2 ring-[var(--app-surface)]">
-                        {unreadMessages >
-                        99
-                          ? "99+"
-                          : unreadMessages}
+              {moreItems.map(
+                ({
+                  href,
+                  label,
+                  description,
+                  icon: Icon,
+                }) => {
+                  const active =
+                    pathname === href ||
+                    pathname.startsWith(
+                      `${href}/`
+                    );
+
+                  return (
+                    <Link
+                      key={href}
+                      href={href}
+                      onClick={() =>
+                        setMoreOpen(false)
+                      }
+                      className="flex min-h-[58px] items-center gap-3 border-b border-[var(--app-border)] last:border-b-0"
+                    >
+                      <Icon
+                        size={19}
+                        className={
+                          active
+                            ? "text-[var(--app-accent)]"
+                            : "text-[var(--app-muted-2)]"
+                        }
+                      />
+
+                      <span className="min-w-0 flex-1">
+                        <strong
+                          className={`block text-[12px] font-black ${
+                            active
+                              ? "text-[var(--app-text)]"
+                              : "text-[var(--app-text-soft)]"
+                          }`}
+                        >
+                          {label}
+                        </strong>
+
+                        <small className="mt-0.5 block text-[9px] text-[var(--app-muted-2)]">
+                          {description}
+                        </small>
                       </span>
-                    )}
-                </span>
+                    </Link>
+                  );
+                }
+              )}
+            </div>
+          </section>
+        </>
+      )}
 
-                <span
-                  className={`text-[10px] ${
-                    active
-                      ? "font-bold text-[var(--app-text)]"
-                      : "text-[var(--app-muted-2)]"
-                  }`}
+      <nav
+        data-alumni-mobile-nav="true"
+        className="fixed inset-x-0 bottom-0 z-[2147482000] border-t border-[var(--app-border)] bg-[color-mix(in_srgb,var(--app-surface)_96%,transparent)] px-2 pb-[max(8px,env(safe-area-inset-bottom))] pt-2 shadow-[0_-10px_30px_var(--app-shadow)] backdrop-blur-2xl [backface-visibility:hidden] [transform:translateZ(0)] lg:hidden"
+      >
+        <div className="mx-auto grid max-w-lg grid-cols-5">
+          {items.map(
+            ({
+              href,
+              label,
+              icon: Icon,
+              create,
+              messages,
+            }) => {
+              const active =
+                !create &&
+                (pathname ===
+                  href ||
+                  (href !==
+                    "/feed" &&
+                    pathname.startsWith(
+                      `${href}/`
+                    )));
+
+              return (
+                <Link
+                  key={label}
+                  href={href}
+                  onClick={(event) => {
+                    setMoreOpen(false);
+
+                    if (
+                      label === "Inicio" &&
+                      pathname === "/feed"
+                    ) {
+                      event.preventDefault();
+
+                      window.scrollTo({
+                        top: 0,
+                        behavior: "smooth",
+                      });
+                    }
+                  }}
+                  className="flex min-h-12 flex-col items-center justify-center gap-1"
                 >
-                  {label}
-                </span>
-              </Link>
-            );
-          }
-        )}
-      </div>
-    </nav>,
+                  <span
+                    className={`relative flex h-9 w-11 items-center justify-center rounded-xl transition ${
+                      create
+                        ? "bg-[var(--app-accent)] text-[var(--app-on-accent)] shadow-[0_8px_25px_color-mix(in_srgb,var(--app-accent)_25%,transparent)]"
+                        : active
+                        ? "bg-[var(--app-soft)] text-[var(--app-text)]"
+                        : "text-[var(--app-muted-2)]"
+                    }`}
+                  >
+                    <Icon
+                      size={20}
+                    />
+
+                    {messages &&
+                      unreadMessages >
+                        0 && (
+                        <span className="absolute right-0.5 top-0 flex min-h-4 min-w-4 items-center justify-center rounded-full bg-[var(--app-accent)] px-1 text-[9px] font-black leading-none text-[var(--app-on-accent)] ring-2 ring-[var(--app-surface)]">
+                          {unreadMessages >
+                          99
+                            ? "99+"
+                            : unreadMessages}
+                        </span>
+                      )}
+                  </span>
+
+                  <span
+                    className={`text-[10px] ${
+                      active
+                        ? "font-bold text-[var(--app-text)]"
+                        : "text-[var(--app-muted-2)]"
+                    }`}
+                  >
+                    {label}
+                  </span>
+                </Link>
+              );
+            }
+          )}
+
+          <button
+            type="button"
+            onClick={() =>
+              setMoreOpen(
+                (value) =>
+                  !value
+              )
+            }
+            aria-expanded={
+              moreOpen
+            }
+            className="flex min-h-12 flex-col items-center justify-center gap-1"
+          >
+            <span
+              className={`relative flex h-9 w-11 items-center justify-center rounded-xl transition ${
+                moreOpen ||
+                moreActive
+                  ? "bg-[var(--app-soft)] text-[var(--app-text)]"
+                  : "text-[var(--app-muted-2)]"
+              }`}
+            >
+              <MoreHorizontal
+                size={20}
+              />
+            </span>
+
+            <span
+              className={`text-[10px] ${
+                moreOpen ||
+                moreActive
+                  ? "font-bold text-[var(--app-text)]"
+                  : "text-[var(--app-muted-2)]"
+              }`}
+            >
+              Más
+            </span>
+          </button>
+        </div>
+      </nav>
+    </>,
     document.body
   );
 }
 
 /* ALUMNI_1_3_7_MOBILE_NAV_PORTAL */
-
 /* ALUMNI_1_5_0_MESSAGING_2_HOME_NAV:MOBILE_NAV */
+/* ALUMNI_2_1_1_MOBILE_NAV_MORE */
