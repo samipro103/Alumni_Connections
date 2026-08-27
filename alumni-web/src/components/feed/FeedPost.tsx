@@ -611,7 +611,10 @@ export default function FeedPost({
               type="button"
               onClick={() => onOpenEngagement("likes")}
             >
-              <strong>{post.likesCount}</strong> me gusta
+              <strong>{post.likesCount}</strong>{" "}
+              {post.likesCount === 1
+                ? "persona"
+                : "personas"}
             </button>
           )}
 
@@ -624,8 +627,8 @@ export default function FeedPost({
             >
               {post.comments.length}{" "}
               {post.comments.length === 1
-                ? "comentario"
-                : "comentarios"}
+                ? "respuesta"
+                : "respuestas"}
             </button>
           )}
 
@@ -662,7 +665,7 @@ export default function FeedPost({
           className="alumni-pro-view-comments"
           onClick={onOpenComments}
         >
-          Ver los {post.comments.length} comentarios
+          Abrir conversación · {post.comments.length}
         </button>
       )}
     </article>
@@ -670,3 +673,5 @@ export default function FeedPost({
 }
 
 /* ALUMNI_1_4_0_FEED_POST */
+
+/* ALUMNI_1_4_2_THEME_CHAT_PROFILE_POLISH:FEED_METRICS */

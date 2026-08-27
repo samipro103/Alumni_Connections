@@ -27,7 +27,7 @@ import {
   type PostMediaItem,
 } from "@/lib/feedMedia";
 
-type FeedMode = "for-you" | "following" | "saved";
+type FeedMode = "for-you" | "following";
 type EngagementState = {
   postId: number;
   mode: "likes" | "reposts";
@@ -947,16 +947,6 @@ function FeedContent() {
   }
 
   const visiblePosts = useMemo(() => {
-    if (feedMode === "saved") {
-      return posts
-        .filter((post) => post.saved)
-        .sort(
-          (a, b) =>
-            new Date(b.created_at).getTime() -
-            new Date(a.created_at).getTime()
-        );
-    }
-
     if (feedMode === "following") {
       return posts
         .filter((post) => {
@@ -1028,9 +1018,6 @@ function FeedContent() {
             [
               ["for-you", "Para ti"],
               ["following", "Siguiendo"],
-              ...(currentUser
-                ? ([["saved", "Guardadas"]] as const)
-                : []),
             ] as const
           ).map(([mode, label]) => (
             <button
@@ -1056,8 +1043,6 @@ function FeedContent() {
           <div className="alumni-pro-feed-status">
             {feedMode === "following"
               ? "Todavía no hay publicaciones recientes de tus conexiones."
-              : feedMode === "saved"
-              ? "Todavía no has guardado publicaciones."
               : "Todavía no hay publicaciones."}
           </div>
         ) : (
@@ -1213,3 +1198,5 @@ export default function FeedPage() {
 }
 
 /* ALUMNI_1_4_0_FEED_PRO */
+
+/* ALUMNI_1_4_2_THEME_CHAT_PROFILE_POLISH:FEED_NO_SAVED */

@@ -11,11 +11,7 @@ import {
 export type AlumniTheme =
   | "dark"
   | "light"
-  | "chill"
-  | "pride"
-  | "midnight"
-  | "emerald"
-  | "executive";
+  | "pride";
 
 export const ALUMNI_THEMES: Array<{
   id: AlumniTheme;
@@ -25,60 +21,64 @@ export const ALUMNI_THEMES: Array<{
 }> = [
   {
     id: "dark",
-    name: "Dark",
-    description: "El estilo oscuro actual de Alumni.",
-    swatches: ["#090b0f", "#101318", "#6d7cff"],
+    name: "Oscuro",
+    description:
+      "Oscuro profesional, alto contraste y cómodo para uso prolongado.",
+    swatches: [
+      "#090b0f",
+      "#101318",
+      "#7f8cff",
+    ],
   },
   {
     id: "light",
-    name: "Light",
-    description: "Claro, limpio y profesional.",
-    swatches: ["#f4f6fa", "#ffffff", "#5267e8"],
-  },
-  {
-    id: "chill",
-    name: "Chill",
-    description: "Azules suaves, frescos y relajados.",
-    swatches: ["#edf6fa", "#f8fcff", "#38a6c4"],
+    name: "Claro",
+    description:
+      "Claro limpio, sobrio y con contraste reforzado.",
+    swatches: [
+      "#f4f6fa",
+      "#ffffff",
+      "#5267e8",
+    ],
   },
   {
     id: "pride",
-    name: "Pride / LGTB",
-    description: "Oscuro elegante con acentos arcoíris.",
-    swatches: ["#120b16", "#1b121f", "linear-gradient(90deg,#ff4d6d,#ffad33,#ffd43b,#35c46a,#38a7ff,#9b5cff)"],
-  },
-  {
-    id: "midnight",
-    name: "Midnight",
-    description: "Azul noche con acento eléctrico.",
-    swatches: ["#07101d", "#0d1827", "#3da6ff"],
-  },
-  {
-    id: "emerald",
-    name: "Emerald",
-    description: "Verde sobrio con sensación premium.",
-    swatches: ["#07110e", "#0d1a16", "#31b879"],
-  },
-  {
-    id: "executive",
-    name: "Executive",
-    description: "Grafito y dorado para un look corporativo.",
-    swatches: ["#0e0e0f", "#171719", "#c9a85e"],
+    name: "Pride",
+    description:
+      "Oscuro elegante con acento arcoíris de alto contraste.",
+    swatches: [
+      "#120b16",
+      "#1b121f",
+      "linear-gradient(90deg,#d93663,#b65312,#8a6c00,#167b43,#2365b1,#6741d9,#9b38b5)",
+    ],
   },
 ];
 
 interface ThemeContextValue {
   theme: AlumniTheme;
-  setTheme: (theme: AlumniTheme) => void;
+  setTheme: (
+    theme: AlumniTheme
+  ) => void;
 }
 
-const ThemeContext = createContext<ThemeContextValue | null>(null);
+const ThemeContext =
+  createContext<ThemeContextValue | null>(
+    null
+  );
 
-function applyTheme(theme: AlumniTheme) {
-  const root = document.documentElement;
-  root.dataset.theme = theme;
+function applyTheme(
+  theme: AlumniTheme
+) {
+  const root =
+    document.documentElement;
+
+  root.dataset.theme =
+    theme;
+
   root.style.colorScheme =
-    theme === "light" || theme === "chill" ? "light" : "dark";
+    theme === "light"
+      ? "light"
+      : "dark";
 }
 
 export function ThemeProvider({
@@ -86,44 +86,94 @@ export function ThemeProvider({
 }: {
   children: React.ReactNode;
 }) {
-  const [theme, setThemeState] = useState<AlumniTheme>("dark");
+  const [
+    theme,
+    setThemeState,
+  ] =
+    useState<AlumniTheme>(
+      "dark"
+    );
 
   useEffect(() => {
-    const saved = localStorage.getItem("alumni-theme") as AlumniTheme | null;
-    const valid = ALUMNI_THEMES.some((item) => item.id === saved);
-    const next = valid && saved ? saved : "dark";
+    const saved =
+      localStorage.getItem(
+        "alumni-theme"
+      ) as
+        | AlumniTheme
+        | null;
 
-    setThemeState(next);
+    const valid =
+      ALUMNI_THEMES.some(
+        (item) =>
+          item.id ===
+          saved
+      );
+
+    const next =
+      valid && saved
+        ? saved
+        : "dark";
+
+    if (!valid && saved) {
+      localStorage.setItem(
+        "alumni-theme",
+        "dark"
+      );
+    }
+
+    setThemeState(
+      next
+    );
+
     applyTheme(next);
   }, []);
 
-  function setTheme(theme: AlumniTheme) {
-    setThemeState(theme);
-    localStorage.setItem("alumni-theme", theme);
-    applyTheme(theme);
+  function setTheme(
+    next: AlumniTheme
+  ) {
+    setThemeState(
+      next
+    );
+
+    localStorage.setItem(
+      "alumni-theme",
+      next
+    );
+
+    applyTheme(next);
   }
 
-  const value = useMemo(
-    () => ({
-      theme,
-      setTheme,
-    }),
-    [theme]
-  );
+  const value =
+    useMemo(
+      () => ({
+        theme,
+        setTheme,
+      }),
+      [theme]
+    );
 
   return (
-    <ThemeContext.Provider value={value}>
+    <ThemeContext.Provider
+      value={value}
+    >
       {children}
     </ThemeContext.Provider>
   );
 }
 
 export function useTheme() {
-  const context = useContext(ThemeContext);
+  const context =
+    useContext(
+      ThemeContext
+    );
 
   if (!context) {
-    throw new Error("useTheme debe usarse dentro de ThemeProvider");
+    throw new Error(
+      "useTheme debe usarse dentro de ThemeProvider"
+    );
   }
 
   return context;
 }
+
+/* ALUMNI_1_4_2_THREE_THEMES */

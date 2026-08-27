@@ -28,12 +28,13 @@ import ProfileSocialLinks from "@/components/profile/ProfileSocialLinks";
 import ProfileIdentityMeta from "@/components/profile/ProfileIdentityMeta";
 import ProfileHeaderFacts from "@/components/profile/ProfileHeaderFacts";
 import ProfileRepostsTab from "@/components/profile/ProfileRepostsTab";
+import ProfileSavedTab from "@/components/profile/ProfileSavedTab";
 import ProfessionalProfileOverview from "@/components/profile/ProfessionalProfileOverview";
 import CommentLikeButton from "@/components/social/CommentLikeButton";
 import UserSafetyActions from "@/components/trust/UserSafetyActions";
 import { hydratePostMedia } from "@/lib/privateMedia";
 
-type ProfileTab = "posts" | "reposts" | "about";
+type ProfileTab = "posts" | "reposts" | "saved" | "about";
 
 export default function UserProfilePage() {
   const params = useParams();
@@ -621,6 +622,13 @@ export default function UserProfilePage() {
             onClick={() => setTab("reposts")}
             label="Compartidos"
           />
+          {ownProfile && (
+            <Tab
+              active={tab === "saved"}
+              onClick={() => setTab("saved")}
+              label="Guardados"
+            />
+          )}
           <Tab
             active={tab === "about"}
             onClick={() => setTab("about")}
@@ -826,6 +834,10 @@ export default function UserProfilePage() {
             userId={profile.id}
             username={profile.username}
           />
+        ) : tab === "saved" && ownProfile ? (
+          <ProfileSavedTab
+            userId={profile.id}
+          />
         ) : (
           <ProfessionalProfileOverview
             profile={profile}
@@ -929,3 +941,5 @@ function Detail({
 /* ALUMNI_1_2_0_TRUST_BLOCK:USER_PROFILE_SAFETY */
 
 /* ALUMNI_1_4_1_PROFILE_REPOSTS_SAVED_READABILITY:PROFILE */
+
+/* ALUMNI_1_4_2_THEME_CHAT_PROFILE_POLISH:PROFILE_SAVED */

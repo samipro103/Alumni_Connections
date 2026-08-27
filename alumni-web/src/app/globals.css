@@ -2689,3 +2689,226 @@ html[data-theme="executive"] .alumni-original-logo-image {
 .alumni-settings-page {
   animation: none !important;
 }
+
+
+/* =========================================================
+   ALUMNI 1.4.2 — THREE THEME CONTRAST AUDIT
+   ========================================================= */
+
+html[data-theme="dark"] {
+  --app-bg: #090b0f;
+  --app-bg-2: #0c0f15;
+  --app-surface: #101318;
+  --app-surface-2: #191e27;
+  --app-text: #f4f4f5;
+  --app-text-soft: #d4d4d8;
+  --app-muted: #aeb6c3;
+  --app-muted-2: #919baa;
+  --app-muted-3: #7f8998;
+  --app-accent: #7f8cff;
+  --app-accent-2: #6d7cff;
+  --app-accent-fill: linear-gradient(135deg,#6d7cff,#7f8cff);
+  --app-accent-soft: rgba(109,124,255,.13);
+  --app-on-accent: #ffffff;
+}
+
+html[data-theme="light"] {
+  --app-bg: #f4f6fa;
+  --app-bg-2: #eef1f6;
+  --app-surface: #ffffff;
+  --app-surface-2: #edf1f7;
+  --app-soft: rgba(15,23,42,.045);
+  --app-soft-strong: rgba(15,23,42,.075);
+  --app-border: rgba(15,23,42,.12);
+  --app-text: #10141b;
+  --app-text-soft: #27303c;
+  --app-muted: #4f5c6d;
+  --app-muted-2: #5c697b;
+  --app-muted-3: #677487;
+  --app-accent: #4d60d8;
+  --app-accent-2: #5267e8;
+  --app-accent-fill: linear-gradient(135deg,#4d60d8,#5267e8);
+  --app-accent-soft: rgba(82,103,232,.11);
+  --app-on-accent: #ffffff;
+  --app-topbar: rgba(255,255,255,.94);
+  --app-shadow: rgba(31,41,55,.10);
+}
+
+html[data-theme="pride"] {
+  --app-bg: #120b16;
+  --app-bg-2: #170d1b;
+  --app-surface: #1b121f;
+  --app-surface-2: #25172a;
+  --app-soft: rgba(255,255,255,.045);
+  --app-soft-strong: rgba(255,255,255,.08);
+  --app-border: rgba(255,255,255,.11);
+  --app-text: #fff7fb;
+  --app-text-soft: #f0dfe9;
+  --app-muted: #c7b0c0;
+  --app-muted-2: #aa91a3;
+  --app-muted-3: #907789;
+  --app-accent: #ff79a8;
+  --app-accent-2: #e85b91;
+  --app-accent-fill:
+    linear-gradient(
+      90deg,
+      #d93663 0%,
+      #b65312 18%,
+      #8a6c00 34%,
+      #167b43 51%,
+      #2365b1 69%,
+      #6741d9 84%,
+      #9b38b5 100%
+    );
+  --app-accent-soft: rgba(232,91,145,.14);
+  --app-on-accent: #ffffff;
+}
+
+/* Dark overlays always keep white foreground, including Light theme. */
+html[data-theme] [class*="bg-black/"][class*="text-white"] {
+  color: #ffffff !important;
+}
+
+/* Reply inside a sent/received bubble. */
+.alumni-reply-quote {
+  display: flex;
+  min-width: 0;
+  overflow: hidden;
+  margin-bottom: 7px;
+  border-left: 3px solid var(--app-accent);
+  border-radius: 9px;
+  background:
+    color-mix(
+      in srgb,
+      var(--app-surface-2) 72%,
+      transparent
+    );
+}
+
+.alumni-reply-quote-body {
+  min-width: 0;
+  padding: 7px 9px;
+}
+
+.alumni-reply-author {
+  overflow: hidden;
+  color: var(--app-accent);
+  font-size: 11px;
+  font-weight: 850;
+  line-height: 1.25;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.alumni-reply-summary {
+  overflow: hidden;
+  max-width: 310px;
+  margin-top: 2px;
+  color: var(--app-text-soft);
+  font-size: 13px;
+  line-height: 1.35;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.alumni-message-mine .alumni-reply-quote {
+  border-left-color:
+    color-mix(
+      in srgb,
+      var(--app-on-accent) 72%,
+      transparent
+    );
+  background:
+    color-mix(
+      in srgb,
+      var(--app-on-accent) 12%,
+      transparent
+    );
+}
+
+.alumni-message-mine .alumni-reply-author {
+  color:
+    color-mix(
+      in srgb,
+      var(--app-on-accent) 92%,
+      transparent
+    );
+}
+
+.alumni-message-mine .alumni-reply-summary {
+  color:
+    color-mix(
+      in srgb,
+      var(--app-on-accent) 82%,
+      transparent
+    );
+}
+
+/* Reply preview above composer — a strip, not a box inside a box. */
+.alumni-composer-reply-preview {
+  display: flex;
+  min-width: 0;
+  margin-bottom: 5px;
+  overflow: hidden;
+  border: 0;
+  border-left: 3px solid var(--app-accent);
+  border-radius: 8px;
+  background: var(--app-soft);
+  box-shadow: none;
+}
+
+.alumni-composer-reply-copy {
+  min-width: 0;
+  flex: 1 1 auto;
+  padding: 7px 10px;
+}
+
+.alumni-composer-reply-preview .alumni-reply-author {
+  font-size: 11px;
+}
+
+.alumni-composer-reply-preview .alumni-reply-summary {
+  max-width: none;
+  font-size: 13px;
+}
+
+.alumni-composer-reply-close {
+  display: inline-flex;
+  width: 38px;
+  flex: 0 0 38px;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  background: transparent;
+  color: var(--app-muted-2);
+}
+
+.alumni-composer-reply-close:hover {
+  background: var(--app-soft-strong);
+  color: var(--app-text);
+}
+
+/* Feed metrics deliberately use a more editorial Alumni language/style. */
+.alumni-feed-pro .alumni-pro-stats,
+.alumni-feed-pro .alumni-pro-view-comments {
+  font-family:
+    var(--font-geist-mono),
+    ui-monospace,
+    SFMono-Regular,
+    Menlo,
+    monospace !important;
+  letter-spacing: .012em;
+}
+
+.alumni-feed-pro .alumni-pro-stats {
+  margin-top: 2px;
+  padding-top: 5px;
+  border-top: 1px solid
+    color-mix(
+      in srgb,
+      var(--app-border) 72%,
+      transparent
+    );
+}
+
+/* ALUMNI_1_4_2_THEME_CHAT_PROFILE_POLISH:GLOBALS */

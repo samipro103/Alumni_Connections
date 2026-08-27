@@ -535,15 +535,21 @@ export function MessageReplyQuote({
         }`;
 
   return (
-    <div className="mb-2 flex min-w-0 overflow-hidden rounded-[11px] bg-[var(--app-surface-2)] ring-1 ring-[var(--app-border)]">
-      <span className="w-[3px] shrink-0 bg-[var(--app-accent)]" />
-
-      <div className="min-w-0 px-2.5 py-2">
-        <p className="truncate text-[10px] font-black text-[var(--app-accent)]">
+    <div
+      className="alumni-reply-quote"
+      data-owner={
+        message.sender_id ===
+        currentUserId
+          ? "mine"
+          : "other"
+      }
+    >
+      <div className="alumni-reply-quote-body">
+        <p className="alumni-reply-author">
           {author}
         </p>
 
-        <p className="mt-0.5 max-w-[300px] truncate text-[12px] leading-[1.35] text-[var(--app-text-soft)]">
+        <p className="alumni-reply-summary">
           {messageSummary(
             reply
           )}
@@ -580,16 +586,14 @@ export function ComposerReplyPreview({
         }`;
 
   return (
-    <div className="mb-1.5 flex min-w-0 overflow-hidden rounded-[13px] bg-[var(--app-surface-2)] ring-1 ring-[var(--app-border)]">
-      <span className="w-[3px] shrink-0 bg-[var(--app-accent)]" />
-
-      <div className="min-w-0 flex-1 px-3 py-2">
-        <p className="truncate text-[10px] font-black text-[var(--app-accent)]">
+    <div className="alumni-composer-reply-preview">
+      <div className="alumni-composer-reply-copy">
+        <p className="alumni-reply-author">
           Responder a{" "}
           {author}
         </p>
 
-        <p className="mt-0.5 truncate text-[12px] leading-[1.35] text-[var(--app-text-soft)]">
+        <p className="alumni-reply-summary">
           {messageSummary(
             message
           )}
@@ -599,13 +603,15 @@ export function ComposerReplyPreview({
       <button
         type="button"
         onClick={onClose}
-        className="flex w-10 shrink-0 items-center justify-center text-[var(--app-muted-2)] transition hover:bg-[var(--app-soft)] hover:text-[var(--app-text)]"
+        className="alumni-composer-reply-close"
         aria-label="Cancelar respuesta"
       >
         <X
-          size={14}
+          size={15}
         />
       </button>
     </div>
   );
 }
+
+/* ALUMNI_1_4_2_THEME_CHAT_PROFILE_POLISH:REPLY */
