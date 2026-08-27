@@ -1,1185 +1,815 @@
 "use client";
 
 import {
+  Clock3,
+  Hash,
+  Search,
+  Sparkles,
+  TrendingUp,
+  UserRoundSearch,
+  Users,
+  X,
+} from "lucide-react";
+import {
   Suspense,
   useEffect,
   useMemo,
   useState,
 } from "react";
-import {
-  useSearchParams,
-} from "next/navigation";
-import Link from "next/link";
-import {
-  Briefcase,
-  Building2,
-  GraduationCap,
-  MapPin,
-  Search,
-  Sparkles,
-  UserPlus,
-  Users,
-} from "lucide-react";
-import {
-  supabase,
-} from "@/lib/supabase";
+import { useSearchParams } from "next/navigation";
 import AppShell from "@/components/layout/AppShell";
+import { useAuth } from "@/components/auth/AuthProvider";
+import { supabase } from "@/lib/supabase";
+import { getRecommendedProfiles } from "@/lib/recommendations";
+import { hydratePostMedia } from "@/lib/privateMedia";
 import {
-  useAuth,
-} from "@/components/auth/AuthProvider";
-import {
-  getRecommendedProfiles,
-  RecommendedProfile,
-} from "@/lib/recommendations";
+  hydratePostMediaItems,
+} from "@/lib/feedMedia";
+import ExplorePostCard from "@/components/explore/ExplorePostCard";
+import ExplorePersonRow from "@/components/explore/ExplorePersonRow";
+import "./explore-pro.css";
 
-type FilterType =
-  | "all"
-  | "institution"
-  | "career"
-  | "program"
-  | "location";
+type Mode = "all" | "people" | "posts";
+type RecentSearch = {
+  query: string;
+  createdAt: string;
+};
 
-function normalize(
-  value: unknown
-) {
+const RECENTS_KEY = "alumni:explore:recent-searches:v1";
+
+function normalize(value: unknown) {
   return String(value || "")
     .normalize("NFKD")
-    .replace(
-      /[\u0300-\u036f]/g,
-      ""
-    )
+    .replace(/[\u0300-\u036f]/g, "")
     .trim()
     .toLowerCase();
 }
 
-function institutionOf(
-  person: any
-) {
-  return (
-    person
-      ?.education_institution_name ||
-    person?.university ||
-    ""
+function readRecents(): RecentSearch[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const parsed = JSON.parse(
+      localStorage.getItem(RECENTS_KEY) || "[]"
+    );
+    return Array.isArray(parsed) ? parsed.slice(0, 8) : [];
+  } catch {
+    return [];
+  }
+}
+
+function writeRecent(query: string) {
+  const clean = query.trim();
+  if (!clean) return;
+
+  const current = readRecents().filter(
+    (item) => normalize(item.query) !== normalize(clean)
   );
+
+  const next = [
+    {
+      query: clean,
+      createdAt: new Date().toISOString(),
+    },
+    ...current,
+  ].slice(0, 8);
+
+  localStorage.setItem(
+    RECENTS_KEY,
+    JSON.stringify(next)
+  );
+
+  return next;
 }
 
-function searchScore(
-  person: any,
-  query: string
-) {
-  const q =
-    normalize(query);
+async function hydratePosts(postIds: number[]) {
+  if (!postIds.length) return [];
 
-  if (!q) return 0;
-
-  const username =
-    normalize(
-      person.username
-    );
-
-  const fullName =
-    normalize(
-      person.full_name
-    );
-
-  const career =
-    normalize(
-      person.career
-    );
-
-  const institution =
-    normalize(
-      institutionOf(
-        person
-      )
-    );
-
-  const program =
-    normalize(
-      person
-        .education_program_name
-    );
-
-  const city =
-    normalize(
-      person.city
-    );
-
-  const country =
-    normalize(
-      person.country
-    );
-
-  let score = 0;
-
-  if (username === q) {
-    score += 150;
-  } else if (
-    username.startsWith(q)
-  ) {
-    score += 110;
-  } else if (
-    username.includes(q)
-  ) {
-    score += 75;
-  }
-
-  if (fullName === q) {
-    score += 130;
-  } else if (
-    fullName.startsWith(q)
-  ) {
-    score += 95;
-  } else if (
-    fullName.includes(q)
-  ) {
-    score += 65;
-  }
-
-  if (
-    career.includes(q)
-  ) {
-    score += 58;
-  }
-
-  if (
-    program.includes(q)
-  ) {
-    score += 56;
-  }
-
-  if (
-    institution.includes(q)
-  ) {
-    score += 54;
-  }
-
-  if (
-    city.includes(q) ||
-    country.includes(q)
-  ) {
-    score += 38;
-  }
-
-  return score;
-}
-
-function affinityScore(
-  person: any,
-  me: any,
-  following:
-    Set<string>
-) {
-  let score = 0;
-
-  if (
-    following.has(
-      person.id
-    )
-  ) {
-    score += 6;
-  }
-
-  if (
-    normalize(
-      person
-        .education_program_name
-    ) &&
-    normalize(
-      person
-        .education_program_name
-    ) ===
-      normalize(
-        me?.education_program_name
-      )
-  ) {
-    score += 48;
-  }
-
-  if (
-    normalize(
-      person.career
-    ) &&
-    normalize(
-      person.career
-    ) ===
-      normalize(
-        me?.career
-      )
-  ) {
-    score += 40;
-  }
-
-  if (
-    normalize(
-      institutionOf(person)
-    ) &&
-    normalize(
-      institutionOf(person)
-    ) ===
-      normalize(
-        institutionOf(me)
-      )
-  ) {
-    score += 36;
-  }
-
-  if (
-    normalize(
-      person.city
-    ) &&
-    normalize(
-      person.city
-    ) ===
-      normalize(
-        me?.city
-      )
-  ) {
-    score += 11;
-  }
-
-  return score;
-}
-
-function matchesFilter(
-  person: any,
-  filter: FilterType
-) {
-  switch (filter) {
-    case "institution":
-      return Boolean(
-        institutionOf(
-          person
+  const [
+    { data: postsData },
+    { data: commentsData },
+    { data: repostData },
+    { data: mediaRaw },
+  ] = await Promise.all([
+    supabase
+      .from("posts")
+      .select(`
+        *,
+        profiles (
+          id,
+          username,
+          avatar_url,
+          full_name,
+          university,
+          education_institution_name,
+          education_program_name,
+          career,
+          city,
+          country,
+          residence_country_code
+        ),
+        likes (
+          user_id
         )
-      );
+      `)
+      .in("id", postIds),
+    supabase
+      .from("comments")
+      .select("post_id")
+      .in("post_id", postIds),
+    supabase
+      .from("post_reposts")
+      .select("post_id")
+      .in("post_id", postIds),
+    supabase
+      .from("post_media")
+      .select("*")
+      .in("post_id", postIds)
+      .order("sort_order", { ascending: true }),
+  ]);
 
-    case "career":
-      return Boolean(
-        person.career
-      );
-
-    case "program":
-      return Boolean(
-        person
-          .education_program_name
-      );
-
-    case "location":
-      return Boolean(
-        person.city ||
-          person.country
-      );
-
-    default:
-      return true;
-  }
-}
-
-function searchableText(
-  person: any
-) {
-  return normalize(
-    [
-      person.username,
-      person.full_name,
-      person.career,
-      institutionOf(
-        person
-      ),
-      person
-        .education_program_name,
-      person.bio,
-      person.city,
-      person.country,
-    ]
-      .filter(Boolean)
-      .join(" ")
+  const hydrated = await hydratePostMedia(
+    (postsData || []) as any[]
   );
-}
+  const mediaRows = await hydratePostMediaItems(
+    (mediaRaw || []) as any[]
+  );
 
-function connectionLabel(
-  person: any,
-  me: any,
-  following:
-    Set<string>
-) {
-  if (
-    following.has(
-      person.id
-    )
-  ) {
-    return "Ya sigues";
-  }
+  const byId = new Map(
+    hydrated.map((post: any) => [
+      post.id,
+      {
+        ...post,
+        likesCount: post.likes?.length || 0,
+        commentsCount: (commentsData || []).filter(
+          (row: any) => row.post_id === post.id
+        ).length,
+        repostsCount: (repostData || []).filter(
+          (row: any) => row.post_id === post.id
+        ).length,
+        mediaItems: mediaRows.filter(
+          (row: any) => row.post_id === post.id
+        ),
+      },
+    ])
+  );
 
-  if (
-    person
-      .education_program_name &&
-    normalize(
-      person
-        .education_program_name
-    ) ===
-      normalize(
-        me?.education_program_name
-      )
-  ) {
-    return "Mismo programa";
-  }
-
-  if (
-    person.career &&
-    normalize(
-      person.career
-    ) ===
-      normalize(
-        me?.career
-      )
-  ) {
-    return "Tu carrera";
-  }
-
-  if (
-    institutionOf(
-      person
-    ) &&
-    normalize(
-      institutionOf(
-        person
-      )
-    ) ===
-      normalize(
-        institutionOf(me)
-      )
-  ) {
-    return "Tu institución";
-  }
-
-  if (
-    person.city &&
-    normalize(
-      person.city
-    ) ===
-      normalize(me?.city)
-  ) {
-    return "Misma ciudad";
-  }
-
-  return "";
+  return postIds
+    .map((id) => byId.get(id))
+    .filter(Boolean);
 }
 
 function ExploreContent() {
-  const { user } =
-    useAuth();
+  const { user } = useAuth();
+  const params = useSearchParams();
 
-  const searchParams =
-    useSearchParams();
-
-  const [users, setUsers] =
-    useState<any[]>([]);
-
-  const [
-    recommended,
-    setRecommended,
-  ] = useState<
-    RecommendedProfile[]
-  >([]);
-
-  const [search, setSearch] =
-    useState(
-      searchParams.get("q") ||
-        ""
-    );
-
-  const [filter, setFilter] =
-    useState<FilterType>(
-      "all"
-    );
-
-  const [loading, setLoading] =
-    useState(true);
-
-  const [busy, setBusy] =
-    useState<string | null>(
-      null
-    );
-
-  const [
-    currentProfile,
-    setCurrentProfile,
-  ] = useState<any>(null);
-
-  const [
-    followingIds,
-    setFollowingIds,
-  ] = useState<string[]>(
-    []
+  const [query, setQuery] = useState(
+    params.get("q") || ""
   );
+  const [mode, setMode] = useState<Mode>("all");
+  const [loading, setLoading] = useState(true);
+  const [searching, setSearching] = useState(false);
+  const [people, setPeople] = useState<any[]>([]);
+  const [posts, setPosts] = useState<any[]>([]);
+  const [trendingPosts, setTrendingPosts] = useState<any[]>([]);
+  const [trendingTags, setTrendingTags] = useState<any[]>([]);
+  const [recommended, setRecommended] = useState<any[]>([]);
+  const [followingIds, setFollowingIds] = useState<string[]>([]);
+  const [busy, setBusy] = useState<string | null>(null);
+  const [recents, setRecents] = useState<RecentSearch[]>([]);
+  const [newMembers, setNewMembers] = useState<any[]>([]);
 
   useEffect(() => {
-    setSearch(
-      searchParams.get("q") ||
-        ""
-    );
-  }, [searchParams]);
-
-  useEffect(() => {
-    let active = true;
-
-    async function loadDirectory() {
-      const { data } =
-        await supabase
-          .from("profiles")
-          .select(
-            "id, username, avatar_url, full_name, university, education_institution_name, education_institution_logo_url, education_program_name, education_program_logo_url, career, bio, city, country, residence_country_code, is_private, created_at"
-          )
-          .order(
-            "created_at",
-            {
-              ascending: false,
-            }
-          )
-          .limit(500);
-
-      if (!active) return;
-
-      setUsers(
-        (data || []) as any[]
-      );
-
-      setLoading(false);
-    }
-
-    void loadDirectory();
-
-    return () => {
-      active = false;
-    };
+    setRecents(readRecents());
   }, []);
 
   useEffect(() => {
-    if (!user) {
-      setRecommended([]);
-      setCurrentProfile(null);
-      setFollowingIds([]);
-      return;
+    const q = params.get("q") || "";
+    if (q !== query) {
+      setQuery(q);
     }
+  }, [params]);
 
+  useEffect(() => {
     let active = true;
 
-    async function loadPersonalization() {
+    void (async () => {
+      setLoading(true);
+
       const [
-        { data: me },
-        { data: follows },
-        recommendations,
+        trendingResult,
+        tagsResult,
+        recentProfilesResult,
       ] = await Promise.all([
+        supabase.rpc(
+          "alumni_trending_post_ids",
+          { p_limit: 18 }
+        ),
+        supabase.rpc(
+          "alumni_trending_hashtags",
+          { p_limit: 12 }
+        ),
         supabase
           .from("profiles")
           .select(
-            "id, university, education_institution_name, education_program_name, career, city, country, residence_country_code"
+            "id,username,avatar_url,full_name,university,education_institution_name,education_program_name,career,city,country,is_private,created_at"
           )
-          .eq(
-            "id",
-            user!.id
-          )
-          .maybeSingle(),
-
-        supabase
-          .from("follows")
-          .select(
-            "following_id"
-          )
-          .eq(
-            "follower_id",
-            user!.id
-          ),
-
-        getRecommendedProfiles(
-          user!.id,
-          10
-        ),
+          .order("created_at", { ascending: false })
+          .limit(10),
       ]);
+
+      const ids = (trendingResult.data || []).map(
+        (row: any) => Number(row.post_id)
+      );
+
+      const hydratedTrending = await hydratePosts(ids);
 
       if (!active) return;
 
-      setCurrentProfile(
-        (me as any) || null
-      );
-
-      setFollowingIds(
-        (follows || []).map(
-          (row: any) =>
-            row.following_id
+      setTrendingPosts(hydratedTrending);
+      setTrendingTags(tagsResult.data || []);
+      setNewMembers(
+        (recentProfilesResult.data || []).filter(
+          (person: any) => person.id !== user?.id
         )
       );
 
-      setRecommended(
-        recommendations
-      );
-    }
-
-    void loadPersonalization();
+      setLoading(false);
+    })();
 
     return () => {
       active = false;
     };
   }, [user?.id]);
 
-  async function follow(
-  person:
-    RecommendedProfile
-) {
-  if (!user) {
-    window.location.href =
-      "/login";
-    return;
-  }
-
-  if (busy) {
-    return;
-  }
-
-  setBusy(person.id);
-
-  try {
-    if (person.is_private) {
-      const {
-        error,
-      } = await supabase
-        .from(
-          "follow_requests"
-        )
-        .insert({
-          requester_id:
-            user.id,
-          target_id:
-            person.id,
-        });
-
-      if (error) {
-        throw error;
-      }
-
-      setRecommended(
-        (current) =>
-          current.filter(
-            (item) =>
-              item.id !==
-              person.id
-          )
-      );
-
+  useEffect(() => {
+    if (!user) {
+      setRecommended([]);
+      setFollowingIds([]);
       return;
     }
 
-    const {
-      error,
-    } = await supabase
-      .from("follows")
-      .insert({
-        follower_id:
-          user.id,
-        following_id:
-          person.id,
-      });
+    let active = true;
 
-    if (error) {
-      throw error;
-    }
+    void (async () => {
+      const [
+        recs,
+        { data: follows },
+      ] = await Promise.all([
+        getRecommendedProfiles(user.id, 12),
+        supabase
+          .from("follows")
+          .select("following_id")
+          .eq("follower_id", user.id),
+      ]);
 
-    const {
-      error:
-        notificationError,
-    } = await supabase
-      .from("notifications")
-      .insert({
-        user_id:
-          person.id,
-        actor_id:
-          user.id,
-        type: "follow",
-        target_type:
-          "profile",
-        target_id:
-          user.id,
-      });
+      if (!active) return;
 
-    if (
-      notificationError
-    ) {
-      console.warn(
-        "Follow notification:",
-        notificationError
+      setRecommended(recs);
+      setFollowingIds(
+        (follows || []).map(
+          (row: any) => row.following_id
+        )
       );
+    })();
+
+    return () => {
+      active = false;
+    };
+  }, [user?.id]);
+
+  useEffect(() => {
+    const clean = query.trim();
+
+    if (clean.length < 2) {
+      setPeople([]);
+      setPosts([]);
+      setSearching(false);
+      return;
     }
 
-    setRecommended(
-      (current) =>
-        current.filter(
-          (item) =>
-            item.id !==
-            person.id
-        )
-    );
+    const timer = window.setTimeout(() => {
+      void runSearch(clean, false);
+    }, 260);
 
-    setFollowingIds(
-      (current) =>
-        current.includes(
-          person.id
-        )
-          ? current
-          : [
-              ...current,
-              person.id,
-            ]
-    );
-  } catch (error: any) {
-    console.error(
-      "Follow error:",
-      error
-    );
+    return () => window.clearTimeout(timer);
+  }, [query]);
 
-    alert(
-      error?.message ||
-        "No se pudo completar la acción."
+  async function recordSignal(
+    type: "hashtag" | "profile" | "search" | "post",
+    value: string,
+    weight = 1
+  ) {
+    if (!user) return;
+
+    void supabase.rpc(
+      "alumni_record_discovery_signal",
+      {
+        p_signal_type: type,
+        p_signal_value: value,
+        p_weight: weight,
+      }
     );
-  } finally {
-    setBusy(null);
   }
-}
 
+  async function runSearch(
+    raw: string,
+    persist = true
+  ) {
+    const clean = raw.trim();
 
-  const following =
-    useMemo(
-      () =>
-        new Set(
-          followingIds
+    if (clean.length < 2) {
+      setPeople([]);
+      setPosts([]);
+      return;
+    }
+
+    setSearching(true);
+
+    const [peopleResult, postIdsResult] =
+      await Promise.all([
+        supabase.rpc(
+          "alumni_search_profiles",
+          {
+            p_query: clean,
+            p_limit: 35,
+          }
         ),
-      [followingIds]
+        supabase.rpc(
+          "alumni_search_post_ids",
+          {
+            p_query: clean,
+            p_limit: 40,
+          }
+        ),
+      ]);
+
+    const postIds = (postIdsResult.data || []).map(
+      (row: any) => Number(row.post_id)
     );
 
-  const filteredUsers =
-    useMemo(() => {
-      const q =
-        normalize(search);
+    const hydrated = await hydratePosts(postIds);
 
-      return users
-        .filter(
-          (person: any) => {
-            if (
-              person.id ===
-              user?.id
-            ) {
-              return false;
-            }
+    setPeople(peopleResult.data || []);
+    setPosts(hydrated);
+    setSearching(false);
 
-            if (
-              !matchesFilter(
-                person,
-                filter
-              )
-            ) {
-              return false;
-            }
+    if (persist) {
+      const next = writeRecent(clean);
+      if (next) setRecents(next);
+      void recordSignal("search", normalize(clean), 1.2);
+    }
+  }
 
-            if (
-              q &&
-              !searchableText(
-                person
-              ).includes(q)
-            ) {
-              return false;
-            }
+  async function follow(person: any) {
+    if (!user) {
+      window.location.href = "/login";
+      return;
+    }
 
-            return true;
-          }
-        )
-        .map(
-          (person: any) => ({
-            ...person,
-            _searchScore:
-              searchScore(
-                person,
-                search
-              ),
-            _affinityScore:
-              affinityScore(
-                person,
-                currentProfile,
-                following
-              ),
-          })
-        )
-        .sort(
-          (a: any, b: any) => {
-            if (q) {
-              const searchDiff =
-                b._searchScore -
-                a._searchScore;
+    if (busy || followingIds.includes(person.id)) return;
 
-              if (
-                searchDiff !== 0
-              ) {
-                return searchDiff;
-              }
-            }
+    setBusy(person.id);
 
-            const affinityDiff =
-              b._affinityScore -
-              a._affinityScore;
+    try {
+      if (person.is_private) {
+        const { error } = await supabase
+          .from("follow_requests")
+          .insert({
+            requester_id: user.id,
+            target_id: person.id,
+          });
 
-            if (
-              affinityDiff !== 0
-            ) {
-              return affinityDiff;
-            }
+        if (error) throw error;
+      } else {
+        const { error } = await supabase
+          .from("follows")
+          .insert({
+            follower_id: user.id,
+            following_id: person.id,
+          });
 
-            return (
-              new Date(
-                b.created_at
-              ).getTime() -
-              new Date(
-                a.created_at
-              ).getTime()
-            );
-          }
+        if (error) throw error;
+
+        setFollowingIds((current) =>
+          current.includes(person.id)
+            ? current
+            : [...current, person.id]
         );
-    }, [
-      users,
-      search,
-      filter,
-      currentProfile,
-      following,
-      user?.id,
-    ]);
 
-  const filters = [
-    {
-      id: "all",
-      label: "Todos",
-      icon: Users,
-    },
-    {
-      id: "institution",
-      label: "Institución",
-      icon: Building2,
-    },
-    {
-      id: "career",
-      label: "Carrera",
-      icon: GraduationCap,
-    },
-    {
-      id: "program",
-      label: "Programa",
-      icon: Sparkles,
-    },
-    {
-      id: "location",
-      label: "Ubicación",
-      icon: MapPin,
-    },
-  ] as const;
+        void supabase
+          .from("notifications")
+          .insert({
+            user_id: person.id,
+            actor_id: user.id,
+            type: "follow",
+            target_type: "profile",
+            target_id: user.id,
+          });
+      }
+
+      void recordSignal("profile", person.id, 2.2);
+    } catch (error: any) {
+      alert(
+        error?.message ||
+          "No se pudo completar la acción."
+      );
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  const activeSearch = query.trim().length >= 2;
+
+  const peopleResults = useMemo(
+    () =>
+      people.filter(
+        (person) => person.id !== user?.id
+      ),
+    [people, user?.id]
+  );
+
+  const recommendedUnique = useMemo(() => {
+    const seen = new Set<string>();
+    return recommended.filter((person) => {
+      if (
+        person.id === user?.id ||
+        seen.has(person.id)
+      ) {
+        return false;
+      }
+      seen.add(person.id);
+      return true;
+    });
+  }, [recommended, user?.id]);
+
+  const newMembersUnique = useMemo(() => {
+    const recommendedIds = new Set(
+      recommendedUnique.map((person) => person.id)
+    );
+
+    return newMembers.filter(
+      (person) =>
+        person.id !== user?.id &&
+        !recommendedIds.has(person.id)
+    );
+  }, [newMembers, recommendedUnique, user?.id]);
 
   return (
     <AppShell>
-      <div className="mx-auto w-full max-w-[940px]">
-        <header className="pb-6 pt-2 sm:pb-8">
-          <p className="text-[10px] font-black uppercase tracking-[0.22em] text-[var(--app-muted-2)]">
-            Red Alumni.
+      <main className="alumni-explore-pro mx-auto w-full max-w-[1040px]">
+        <header className="alumni-explore-hero">
+          <p className="alumni-explore-eyebrow">
+            Explorar Alumni.
           </p>
 
-          <div className="mt-2 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-            <div>
-              <h1 className="text-[31px] font-black tracking-[-0.045em] text-[var(--app-text)] sm:text-[35px]">
-                Descubrir
-              </h1>
+          <h1>Descubre tu próxima conexión.</h1>
 
-              <p className="mt-1 max-w-xl text-sm leading-6 text-[var(--app-muted)]">
-                Encuentra personas por institución, carrera, programa y ubicación.
-              </p>
-            </div>
+          <p className="alumni-explore-lead">
+            Personas, publicaciones, carreras, instituciones y temas
+            que se mueven dentro de tu comunidad.
+          </p>
 
-            <p className="text-xs font-bold text-[var(--app-muted-2)]">
-              {filteredUsers.length} perfiles
-            </p>
-          </div>
-        </header>
-
-        <div className="border-y border-[var(--app-border)] py-4">
-          <div className="flex items-center gap-3">
-            <Search
-              size={19}
-              className="shrink-0 text-[var(--app-muted)]"
-            />
-
+          <div className="alumni-explore-search">
+            <Search size={19} />
             <input
-              value={search}
+              value={query}
               onChange={(event) =>
-                setSearch(
-                  event.target.value
-                )
+                setQuery(event.target.value)
               }
-              placeholder="Nombre, carrera, universidad, programa o ciudad..."
-              className="alumni-mobile-input h-11 min-w-0 flex-1 bg-transparent text-[15px] font-semibold text-[var(--app-text)] outline-none placeholder:font-medium placeholder:text-[var(--app-muted-2)]"
+              onKeyDown={(event) => {
+                if (event.key === "Enter") {
+                  void runSearch(query, true);
+                }
+              }}
+              placeholder="Buscar personas, carreras, universidades, temas o publicaciones"
+              aria-label="Buscar en Alumni"
             />
 
-            {search && (
+            {query && (
               <button
                 type="button"
-                onClick={() =>
-                  setSearch("")
-                }
-                className="text-[10px] font-black uppercase tracking-[0.12em] text-[var(--app-muted)] transition hover:text-[var(--app-text)]"
+                onClick={() => {
+                  setQuery("");
+                  setPeople([]);
+                  setPosts([]);
+                }}
+                aria-label="Limpiar búsqueda"
               >
-                Limpiar
+                <X size={16} />
               </button>
             )}
           </div>
 
-          <div className="scrollbar-thin mt-2 flex gap-1 overflow-x-auto">
-            {filters.map(
-              ({
-                id,
-                label,
-                icon: Icon,
-              }) => (
+          {activeSearch && (
+            <nav className="alumni-explore-tabs">
+              {(
+                [
+                  ["all", "Todo"],
+                  ["people", "Personas"],
+                  ["posts", "Publicaciones"],
+                ] as const
+              ).map(([id, label]) => (
                 <button
                   key={id}
                   type="button"
-                  onClick={() =>
-                    setFilter(
-                      id as FilterType
-                    )
-                  }
-                  className={`relative flex h-9 shrink-0 items-center gap-2 px-3 text-xs font-bold transition ${
-                    filter === id
-                      ? "text-[var(--app-text)]"
-                      : "text-[var(--app-muted-2)] hover:text-[var(--app-muted)]"
-                  }`}
+                  data-active={mode === id ? "true" : "false"}
+                  onClick={() => setMode(id)}
                 >
-                  <Icon
-                    size={14}
-                  />
                   {label}
-
-                  {filter === id && (
-                    <span className="absolute inset-x-3 bottom-0 h-px bg-[var(--app-accent)]" />
-                  )}
                 </button>
-              )
+              ))}
+            </nav>
+          )}
+        </header>
+
+        {!activeSearch && recents.length > 0 && (
+          <section className="alumni-explore-section">
+            <div className="alumni-explore-section-title">
+              <div>
+                <span>Continuar</span>
+                <h2>Búsquedas recientes</h2>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  localStorage.removeItem(RECENTS_KEY);
+                  setRecents([]);
+                }}
+              >
+                Limpiar
+              </button>
+            </div>
+
+            <div className="alumni-explore-recent-list">
+              {recents.map((item) => (
+                <button
+                  key={`${item.query}-${item.createdAt}`}
+                  type="button"
+                  onClick={() => {
+                    setQuery(item.query);
+                    void runSearch(item.query, true);
+                  }}
+                >
+                  <Clock3 size={14} />
+                  {item.query}
+                </button>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {activeSearch ? (
+          <section className="alumni-explore-search-results">
+            {searching ? (
+              <div className="alumni-explore-empty">
+                Buscando en Alumni...
+              </div>
+            ) : (
+              <>
+                {(mode === "all" || mode === "people") && (
+                  <section className="alumni-explore-section">
+                    <div className="alumni-explore-section-title">
+                      <div>
+                        <span>Resultados</span>
+                        <h2>Personas</h2>
+                      </div>
+                      <strong>{peopleResults.length}</strong>
+                    </div>
+
+                    {peopleResults.length ? (
+                      <div className="alumni-explore-person-list">
+                        {peopleResults.map((person) => (
+                          <ExplorePersonRow
+                            key={person.id}
+                            person={person}
+                            following={followingIds.includes(person.id)}
+                            busy={busy === person.id}
+                            onFollow={() => void follow(person)}
+                            onOpen={() =>
+                              void recordSignal(
+                                "profile",
+                                person.id,
+                                1.8
+                              )
+                            }
+                            reason={
+                              person.education_program_name ||
+                              person.career ||
+                              person.education_institution_name ||
+                              person.university ||
+                              person.city
+                            }
+                          />
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="alumni-explore-empty">
+                        No encontramos personas con esa búsqueda.
+                      </div>
+                    )}
+                  </section>
+                )}
+
+                {(mode === "all" || mode === "posts") && (
+                  <section className="alumni-explore-section">
+                    <div className="alumni-explore-section-title">
+                      <div>
+                        <span>Contenido</span>
+                        <h2>Publicaciones</h2>
+                      </div>
+                      <strong>{posts.length}</strong>
+                    </div>
+
+                    {posts.length ? (
+                      <div className="alumni-explore-post-list">
+                        {posts.map((post) => (
+                          <ExplorePostCard
+                            key={post.id}
+                            post={post}
+                            onOpen={() => {
+                              void recordSignal(
+                                "post",
+                                String(post.id),
+                                1.5
+                              );
+
+                              for (const tag of (
+                                String(post.content || "").match(
+                                  /#[A-Za-z0-9_]{2,40}/g
+                                ) || []
+                              )) {
+                                void recordSignal(
+                                  "hashtag",
+                                  tag.slice(1).toLowerCase(),
+                                  1.2
+                                );
+                              }
+                            }}
+                          />
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="alumni-explore-empty">
+                        No encontramos publicaciones relacionadas.
+                      </div>
+                    )}
+                  </section>
+                )}
+              </>
             )}
-          </div>
-        </div>
-
-        {!search &&
-          recommended.length >
-            0 && (
-            <section className="pt-8">
-              <div className="flex items-end justify-between gap-4">
+          </section>
+        ) : (
+          <>
+            <section className="alumni-explore-section">
+              <div className="alumni-explore-section-title">
                 <div>
-                  <h2 className="text-lg font-black tracking-[-0.025em] text-[var(--app-text)]">
-                    Personas que vale la pena conocer
-                  </h2>
-
-                  <p className="mt-1 text-xs leading-5 text-[var(--app-muted-2)]">
-                    Afinidad académica, conexiones y actividad reciente.
-                  </p>
+                  <span>Tendencias</span>
+                  <h2>Temas que están creciendo</h2>
                 </div>
+                <TrendingUp size={18} />
               </div>
 
-              <div className="mt-4 grid border-t border-[var(--app-border)] sm:grid-cols-2">
-                {recommended
-                  .slice(0, 6)
-                  .map(
-                    (
-                      person,
-                      index
-                    ) => (
-                      <div
-                        key={
-                          person.id
-                        }
-                        className={`flex min-w-0 items-center gap-3 border-b border-[var(--app-border)] py-4 ${
-                          index %
-                            2 ===
-                            0
-                            ? "sm:pr-5"
-                            : "sm:border-l sm:pl-5"
-                        }`}
-                      >
-                        <Link
-                          href={`/u/${person.username}`}
-                          className="flex min-w-0 flex-1 items-center gap-3"
-                        >
-                          <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[var(--app-surface-2)] text-sm font-black text-[var(--app-text)] ring-1 ring-[var(--app-border)]">
-                            {person.avatar_url ? (
-                              <img
-                                src={
-                                  person.avatar_url
-                                }
-                                alt={
-                                  person.username
-                                }
-                                loading={
-                                  index <
-                                  2
-                                    ? "eager"
-                                    : "lazy"
-                                }
-                                decoding="async"
-                                className="h-full w-full object-cover"
-                              />
-                            ) : (
-                              person.username
-                                ?.charAt(
-                                  0
-                                )
-                                ?.toUpperCase() ||
-                              "A"
-                            )}
-                          </div>
-
-                          <div className="min-w-0">
-                            <p className="truncate text-sm font-black text-[var(--app-text)]">
-                              @
-                              {
-                                person.username
-                              }
-                            </p>
-
-                            <p className="mt-1 truncate text-xs text-[var(--app-muted)]">
-                              {
-                                person.reason
-                              }
-                            </p>
-                          </div>
-                        </Link>
-
-                        <button
-                          type="button"
-                          onClick={() =>
-                            follow(
-                              person
-                            )
-                          }
-                          disabled={
-                            busy ===
-                            person.id
-                          }
-                          className="flex h-9 shrink-0 items-center gap-1.5 px-2 text-[10px] font-black uppercase tracking-[0.08em] text-[var(--app-accent)] transition hover:text-[var(--app-text)] disabled:opacity-50"
-                        >
-                          <UserPlus
-                            size={14}
-                          />
-                          Seguir
-                        </button>
-                      </div>
-                    )
-                  )}
-              </div>
-            </section>
-          )}
-
-        <section className="pb-12 pt-9">
-          <div className="flex items-end justify-between gap-4">
-            <div>
-              <h2 className="text-lg font-black tracking-[-0.025em] text-[var(--app-text)]">
-                {search
-                  ? "Resultados"
-                  : "Comunidad Alumni"}
-              </h2>
-
-              <p className="mt-1 text-xs leading-5 text-[var(--app-muted-2)]">
-                {search
-                  ? `Coincidencias para “${search}”`
-                  : "Ordenado por afinidad contigo y actividad reciente."}
-              </p>
-            </div>
-          </div>
-
-          {loading ? (
-            <div className="border-t border-[var(--app-border)] py-16 text-center text-sm text-[var(--app-muted)]">
-              Buscando personas...
-            </div>
-          ) : filteredUsers.length ===
-            0 ? (
-            <div className="mt-4 border-y border-[var(--app-border)] py-16 text-center">
-              <Users
-                size={24}
-                className="mx-auto text-[var(--app-muted-2)]"
-              />
-
-              <p className="mt-4 font-bold text-[var(--app-text-soft)]">
-                No encontramos coincidencias
-              </p>
-
-              <p className="mx-auto mt-1 max-w-sm text-xs leading-5 text-[var(--app-muted)]">
-                Prueba con otra carrera, institución, programa o ciudad.
-              </p>
-            </div>
-          ) : (
-            <div className="mt-4 border-t border-[var(--app-border)]">
-              {filteredUsers.map(
-                (
-                  person: any,
-                  index: number
-                ) => {
-                  const label =
-                    connectionLabel(
-                      person,
-                      currentProfile,
-                      following
-                    );
-
-                  const institution =
-                    institutionOf(
-                      person
-                    );
-
-                  return (
-                    <Link
-                      key={
-                        person.id
+              {trendingTags.length ? (
+                <div className="alumni-explore-tags">
+                  {trendingTags.map((item: any, index) => (
+                    <a
+                      key={item.tag}
+                      href={`/explore/tag/${encodeURIComponent(item.tag)}`}
+                      onClick={() =>
+                        void recordSignal(
+                          "hashtag",
+                          item.tag,
+                          1.4
+                        )
                       }
-                      href={`/u/${person.username}`}
-                      className="group flex gap-4 border-b border-[var(--app-border)] py-5 transition sm:px-1"
                     >
-                      <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[var(--app-surface-2)] text-sm font-black text-[var(--app-text)] ring-1 ring-[var(--app-border)]">
-                        {person.avatar_url ? (
-                          <img
-                            src={
-                              person.avatar_url
-                            }
-                            alt={
-                              person.username
-                            }
-                            loading={
-                              index <
-                              3
-                                ? "eager"
-                                : "lazy"
-                            }
-                            decoding="async"
-                            className="h-full w-full object-cover"
-                          />
-                        ) : (
-                          person.username
-                            ?.charAt(
-                              0
-                            )
-                            ?.toUpperCase() ||
-                          "A"
-                        )}
-                      </div>
-
-                      <div className="min-w-0 flex-1">
-                        <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
-                          <p className="truncate font-black text-[var(--app-text)] transition group-hover:text-[var(--app-accent)]">
-                            @
-                            {
-                              person.username
-                            }
-                          </p>
-
-                          {person.full_name && (
-                            <span className="truncate text-xs font-semibold text-[var(--app-muted)]">
-                              {
-                                person.full_name
-                              }
-                            </span>
-                          )}
-
-                          {label && (
-                            <span className="text-[9px] font-black uppercase tracking-[0.12em] text-[var(--app-accent)]">
-                              {
-                                label
-                              }
-                            </span>
-                          )}
-                        </div>
-
-                        <div className="mt-2 flex flex-wrap gap-x-5 gap-y-1.5 text-xs text-[var(--app-muted)]">
-                          {(person.career ||
-                            institution) && (
-                            <span className="flex min-w-0 items-center gap-1.5">
-                              <GraduationCap
-                                size={
-                                  13
-                                }
-                              />
-
-                              <span className="truncate">
-                                {[
-                                  person.career,
-                                  institution,
-                                ]
-                                  .filter(
-                                    Boolean
-                                  )
-                                  .join(
-                                    " · "
-                                  )}
-                              </span>
-                            </span>
-                          )}
-
-                          {person
-                            .education_program_name && (
-                            <span className="flex items-center gap-1.5">
-                              <Sparkles
-                                size={
-                                  13
-                                }
-                              />
-                              {
-                                person
-                                  .education_program_name
-                              }
-                            </span>
-                          )}
-
-                          {(person.city ||
-                            person.country) && (
-                            <span className="flex items-center gap-1.5">
-                              <MapPin
-                                size={
-                                  13
-                                }
-                              />
-                              {[
-                                person.city,
-                                person.country,
-                              ]
-                                .filter(
-                                  Boolean
-                                )
-                                .join(
-                                  ", "
-                                )}
-                            </span>
-                          )}
-                        </div>
-
-                        {person.bio && (
-                          <p className="mt-2 line-clamp-2 max-w-2xl text-sm leading-5 text-[var(--app-muted)]">
-                            {
-                              person.bio
-                            }
-                          </p>
-                        )}
-                      </div>
-
-                      <Briefcase
-                        size={16}
-                        className="mt-1 hidden shrink-0 text-[var(--app-muted-3)] transition group-hover:text-[var(--app-accent)] sm:block"
-                      />
-                    </Link>
-                  );
-                }
+                      <span>{index + 1}</span>
+                      <strong>#{item.tag}</strong>
+                      <small>
+                        {item.post_count}{" "}
+                        {Number(item.post_count) === 1
+                          ? "publicación"
+                          : "publicaciones"}
+                      </small>
+                    </a>
+                  ))}
+                </div>
+              ) : (
+                <div className="alumni-explore-empty">
+                  Las tendencias aparecerán cuando la comunidad use hashtags.
+                </div>
               )}
-            </div>
-          )}
-        </section>
-      </div>
+            </section>
+
+            {user && recommendedUnique.length > 0 && (
+              <section className="alumni-explore-section">
+                <div className="alumni-explore-section-title">
+                  <div>
+                    <span>Para tu red</span>
+                    <h2>Personas que podrías conocer</h2>
+                  </div>
+                  <UserRoundSearch size={18} />
+                </div>
+
+                <div className="alumni-explore-person-list">
+                  {recommendedUnique.slice(0, 8).map((person) => (
+                    <ExplorePersonRow
+                      key={person.id}
+                      person={person}
+                      following={followingIds.includes(person.id)}
+                      busy={busy === person.id}
+                      reason={person.reason}
+                      onFollow={() => void follow(person)}
+                      onOpen={() =>
+                        void recordSignal(
+                          "profile",
+                          person.id,
+                          2
+                        )
+                      }
+                    />
+                  ))}
+                </div>
+              </section>
+            )}
+
+            <section className="alumni-explore-section">
+              <div className="alumni-explore-section-title">
+                <div>
+                  <span>Ahora</span>
+                  <h2>Publicaciones destacadas</h2>
+                </div>
+                <Sparkles size={18} />
+              </div>
+
+              {loading ? (
+                <div className="alumni-explore-empty">
+                  Preparando descubrimientos...
+                </div>
+              ) : trendingPosts.length ? (
+                <div className="alumni-explore-post-grid">
+                  {trendingPosts.slice(0, 8).map((post) => (
+                    <ExplorePostCard
+                      key={post.id}
+                      post={post}
+                      compact
+                      onOpen={() => {
+                        void recordSignal(
+                          "post",
+                          String(post.id),
+                          1.7
+                        );
+                      }}
+                    />
+                  ))}
+                </div>
+              ) : (
+                <div className="alumni-explore-empty">
+                  Todavía no hay suficiente actividad para destacar contenido.
+                </div>
+              )}
+            </section>
+
+            {newMembersUnique.length > 0 && (
+              <section className="alumni-explore-section">
+                <div className="alumni-explore-section-title">
+                  <div>
+                    <span>Comunidad</span>
+                    <h2>Nuevos en Alumni</h2>
+                  </div>
+                  <Users size={18} />
+                </div>
+
+                <div className="alumni-explore-person-list">
+                  {newMembersUnique.slice(0, 6).map((person) => (
+                    <ExplorePersonRow
+                      key={person.id}
+                      person={person}
+                      following={followingIds.includes(person.id)}
+                      busy={busy === person.id}
+                      reason={
+                        person.career ||
+                        person.education_institution_name ||
+                        person.university ||
+                        person.city ||
+                        "Nuevo en la comunidad"
+                      }
+                      onFollow={() => void follow(person)}
+                      onOpen={() =>
+                        void recordSignal(
+                          "profile",
+                          person.id,
+                          1.2
+                        )
+                      }
+                    />
+                  ))}
+                </div>
+              </section>
+            )}
+          </>
+        )}
+      </main>
     </AppShell>
   );
 }
@@ -1189,7 +819,7 @@ export default function ExplorePage() {
     <Suspense
       fallback={
         <div className="flex min-h-screen items-center justify-center bg-[var(--app-bg)] text-sm text-[var(--app-muted)]">
-          Cargando...
+          Cargando Explorar...
         </div>
       }
     >
@@ -1197,3 +827,5 @@ export default function ExplorePage() {
     </Suspense>
   );
 }
+
+/* ALUMNI_1_6_0_EXPLORE_DISCOVERY */

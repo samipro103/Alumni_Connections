@@ -253,6 +253,28 @@ function scorePost(
     score += 3;
   }
 
+  const discoveryBoost = Math.min(
+    Math.max(
+      Number(
+        post._discoveryBoost ||
+          0
+      ),
+      0
+    ),
+    18
+  );
+
+  if (discoveryBoost > 0) {
+    score += discoveryBoost;
+
+    if (discoveryBoost >= 5) {
+      reasons.push({
+        score: discoveryBoost,
+        text: "Según lo que exploras",
+      });
+    }
+  }
+
   score +=
     engagementScore(post);
 
@@ -423,3 +445,5 @@ export function rankForYouPosts(
     scored
   );
 }
+
+/* ALUMNI_1_6_0_EXPLORE_DISCOVERY:RANKING */

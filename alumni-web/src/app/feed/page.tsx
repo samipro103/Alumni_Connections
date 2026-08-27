@@ -311,16 +311,36 @@ function FeedContent() {
             .in("post_id", postIds)
         : Promise.resolve({ data: [] } as any);
 
+    const hashtagsPromise = postIds.length
+      ? supabase
+          .from("post_hashtags")
+          .select("post_id,tag")
+          .in("post_id", postIds)
+      : Promise.resolve({ data: [] } as any);
+
+    const discoverySignalsPromise = user
+      ? supabase
+          .from("discovery_signals")
+          .select("signal_type,signal_value,score")
+          .eq("user_id", user.id)
+          .order("score", { ascending: false })
+          .limit(120)
+      : Promise.resolve({ data: [] } as any);
+
     const [
       { data: commentsData },
       { data: repostRows },
       { data: mediaRowsRaw },
       { data: saveRows },
+      { data: hashtagRows },
+      { data: discoverySignalRows },
     ] = await Promise.all([
       commentsPromise,
       repostPromise,
       mediaPromise,
       savesPromise,
+      hashtagsPromise,
+      discoverySignalsPromise,
     ]);
 
     if (requestId !== feedRequestRef.current) return;
@@ -392,6 +412,45 @@ function FeedContent() {
       (saveRows || []).map((row: any) => row.post_id)
     );
 
+    const hashtagSignalScore = new Map<string, number>();
+    const profileSignalScore = new Map<string, number>();
+    const postSignalScore = new Map<string, number>();
+
+    for (const signal of discoverySignalRows || []) {
+      const score = Number(signal.score || 0);
+
+      if (signal.signal_type === "hashtag") {
+        hashtagSignalScore.set(
+          String(signal.signal_value).toLowerCase(),
+          score
+        );
+      } else if (signal.signal_type === "profile") {
+        profileSignalScore.set(
+          String(signal.signal_value),
+          score
+        );
+      } else if (signal.signal_type === "post") {
+        postSignalScore.set(
+          String(signal.signal_value),
+          score
+        );
+      }
+    }
+
+    const hashtagsByPost = new Map<number, string[]>();
+
+    for (const row of hashtagRows || []) {
+      const current =
+        hashtagsByPost.get(Number(row.post_id)) || [];
+
+      current.push(String(row.tag).toLowerCase());
+
+      hashtagsByPost.set(
+        Number(row.post_id),
+        current
+      );
+    }
+
     const formatted = legacyReady.map((post: any) => {
       const postComments = (commentsData || [])
         .filter(
@@ -437,6 +496,36 @@ function FeedContent() {
 
       const latestRepost = postReposts[0] || null;
 
+      const postTags =
+        hashtagsByPost.get(Number(post.id)) || [];
+
+      const hashtagBoost = postTags.reduce(
+        (total, tag) =>
+          total +
+          Math.min(
+            Number(hashtagSignalScore.get(tag) || 0),
+            6
+          ),
+        0
+      );
+
+      const authorBoost = Math.min(
+        Number(profileSignalScore.get(String(post.user_id)) || 0),
+        6
+      );
+
+      const directPostBoost = Math.min(
+        Number(postSignalScore.get(String(post.id)) || 0),
+        4
+      );
+
+      const discoveryBoost = Math.min(
+        hashtagBoost * 0.7 +
+          authorBoost * 0.55 +
+          directPostBoost * 0.45,
+        18
+      );
+
       return {
         ...post,
         liked,
@@ -454,6 +543,8 @@ function FeedContent() {
           : null,
         saved: savedPostIds.has(post.id),
         mediaItems,
+        discoveryTags: postTags,
+        _discoveryBoost: discoveryBoost,
       };
     });
 
@@ -1200,3 +1291,5 @@ export default function FeedPage() {
 /* ALUMNI_1_4_0_FEED_PRO */
 
 /* ALUMNI_1_4_2_THEME_CHAT_PROFILE_POLISH:FEED_NO_SAVED */
+
+/* ALUMNI_1_6_0_EXPLORE_DISCOVERY:FEED_SIGNALS */
