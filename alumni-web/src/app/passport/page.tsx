@@ -197,10 +197,19 @@ export default function PassportPage() {
         </header>
 
         {countries.length === 0 ? (
-          <section className="passport-empty">
+          <section className="passport-empty passport-empty-first">
             <Globe2 size={28} />
             <strong>Tu pasaporte está esperando su primer destino.</strong>
             <p>Crea un país, elige un estilo y empieza a guardar recuerdos.</p>
+
+            <button
+              type="button"
+              className="passport-empty-create"
+              onClick={() => setCountryOpen(true)}
+            >
+              <Plus size={16} />
+              Crear primer país
+            </button>
           </section>
         ) : (
           <>
@@ -316,7 +325,7 @@ export default function PassportPage() {
               <footer>
                 <span>Un país, un estilo, un álbum.</span>
                 <button type="button" disabled={busy || !form.country_name.trim() || !form.country_code.trim()} onClick={() => void createCountry()}>
-                  {busy ? "Guardando..." : "Guardar país"}
+                  {busy ? "Creando..." : "Crear país"}
                 </button>
               </footer>
             </section>
@@ -360,3 +369,5 @@ export default function PassportPage() {
 }
 
 /* ALUMNI_2_2_0_FIX1_PASSPORT */
+
+/* ALUMNI_2_2_1_PASSPORT_CREATE_FIX:PAGE */
