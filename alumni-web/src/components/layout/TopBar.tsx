@@ -227,8 +227,8 @@ export default function TopBar() {
   }
 
   return (
-    <header className="fixed inset-x-0 top-0 z-[70] h-[68px] border-b border-[var(--app-border)] bg-[color-mix(in_srgb,var(--app-surface)_94%,transparent)] backdrop-blur-xl [transform:translateZ(0)]">
-      <div className="mx-auto flex h-full w-full max-w-[1500px] items-center gap-5 px-4 sm:px-6 lg:px-8">
+    <header className="fixed inset-x-0 top-0 z-[70] h-[calc(68px+env(safe-area-inset-top))] border-b border-[var(--app-border)] bg-[color-mix(in_srgb,var(--app-surface)_94%,transparent)] backdrop-blur-xl [transform:translateZ(0)] lg:h-[68px]">
+      <div className="mx-auto flex h-full w-full max-w-[1500px] items-center gap-5 px-4 pt-[env(safe-area-inset-top)] sm:px-6 lg:px-8 lg:pt-0">
         <Link
           href="/feed"
           className="shrink-0"
@@ -328,3 +328,5 @@ export default function TopBar() {
     </header>
   );
 }
+
+/* ALUMNI_2_1_4_IOS_SAFE_HEADER:TOPBAR */

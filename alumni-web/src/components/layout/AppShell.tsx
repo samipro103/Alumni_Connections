@@ -42,7 +42,7 @@ export default function AppShell({
           className={
             immersiveMobile
               ? "mx-auto w-full max-w-[1500px] px-0 pb-0 pt-0 lg:px-8 lg:pb-10 lg:pt-[84px]"
-              : "mx-auto w-full max-w-[1500px] px-4 pb-24 pt-[84px] sm:px-6 lg:px-8 lg:pb-10"
+              : "mx-auto w-full max-w-[1500px] px-4 pb-24 pt-[calc(84px+env(safe-area-inset-top))] sm:px-6 lg:px-8 lg:pb-10 lg:pt-[84px]"
           }
         >
           <div
@@ -88,3 +88,5 @@ export default function AppShell({
 /* ALUMNI_1_3_6_CHAT_STABILITY_MEDIA_SPOTIFY:APP_SHELL */
 
 /* ALUMNI_2_1_2_EVENT_REMINDER_BOOTSTRAP:MOUNT */
+
+/* ALUMNI_2_1_4_IOS_SAFE_HEADER:APP_SHELL */
