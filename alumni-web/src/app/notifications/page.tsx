@@ -1,131 +1,285 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
 import {
+  AtSign,
   Bell,
-  Check,
-  Clock3,
+  CheckCheck,
+  ChevronDown,
   Heart,
-  Loader2,
   MessageCircle,
+  Repeat2,
+  Settings2,
   UserPlus,
+  Users,
   X,
 } from "lucide-react";
 import {
-  formatDistanceToNow,
-  isToday,
-  isYesterday,
-} from "date-fns";
-import { es } from "date-fns/locale";
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
+import { useRouter } from "next/navigation";
+import AppShell from "@/components/layout/AppShell";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { supabase } from "@/lib/supabase";
-import AppShell from "@/components/layout/AppShell";
+import { hydratePostMediaItems } from "@/lib/feedMedia";
+import "./notifications-pro.css";
 
-type FilterType = "all" | "priority" | "connections" | "activity";
+type FilterType =
+  | "all"
+  | "interactions"
+  | "connections"
+  | "mentions";
 
-type NotificationGroup = {
+type Preferences = {
+  enabled: boolean;
+  interactions: boolean;
+  connections: boolean;
+  mentions: boolean;
+  stories: boolean;
+  groups: boolean;
+};
+
+type GroupedNotification = {
   key: string;
   type: string;
   targetType: string;
   targetId: string;
+  postId: number | null;
   latestAt: string;
+  unread: boolean;
   items: any[];
   actors: any[];
+  previewUrl?: string | null;
 };
 
-function notificationPriority(
-  group: NotificationGroup
-) {
+const PAGE_SIZE = 40;
+
+const DEFAULT_PREFS: Preferences = {
+  enabled: true,
+  interactions: true,
+  connections: true,
+  mentions: true,
+  stories: true,
+  groups: true,
+};
+
+function categoryOf(
+  type: string,
+  targetType: string
+): Exclude<FilterType, "all"> {
+  const t = String(type || "").toLowerCase();
+  const target = String(targetType || "").toLowerCase();
+
   if (
-    group.type ===
-    "follow_request"
+    ["follow", "follow_request", "follow_request_accepted"].includes(t)
   ) {
-    return 100;
+    return "connections";
   }
 
   if (
-    group.type ===
-    "story_reply"
+    t.includes("mention") ||
+    target === "group_message"
   ) {
-    return 92;
+    return "mentions";
   }
 
-  if (
-    group.type ===
-    "comment"
-  ) {
-    return 84;
-  }
-
-  if (
-    group.type ===
-    "follow_request_accepted"
-  ) {
-    return 74;
-  }
-
-  if (
-    group.type ===
-    "follow"
-  ) {
-    return 64;
-  }
-
-  if (
-    group.targetType ===
-    "comment"
-  ) {
-    return 50;
-  }
-
-  if (
-    group.targetType ===
-    "story"
-  ) {
-    return 42;
-  }
-
-  return 30;
+  return "interactions";
 }
 
-function isPriorityNotification(
-  group: NotificationGroup
-) {
-  return (
-    notificationPriority(
-      group
-    ) >= 80
+function groupKey(item: any) {
+  const type = String(item.type || "activity");
+  const targetType =
+    item.target_type ||
+    (item.post_id ? "post" : "profile");
+  const targetId =
+    item.target_id ||
+    (item.post_id ? String(item.post_id) : String(item.id));
+
+  /*
+    Agrupamos por acción + destino.
+    Likes del mismo post se convierten en una sola fila,
+    igual que comentarios/reposts repetidos.
+  */
+  return `${type}:${targetType}:${targetId}`;
+}
+
+function relativeTime(value: string) {
+  const date = new Date(value);
+  const seconds = Math.max(
+    0,
+    Math.round((Date.now() - date.getTime()) / 1000)
   );
+
+  if (seconds < 60) return "ahora";
+  if (seconds < 3600) return `hace ${Math.floor(seconds / 60)} min`;
+  if (seconds < 86400) return `hace ${Math.floor(seconds / 3600)} h`;
+  if (seconds < 604800) return `hace ${Math.floor(seconds / 86400)} d`;
+
+  return date.toLocaleDateString("es-SV", {
+    day: "numeric",
+    month: "short",
+  });
+}
+
+function dayLabel(value: string) {
+  const date = new Date(value);
+  const today = new Date();
+  const yesterday = new Date();
+  yesterday.setDate(today.getDate() - 1);
+
+  if (date.toDateString() === today.toDateString()) {
+    return "Hoy";
+  }
+
+  if (date.toDateString() === yesterday.toDateString()) {
+    return "Ayer";
+  }
+
+  return "Anteriores";
+}
+
+function notificationCopy(group: GroupedNotification) {
+  const count = group.items.length;
+  const plural = count > 1;
+
+  switch (group.type) {
+    case "like":
+      return plural
+        ? "reaccionaron a tu publicación"
+        : "reaccionó a tu publicación";
+
+    case "comment":
+      return plural
+        ? "comentaron tu publicación"
+        : "comentó tu publicación";
+
+    case "comment_like":
+      return plural
+        ? "reaccionaron a tu comentario"
+        : "reaccionó a tu comentario";
+
+    case "repost":
+      return plural
+        ? "compartieron tu publicación"
+        : "compartió tu publicación";
+
+    case "follow":
+      return plural
+        ? "comenzaron a seguirte"
+        : "comenzó a seguirte";
+
+    case "follow_request":
+      return plural
+        ? "quieren seguirte"
+        : "quiere seguirte";
+
+    case "follow_request_accepted":
+      return "aceptó tu solicitud";
+
+    case "story_reply":
+      return plural
+        ? "respondieron a tu historia"
+        : "respondió a tu historia";
+
+    case "mention":
+      return plural
+        ? "te mencionaron"
+        : "te mencionó";
+
+    case "group_mention":
+      return plural
+        ? "te mencionaron en un grupo"
+        : "te mencionó en un grupo";
+
+    default:
+      return plural
+        ? "interactuaron con tu contenido"
+        : "interactuó con tu contenido";
+  }
+}
+
+function iconFor(group: GroupedNotification) {
+  switch (group.type) {
+    case "follow":
+    case "follow_request":
+    case "follow_request_accepted":
+      return UserPlus;
+
+    case "comment":
+    case "story_reply":
+      return MessageCircle;
+
+    case "repost":
+      return Repeat2;
+
+    case "mention":
+    case "group_mention":
+      return AtSign;
+
+    default:
+      return Heart;
+  }
+}
+
+function actorText(group: GroupedNotification) {
+  const names = group.actors
+    .map((actor) => actor?.username)
+    .filter(Boolean);
+
+  if (!names.length) return "Alguien";
+  if (names.length === 1) return `@${names[0]}`;
+  if (names.length === 2) return `@${names[0]} y @${names[1]}`;
+
+  const extra = Math.max(
+    group.items.length - 2,
+    names.length - 2
+  );
+
+  return `@${names[0]}, @${names[1]} y ${extra} ${
+    extra === 1 ? "persona más" : "personas más"
+  }`;
 }
 
 export default function NotificationsPage() {
   const router = useRouter();
   const { user, loading } = useAuth();
 
-  const [notifications, setNotifications] = useState<any[]>([]);
-  const [pendingRequests, setPendingRequests] = useState<Record<string, boolean>>(
-    {}
-  );
-  const [requestBusy, setRequestBusy] = useState<string | null>(null);
-  const [loadingNotifications, setLoadingNotifications] = useState(true);
+  const [rows, setRows] = useState<any[]>([]);
   const [filter, setFilter] = useState<FilterType>("all");
-const loadRequestRef = useRef(0);
+  const [loadingRows, setLoadingRows] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
+  const [page, setPage] = useState(0);
 
-useEffect(() => {
+  const [pendingRequests, setPendingRequests] = useState<
+    Record<string, boolean>
+  >({});
+  const [requestBusy, setRequestBusy] = useState<string | null>(null);
 
-    if (!loading && !user) router.push("/login");
-  }, [user, loading, router]);
+  const [preferencesOpen, setPreferencesOpen] = useState(false);
+  const [preferences, setPreferences] =
+    useState<Preferences>(DEFAULT_PREFS);
+  const [savingPreference, setSavingPreference] =
+    useState<keyof Preferences | null>(null);
+
+  const requestRef = useRef(0);
 
   useEffect(() => {
-    if (user) void loadNotifications();
-  }, [user?.id]);
+    if (!loading && !user) {
+      router.push("/login");
+    }
+  }, [loading, user, router]);
 
   useEffect(() => {
     if (!user) return;
 
+    void loadPage(0, true);
+    void loadPreferences();
+
     const channel = supabase
-      .channel(`notifications:${user.id}`)
+      .channel(`notifications-v2:${user.id}`)
       .on(
         "postgres_changes",
         {
@@ -134,159 +288,425 @@ useEffect(() => {
           table: "notifications",
           filter: `user_id=eq.${user.id}`,
         },
-        () => void loadNotifications(false)
+        () => void loadPage(0, true, false)
       )
       .subscribe();
 
     return () => {
+      requestRef.current += 1;
       supabase.removeChannel(channel);
     };
   }, [user?.id]);
 
-  async function loadNotifications(markRead = true) {
-  if (!user) return;
+  async function loadPreferences() {
+    if (!user) return;
 
-  const requestId =
-    ++loadRequestRef.current;
+    const { data } = await supabase
+      .from("notification_preferences")
+      .select(
+        "enabled,interactions,connections,mentions,stories,groups"
+      )
+      .eq("user_id", user.id)
+      .maybeSingle();
 
-  if (markRead) {
-    setLoadingNotifications(true);
+    setPreferences({
+      ...DEFAULT_PREFS,
+      ...(data || {}),
+    });
   }
 
-  const [
-
-      { data: notificationsData, error },
-      { data: requestsData, error: requestsError },
-    ] = await Promise.all([
-  supabase
-    .from("notifications")
-    .select("*")
-    .eq("user_id", user.id)
-    .order("created_at", { ascending: false }),
-  supabase
-    .from("follow_requests")
-    .select("id")
-    .eq("target_id", user.id),
-]);
-
-if (
-  requestId !==
-  loadRequestRef.current
-) {
-  return;
-}
-
-if (error || !notificationsData) {
-  console.error(error);
-
-  if (markRead) {
-    setNotifications([]);
-      if (
-    requestId ===
-    loadRequestRef.current
+  async function loadPage(
+    nextPage: number,
+    replace: boolean,
+    showLoader = true
   ) {
-    setLoadingNotifications(false);
-  }
-}
+    if (!user) return;
 
+    const requestId = ++requestRef.current;
+    const from = nextPage * PAGE_SIZE;
+    const to = from + PAGE_SIZE - 1;
 
-  return;
-}
-
-
-    if (requestsError) {
-      console.error("Error cargando solicitudes pendientes:", requestsError);
+    if (replace && showLoader) {
+      setLoadingRows(true);
+    } else if (!replace) {
+      setLoadingMore(true);
     }
 
-    const requestMap: Record<string, boolean> = {};
-    (requestsData || []).forEach((request: any) => {
-      requestMap[String(request.id)] = true;
-    });
-    setPendingRequests(requestMap);
+    const [{ data, error }, { data: requests }] =
+      await Promise.all([
+        supabase
+          .from("notifications")
+          .select("*")
+          .eq("user_id", user.id)
+          .order("created_at", { ascending: false })
+          .range(from, to),
+        supabase
+          .from("follow_requests")
+          .select("id")
+          .eq("target_id", user.id),
+      ]);
+
+    if (requestId !== requestRef.current) return;
+
+    if (error) {
+      console.error(error);
+      setLoadingRows(false);
+      setLoadingMore(false);
+      return;
+    }
+
+    const notificationRows = data || [];
 
     const actorIds = [
       ...new Set(
-        notificationsData
-          .map((notification: any) => notification.actor_id)
+        notificationRows
+          .map((item: any) => item.actor_id)
           .filter(Boolean)
       ),
     ];
 
-    let profilesData: any[] = [];
+    const postIds = [
+      ...new Set(
+        notificationRows
+          .map((item: any) => item.post_id)
+          .filter(Boolean)
+          .map(Number)
+      ),
+    ];
 
-    if (actorIds.length > 0) {
-      const { data } = await supabase
-        .from("profiles")
-        .select("id, username, full_name, avatar_url, university, career")
-        .in("id", actorIds);
+    const [profilesResult, mediaResult, postsResult] =
+      await Promise.all([
+        actorIds.length
+          ? supabase
+              .from("profiles")
+              .select("id,username,full_name,avatar_url")
+              .in("id", actorIds)
+          : Promise.resolve({ data: [] } as any),
 
-        profilesData = data || [];
-}
+        postIds.length
+          ? supabase
+              .from("post_media")
+              .select("post_id,media_type,media_url,media_path,media_bucket,sort_order")
+              .in("post_id", postIds)
+              .eq("media_type", "image")
+              .order("sort_order", { ascending: true })
+          : Promise.resolve({ data: [] } as any),
 
-if (
-  requestId !==
-  loadRequestRef.current
-) {
-  return;
-}
+        postIds.length
+          ? supabase
+              .from("posts")
+              .select("id,image_url")
+              .in("id", postIds)
+          : Promise.resolve({ data: [] } as any),
+      ]);
 
-setNotifications(
+    if (requestId !== requestRef.current) return;
 
-      notificationsData.map((notification: any) => ({
-        ...notification,
-        profile: profilesData.find(
-          (profile: any) => profile.id === notification.actor_id
-        ),
+    const profiles = new Map(
+      (profilesResult.data || []).map((profile: any) => [
+        profile.id,
+        profile,
+      ])
+    );
+
+    const hydratedMedia = await hydratePostMediaItems(
+      (mediaResult.data || []) as any[]
+    );
+
+    if (requestId !== requestRef.current) return;
+
+    const mediaByPost = new Map<number, string>();
+
+    for (const media of hydratedMedia) {
+      if (
+        !mediaByPost.has(Number(media.post_id)) &&
+        media.media_url
+      ) {
+        mediaByPost.set(
+          Number(media.post_id),
+          media.media_url
+        );
+      }
+    }
+
+    for (const post of postsResult.data || []) {
+      if (
+        !mediaByPost.has(Number(post.id)) &&
+        post.image_url
+      ) {
+        mediaByPost.set(
+          Number(post.id),
+          post.image_url
+        );
+      }
+    }
+
+    const enriched = notificationRows.map((item: any) => ({
+      ...item,
+      profile: profiles.get(item.actor_id) || null,
+      preview_url:
+        item.post_id
+          ? mediaByPost.get(Number(item.post_id)) || null
+          : null,
+    }));
+
+    setRows((current) => {
+      if (replace) return enriched;
+
+      const ids = new Set(current.map((item) => item.id));
+
+      return [
+        ...current,
+        ...enriched.filter((item: any) => !ids.has(item.id)),
+      ];
+    });
+
+    const requestMap: Record<string, boolean> = {};
+
+    for (const request of requests || []) {
+      requestMap[String(request.id)] = true;
+    }
+
+    setPendingRequests(requestMap);
+    setPage(nextPage);
+    setHasMore(notificationRows.length === PAGE_SIZE);
+    setLoadingRows(false);
+    setLoadingMore(false);
+  }
+
+  const groups = useMemo(() => {
+    const map = new Map<string, GroupedNotification>();
+
+    for (const item of rows) {
+      const key = groupKey(item);
+      const targetType =
+        item.target_type ||
+        (item.post_id ? "post" : "profile");
+      const targetId =
+        item.target_id ||
+        (item.post_id ? String(item.post_id) : String(item.id));
+
+      const current = map.get(key);
+
+      if (current) {
+        current.items.push(item);
+        current.unread =
+          current.unread || !item.read_at;
+
+        if (
+          item.profile &&
+          !current.actors.some(
+            (actor) => actor.id === item.profile.id
+          )
+        ) {
+          current.actors.push(item.profile);
+        }
+
+        if (!current.previewUrl && item.preview_url) {
+          current.previewUrl = item.preview_url;
+        }
+      } else {
+        map.set(key, {
+          key,
+          type: item.type || "activity",
+          targetType,
+          targetId,
+          postId: item.post_id ? Number(item.post_id) : null,
+          latestAt: item.created_at,
+          unread: !item.read_at,
+          items: [item],
+          actors: item.profile ? [item.profile] : [],
+          previewUrl: item.preview_url || null,
+        });
+      }
+    }
+
+    return [...map.values()].sort(
+      (a, b) =>
+        new Date(b.latestAt).getTime() -
+        new Date(a.latestAt).getTime()
+    );
+  }, [rows]);
+
+  const filteredGroups = useMemo(() => {
+    if (filter === "all") return groups;
+
+    return groups.filter(
+      (group) =>
+        categoryOf(group.type, group.targetType) === filter
+    );
+  }, [groups, filter]);
+
+  const byDate = useMemo(() => {
+    const result: Record<string, GroupedNotification[]> = {
+      Hoy: [],
+      Ayer: [],
+      Anteriores: [],
+    };
+
+    for (const group of filteredGroups) {
+      result[dayLabel(group.latestAt)].push(group);
+    }
+
+    return result;
+  }, [filteredGroups]);
+
+  const unreadCount = useMemo(
+    () =>
+      rows.filter((item) => !item.read_at).length,
+    [rows]
+  );
+
+  async function markGroupRead(group: GroupedNotification) {
+    if (!user || !group.unread) return;
+
+    const ids = group.items
+      .filter((item) => !item.read_at)
+      .map((item) => item.id);
+
+    if (!ids.length) return;
+
+    const readAt = new Date().toISOString();
+
+    setRows((current) =>
+      current.map((item) =>
+        ids.includes(item.id)
+          ? { ...item, read_at: readAt }
+          : item
+      )
+    );
+
+    const { error } = await supabase
+      .from("notifications")
+      .update({ read_at: readAt })
+      .eq("user_id", user.id)
+      .in("id", ids);
+
+    if (error) {
+      void loadPage(0, true, false);
+    }
+  }
+
+  async function markAllRead() {
+    if (!user || unreadCount === 0) return;
+
+    const readAt = new Date().toISOString();
+
+    setRows((current) =>
+      current.map((item) => ({
+        ...item,
+        read_at: item.read_at || readAt,
       }))
     );
 
-    if (markRead) {
-      await supabase
-        .from("notifications")
-        .update({ read_at: new Date().toISOString() })
-        .eq("user_id", user.id)
-        .is("read_at", null);
+    const { error } = await supabase.rpc(
+      "alumni_mark_all_notifications_read"
+    );
+
+    if (error) {
+      void loadPage(0, true, false);
+    }
+  }
+
+  async function openNotification(group: GroupedNotification) {
+    await markGroupRead(group);
+
+    const actorUsername = group.actors[0]?.username;
+
+    if (
+      group.type === "follow" ||
+      group.type === "follow_request" ||
+      group.type === "follow_request_accepted"
+    ) {
+      if (actorUsername) {
+        router.push(`/u/${actorUsername}`);
+      }
+      return;
     }
 
-    setLoadingNotifications(false);
+    if (group.type === "story_reply") {
+      if (actorUsername) {
+        router.push(`/messages/${actorUsername}`);
+      }
+      return;
+    }
+
+    if (group.type === "group_mention") {
+      const { data: message } = await supabase
+        .from("group_messages")
+        .select("group_id")
+        .eq("id", Number(group.targetId))
+        .maybeSingle();
+
+      if (message?.group_id) {
+        router.push(`/messages/group/${message.group_id}`);
+      }
+      return;
+    }
+
+    if (
+      group.targetType === "comment" ||
+      group.targetType === "post_comment"
+    ) {
+      const { data: comment } = await supabase
+        .from("comments")
+        .select("id,post_id")
+        .eq("id", Number(group.targetId))
+        .maybeSingle();
+
+      if (comment) {
+        router.push(
+          `/feed?post=${comment.post_id}&comment=${comment.id}`
+        );
+      }
+      return;
+    }
+
+    if (group.postId) {
+      router.push(`/feed?post=${group.postId}`);
+      return;
+    }
+
+    if (group.targetType === "post") {
+      router.push(`/feed?post=${encodeURIComponent(group.targetId)}`);
+    }
   }
 
-  async function clearRequestNotification(requestId: string) {
-    if (!user) return;
-
-    await supabase
-      .from("notifications")
-      .delete()
-      .eq("user_id", user.id)
-      .eq("type", "follow_request")
-      .eq("target_id", requestId);
-  }
-
-  async function acceptFollowRequest(requestId: string) {
+  async function acceptRequest(group: GroupedNotification) {
     if (!user || requestBusy) return;
 
+    const requestId = group.targetId;
     setRequestBusy(requestId);
 
     try {
-      const { error } = await supabase.rpc("accept_follow_request", {
-        p_request_id: requestId,
-      });
+      const { error } = await supabase.rpc(
+        "accept_follow_request",
+        {
+          p_request_id: requestId,
+        }
+      );
 
       if (error) throw error;
 
-      await clearRequestNotification(requestId);
-      await loadNotifications(false);
+      await supabase
+        .from("notifications")
+        .delete()
+        .eq("user_id", user.id)
+        .eq("type", "follow_request")
+        .eq("target_id", requestId);
+
+      await loadPage(0, true, false);
     } catch (error: any) {
-      console.error(error);
-      alert(error?.message || "No se pudo aceptar la solicitud.");
+      alert(error?.message || "No se pudo aceptar.");
     } finally {
       setRequestBusy(null);
     }
   }
 
-  async function rejectFollowRequest(requestId: string) {
+  async function rejectRequest(group: GroupedNotification) {
     if (!user || requestBusy) return;
 
+    const requestId = group.targetId;
     setRequestBusy(requestId);
 
     try {
@@ -298,495 +718,399 @@ setNotifications(
 
       if (error) throw error;
 
-      await clearRequestNotification(requestId);
-      await loadNotifications(false);
+      await supabase
+        .from("notifications")
+        .delete()
+        .eq("user_id", user.id)
+        .eq("type", "follow_request")
+        .eq("target_id", requestId);
+
+      await loadPage(0, true, false);
     } catch (error: any) {
-      console.error(error);
-      alert(error?.message || "No se pudo rechazar la solicitud.");
+      alert(error?.message || "No se pudo rechazar.");
     } finally {
       setRequestBusy(null);
     }
   }
 
-  const groupedNotifications = useMemo(() => {
-    const map = new Map<string, NotificationGroup>();
+  async function togglePreference(key: keyof Preferences) {
+    if (!user || savingPreference) return;
 
-    notifications.forEach((item: any) => {
-      const targetType =
-        item.target_type ||
-        (item.post_id
-          ? "post"
-          : item.type === "follow"
-          ? "profile"
-          : "other");
-
-      const targetId =
-        item.target_id ||
-        (item.post_id
-          ? String(item.post_id)
-          : item.type === "follow"
-          ? "followers"
-          : String(item.id));
-
-      const key = `${item.type}:${targetType}:${targetId}`;
-      const current = map.get(key);
-
-      if (current) {
-        current.items.push(item);
-
-        if (
-          item.profile &&
-          !current.actors.some((actor) => actor.id === item.profile.id)
-        ) {
-          current.actors.push(item.profile);
-        }
-      } else {
-        map.set(key, {
-          key,
-          type: item.type,
-          targetType,
-          targetId,
-          latestAt: item.created_at,
-          items: [item],
-          actors: item.profile ? [item.profile] : [],
-        });
-      }
-    });
-
-    return [...map.values()].sort(
-      (a, b) => {
-        const priorityDiff =
-          notificationPriority(
-            b
-          ) -
-          notificationPriority(
-            a
-          );
-
-        if (
-          priorityDiff !== 0
-        ) {
-          return priorityDiff;
-        }
-
-        return (
-          new Date(
-            b.latestAt
-          ).getTime() -
-          new Date(
-            a.latestAt
-          ).getTime()
-        );
-      }
-    );
-  }, [notifications]);
-
-  const filtered = useMemo(() => {
-    const connectionTypes = new Set([
-      "follow",
-      "follow_request",
-      "follow_request_accepted",
-    ]);
-
-    if (filter === "priority") {
-      return groupedNotifications.filter(
-        isPriorityNotification
-      );
-    }
-
-    if (filter === "connections") {
-      return groupedNotifications.filter((group) =>
-        connectionTypes.has(group.type)
-      );
-    }
-
-    if (filter === "activity") {
-      return groupedNotifications.filter(
-        (group) => !connectionTypes.has(group.type)
-      );
-    }
-
-    return groupedNotifications;
-  }, [groupedNotifications, filter]);
-
-  const priorityCount =
-    useMemo(
-      () =>
-        groupedNotifications.filter(
-          isPriorityNotification
-        ).length,
-      [groupedNotifications]
-    );
-
-  const groupedByDate = useMemo(() => {
-    const result: Record<string, NotificationGroup[]> = {
-      Hoy: [],
-      Ayer: [],
-      Anteriores: [],
+    const next = {
+      ...preferences,
+      [key]: !preferences[key],
     };
 
-    filtered.forEach((group) => {
-      const date = new Date(group.latestAt);
+    setPreferences(next);
+    setSavingPreference(key);
 
-      if (isToday(date)) result.Hoy.push(group);
-      else if (isYesterday(date)) result.Ayer.push(group);
-      else result.Anteriores.push(group);
-    });
+    const { error } = await supabase
+      .from("notification_preferences")
+      .upsert(
+        {
+          user_id: user.id,
+          ...next,
+          updated_at: new Date().toISOString(),
+        },
+        {
+          onConflict: "user_id",
+        }
+      );
 
-    return result;
-  }, [filtered]);
-
-  function notificationMeta(group: NotificationGroup) {
-    if (group.type === "follow_request") {
-      return {
-        icon: Clock3,
-        action:
-          group.items.length === 1 ? "quiere seguirte" : "quieren seguirte",
-        tone: "text-[var(--app-accent)]",
-      };
+    if (error) {
+      setPreferences(preferences);
+      alert(error.message);
     }
 
-    if (group.type === "follow_request_accepted") {
-      return {
-        icon: UserPlus,
-        action: "aceptó tu solicitud de seguimiento",
-        tone: "text-emerald-400",
-      };
-    }
-
-    if (group.type === "follow") {
-      return {
-        icon: UserPlus,
-        action:
-          group.items.length === 1
-            ? "comenzó a seguirte"
-            : "comenzaron a seguirte",
-        tone: "text-[var(--app-accent)]",
-      };
-    }
-
-    if (group.type === "story_reply") {
-      return {
-        icon: MessageCircle,
-        action:
-          group.items.length === 1
-            ? "respondió a tu historia"
-            : "respondieron a tu historia",
-        tone: "text-[var(--app-accent)]",
-      };
-    }
-
-    if (group.type === "comment") {
-      return {
-        icon: MessageCircle,
-        action:
-          group.items.length === 1
-            ? "comentó tu publicación"
-            : "comentaron tu publicación",
-        tone: "text-emerald-400",
-      };
-    }
-
-    return {
-      icon: Heart,
-      action:
-        group.items.length === 1
-          ? group.targetType === "comment"
-            ? "le dio me gusta a tu comentario"
-            : group.targetType === "story"
-            ? "le dio me gusta a tu historia"
-            : "le dio me gusta a tu publicación"
-          : "interactuaron con tu contenido",
-      tone:
-        group.targetType === "story" ? "text-pink-400" : "text-red-400",
-    };
+    setSavingPreference(null);
   }
 
-  function actorsText(group: NotificationGroup) {
-    const names = group.actors
-      .map((actor) => actor?.username)
-      .filter(Boolean);
-
-    if (names.length === 0) return "Alguien";
-    if (names.length === 1) return `@${names[0]}`;
-    if (names.length === 2) return `@${names[0]} y @${names[1]}`;
-
-    const remaining = Math.max(group.items.length - 2, names.length - 2);
-    return `@${names[0]}, @${names[1]} y ${remaining} ${
-      remaining === 1 ? "persona más" : "personas más"
-    }`;
-  }
-
-  async function openNotification(group: NotificationGroup) {
-    if (group.type === "follow_request") {
-      const username = group.actors[0]?.username;
-      if (username) router.push(`/u/${username}`);
-      return;
-    }
-
-    if (
-      group.type === "follow_request_accepted" ||
-      group.type === "follow"
-    ) {
-      const username = group.actors[0]?.username;
-      if (username) router.push(`/u/${username}`);
-      return;
-    }
-
-    if (group.type === "story_reply") {
-      const username = group.actors[0]?.username;
-      if (username) router.push(`/messages/${username}`);
-      return;
-    }
-
-    if (group.targetType === "story") {
-      router.push(`/feed?story=${encodeURIComponent(group.targetId)}`);
-      return;
-    }
-
-    if (
-      group.targetType === "comment" ||
-      group.targetType === "post_comment"
-    ) {
-      const { data: comment } = await supabase
-        .from("comments")
-        .select("id, post_id")
-        .eq("id", Number(group.targetId))
-        .maybeSingle();
-
-      if (comment) {
-        router.push(`/feed?post=${comment.post_id}&comment=${comment.id}`);
-      }
-
-      return;
-    }
-
-    if (group.targetType === "post") {
-      router.push(`/feed?post=${encodeURIComponent(group.targetId)}`);
-      return;
-    }
-
-    if (group.items[0]?.post_id) {
-      router.push(`/feed?post=${group.items[0].post_id}`);
-    }
-  }
+  const tabs: Array<{
+    id: FilterType;
+    label: string;
+  }> = [
+    { id: "all", label: "Todo" },
+    { id: "interactions", label: "Interacciones" },
+    { id: "connections", label: "Conexiones" },
+    { id: "mentions", label: "Menciones" },
+  ];
 
   return (
     <AppShell>
-      <div className="alumni-notifications-page mx-auto w-full max-w-[820px]">
-        <header className="mb-7 pt-2">
-          <p className="mb-2 text-[10px] font-black uppercase tracking-[0.22em] text-[var(--app-muted-3)]">
-            Centro de actividad
-          </p>
-          <h1 className="text-[32px] font-black tracking-[-0.045em] text-[var(--app-text)]">
-            Notificaciones
-          </h1>
-          <p className="mt-2 max-w-xl text-sm leading-6 text-[var(--app-muted)]">
-            Conexiones, reacciones y conversaciones importantes, sin ruido.
-          </p>
+      <main className="alumni-notifications-pro mx-auto w-full max-w-[860px]">
+        <header className="alumni-notifications-header">
+          <div className="min-w-0">
+            <p className="alumni-notifications-eyebrow">
+              Actividad
+            </p>
 
-          {priorityCount > 0 && (
-            <div className="mt-5 flex items-center gap-3 border-t border-[var(--app-border)] pt-4">
-              <span className="h-1.5 w-1.5 rounded-full bg-[var(--app-accent)]" />
-              <p className="text-[10px] font-black uppercase tracking-[0.13em] text-[var(--app-muted)]">
-                {priorityCount} {priorityCount === 1 ? "actividad prioritaria" : "actividades prioritarias"}
-              </p>
-            </div>
-          )}
+            <h1>Notificaciones</h1>
+
+            <p>
+              Lo importante de tu red, agrupado para que puedas
+              revisarlo sin ruido.
+            </p>
+          </div>
+
+          <div className="flex shrink-0 items-center gap-1">
+            <button
+              type="button"
+              onClick={() => void markAllRead()}
+              disabled={unreadCount === 0}
+              className="alumni-notification-header-action"
+              title="Marcar todo como leído"
+            >
+              <CheckCheck size={17} />
+              <span className="hidden sm:inline">
+                Leer todo
+              </span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setPreferencesOpen(true)}
+              className="alumni-notification-icon-button"
+              aria-label="Preferencias de notificaciones"
+            >
+              <Settings2 size={18} />
+            </button>
+          </div>
         </header>
 
-        <div className="mb-7 flex items-center gap-5 border-b border-[var(--app-border)]">
-          {[
-            ["all", "Todas"],
-            ["priority", "Prioridad"],
-            ["connections", "Conexiones"],
-            ["activity", "Actividad"],
-          ].map(([id, label]) => {
-            const active = filter === id;
+        <nav className="alumni-notification-tabs">
+          {tabs.map((tab) => (
+            <button
+              key={tab.id}
+              type="button"
+              data-active={filter === tab.id ? "true" : "false"}
+              onClick={() => setFilter(tab.id)}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </nav>
 
-            return (
-              <button
-                key={id}
-                type="button"
-                onClick={() => setFilter(id as FilterType)}
-                className={`relative pb-3 text-xs font-black transition ${
-                  active
-                    ? "text-[var(--app-text)]"
-                    : "text-[var(--app-muted-2)] hover:text-[var(--app-text-soft)]"
-                }`}
-              >
-                {label}
-                {active && (
-                  <span className="absolute inset-x-0 bottom-0 h-0.5 rounded-full bg-[var(--app-accent)]" />
-                )}
-              </button>
-            );
-          })}
-        </div>
-
-        {loadingNotifications ? (
-          <div className="flex min-h-[280px] items-center justify-center">
-            <Loader2
-              size={20}
-              className="animate-spin text-[var(--app-muted)]"
-            />
-          </div>
-        ) : filtered.length === 0 ? (
-          <div className="py-20 text-center">
-            <Bell size={27} className="mx-auto text-[var(--app-muted-3)]" />
-            <p className="mt-4 text-sm font-black text-[var(--app-text-soft)]">
-              Todo está tranquilo
+        {unreadCount > 0 && (
+          <div className="alumni-notification-unread-summary">
+            <span />
+            <strong>
+              {unreadCount > 99 ? "99+" : unreadCount}
+            </strong>
+            <p>
+              {unreadCount === 1
+                ? "actividad sin leer"
+                : "actividades sin leer"}
             </p>
-            <p className="mt-1 text-xs text-[var(--app-muted-2)]">
-              Las nuevas interacciones aparecerán aquí.
+          </div>
+        )}
+
+        {loadingRows ? (
+          <div className="alumni-notifications-empty">
+            Cargando actividad...
+          </div>
+        ) : filteredGroups.length === 0 ? (
+          <div className="alumni-notifications-empty">
+            <Bell size={28} />
+            <strong>Todo al día.</strong>
+            <p>
+              Aquí aparecerán tus nuevas interacciones y conexiones.
             </p>
           </div>
         ) : (
-          <div className="space-y-9">
-            {Object.entries(groupedByDate).map(([label, groups]) => {
-              if (groups.length === 0) return null;
+          <div>
+            {(["Hoy", "Ayer", "Anteriores"] as const).map(
+              (section) => {
+                const sectionGroups = byDate[section];
 
-              return (
-                <section key={label}>
-                  <div className="mb-2 flex items-center gap-3">
-                    <p className="text-[10px] font-black uppercase tracking-[0.18em] text-[var(--app-muted-3)]">
-                      {label}
-                    </p>
-                    <span className="h-px flex-1 bg-[var(--app-border)]" />
-                  </div>
+                if (!sectionGroups.length) return null;
 
-                  <div>
-                    {groups.map((group) => {
-                      const meta = notificationMeta(group);
-                      const Icon = meta.icon;
-                      const actor = group.actors[0];
-                      const requestPending =
-                        group.type === "follow_request" &&
-                        Boolean(pendingRequests[group.targetId]);
-                      const busy = requestBusy === group.targetId;
+                return (
+                  <section
+                    key={section}
+                    className="alumni-notification-day"
+                  >
+                    <h2>{section}</h2>
 
-                      return (
-                        <article
-                          key={group.key}
-                          className="group border-b border-[var(--app-border)] py-4.5 last:border-b-0"
-                        >
-                          <div className="flex gap-4">
+                    <div>
+                      {sectionGroups.map((group) => {
+                        const Icon = iconFor(group);
+                        const requestOpen =
+                          group.type === "follow_request" &&
+                          Boolean(pendingRequests[group.targetId]);
+
+                        return (
+                          <article
+                            key={group.key}
+                            className="alumni-notification-row"
+                            data-unread={group.unread ? "true" : "false"}
+                          >
                             <button
                               type="button"
-                              onClick={() => void openNotification(group)}
-                              className="relative h-12 w-12 shrink-0 text-left"
-                              aria-label="Abrir perfil"
+                              className="alumni-notification-main"
+                              onClick={() =>
+                                void openNotification(group)
+                              }
                             >
-                              <span className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-full bg-[var(--app-soft-strong)] text-xs font-black text-[var(--app-text-soft)] ring-1 ring-[var(--app-border)]">
-                                {actor?.avatar_url ? (
-                                  <img
-                                    src={actor.avatar_url}
-                                    alt=""
-                                    className="h-full w-full object-cover"
-                                  />
-                                ) : (
-                                  actor?.username?.charAt(0)?.toUpperCase() ||
-                                  "U"
+                              <span className="alumni-notification-avatars">
+                                {group.actors
+                                  .slice(0, 3)
+                                  .map((actor, index) => (
+                                    <span
+                                      key={actor.id || index}
+                                      style={{
+                                        zIndex: 3 - index,
+                                      }}
+                                    >
+                                      {actor.avatar_url ? (
+                                        <img
+                                          src={actor.avatar_url}
+                                          alt=""
+                                        />
+                                      ) : (
+                                        actor.username
+                                          ?.charAt(0)
+                                          ?.toUpperCase() || "A"
+                                      )}
+                                    </span>
+                                  ))}
+
+                                {!group.actors.length && (
+                                  <span>
+                                    <Icon size={17} />
+                                  </span>
                                 )}
+
+                                <i>
+                                  <Icon size={11} />
+                                </i>
                               </span>
 
-                              <span
-                                className={`absolute -bottom-1 -right-1 flex h-6 w-6 items-center justify-center rounded-full bg-[var(--app-bg)] ${meta.tone}`}
-                              >
-                                <Icon size={13} strokeWidth={2} />
+                              <span className="alumni-notification-copy">
+                                <span>
+                                  <strong>
+                                    {actorText(group)}
+                                  </strong>{" "}
+                                  {notificationCopy(group)}
+                                </span>
+
+                                <small>
+                                  {relativeTime(group.latestAt)}
+                                  {group.items.length > 1
+                                    ? ` · ${group.items.length} actividades`
+                                    : ""}
+                                </small>
                               </span>
+
+                              {group.previewUrl && (
+                                <span className="alumni-notification-preview">
+                                  <img
+                                    src={group.previewUrl}
+                                    alt=""
+                                  />
+                                </span>
+                              )}
+
+                              {group.unread && (
+                                <span className="alumni-notification-dot" />
+                              )}
                             </button>
 
-                            <div className="min-w-0 flex-1">
-                              <button
-                                type="button"
-                                onClick={() => void openNotification(group)}
-                                className="block w-full text-left"
-                              >
-                                <p className="text-[13px] leading-5 text-[var(--app-muted)]">
-                                  <span className="font-black text-[var(--app-text)]">
-                                    {actorsText(group)}
-                                  </span>{" "}
-                                  {meta.action}.
-                                </p>
+                            {requestOpen && (
+                              <div className="alumni-notification-request-actions">
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    void acceptRequest(group)
+                                  }
+                                  disabled={
+                                    requestBusy === group.targetId
+                                  }
+                                >
+                                  Aceptar
+                                </button>
 
-                                {actor?.full_name && (
-                                  <p className="mt-0.5 truncate text-[11px] text-[var(--app-muted-2)]">
-                                    {actor.full_name}
-                                  </p>
-                                )}
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    void rejectRequest(group)
+                                  }
+                                  disabled={
+                                    requestBusy === group.targetId
+                                  }
+                                >
+                                  Rechazar
+                                </button>
+                              </div>
+                            )}
+                          </article>
+                        );
+                      })}
+                    </div>
+                  </section>
+                );
+              }
+            )}
 
-                                <p className="mt-1.5 text-[10px] font-bold text-[var(--app-muted-3)]">
-                                  {formatDistanceToNow(
-                                    new Date(group.latestAt),
-                                    {
-                                      addSuffix: true,
-                                      locale: es,
-                                    }
-                                  )}
-                                </p>
-                              </button>
-
-                              {group.type === "follow_request" && (
-                                <div className="mt-3 flex flex-wrap items-center gap-2">
-                                  {requestPending ? (
-                                    <>
-                                      <button
-                                        type="button"
-                                        disabled={busy}
-                                        onClick={(event) => {
-                                          event.stopPropagation();
-                                          void acceptFollowRequest(
-                                            group.targetId
-                                          );
-                                        }}
-                                        className="inline-flex h-9 items-center gap-1.5 rounded-full bg-[var(--app-accent)] px-4 text-[11px] font-black text-[var(--app-on-accent)] transition hover:brightness-105 disabled:opacity-50"
-                                      >
-                                        {busy ? (
-                                          <Loader2
-                                            size={13}
-                                            className="animate-spin"
-                                          />
-                                        ) : (
-                                          <Check size={13} />
-                                        )}
-                                        Aceptar
-                                      </button>
-
-                                      <button
-                                        type="button"
-                                        disabled={busy}
-                                        onClick={(event) => {
-                                          event.stopPropagation();
-                                          void rejectFollowRequest(
-                                            group.targetId
-                                          );
-                                        }}
-                                        className="inline-flex h-9 items-center gap-1.5 rounded-full px-4 text-[11px] font-black text-[var(--app-muted)] ring-1 ring-inset ring-[var(--app-border)] transition hover:bg-[var(--app-soft)] hover:text-[var(--app-text)] disabled:opacity-50"
-                                      >
-                                        <X size={13} />
-                                        Rechazar
-                                      </button>
-                                    </>
-                                  ) : (
-                                    <span className="text-[10px] font-bold text-[var(--app-muted-3)]">
-                                      Solicitud gestionada
-                                    </span>
-                                  )}
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        </article>
-                      );
-                    })}
-                  </div>
-                </section>
-              );
-            })}
+            {hasMore && filter === "all" && (
+              <div className="alumni-notification-load-more">
+                <button
+                  type="button"
+                  disabled={loadingMore}
+                  onClick={() =>
+                    void loadPage(page + 1, false)
+                  }
+                >
+                  <ChevronDown size={16} />
+                  {loadingMore
+                    ? "Cargando..."
+                    : "Ver actividad anterior"}
+                </button>
+              </div>
+            )}
           </div>
         )}
-      </div>
+
+        {preferencesOpen && (
+          <div
+            className="alumni-notification-settings-backdrop"
+            role="presentation"
+            onMouseDown={(event) => {
+              if (event.target === event.currentTarget) {
+                setPreferencesOpen(false);
+              }
+            }}
+          >
+            <section
+              className="alumni-notification-settings"
+              role="dialog"
+              aria-modal="true"
+              aria-label="Preferencias de notificaciones"
+            >
+              <header>
+                <div>
+                  <p>Preferencias</p>
+                  <h2>Qué quieres recibir</h2>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => setPreferencesOpen(false)}
+                  aria-label="Cerrar"
+                >
+                  <X size={18} />
+                </button>
+              </header>
+
+              <div className="alumni-notification-preferences-list">
+                {(
+                  [
+                    [
+                      "enabled",
+                      "Notificaciones",
+                      "Control general de la bandeja.",
+                    ],
+                    [
+                      "interactions",
+                      "Interacciones",
+                      "Likes, comentarios y compartidos.",
+                    ],
+                    [
+                      "connections",
+                      "Conexiones",
+                      "Seguidores y solicitudes.",
+                    ],
+                    [
+                      "mentions",
+                      "Menciones",
+                      "Cuando alguien escribe tu @usuario.",
+                    ],
+                    [
+                      "stories",
+                      "Historias",
+                      "Respuestas y actividad de historias.",
+                    ],
+                    [
+                      "groups",
+                      "Grupos",
+                      "Menciones y actividad importante en grupos.",
+                    ],
+                  ] as Array<
+                    [
+                      keyof Preferences,
+                      string,
+                      string
+                    ]
+                  >
+                ).map(([key, title, description]) => (
+                  <button
+                    key={key}
+                    type="button"
+                    onClick={() =>
+                      void togglePreference(key)
+                    }
+                    disabled={Boolean(savingPreference)}
+                  >
+                    <span>
+                      <strong>{title}</strong>
+                      <small>{description}</small>
+                    </span>
+
+                    <i
+                      data-on={
+                        preferences[key] ? "true" : "false"
+                      }
+                    >
+                      <b />
+                    </i>
+                  </button>
+                ))}
+              </div>
+            </section>
+          </div>
+        )}
+      </main>
     </AppShell>
   );
 }
+
+/* ALUMNI_1_7_0_NOTIFICATIONS_ACTIVITY_2 */
