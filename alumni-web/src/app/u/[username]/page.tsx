@@ -27,12 +27,13 @@ import HDProfileImage from "@/components/profile/HDProfileImage";
 import ProfileSocialLinks from "@/components/profile/ProfileSocialLinks";
 import ProfileIdentityMeta from "@/components/profile/ProfileIdentityMeta";
 import ProfileHeaderFacts from "@/components/profile/ProfileHeaderFacts";
+import ProfileRepostsTab from "@/components/profile/ProfileRepostsTab";
 import ProfessionalProfileOverview from "@/components/profile/ProfessionalProfileOverview";
 import CommentLikeButton from "@/components/social/CommentLikeButton";
 import UserSafetyActions from "@/components/trust/UserSafetyActions";
 import { hydratePostMedia } from "@/lib/privateMedia";
 
-type ProfileTab = "posts" | "about";
+type ProfileTab = "posts" | "reposts" | "about";
 
 export default function UserProfilePage() {
   const params = useParams();
@@ -616,6 +617,11 @@ export default function UserProfilePage() {
             label="Publicaciones"
           />
           <Tab
+            active={tab === "reposts"}
+            onClick={() => setTab("reposts")}
+            label="Compartidos"
+          />
+          <Tab
             active={tab === "about"}
             onClick={() => setTab("about")}
             label="Acerca de"
@@ -815,6 +821,11 @@ export default function UserProfilePage() {
               </div>
             )}
           </section>
+        ) : tab === "reposts" ? (
+          <ProfileRepostsTab
+            userId={profile.id}
+            username={profile.username}
+          />
         ) : (
           <ProfessionalProfileOverview
             profile={profile}
@@ -916,3 +927,5 @@ function Detail({
 }
 
 /* ALUMNI_1_2_0_TRUST_BLOCK:USER_PROFILE_SAFETY */
+
+/* ALUMNI_1_4_1_PROFILE_REPOSTS_SAVED_READABILITY:PROFILE */

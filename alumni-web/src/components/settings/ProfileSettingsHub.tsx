@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  Bookmark,
   Check,
   ChevronRight,
   Clock3,
@@ -20,6 +21,7 @@ type Props = {
   acceptFollowRequest: (id: string) => Promise<void>;
   rejectFollowRequest: (id: string) => Promise<void>;
   onEditProfile: () => void;
+  onOpenSaved: () => void;
 };
 
 export default function ProfileSettingsHub({
@@ -31,6 +33,7 @@ export default function ProfileSettingsHub({
   acceptFollowRequest,
   rejectFollowRequest,
   onEditProfile,
+  onOpenSaved,
 }: Props) {
   const [busyRequest, setBusyRequest] = useState<string | null>(null);
 
@@ -176,6 +179,27 @@ export default function ProfileSettingsHub({
 
       <button
         type="button"
+        onClick={onOpenSaved}
+        className="alumni-setting-row w-full border-t border-[var(--app-border)] text-left"
+      >
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[14px] bg-[var(--app-soft)] text-[var(--app-muted)]">
+          <Bookmark size={18} />
+        </div>
+
+        <div className="min-w-0 flex-1">
+          <p className="text-sm font-black text-[var(--app-text)]">
+            Guardados
+          </p>
+          <p className="mt-1 text-[12px] leading-5 text-[var(--app-muted-2)]">
+            Publicaciones que guardaste para ver después.
+          </p>
+        </div>
+
+        <ChevronRight size={18} className="text-[var(--app-muted-3)]" />
+      </button>
+
+      <button
+        type="button"
         onClick={onEditProfile}
         className="alumni-setting-row w-full border-t border-[var(--app-border)] text-left"
       >
@@ -194,3 +218,5 @@ export default function ProfileSettingsHub({
     </div>
   );
 }
+
+/* ALUMNI_1_4_1_PROFILE_REPOSTS_SAVED_READABILITY:SETTINGS_HUB */

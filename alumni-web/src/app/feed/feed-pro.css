@@ -371,7 +371,7 @@
   gap: 6px;
   margin: 0 0 8px 55px;
   color: var(--app-muted-2);
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 740;
 }
 
@@ -408,7 +408,7 @@
 .alumni-pro-author a {
   overflow: hidden;
   color: var(--app-text);
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 840;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -417,7 +417,7 @@
 .alumni-pro-author > div > span,
 .alumni-pro-author time {
   color: var(--app-muted-2);
-  font-size: 11px;
+  font-size: 12px;
   white-space: nowrap;
 }
 
@@ -425,7 +425,7 @@
   overflow: hidden;
   margin-top: 2px;
   color: var(--app-muted-2);
-  font-size: 10.5px;
+  font-size: 12px;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -457,7 +457,7 @@
   border: 0;
   background: transparent;
   color: var(--app-muted);
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 780;
 }
 
@@ -465,7 +465,7 @@
   display: block;
   margin-top: 5px;
   color: var(--app-muted-3);
-  font-size: 10px;
+  font-size: 12px;
 }
 
 /* ---------------------------------------------------------
@@ -502,7 +502,7 @@
   display: block;
   margin-bottom: 3px;
   color: var(--app-muted-2);
-  font-size: 9.5px;
+  font-size: 11px;
   font-weight: 760;
   text-transform: uppercase;
   letter-spacing: .08em;
@@ -512,7 +512,7 @@
   display: block;
   overflow: hidden;
   color: var(--app-text);
-  font-size: 13px;
+  font-size: 14px;
   line-height: 1.35;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -523,7 +523,7 @@
   overflow: hidden;
   margin-top: 4px;
   color: var(--app-muted);
-  font-size: 11px;
+  font-size: 13px;
   line-height: 1.45;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
@@ -565,13 +565,14 @@
 .alumni-pro-media-shell {
   position: relative;
   margin: 2px -16px 0;
-  overflow: hidden;
+  overflow: visible;
   background: #05070b;
 }
 
 .alumni-pro-carousel {
   display: flex;
   overflow-x: auto;
+  overflow-y: hidden;
   scroll-behavior: smooth;
   scroll-snap-type: x mandatory;
   scrollbar-width: none;
@@ -802,7 +803,7 @@
   border-bottom: 1px solid var(--app-border);
   background: transparent;
   color: var(--app-text-soft);
-  font-size: 11.5px;
+  font-size: 13px;
   font-weight: 760;
   text-align: left;
 }
@@ -899,7 +900,7 @@
   gap: 12px;
   min-height: 20px;
   color: var(--app-muted-2);
-  font-size: 10.5px;
+  font-size: 12px;
 }
 
 .alumni-pro-stats > span {
@@ -939,13 +940,13 @@
 .alumni-pro-comment-preview strong {
   flex: 0 0 auto;
   color: var(--app-text-soft);
-  font-size: 11px;
+  font-size: 12px;
 }
 
 .alumni-pro-comment-preview span {
   overflow: hidden;
   color: var(--app-muted);
-  font-size: 11px;
+  font-size: 12px;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -956,7 +957,7 @@
   border: 0;
   background: transparent;
   color: var(--app-muted-2);
-  font-size: 10.5px;
+  font-size: 12px;
 }
 
 /* ---------------------------------------------------------
@@ -1003,7 +1004,7 @@
 .alumni-feed-people-modal > header span {
   display: block;
   color: var(--app-muted-3);
-  font-size: 8.5px;
+  font-size: 10px;
   font-weight: 850;
   text-transform: uppercase;
   letter-spacing: .12em;
@@ -1082,8 +1083,8 @@
 
 .alumni-feed-comment-body > p {
   color: var(--app-text-soft);
-  font-size: 12px;
-  line-height: 1.5;
+  font-size: 14px;
+  line-height: 1.55;
 }
 
 .alumni-feed-comment-body > p a {
@@ -1348,3 +1349,72 @@
 }
 
 /* ALUMNI_1_4_0_FEED_PRO_CSS */
+
+/* ALUMNI 1.4.1 — legibilidad final */
+.alumni-feed-pro .alumni-pro-repost-label {
+  font-size: 12px !important;
+}
+
+.alumni-feed-pro .alumni-pro-author a {
+  font-size: 14px !important;
+}
+
+.alumni-feed-pro .alumni-pro-author time,
+.alumni-feed-pro .alumni-pro-author > div > span,
+.alumni-feed-pro .alumni-pro-author > p {
+  font-size: 12px !important;
+}
+
+.alumni-feed-pro .alumni-pro-stats,
+.alumni-feed-pro .alumni-pro-comment-preview strong,
+.alumni-feed-pro .alumni-pro-comment-preview span,
+.alumni-feed-pro .alumni-pro-view-comments {
+  font-size: 12px !important;
+}
+
+.alumni-feed-pro .alumni-feed-comment-body > p {
+  font-size: 14px !important;
+  line-height: 1.55 !important;
+}
+
+.alumni-feed-pro .alumni-pro-menu-popover > button {
+  font-size: 13px !important;
+}
+
+/*
+ * El botón ... sigue SOBRE la imagen arriba-derecha,
+ * pero el popover puede salir del rectángulo si la imagen es baja.
+ */
+.alumni-feed-pro .alumni-pro-media-shell {
+  overflow: visible !important;
+}
+
+.alumni-feed-pro .alumni-pro-carousel {
+  overflow-x: auto !important;
+  overflow-y: hidden !important;
+}
+
+.alumni-feed-pro .alumni-pro-media-menu {
+  top: 10px !important;
+  right: 10px !important;
+  left: auto !important;
+  bottom: auto !important;
+}
+
+.alumni-feed-pro .alumni-pro-menu-popover {
+  max-height: min(360px, 70dvh);
+  overflow-y: auto;
+}
+
+@media (max-width: 639px) {
+  .alumni-feed-pro .alumni-pro-author a {
+    font-size: 14px !important;
+  }
+
+  .alumni-feed-pro .alumni-pro-author time,
+  .alumni-feed-pro .alumni-pro-author > p {
+    font-size: 12px !important;
+  }
+}
+
+/* ALUMNI_1_4_1_PROFILE_REPOSTS_SAVED_READABILITY:FEED_CSS */

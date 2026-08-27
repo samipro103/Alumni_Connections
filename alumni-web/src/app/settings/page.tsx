@@ -31,6 +31,7 @@ import { supabase } from "@/lib/supabase";
 import { uploadImage } from "@/lib/storage";
 import AppShell from "@/components/layout/AppShell";
 import ProfileSettingsHub from "@/components/settings/ProfileSettingsHub";
+import SavedPostsPanel from "@/components/settings/SavedPostsPanel";
 import ProfileEditorPro from "@/components/settings/ProfileEditorPro";
 import SpotifyPremiumMusicGate from "@/components/music/SpotifyPremiumMusicGate";
 import AccountTrustPanel from "@/components/settings/AccountTrustPanel";
@@ -92,6 +93,7 @@ export default function SettingsPage() {
   const [mobileSectionOpen, setMobileSectionOpen] =
     useState(false);
   const [profileEditorOpen, setProfileEditorOpen] = useState(false);
+  const [profileSavedOpen, setProfileSavedOpen] = useState(false);
 
   const [form, setForm] = useState({
     full_name: "",
@@ -137,6 +139,10 @@ export default function SettingsPage() {
 
     if (section === "profile" && params.get("edit") === "1") {
       setProfileEditorOpen(true);
+    }
+
+    if (section === "profile" && params.get("view") === "saved") {
+      setProfileSavedOpen(true);
     }
 
     if (
@@ -696,6 +702,23 @@ export default function SettingsPage() {
                   }}
                   onSaved={getProfile}
                 />
+              ) : profileSavedOpen ? (
+                <SavedPostsPanel
+                  userId={user?.id || ""}
+                  onBack={() => {
+                    setProfileSavedOpen(false);
+
+                    if (typeof window !== "undefined") {
+                      const url = new URL(window.location.href);
+                      url.searchParams.delete("view");
+                      window.history.replaceState(
+                        window.history.state,
+                        "",
+                        url.pathname + url.search
+                      );
+                    }
+                  }}
+                />
               ) : (
                 <ProfileSettingsHub
                   isPrivate={isPrivate}
@@ -705,12 +728,30 @@ export default function SettingsPage() {
                   requestsLoading={requestsLoading}
                   acceptFollowRequest={acceptFollowRequest}
                   rejectFollowRequest={rejectFollowRequest}
+                  onOpenSaved={() => {
+                    setProfileSavedOpen(true);
+
+                    if (typeof window !== "undefined") {
+                      const url = new URL(window.location.href);
+                      url.searchParams.set("section", "profile");
+                      url.searchParams.set("view", "saved");
+                      url.searchParams.delete("edit");
+                      window.history.replaceState(
+                        window.history.state,
+                        "",
+                        url.pathname + url.search
+                      );
+                    }
+                  }}
                   onEditProfile={() => {
+                    setProfileSavedOpen(false);
                     setProfileEditorOpen(true);
+
                     if (typeof window !== "undefined") {
                       const url = new URL(window.location.href);
                       url.searchParams.set("section", "profile");
                       url.searchParams.set("edit", "1");
+                      url.searchParams.delete("view");
                       window.history.replaceState(
                         window.history.state,
                         "",
@@ -1432,3 +1473,5 @@ function SocialField({
 }
 
 /* ALUMNI_1_2_0_TRUST_BLOCK:SETTINGS_TRUST */
+
+/* ALUMNI_1_4_1_PROFILE_REPOSTS_SAVED_READABILITY:SETTINGS */

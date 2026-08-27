@@ -112,7 +112,7 @@ export default function CommentLikeButton({
       type="button"
       onClick={toggleLike}
       disabled={busy}
-      className={`mt-2 flex h-7 items-center gap-1.5 rounded-lg px-2 text-[11px] font-bold transition ${
+      className={`mt-2 flex h-8 items-center gap-1.5 rounded-lg px-2.5 text-[12px] font-bold transition ${
         liked
           ? "bg-red-500/10 text-red-400"
           : "text-zinc-700 hover:bg-white/[0.04] hover:text-zinc-400"
@@ -120,10 +120,12 @@ export default function CommentLikeButton({
       aria-label="Me gusta este comentario"
     >
       <Heart
-        size={13}
+        size={14}
         fill={liked ? "currentColor" : "none"}
       />
       {count > 0 ? count : "Me gusta"}
     </button>
   );
 }
+
+/* ALUMNI_1_4_1_PROFILE_REPOSTS_SAVED_READABILITY:COMMENT_LIKE */
