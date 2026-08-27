@@ -1,12 +1,18 @@
 "use client";
 
 import {
+  ArrowLeft,
+  BookOpen,
+  CalendarDays,
   ChevronRight,
+  Globe2,
+  GraduationCap,
   Lock,
+  MapPin,
   Plus,
   Search,
+  Sparkles,
   Users,
-  X,
 } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
@@ -15,14 +21,48 @@ import { useAuth } from "@/components/auth/AuthProvider";
 import { supabase } from "@/lib/supabase";
 import "./community-2.css";
 
-const CATEGORY_LABELS: Record<string, string> = {
-  university: "Universidad",
-  career: "Carrera",
-  generation: "Generación",
-  city: "Ciudad",
-  interest: "Interés",
-  general: "General",
-};
+const CATEGORIES = [
+  {
+    id: "general",
+    label: "General",
+    description: "Un espacio abierto alrededor de un tema.",
+    icon: Users,
+  },
+  {
+    id: "university",
+    label: "Universidad",
+    description: "Personas de la misma institución.",
+    icon: GraduationCap,
+  },
+  {
+    id: "career",
+    label: "Carrera",
+    description: "Una carrera, facultad o programa.",
+    icon: BookOpen,
+  },
+  {
+    id: "generation",
+    label: "Generación",
+    description: "Una promoción o año compartido.",
+    icon: CalendarDays,
+  },
+  {
+    id: "city",
+    label: "Ciudad",
+    description: "Personas conectadas por un lugar.",
+    icon: MapPin,
+  },
+  {
+    id: "interest",
+    label: "Interés",
+    description: "Un hobby, causa o tema en común.",
+    icon: Sparkles,
+  },
+] as const;
+
+const CATEGORY_LABELS = Object.fromEntries(
+  CATEGORIES.map((item) => [item.id, item.label])
+);
 
 export default function CommunityPage() {
   const { user } = useAuth();
@@ -46,6 +86,17 @@ export default function CommunityPage() {
   useEffect(() => {
     void load();
   }, [user?.id]);
+
+  useEffect(() => {
+    if (!createOpen) return;
+
+    const previous = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    return () => {
+      document.body.style.overflow = previous;
+    };
+  }, [createOpen]);
 
   async function load() {
     setLoading(true);
@@ -71,7 +122,10 @@ export default function CommunityPage() {
   const memberMap = useMemo(
     () =>
       new Map(
-        members.map((row: any) => [row.community_id, row])
+        members.map((row: any) => [
+          row.community_id,
+          row,
+        ])
       ),
     [members]
   );
@@ -82,7 +136,10 @@ export default function CommunityPage() {
     return communities.filter((community: any) => {
       const membership = memberMap.get(community.id);
 
-      if (mode === "mine" && membership?.status !== "active") {
+      if (
+        mode === "mine" &&
+        membership?.status !== "active"
+      ) {
         return false;
       }
 
@@ -103,8 +160,19 @@ export default function CommunityPage() {
     });
   }, [communities, memberMap, query, mode]);
 
+  function closeCreate() {
+    if (creating) return;
+    setCreateOpen(false);
+  }
+
   async function createCommunity() {
-    if (!user || creating || form.name.trim().length < 3) return;
+    if (
+      !user ||
+      creating ||
+      form.name.trim().length < 3
+    ) {
+      return;
+    }
 
     setCreating(true);
 
@@ -129,6 +197,7 @@ export default function CommunityPage() {
     }
 
     setCreateOpen(false);
+
     setForm({
       name: "",
       description: "",
@@ -155,13 +224,15 @@ export default function CommunityPage() {
   return (
     <AppShell>
       <main className="alumni-community-2 mx-auto w-full max-w-[920px]">
-        <header className="community2-header">
+        <header className="community2-hero">
           <div>
-            <span>Comunidades</span>
-            <h1>Encuentra tu gente.</h1>
+            <span className="community2-eyebrow">
+              Comunidades
+            </span>
+            <h1>Encuentra donde perteneces.</h1>
             <p>
-              Espacios creados alrededor de universidades, carreras,
-              generaciones, ciudades e intereses reales.
+              Universidad, carrera, generación, ciudad o intereses:
+              crea un lugar donde la conversación tenga contexto.
             </p>
           </div>
 
@@ -169,26 +240,31 @@ export default function CommunityPage() {
             <button
               type="button"
               onClick={() => setCreateOpen(true)}
-              className="community2-create"
+              className="community2-primary-action"
             >
-              <Plus size={16} />
+              <Plus size={17} />
               Crear comunidad
             </button>
           )}
         </header>
 
-        <div className="community2-toolbar">
+        <div className="community2-navigation">
           <div className="community2-tabs">
             <button
               type="button"
-              data-active={mode === "discover" ? "true" : "false"}
+              data-active={
+                mode === "discover" ? "true" : "false"
+              }
               onClick={() => setMode("discover")}
             >
               Descubrir
             </button>
+
             <button
               type="button"
-              data-active={mode === "mine" ? "true" : "false"}
+              data-active={
+                mode === "mine" ? "true" : "false"
+              }
               onClick={() => setMode("mine")}
             >
               Mis comunidades
@@ -199,29 +275,43 @@ export default function CommunityPage() {
             <Search size={15} />
             <input
               value={query}
-              onChange={(event) => setQuery(event.target.value)}
-              placeholder="Buscar comunidad..."
+              onChange={(event) =>
+                setQuery(event.target.value)
+              }
+              placeholder="Buscar comunidad"
             />
           </label>
         </div>
 
         {loading ? (
-          <p className="community2-state">Cargando comunidades...</p>
-        ) : filtered.length === 0 ? (
           <p className="community2-state">
-            {mode === "mine"
-              ? "Todavía no perteneces a ninguna comunidad."
-              : "No encontramos comunidades con ese filtro."}
+            Cargando comunidades...
           </p>
+        ) : filtered.length === 0 ? (
+          <section className="community2-empty">
+            <Users size={25} />
+            <strong>
+              {mode === "mine"
+                ? "Aún no estás en ninguna comunidad."
+                : "No encontramos comunidades."}
+            </strong>
+            <p>
+              {mode === "mine"
+                ? "Únete a una o crea tu propio espacio."
+                : "Prueba otra búsqueda o crea la primera."}
+            </p>
+          </section>
         ) : (
           <section className="community2-list">
             {filtered.map((community: any) => {
-              const membership = memberMap.get(community.id);
+              const membership = memberMap.get(
+                community.id
+              );
+
               const context =
                 community.institution ||
                 community.career ||
                 community.city ||
-                CATEGORY_LABELS[community.category] ||
                 "Comunidad Alumni";
 
               return (
@@ -230,33 +320,48 @@ export default function CommunityPage() {
                   href={`/community/${community.slug}`}
                   className="community2-row"
                 >
-                  <span className="community2-symbol">
-                    {community.name.slice(0, 1).toUpperCase()}
+                  <span className="community2-mark">
+                    {community.name
+                      .slice(0, 1)
+                      .toUpperCase()}
                   </span>
 
-                  <span className="community2-copy">
-                    <span>
-                      {CATEGORY_LABELS[community.category] || "Comunidad"}
-                      {community.visibility === "private" && (
+                  <span className="community2-row-main">
+                    <span className="community2-row-kicker">
+                      {CATEGORY_LABELS[
+                        community.category
+                      ] || "Comunidad"}
+
+                      {community.visibility ===
+                        "private" && (
                         <>
                           {" · "}
                           <Lock size={10} />
-                          privada
+                          Privada
                         </>
                       )}
                     </span>
-                    <strong>{community.name}</strong>
+
+                    <strong>
+                      {community.name}
+                    </strong>
+
                     <small>
                       {context}
-                      {membership?.status === "active"
+
+                      {membership?.status ===
+                      "active"
                         ? ` · ${
-                            membership.role === "owner"
+                            membership.role ===
+                            "owner"
                               ? "Tu comunidad"
-                              : membership.role === "moderator"
+                              : membership.role ===
+                                "moderator"
                               ? "Moderador"
                               : "Miembro"
                           }`
-                        : membership?.status === "pending"
+                        : membership?.status ===
+                          "pending"
                         ? " · Solicitud pendiente"
                         : ""}
                     </small>
@@ -271,141 +376,266 @@ export default function CommunityPage() {
 
         {createOpen && (
           <div
-            className="community2-modal-backdrop"
+            className="community2-editor-backdrop"
             onMouseDown={(event) => {
-              if (event.target === event.currentTarget) setCreateOpen(false);
+              if (
+                event.target === event.currentTarget
+              ) {
+                closeCreate();
+              }
             }}
           >
-            <section className="community2-modal" role="dialog" aria-modal="true">
-              <header>
-                <div>
-                  <span>Nueva comunidad</span>
-                  <h2>Crea un espacio con propósito.</h2>
-                </div>
-                <button type="button" onClick={() => setCreateOpen(false)}>
-                  <X size={18} />
-                </button>
-              </header>
-
-              <div className="community2-form">
-                <label>
-                  <span>Nombre</span>
-                  <input
-                    value={form.name}
-                    maxLength={70}
-                    onChange={(event) =>
-                      setForm((current) => ({
-                        ...current,
-                        name: event.target.value,
-                      }))
-                    }
-                    placeholder="Ej. Graduados UES 2024"
-                  />
-                </label>
-
-                <label>
-                  <span>Descripción</span>
-                  <textarea
-                    value={form.description}
-                    maxLength={700}
-                    onChange={(event) =>
-                      setForm((current) => ({
-                        ...current,
-                        description: event.target.value,
-                      }))
-                    }
-                    placeholder="¿Qué une a esta comunidad?"
-                  />
-                </label>
-
-                <div className="community2-form-grid">
-                  <label>
-                    <span>Tipo</span>
-                    <select
-                      value={form.category}
-                      onChange={(event) =>
-                        setForm((current) => ({
-                          ...current,
-                          category: event.target.value,
-                        }))
-                      }
-                    >
-                      <option value="general">General</option>
-                      <option value="university">Universidad</option>
-                      <option value="career">Carrera</option>
-                      <option value="generation">Generación</option>
-                      <option value="city">Ciudad</option>
-                      <option value="interest">Interés</option>
-                    </select>
-                  </label>
-
-                  <label>
-                    <span>Acceso</span>
-                    <select
-                      value={form.visibility}
-                      onChange={(event) =>
-                        setForm((current) => ({
-                          ...current,
-                          visibility: event.target.value,
-                        }))
-                      }
-                    >
-                      <option value="public">Pública</option>
-                      <option value="private">Privada</option>
-                    </select>
-                  </label>
-                </div>
-
-                <label>
-                  <span>Universidad / institución (opcional)</span>
-                  <input
-                    value={form.institution}
-                    onChange={(event) =>
-                      setForm((current) => ({
-                        ...current,
-                        institution: event.target.value,
-                      }))
-                    }
-                  />
-                </label>
-
-                <label>
-                  <span>Carrera (opcional)</span>
-                  <input
-                    value={form.career}
-                    onChange={(event) =>
-                      setForm((current) => ({
-                        ...current,
-                        career: event.target.value,
-                      }))
-                    }
-                  />
-                </label>
-
-                <label>
-                  <span>Ciudad (opcional)</span>
-                  <input
-                    value={form.city}
-                    onChange={(event) =>
-                      setForm((current) => ({
-                        ...current,
-                        city: event.target.value,
-                      }))
-                    }
-                  />
-                </label>
-              </div>
-
-              <footer>
-                <button type="button" onClick={() => setCreateOpen(false)}>
-                  Cancelar
-                </button>
+            <section
+              className="community2-editor"
+              role="dialog"
+              aria-modal="true"
+              aria-label="Crear comunidad"
+            >
+              <header className="community2-editor-header">
                 <button
                   type="button"
-                  disabled={creating || form.name.trim().length < 3}
-                  onClick={() => void createCommunity()}
+                  className="community2-editor-back"
+                  onClick={closeCreate}
+                  disabled={creating}
                 >
-                  {creating ? "Creando..." : "Crear comunidad"}
+                  <ArrowLeft size={17} />
+                  Volver
+                </button>
+
+                <div>
+                  <span>Nueva comunidad</span>
+                  <h2>Dale un lugar a algo que ya los une.</h2>
+                  <p>
+                    Define la idea, el contexto y quién puede entrar.
+                  </p>
+                </div>
+
+                <span className="community2-editor-progress">
+                  3 pasos
+                </span>
+              </header>
+
+              <div className="community2-editor-body">
+                <section className="community2-editor-section">
+                  <div className="community2-step">
+                    <strong>01</strong>
+                    <span>
+                      <b>Identidad</b>
+                      <small>Cómo se reconocerá</small>
+                    </span>
+                  </div>
+
+                  <div className="community2-fields">
+                    <label className="community2-field community2-field-large">
+                      <span>Nombre</span>
+                      <input
+                        value={form.name}
+                        maxLength={70}
+                        onChange={(event) =>
+                          setForm((current) => ({
+                            ...current,
+                            name: event.target.value,
+                          }))
+                        }
+                        placeholder="Ej. Graduados UES 2024"
+                        autoFocus
+                      />
+                      <small>{form.name.length}/70</small>
+                    </label>
+
+                    <label className="community2-field">
+                      <span>Descripción</span>
+                      <textarea
+                        value={form.description}
+                        maxLength={700}
+                        onChange={(event) =>
+                          setForm((current) => ({
+                            ...current,
+                            description:
+                              event.target.value,
+                          }))
+                        }
+                        placeholder="Explica en una frase qué une a las personas de este espacio."
+                      />
+                    </label>
+                  </div>
+                </section>
+
+                <section className="community2-editor-section">
+                  <div className="community2-step">
+                    <strong>02</strong>
+                    <span>
+                      <b>Contexto</b>
+                      <small>Qué tienen en común</small>
+                    </span>
+                  </div>
+
+                  <div className="community2-fields">
+                    <div className="community2-category-list">
+                      {CATEGORIES.map(
+                        ({
+                          id,
+                          label,
+                          description,
+                          icon: Icon,
+                        }) => (
+                          <button
+                            key={id}
+                            type="button"
+                            data-active={
+                              form.category === id
+                                ? "true"
+                                : "false"
+                            }
+                            onClick={() =>
+                              setForm((current) => ({
+                                ...current,
+                                category: id,
+                              }))
+                            }
+                          >
+                            <Icon size={17} />
+                            <span>
+                              <strong>{label}</strong>
+                              <small>
+                                {description}
+                              </small>
+                            </span>
+                          </button>
+                        )
+                      )}
+                    </div>
+
+                    <div className="community2-context-fields">
+                      <label className="community2-field">
+                        <span>Universidad · opcional</span>
+                        <input
+                          value={form.institution}
+                          onChange={(event) =>
+                            setForm((current) => ({
+                              ...current,
+                              institution:
+                                event.target.value,
+                            }))
+                          }
+                          placeholder="Nombre de la institución"
+                        />
+                      </label>
+
+                      <label className="community2-field">
+                        <span>Carrera · opcional</span>
+                        <input
+                          value={form.career}
+                          onChange={(event) =>
+                            setForm((current) => ({
+                              ...current,
+                              career:
+                                event.target.value,
+                            }))
+                          }
+                          placeholder="Carrera o programa"
+                        />
+                      </label>
+
+                      <label className="community2-field">
+                        <span>Ciudad · opcional</span>
+                        <input
+                          value={form.city}
+                          onChange={(event) =>
+                            setForm((current) => ({
+                              ...current,
+                              city:
+                                event.target.value,
+                            }))
+                          }
+                          placeholder="Ciudad principal"
+                        />
+                      </label>
+                    </div>
+                  </div>
+                </section>
+
+                <section className="community2-editor-section">
+                  <div className="community2-step">
+                    <strong>03</strong>
+                    <span>
+                      <b>Acceso</b>
+                      <small>Quién puede entrar</small>
+                    </span>
+                  </div>
+
+                  <div className="community2-fields">
+                    <div className="community2-access-list">
+                      <button
+                        type="button"
+                        data-active={
+                          form.visibility === "public"
+                            ? "true"
+                            : "false"
+                        }
+                        onClick={() =>
+                          setForm((current) => ({
+                            ...current,
+                            visibility: "public",
+                          }))
+                        }
+                      >
+                        <Globe2 size={18} />
+                        <span>
+                          <strong>Pública</strong>
+                          <small>
+                            Cualquiera puede verla y unirse.
+                          </small>
+                        </span>
+                      </button>
+
+                      <button
+                        type="button"
+                        data-active={
+                          form.visibility === "private"
+                            ? "true"
+                            : "false"
+                        }
+                        onClick={() =>
+                          setForm((current) => ({
+                            ...current,
+                            visibility: "private",
+                          }))
+                        }
+                      >
+                        <Lock size={18} />
+                        <span>
+                          <strong>Privada</strong>
+                          <small>
+                            Las solicitudes deben aprobarse.
+                          </small>
+                        </span>
+                      </button>
+                    </div>
+                  </div>
+                </section>
+              </div>
+
+              <footer className="community2-editor-footer">
+                <span>
+                  {form.name.trim().length < 3
+                    ? "El nombre necesita al menos 3 caracteres."
+                    : "Todo listo para crear tu comunidad."}
+                </span>
+
+                <button
+                  type="button"
+                  disabled={
+                    creating ||
+                    form.name.trim().length < 3
+                  }
+                  onClick={() =>
+                    void createCommunity()
+                  }
+                >
+                  {creating
+                    ? "Creando..."
+                    : "Crear comunidad"}
                 </button>
               </footer>
             </section>
@@ -416,4 +646,4 @@ export default function CommunityPage() {
   );
 }
 
-/* ALUMNI_2_1_COMMUNITIES_HOME */
+/* ALUMNI_2_1_5_COMMUNITIES_EDITORIAL_REDESIGN */
