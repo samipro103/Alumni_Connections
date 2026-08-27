@@ -1,343 +1,419 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import Link from "next/link";
 import {
-  Briefcase,
-  GraduationCap,
+  ChevronRight,
+  Lock,
+  Plus,
   Search,
   Users,
+  X,
 } from "lucide-react";
-import { supabase } from "@/lib/supabase";
+import Link from "next/link";
+import { useEffect, useMemo, useState } from "react";
 import AppShell from "@/components/layout/AppShell";
+import { useAuth } from "@/components/auth/AuthProvider";
+import { supabase } from "@/lib/supabase";
+import "./community-2.css";
+
+const CATEGORY_LABELS: Record<string, string> = {
+  university: "Universidad",
+  career: "Carrera",
+  generation: "Generación",
+  city: "Ciudad",
+  interest: "Interés",
+  general: "General",
+};
 
 export default function CommunityPage() {
-  const [profiles, setProfiles] = useState<any[]>([]);
-  const [search, setSearch] = useState("");
+  const { user } = useAuth();
+  const [communities, setCommunities] = useState<any[]>([]);
+  const [members, setMembers] = useState<any[]>([]);
+  const [query, setQuery] = useState("");
+  const [mode, setMode] = useState<"discover" | "mine">("discover");
   const [loading, setLoading] = useState(true);
+  const [createOpen, setCreateOpen] = useState(false);
+  const [creating, setCreating] = useState(false);
+  const [form, setForm] = useState({
+    name: "",
+    description: "",
+    category: "general",
+    visibility: "public",
+    institution: "",
+    career: "",
+    city: "",
+  });
 
   useEffect(() => {
-    loadCommunity();
-  }, []);
+    void load();
+  }, [user?.id]);
 
-  async function loadCommunity() {
+  async function load() {
     setLoading(true);
 
-    const { data } = await supabase
-      .from("profiles")
-      .select(
-        "id, username, avatar_url, full_name, university, career, bio, city, country, created_at"
-      )
-      .order("created_at", { ascending: false });
+    const [communitiesResult, membersResult] = await Promise.all([
+      supabase
+        .from("communities")
+        .select("*")
+        .order("created_at", { ascending: false }),
+      user
+        ? supabase
+            .from("community_members")
+            .select("community_id,role,status,joined_at")
+            .eq("user_id", user.id)
+        : Promise.resolve({ data: [] } as any),
+    ]);
 
-    setProfiles(data || []);
+    setCommunities(communitiesResult.data || []);
+    setMembers(membersResult.data || []);
     setLoading(false);
   }
 
-  const universities = useMemo(() => {
-    const counts = new Map<string, number>();
-
-    profiles.forEach((profile: any) => {
-      if (!profile.university) return;
-      counts.set(
-        profile.university,
-        (counts.get(profile.university) || 0) + 1
-      );
-    });
-
-    return [...counts.entries()]
-      .sort((a, b) => b[1] - a[1])
-      .slice(0, 6);
-  }, [profiles]);
-
-  const careers = useMemo(() => {
-    const counts = new Map<string, number>();
-
-    profiles.forEach((profile: any) => {
-      if (!profile.career) return;
-      counts.set(profile.career, (counts.get(profile.career) || 0) + 1);
-    });
-
-    return [...counts.entries()]
-      .sort((a, b) => b[1] - a[1])
-      .slice(0, 8);
-  }, [profiles]);
-
-  const spotlight = useMemo(() => {
-    return [...profiles]
-      .sort((a: any, b: any) => {
-        const aScore =
-          Number(Boolean(a.avatar_url)) * 3 +
-          Number(Boolean(a.bio)) * 2 +
-          Number(Boolean(a.university)) * 2 +
-          Number(Boolean(a.career)) * 2;
-        const bScore =
-          Number(Boolean(b.avatar_url)) * 3 +
-          Number(Boolean(b.bio)) * 2 +
-          Number(Boolean(b.university)) * 2 +
-          Number(Boolean(b.career)) * 2;
-
-        return bScore - aScore;
-      })
-      .slice(0, 3);
-  }, [profiles]);
+  const memberMap = useMemo(
+    () =>
+      new Map(
+        members.map((row: any) => [row.community_id, row])
+      ),
+    [members]
+  );
 
   const filtered = useMemo(() => {
-    const value = search.trim().toLowerCase();
+    const value = query.trim().toLowerCase();
 
-    if (!value) return profiles.slice(0, 12);
+    return communities.filter((community: any) => {
+      const membership = memberMap.get(community.id);
 
-    return profiles
-      .filter((profile: any) =>
-        [
-          profile.username,
-          profile.full_name,
-          profile.university,
-          profile.career,
-          profile.city,
-          profile.country,
-        ]
-          .filter(Boolean)
-          .some((field) =>
-            String(field).toLowerCase().includes(value)
-          )
-      )
-      .slice(0, 20);
-  }, [profiles, search]);
+      if (mode === "mine" && membership?.status !== "active") {
+        return false;
+      }
+
+      if (!value) return true;
+
+      return [
+        community.name,
+        community.description,
+        community.institution,
+        community.career,
+        community.city,
+        CATEGORY_LABELS[community.category],
+      ]
+        .filter(Boolean)
+        .some((item) =>
+          String(item).toLowerCase().includes(value)
+        );
+    });
+  }, [communities, memberMap, query, mode]);
+
+  async function createCommunity() {
+    if (!user || creating || form.name.trim().length < 3) return;
+
+    setCreating(true);
+
+    const { data, error } = await supabase.rpc(
+      "alumni_create_community",
+      {
+        p_name: form.name,
+        p_description: form.description || null,
+        p_category: form.category,
+        p_visibility: form.visibility,
+        p_institution: form.institution || null,
+        p_career: form.career || null,
+        p_city: form.city || null,
+      }
+    );
+
+    setCreating(false);
+
+    if (error) {
+      alert(error.message);
+      return;
+    }
+
+    setCreateOpen(false);
+    setForm({
+      name: "",
+      description: "",
+      category: "general",
+      visibility: "public",
+      institution: "",
+      career: "",
+      city: "",
+    });
+
+    const { data: created } = await supabase
+      .from("communities")
+      .select("slug")
+      .eq("id", data)
+      .maybeSingle();
+
+    await load();
+
+    if (created?.slug) {
+      window.location.href = `/community/${created.slug}`;
+    }
+  }
 
   return (
     <AppShell>
-      <div className="mx-auto w-full max-w-[960px]">
-        <div className="mb-7 pt-2">
-          <h1 className="text-[30px] font-black tracking-[-0.04em]">
-            Comunidad
-          </h1>
-          <p className="mt-1 text-sm text-zinc-600">
-            Descubre quiénes forman parte de Alumni y cómo está creciendo la red.
+      <main className="alumni-community-2 mx-auto w-full max-w-[920px]">
+        <header className="community2-header">
+          <div>
+            <span>Comunidades</span>
+            <h1>Encuentra tu gente.</h1>
+            <p>
+              Espacios creados alrededor de universidades, carreras,
+              generaciones, ciudades e intereses reales.
+            </p>
+          </div>
+
+          {user && (
+            <button
+              type="button"
+              onClick={() => setCreateOpen(true)}
+              className="community2-create"
+            >
+              <Plus size={16} />
+              Crear comunidad
+            </button>
+          )}
+        </header>
+
+        <div className="community2-toolbar">
+          <div className="community2-tabs">
+            <button
+              type="button"
+              data-active={mode === "discover" ? "true" : "false"}
+              onClick={() => setMode("discover")}
+            >
+              Descubrir
+            </button>
+            <button
+              type="button"
+              data-active={mode === "mine" ? "true" : "false"}
+              onClick={() => setMode("mine")}
+            >
+              Mis comunidades
+            </button>
+          </div>
+
+          <label className="community2-search">
+            <Search size={15} />
+            <input
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              placeholder="Buscar comunidad..."
+            />
+          </label>
+        </div>
+
+        {loading ? (
+          <p className="community2-state">Cargando comunidades...</p>
+        ) : filtered.length === 0 ? (
+          <p className="community2-state">
+            {mode === "mine"
+              ? "Todavía no perteneces a ninguna comunidad."
+              : "No encontramos comunidades con ese filtro."}
           </p>
-        </div>
+        ) : (
+          <section className="community2-list">
+            {filtered.map((community: any) => {
+              const membership = memberMap.get(community.id);
+              const context =
+                community.institution ||
+                community.career ||
+                community.city ||
+                CATEGORY_LABELS[community.category] ||
+                "Comunidad Alumni";
 
-        <div className="grid gap-3 sm:grid-cols-3">
-          <Metric
-            icon={<Users size={18} />}
-            value={profiles.length}
-            label="Miembros"
-          />
-          <Metric
-            icon={<GraduationCap size={18} />}
-            value={universities.length}
-            label="Universidades"
-          />
-          <Metric
-            icon={<Briefcase size={18} />}
-            value={careers.length}
-            label="Carreras destacadas"
-          />
-        </div>
-
-        {spotlight.length > 0 && (
-          <section className="mt-6">
-            <div className="mb-4">
-              <h2 className="text-lg font-black tracking-[-0.025em]">
-                Miembros destacados
-              </h2>
-              <p className="mt-1 text-xs text-zinc-700">
-                Perfiles completos que representan la diversidad de la comunidad.
-              </p>
-            </div>
-
-            <div className="grid gap-3 md:grid-cols-3">
-              {spotlight.map((profile: any) => (
+              return (
                 <Link
-                  key={profile.id}
-                  href={`/u/${profile.username}`}
-                  className="group rounded-[24px] border border-white/[0.07] bg-[#101318]/95 p-5 transition hover:-translate-y-0.5 hover:border-[#6d7cff]/20"
+                  key={community.id}
+                  href={`/community/${community.slug}`}
+                  className="community2-row"
                 >
-                  <div className="flex items-center gap-3">
-                    <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[#1a1f29] text-sm font-bold ring-1 ring-white/10">
-                      {profile.avatar_url ? (
-                        <img
-                          src={profile.avatar_url}
-                          alt={profile.username}
-                          className="h-full w-full object-cover"
-                        />
-                      ) : (
-                        profile.username?.charAt(0)?.toUpperCase() || "U"
+                  <span className="community2-symbol">
+                    {community.name.slice(0, 1).toUpperCase()}
+                  </span>
+
+                  <span className="community2-copy">
+                    <span>
+                      {CATEGORY_LABELS[community.category] || "Comunidad"}
+                      {community.visibility === "private" && (
+                        <>
+                          {" · "}
+                          <Lock size={10} />
+                          privada
+                        </>
                       )}
-                    </div>
+                    </span>
+                    <strong>{community.name}</strong>
+                    <small>
+                      {context}
+                      {membership?.status === "active"
+                        ? ` · ${
+                            membership.role === "owner"
+                              ? "Tu comunidad"
+                              : membership.role === "moderator"
+                              ? "Moderador"
+                              : "Miembro"
+                          }`
+                        : membership?.status === "pending"
+                        ? " · Solicitud pendiente"
+                        : ""}
+                    </small>
+                  </span>
 
-                    <div className="min-w-0">
-                      <p className="truncate text-sm font-black">
-                        @{profile.username}
-                      </p>
-                      <p className="mt-0.5 truncate text-xs text-zinc-600">
-                        {profile.full_name || "Miembro Alumni"}
-                      </p>
-                    </div>
-                  </div>
-
-                  <p className="mt-4 line-clamp-2 min-h-10 text-xs leading-5 text-zinc-600">
-                    {[profile.career, profile.university]
-                      .filter(Boolean)
-                      .join(" · ") || "Comunidad Alumni"}
-                  </p>
-
-                  <p className="mt-4 text-xs font-bold text-[#8d98ff]">
-                    Ver perfil →
-                  </p>
+                  <ChevronRight size={17} />
                 </Link>
-              ))}
-            </div>
+              );
+            })}
           </section>
         )}
 
-        <div className="mt-6 grid gap-4 lg:grid-cols-2">
-          <section className="rounded-[24px] border border-white/[0.07] bg-[#101318]/95 p-5">
-            <h2 className="text-sm font-black text-zinc-200">
-              Universidades con más presencia
-            </h2>
+        {createOpen && (
+          <div
+            className="community2-modal-backdrop"
+            onMouseDown={(event) => {
+              if (event.target === event.currentTarget) setCreateOpen(false);
+            }}
+          >
+            <section className="community2-modal" role="dialog" aria-modal="true">
+              <header>
+                <div>
+                  <span>Nueva comunidad</span>
+                  <h2>Crea un espacio con propósito.</h2>
+                </div>
+                <button type="button" onClick={() => setCreateOpen(false)}>
+                  <X size={18} />
+                </button>
+              </header>
 
-            <div className="mt-4 space-y-2">
-              {universities.length === 0 ? (
-                <p className="text-sm text-zinc-700">
-                  Aún no hay universidades registradas.
-                </p>
-              ) : (
-                universities.map(([name, count], index) => (
-                  <button
-                    key={name}
-                    onClick={() => setSearch(name)}
-                    className="flex w-full items-center gap-3 rounded-2xl px-2 py-2 text-left transition hover:bg-white/[0.035]"
-                  >
-                    <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-[#6d7cff]/10 text-xs font-black text-[#8d98ff]">
-                      {index + 1}
-                    </span>
+              <div className="community2-form">
+                <label>
+                  <span>Nombre</span>
+                  <input
+                    value={form.name}
+                    maxLength={70}
+                    onChange={(event) =>
+                      setForm((current) => ({
+                        ...current,
+                        name: event.target.value,
+                      }))
+                    }
+                    placeholder="Ej. Graduados UES 2024"
+                  />
+                </label>
 
-                    <span className="min-w-0 flex-1 truncate text-sm font-bold text-zinc-400">
-                      {name}
-                    </span>
+                <label>
+                  <span>Descripción</span>
+                  <textarea
+                    value={form.description}
+                    maxLength={700}
+                    onChange={(event) =>
+                      setForm((current) => ({
+                        ...current,
+                        description: event.target.value,
+                      }))
+                    }
+                    placeholder="¿Qué une a esta comunidad?"
+                  />
+                </label>
 
-                    <span className="text-xs font-bold text-zinc-700">
-                      {count}
-                    </span>
-                  </button>
-                ))
-              )}
-            </div>
-          </section>
+                <div className="community2-form-grid">
+                  <label>
+                    <span>Tipo</span>
+                    <select
+                      value={form.category}
+                      onChange={(event) =>
+                        setForm((current) => ({
+                          ...current,
+                          category: event.target.value,
+                        }))
+                      }
+                    >
+                      <option value="general">General</option>
+                      <option value="university">Universidad</option>
+                      <option value="career">Carrera</option>
+                      <option value="generation">Generación</option>
+                      <option value="city">Ciudad</option>
+                      <option value="interest">Interés</option>
+                    </select>
+                  </label>
 
-          <section className="rounded-[24px] border border-white/[0.07] bg-[#101318]/95 p-5">
-            <h2 className="text-sm font-black text-zinc-200">
-              Áreas de estudio
-            </h2>
+                  <label>
+                    <span>Acceso</span>
+                    <select
+                      value={form.visibility}
+                      onChange={(event) =>
+                        setForm((current) => ({
+                          ...current,
+                          visibility: event.target.value,
+                        }))
+                      }
+                    >
+                      <option value="public">Pública</option>
+                      <option value="private">Privada</option>
+                    </select>
+                  </label>
+                </div>
 
-            <div className="mt-4 flex flex-wrap gap-2">
-              {careers.length === 0 ? (
-                <p className="text-sm text-zinc-700">
-                  Aún no hay carreras registradas.
-                </p>
-              ) : (
-                careers.map(([name, count]) => (
-                  <button
-                    key={name}
-                    onClick={() => setSearch(name)}
-                    className="rounded-xl border border-white/[0.07] bg-white/[0.025] px-3 py-2 text-xs font-bold text-zinc-500 transition hover:border-[#6d7cff]/30 hover:text-zinc-200"
-                  >
-                    {name}
-                    <span className="ml-1.5 text-zinc-700">{count}</span>
-                  </button>
-                ))
-              )}
-            </div>
-          </section>
-        </div>
+                <label>
+                  <span>Universidad / institución (opcional)</span>
+                  <input
+                    value={form.institution}
+                    onChange={(event) =>
+                      setForm((current) => ({
+                        ...current,
+                        institution: event.target.value,
+                      }))
+                    }
+                  />
+                </label>
 
-        <section className="mt-6">
-          <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <h2 className="text-lg font-black tracking-[-0.02em]">
-                Personas de la comunidad
-              </h2>
-              <p className="mt-1 text-xs text-zinc-700">
-                Busca por usuario, universidad, carrera o ubicación.
-              </p>
-            </div>
+                <label>
+                  <span>Carrera (opcional)</span>
+                  <input
+                    value={form.career}
+                    onChange={(event) =>
+                      setForm((current) => ({
+                        ...current,
+                        career: event.target.value,
+                      }))
+                    }
+                  />
+                </label>
 
-            <div className="flex h-10 w-full items-center rounded-xl border border-white/[0.07] bg-white/[0.035] px-3 sm:max-w-xs">
-              <Search size={15} className="text-zinc-700" />
-              <input
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder="Filtrar comunidad..."
-                className="h-full min-w-0 flex-1 bg-transparent px-2 text-xs outline-none placeholder:text-zinc-700"
-              />
-            </div>
-          </div>
+                <label>
+                  <span>Ciudad (opcional)</span>
+                  <input
+                    value={form.city}
+                    onChange={(event) =>
+                      setForm((current) => ({
+                        ...current,
+                        city: event.target.value,
+                      }))
+                    }
+                  />
+                </label>
+              </div>
 
-          {loading ? (
-            <div className="py-12 text-center text-sm text-zinc-600">
-              Cargando comunidad...
-            </div>
-          ) : filtered.length === 0 ? (
-            <div className="rounded-[24px] border border-dashed border-white/[0.09] px-6 py-12 text-center text-sm text-zinc-600">
-              No encontramos perfiles con ese filtro.
-            </div>
-          ) : (
-            <div className="grid gap-3 sm:grid-cols-2">
-              {filtered.map((profile: any) => (
-                <Link
-                  key={profile.id}
-                  href={`/u/${profile.username}`}
-                  className="flex items-center gap-3 rounded-[20px] border border-white/[0.07] bg-[#101318]/95 p-4 transition hover:bg-white/[0.04]"
+              <footer>
+                <button type="button" onClick={() => setCreateOpen(false)}>
+                  Cancelar
+                </button>
+                <button
+                  type="button"
+                  disabled={creating || form.name.trim().length < 3}
+                  onClick={() => void createCommunity()}
                 >
-                  <div className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[#1a1f29] text-sm font-bold">
-                    {profile.avatar_url ? (
-                      <img
-                        src={profile.avatar_url}
-                        alt={profile.username}
-                        className="h-full w-full object-cover"
-                      />
-                    ) : (
-                      profile.username?.charAt(0)?.toUpperCase() || "U"
-                    )}
-                  </div>
-
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-black">
-                      @{profile.username}
-                    </p>
-                    <p className="mt-0.5 truncate text-xs text-zinc-600">
-                      {profile.career ||
-                        profile.university ||
-                        "Alumni"}
-                    </p>
-                  </div>
-                </Link>
-              ))}
-            </div>
-          )}
-        </section>
-      </div>
+                  {creating ? "Creando..." : "Crear comunidad"}
+                </button>
+              </footer>
+            </section>
+          </div>
+        )}
+      </main>
     </AppShell>
   );
 }
 
-function Metric({
-  icon,
-  value,
-  label,
-}: {
-  icon: React.ReactNode;
-  value: number;
-  label: string;
-}) {
-  return (
-    <div className="rounded-[22px] border border-white/[0.07] bg-[#101318]/95 p-5">
-      <div className="text-[#8d98ff]">{icon}</div>
-      <p className="mt-4 text-2xl font-black tracking-[-0.04em]">
-        {value}
-      </p>
-      <p className="mt-1 text-xs text-zinc-600">{label}</p>
-    </div>
-  );
-}
+/* ALUMNI_2_1_COMMUNITIES_HOME */

@@ -52,9 +52,11 @@ export default function LeftSidebar() {
           Red Alumni.
         </p>
         <p className="mt-2 px-3 text-xs leading-5 text-zinc-600">
-          Conecta con personas de tu universidad, carrera y comunidad profesional.
+          Conecta con personas, comunidades y eventos que forman parte de tu mundo.
         </p>
       </div>
     </div>
   );
 }
+
+/* ALUMNI_2_1_COMMUNITIES_EVENTS:SIDEBAR_COPY */

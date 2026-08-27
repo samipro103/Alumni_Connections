@@ -1,262 +1,447 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
 import {
-  Calendar,
-  Clock,
+  CalendarDays,
+  Clock3,
   MapPin,
-  Share2,
+  Plus,
+  Search,
+  Users,
+  X,
 } from "lucide-react";
-import { supabase } from "@/lib/supabase";
+import Link from "next/link";
+import { useEffect, useMemo, useState } from "react";
 import AppShell from "@/components/layout/AppShell";
+import { useAuth } from "@/components/auth/AuthProvider";
+import { supabase } from "@/lib/supabase";
+import "./events-2.css";
 
-type EventFilter = "upcoming" | "all" | "past";
+type Filter = "upcoming" | "mine" | "past";
 
 export default function EventsPage() {
+  const { user } = useAuth();
   const [events, setEvents] = useState<any[]>([]);
+  const [rsvps, setRsvps] = useState<any[]>([]);
+  const [communities, setCommunities] = useState<any[]>([]);
+  const [filter, setFilter] = useState<Filter>("upcoming");
+  const [query, setQuery] = useState("");
+  const [createOpen, setCreateOpen] = useState(false);
+  const [creating, setCreating] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState<EventFilter>("upcoming");
+  const [form, setForm] = useState({
+    title: "",
+    description: "",
+    event_date: "",
+    end_date: "",
+    location: "",
+    event_type: "meetup",
+    visibility: "public",
+    community_id: "",
+    max_attendees: "",
+  });
 
   useEffect(() => {
-    getEvents();
-  }, []);
+    void load();
+  }, [user?.id]);
 
-  async function getEvents() {
+  async function load() {
     setLoading(true);
 
-    const { data, error } = await supabase
-      .from("events")
-      .select("*")
-      .order("event_date", { ascending: true });
+    const [eventsResult, rsvpResult, membershipResult] = await Promise.all([
+      supabase.from("events").select("*").order("event_date", { ascending: true }),
+      user
+        ? supabase.from("event_rsvps").select("event_id,status").eq("user_id", user.id)
+        : Promise.resolve({ data: [] } as any),
+      user
+        ? supabase
+            .from("community_members")
+            .select("community_id")
+            .eq("user_id", user.id)
+            .eq("status", "active")
+        : Promise.resolve({ data: [] } as any),
+    ]);
 
-    if (error) {
-      console.error(error);
-      setEvents([]);
-    } else {
-      setEvents(data || []);
-    }
+    const communityIds = (membershipResult.data || []).map(
+      (row: any) => row.community_id
+    );
 
+    const communityResult = communityIds.length
+      ? await supabase
+          .from("communities")
+          .select("id,name,slug")
+          .in("id", communityIds)
+          .order("name")
+      : { data: [] as any[] };
+
+    setEvents(eventsResult.data || []);
+    setRsvps(rsvpResult.data || []);
+    setCommunities(communityResult.data || []);
     setLoading(false);
   }
 
-  const now = Date.now();
+  const rsvpMap = useMemo(
+    () => new Map(rsvps.map((row) => [Number(row.event_id), row.status])),
+    [rsvps]
+  );
 
-  const filteredEvents = useMemo(() => {
-    if (filter === "upcoming") {
-      return events.filter(
-        (event: any) => new Date(event.event_date).getTime() >= now
-      );
-    }
+  const filtered = useMemo(() => {
+    const now = Date.now();
+    const value = query.trim().toLowerCase();
 
-    if (filter === "past") {
-      return events
-        .filter((event: any) => new Date(event.event_date).getTime() < now)
-        .reverse();
-    }
+    return events.filter((event: any) => {
+      const eventTime = new Date(event.event_date).getTime();
 
-    return events;
-  }, [events, filter, now]);
-
-  const nextEvent = useMemo(() => {
-    return events.find(
-      (event: any) => new Date(event.event_date).getTime() >= now
-    );
-  }, [events, now]);
-
-  async function shareEvent(event: any) {
-    const text = `${event.title}${
-      event.location ? ` · ${event.location}` : ""
-    }`;
-
-    try {
-      if (navigator.share) {
-        await navigator.share({
-          title: event.title,
-          text,
-          url: window.location.href,
-        });
-      } else {
-        await navigator.clipboard.writeText(
-          `${text} ${window.location.href}`
-        );
-        alert("Evento copiado al portapapeles.");
+      if (filter === "upcoming" && eventTime < now) return false;
+      if (filter === "past" && eventTime >= now) return false;
+      if (
+        filter === "mine" &&
+        !["going", "interested"].includes(rsvpMap.get(Number(event.id)) || "")
+      ) {
+        return false;
       }
-    } catch {
-      // Compartir cancelado por el usuario.
+
+      if (!value) return true;
+
+      return [event.title, event.description, event.location, event.event_type]
+        .filter(Boolean)
+        .some((item) =>
+          String(item).toLowerCase().includes(value)
+        );
+    });
+  }, [events, filter, query, rsvpMap]);
+
+  async function createEvent() {
+    if (!user || creating || !form.title.trim() || !form.event_date) return;
+
+    setCreating(true);
+
+    const { error } = await supabase.rpc("alumni_create_event", {
+      p_title: form.title,
+      p_description: form.description || null,
+      p_event_date: form.event_date,
+      p_end_date: form.end_date || null,
+      p_location: form.location || null,
+      p_event_type: form.event_type,
+      p_visibility: form.visibility,
+      p_community:
+        form.visibility === "community" && form.community_id
+          ? form.community_id
+          : null,
+      p_max_attendees: form.max_attendees
+        ? Number(form.max_attendees)
+        : null,
+    });
+
+    setCreating(false);
+
+    if (error) {
+      alert(error.message);
+      return;
     }
+
+    setCreateOpen(false);
+    setForm({
+      title: "",
+      description: "",
+      event_date: "",
+      end_date: "",
+      location: "",
+      event_type: "meetup",
+      visibility: "public",
+      community_id: "",
+      max_attendees: "",
+    });
+    await load();
   }
 
   return (
     <AppShell>
-      <div className="alumni-events-page mx-auto w-full max-w-[940px]">
-        <div className="mb-6 pt-2">
-          <h1 className="text-[30px] font-black tracking-[-0.04em]">
-            Eventos
-          </h1>
-          <p className="mt-1 text-sm text-zinc-600">
-            Conferencias, encuentros y actividades de tu comunidad.
-          </p>
-        </div>
+      <main className="alumni-events-2 mx-auto w-full max-w-[920px]">
+        <header className="events2-header">
+          <div>
+            <span>Eventos</span>
+            <h1>Haz planes. Encuéntrense.</h1>
+            <p>
+              Reuniones, graduaciones, torneos, fiestas y actividades creadas
+              por la propia comunidad Alumni.
+            </p>
+          </div>
 
-        {nextEvent && filter !== "past" && (
-          <article className="alumni-event-hero mb-6 overflow-hidden rounded-[28px] border border-white/[0.07] bg-[#101318]/95">
-            <div className="relative min-h-[250px]">
-              {nextEvent.image_url ? (
-                <img
-                  src={nextEvent.image_url}
-                  alt={nextEvent.title}
-                  className="absolute inset-0 h-full w-full object-cover"
-                />
-              ) : (
-                <div className="absolute inset-0 bg-[radial-gradient(circle_at_15%_20%,rgba(109,124,255,.25),transparent_34%),radial-gradient(circle_at_90%_10%,rgba(124,58,237,.16),transparent_32%),#101318]" />
-              )}
-
-              <div className="absolute inset-0 bg-gradient-to-r from-black/75 via-black/45 to-black/15" />
-
-              <div className="relative flex min-h-[250px] max-w-2xl flex-col justify-end p-6 sm:p-8">
-                <p className="text-xs font-black uppercase tracking-[0.14em] text-[#9ba5ff]">
-                  Próximo evento
-                </p>
-
-                <h2 className="mt-3 text-3xl font-black tracking-[-0.04em] text-white sm:text-4xl">
-                  {nextEvent.title}
-                </h2>
-
-                <div className="mt-4 flex flex-wrap gap-x-5 gap-y-2 text-xs text-white/70">
-                  <span className="flex items-center gap-1.5">
-                    <Calendar size={14} />
-                    {new Date(nextEvent.event_date).toLocaleDateString(
-                      "es-SV",
-                      {
-                        weekday: "long",
-                        day: "2-digit",
-                        month: "long",
-                      }
-                    )}
-                  </span>
-
-                  <span className="flex items-center gap-1.5">
-                    <Clock size={14} />
-                    {new Date(nextEvent.event_date).toLocaleTimeString(
-                      "es-SV",
-                      {
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      }
-                    )}
-                  </span>
-
-                  {nextEvent.location && (
-                    <span className="flex items-center gap-1.5">
-                      <MapPin size={14} />
-                      {nextEvent.location}
-                    </span>
-                  )}
-                </div>
-
-                {nextEvent.description && (
-                  <p className="mt-4 line-clamp-3 text-sm leading-6 text-white/70">
-                    {nextEvent.description}
-                  </p>
-                )}
-              </div>
-            </div>
-          </article>
-        )}
-
-        <div className="alumni-section-tabs mb-5 flex gap-2 border-b border-white/[0.07] pb-3">
-          {[
-            ["upcoming", "Próximos"],
-            ["all", "Todos"],
-            ["past", "Pasados"],
-          ].map(([id, label]) => (
-            <button
-              key={id}
-              onClick={() => setFilter(id as EventFilter)}
-              className={`rounded-xl px-3 py-2 text-xs font-bold transition ${
-                filter === id
-                  ? "bg-white/[0.07] text-zinc-200"
-                  : "text-zinc-600 hover:bg-white/[0.035] hover:text-zinc-300"
-              }`}
-            >
-              {label}
+          {user && (
+            <button type="button" onClick={() => setCreateOpen(true)}>
+              <Plus size={16} />
+              Crear evento
             </button>
-          ))}
+          )}
+        </header>
+
+        <div className="events2-toolbar">
+          <div className="events2-tabs">
+            {[
+              ["upcoming", "Próximos"],
+              ["mine", "Mis planes"],
+              ["past", "Pasados"],
+            ].map(([id, label]) => (
+              <button
+                key={id}
+                type="button"
+                data-active={filter === id ? "true" : "false"}
+                onClick={() => setFilter(id as Filter)}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+
+          <label className="events2-search">
+            <Search size={15} />
+            <input
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              placeholder="Buscar evento..."
+            />
+          </label>
         </div>
 
         {loading ? (
-          <div className="py-16 text-center text-sm text-zinc-600">
-            Cargando eventos...
-          </div>
-        ) : filteredEvents.length === 0 ? (
-          <div className="alumni-empty-state rounded-[24px] border border-dashed border-white/[0.09] px-6 py-16 text-center">
-            <Calendar size={26} className="mx-auto text-zinc-700" />
-            <p className="mt-4 font-bold text-zinc-300">
-              No hay eventos en esta sección
-            </p>
-            <p className="mt-2 text-sm text-zinc-600">
-              Cuando haya nuevas actividades aparecerán aquí.
-            </p>
-          </div>
+          <p className="events2-state">Cargando eventos...</p>
+        ) : filtered.length === 0 ? (
+          <p className="events2-state">
+            No hay eventos en esta sección.
+          </p>
         ) : (
-          <div className="alumni-event-list space-y-3">
-            {filteredEvents.map((event: any) => {
+          <section className="events2-list">
+            {filtered.map((event: any) => {
               const date = new Date(event.event_date);
+              const response = rsvpMap.get(Number(event.id));
 
               return (
-                <article
+                <Link
                   key={event.id}
-                  className="alumni-event-row group flex flex-col gap-4 rounded-[24px] border border-white/[0.07] bg-[#101318]/95 p-4 transition hover:border-[#6d7cff]/20 sm:flex-row sm:items-center sm:p-5"
+                  href={`/events/${event.id}`}
+                  className="events2-row"
                 >
-                  <div className="flex h-16 w-16 shrink-0 flex-col items-center justify-center rounded-2xl bg-[#6d7cff]/10 text-[#9ba5ff]">
-                    <span className="text-[10px] font-black uppercase">
+                  <time>
+                    <strong>{date.getDate()}</strong>
+                    <span>
                       {date.toLocaleDateString("es-SV", {
                         month: "short",
                       })}
                     </span>
-                    <span className="text-2xl font-black">{date.getDate()}</span>
-                  </div>
+                  </time>
 
-                  <div className="min-w-0 flex-1">
-                    <h2 className="truncate text-base font-black text-zinc-200">
-                      {event.title}
-                    </h2>
-
-                    <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-zinc-600">
-                      <span className="flex items-center gap-1.5">
-                        <Clock size={13} />
-                        {date.toLocaleTimeString("es-SV", {
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        })}
-                      </span>
-
-                      <span className="flex items-center gap-1.5">
-                        <MapPin size={13} />
-                        {event.location || "Ubicación por confirmar"}
-                      </span>
-                    </div>
-
-                    {event.description && (
-                      <p className="mt-2 line-clamp-2 text-sm leading-5 text-zinc-600">
-                        {event.description}
-                      </p>
-                    )}
-                  </div>
-
-                  <button
-                    onClick={() => shareEvent(event)}
-                    className="alumni-event-share flex h-10 shrink-0 items-center justify-center gap-2 rounded-xl border border-white/[0.07] bg-white/[0.025] px-3 text-xs font-bold text-zinc-600 transition hover:bg-white/[0.05] hover:text-zinc-300"
-                  >
-                    <Share2 size={15} />
-                    Compartir
-                  </button>
-                </article>
+                  <span className="events2-copy">
+                    <span>
+                      {event.event_type || "Evento"}
+                      {event.visibility === "community"
+                        ? " · comunidad"
+                        : ""}
+                    </span>
+                    <strong>{event.title}</strong>
+                    <small>
+                      {date.toLocaleTimeString("es-SV", {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}
+                      {event.location ? ` · ${event.location}` : ""}
+                      {response === "going"
+                        ? " · Vas"
+                        : response === "interested"
+                        ? " · Te interesa"
+                        : ""}
+                    </small>
+                  </span>
+                </Link>
               );
             })}
+          </section>
+        )}
+
+        {createOpen && (
+          <div
+            className="events2-modal-backdrop"
+            onMouseDown={(event) => {
+              if (event.target === event.currentTarget) setCreateOpen(false);
+            }}
+          >
+            <section className="events2-modal" role="dialog" aria-modal="true">
+              <header>
+                <div>
+                  <span>Nuevo evento</span>
+                  <h2>Organiza algo real.</h2>
+                </div>
+                <button type="button" onClick={() => setCreateOpen(false)}>
+                  <X size={18} />
+                </button>
+              </header>
+
+              <div className="events2-form">
+                <label>
+                  <span>Título</span>
+                  <input
+                    value={form.title}
+                    onChange={(event) =>
+                      setForm((current) => ({
+                        ...current,
+                        title: event.target.value,
+                      }))
+                    }
+                    maxLength={100}
+                  />
+                </label>
+
+                <label>
+                  <span>Descripción</span>
+                  <textarea
+                    value={form.description}
+                    onChange={(event) =>
+                      setForm((current) => ({
+                        ...current,
+                        description: event.target.value,
+                      }))
+                    }
+                  />
+                </label>
+
+                <div className="events2-form-grid">
+                  <label>
+                    <span>Inicio</span>
+                    <input
+                      type="datetime-local"
+                      value={form.event_date}
+                      onChange={(event) =>
+                        setForm((current) => ({
+                          ...current,
+                          event_date: event.target.value,
+                        }))
+                      }
+                    />
+                  </label>
+
+                  <label>
+                    <span>Final (opcional)</span>
+                    <input
+                      type="datetime-local"
+                      value={form.end_date}
+                      onChange={(event) =>
+                        setForm((current) => ({
+                          ...current,
+                          end_date: event.target.value,
+                        }))
+                      }
+                    />
+                  </label>
+                </div>
+
+                <label>
+                  <span>Ubicación</span>
+                  <input
+                    value={form.location}
+                    onChange={(event) =>
+                      setForm((current) => ({
+                        ...current,
+                        location: event.target.value,
+                      }))
+                    }
+                    placeholder="Ej. Campus, café, estadio..."
+                  />
+                </label>
+
+                <div className="events2-form-grid">
+                  <label>
+                    <span>Tipo</span>
+                    <select
+                      value={form.event_type}
+                      onChange={(event) =>
+                        setForm((current) => ({
+                          ...current,
+                          event_type: event.target.value,
+                        }))
+                      }
+                    >
+                      <option value="meetup">Encuentro</option>
+                      <option value="party">Fiesta</option>
+                      <option value="sports">Deporte</option>
+                      <option value="academic">Académico</option>
+                      <option value="cultural">Cultural</option>
+                      <option value="graduation">Graduación</option>
+                      <option value="other">Otro</option>
+                    </select>
+                  </label>
+
+                  <label>
+                    <span>Visibilidad</span>
+                    <select
+                      value={form.visibility}
+                      onChange={(event) =>
+                        setForm((current) => ({
+                          ...current,
+                          visibility: event.target.value,
+                        }))
+                      }
+                    >
+                      <option value="public">Público</option>
+                      <option value="community">Solo comunidad</option>
+                    </select>
+                  </label>
+                </div>
+
+                {form.visibility === "community" && (
+                  <label>
+                    <span>Comunidad</span>
+                    <select
+                      value={form.community_id}
+                      onChange={(event) =>
+                        setForm((current) => ({
+                          ...current,
+                          community_id: event.target.value,
+                        }))
+                      }
+                    >
+                      <option value="">Selecciona...</option>
+                      {communities.map((community) => (
+                        <option key={community.id} value={community.id}>
+                          {community.name}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                )}
+
+                <label>
+                  <span>Cupo máximo (opcional)</span>
+                  <input
+                    type="number"
+                    min={1}
+                    value={form.max_attendees}
+                    onChange={(event) =>
+                      setForm((current) => ({
+                        ...current,
+                        max_attendees: event.target.value,
+                      }))
+                    }
+                  />
+                </label>
+              </div>
+
+              <footer>
+                <button type="button" onClick={() => setCreateOpen(false)}>
+                  Cancelar
+                </button>
+                <button
+                  type="button"
+                  onClick={() => void createEvent()}
+                  disabled={creating || !form.title.trim() || !form.event_date}
+                >
+                  {creating ? "Creando..." : "Crear evento"}
+                </button>
+              </footer>
+            </section>
           </div>
         )}
-      </div>
+      </main>
     </AppShell>
   );
 }
+
+/* ALUMNI_2_1_EVENTS_HOME */
