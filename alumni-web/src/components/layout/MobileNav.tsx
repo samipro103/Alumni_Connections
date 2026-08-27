@@ -313,9 +313,9 @@ export default function MobileNav() {
 
           <section
             aria-label="Más secciones"
-            className="fixed inset-x-0 bottom-[calc(72px+env(safe-area-inset-bottom))] z-[2147481999] border-y border-[var(--app-border)] bg-[color-mix(in_srgb,var(--app-surface)_98%,transparent)] backdrop-blur-2xl lg:hidden"
+            className="fixed inset-x-0 bottom-[calc(58px+max(8px,env(safe-area-inset-bottom)))] z-[2147481999] border-t border-[var(--app-border)] bg-[color-mix(in_srgb,var(--app-surface)_98%,transparent)] backdrop-blur-2xl lg:hidden"
           >
-            <div className="mx-auto w-full max-w-lg px-4 py-2">
+            <div className="mx-auto w-full max-w-lg px-4 pt-1 pb-0">
               <div className="flex min-h-9 items-center justify-between border-b border-[var(--app-border)]">
                 <span className="text-[9px] font-black uppercase tracking-[0.15em] text-[var(--app-muted-2)]">
                   Más en Alumni
@@ -519,3 +519,5 @@ export default function MobileNav() {
 /* ALUMNI_2_1_1_MOBILE_NAV_MORE */
 
 /* ALUMNI_2_2_0_FIX1_SAFE_ADDITIVE:MOBILE_NAV */
+
+/* ALUMNI_2_3_2_RECOVERY_PROFILE_PASSPORT_NAV:MOBILE_MORE */

@@ -16,7 +16,6 @@ import { useParams } from "next/navigation";
 import AppShell from "@/components/layout/AppShell";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { supabase } from "@/lib/supabase";
-import { flagEmoji } from "@/lib/countries";
 import "./social-passport.css";
 
 async function sign(path?: string | null) {
@@ -96,7 +95,7 @@ export default function SocialPassportPage() {
     const { data: countryRows } = await supabase
       .from("passport_countries")
       .select(
-        "id,user_id,country_name,country_code,city,note,theme_style,cover_media_path,created_at"
+        "id,user_id,country_name,country_code,note,theme_style,cover_media_path,created_at"
       )
       .eq("user_id", profileData.id)
       .order("created_at", { ascending: false });
@@ -501,8 +500,8 @@ export default function SocialPassportPage() {
                         <Globe2 size={22} />
                       )}
                     </div>
-                    <span className="social-passport-country-flag">
-                      {flagEmoji(country.country_code)}
+                    <span>
+                      {country.country_code}
                     </span>
                     <strong>
                       {country.country_name}
@@ -516,15 +515,12 @@ export default function SocialPassportPage() {
               <section className="social-passport-album">
                 <header className="social-passport-album-head">
                   <div>
-                    <span className="social-passport-active-flag">
-                      {flagEmoji(activeCountry.country_code)}
+                    <span>
+                      {activeCountry.country_code}
                     </span>
                     <h2>
                       {activeCountry.country_name}
                     </h2>
-                    {activeCountry.city && (
-                      <strong>{activeCountry.city}</strong>
-                    )}
                     <p>
                       {activeCountry.note ||
                         "Un álbum de recuerdos en Alumni."}
@@ -730,5 +726,3 @@ export default function SocialPassportPage() {
 }
 
 /* ALUMNI_2_3_0_SOCIAL_PASSPORT_PAGE */
-
-/* ALUMNI_2_3_1_PROFILE_PASSPORT_POLISH:SOCIAL_PASSPORT */

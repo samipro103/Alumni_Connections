@@ -1,19 +1,18 @@
 "use client";
 
-import { Camera, ImagePlus, Plus, X } from "lucide-react";
+import { Camera, Check, Globe2, ImagePlus, Plus, X } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import AppShell from "@/components/layout/AppShell";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { supabase } from "@/lib/supabase";
-import { COUNTRIES, flagEmoji } from "@/lib/countries";
 import "./passport.css";
 
 const THEMES = [
-  ["aurora", "Aurora"],
-  ["sunset", "Sunset"],
-  ["night", "Night"],
-  ["coast", "Coast"],
-  ["stamp", "Stamp"],
+  ["aurora", "Aurora", "Brillos suaves y color nocturno."],
+  ["sunset", "Sunset", "Cálido, fotográfico y vibrante."],
+  ["night", "Night", "Elegante y profundo."],
+  ["coast", "Coast", "Claro, fresco y ligero."],
+  ["stamp", "Stamp", "Clásico, editorial y coleccionable."],
 ] as const;
 
 async function sign(path?: string | null) {
@@ -47,8 +46,8 @@ export default function PassportPage() {
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [caption, setCaption] = useState("");
   const [form, setForm] = useState({
+    country_name: "",
     country_code: "",
-    city: "",
     note: "",
     theme_style: "aurora",
   });
@@ -68,6 +67,7 @@ export default function PassportPage() {
 
   async function load() {
     if (!user?.id) return;
+
     const [countryResult, mediaResult] = await Promise.all([
       supabase
         .from("passport_countries")
@@ -87,6 +87,7 @@ export default function PassportPage() {
         cover_url: await sign(row.cover_media_path),
       }))
     );
+
     const hydratedMedia = await Promise.all(
       (mediaResult.data || []).map(async (row: any) => ({
         ...row,
@@ -110,12 +111,9 @@ export default function PassportPage() {
   );
 
   async function createCountry() {
-    if (!user?.id || busy || !form.country_code) return;
-
-    const selected = COUNTRIES.find((item) => item.code === form.country_code);
-    if (!selected) return;
-
+    if (!user?.id || busy || !form.country_name.trim() || !form.country_code.trim()) return;
     setBusy(true);
+
     try {
       const coverPath = countryFile
         ? await upload(countryFile, user.id, "covers")
@@ -123,9 +121,8 @@ export default function PassportPage() {
 
       const { error } = await supabase.from("passport_countries").insert({
         user_id: user.id,
-        country_name: selected.name,
-        country_code: selected.code,
-        city: form.city.trim() || null,
+        country_name: form.country_name.trim(),
+        country_code: form.country_code.trim().toUpperCase(),
         note: form.note.trim() || null,
         theme_style: form.theme_style,
         cover_media_path: coverPath,
@@ -136,14 +133,14 @@ export default function PassportPage() {
       setCountryOpen(false);
       setCountryFile(null);
       setForm({
+        country_name: "",
         country_code: "",
-        city: "",
         note: "",
         theme_style: "aurora",
       });
       await load();
     } catch (error: any) {
-      alert(error?.message || "No se pudo crear el país.");
+      alert(error?.message || "No se pudo guardar el país.");
     } finally {
       setBusy(false);
     }
@@ -155,12 +152,14 @@ export default function PassportPage() {
 
     try {
       const mediaPath = await upload(photoFile, user.id, "albums");
+
       const { error } = await supabase.from("passport_media").insert({
         passport_country_id: active.id,
         user_id: user.id,
         media_path: mediaPath,
         caption: caption.trim() || null,
       });
+
       if (error) throw error;
 
       if (!active.cover_media_path) {
@@ -186,7 +185,11 @@ export default function PassportPage() {
     <AppShell>
       <main className="alumni-passport mx-auto w-full max-w-[1040px]">
         <header className="passport-hero">
-          <h1>Pasaporte Alumni</h1>
+          <div>
+            <span>Pasaporte Alumni</span>
+            <h1>Convierte cada país en un álbum con personalidad propia.</h1>
+            <p>Portadas, fotos, recuerdos y estilos visuales que hacen que cada destino se sienta distinto.</p>
+          </div>
           <button type="button" onClick={() => setCountryOpen(true)}>
             <Plus size={16} />
             Añadir país
@@ -194,10 +197,10 @@ export default function PassportPage() {
         </header>
 
         {countries.length === 0 ? (
-          <section className="passport-empty">
-            <span className="passport-empty-flag">🌍</span>
-            <strong>Tu pasaporte está vacío.</strong>
-            <p>Añade el primer país que forme parte de tu historia.</p>
+          <section className="passport-empty passport-empty-first">
+            <Globe2 size={28} />
+            <strong>Tu pasaporte está esperando su primer destino.</strong>
+            <p>Usa “Añadir país” arriba para crear tu primer álbum de viaje.</p>
           </section>
         ) : (
           <>
@@ -210,9 +213,16 @@ export default function PassportPage() {
                   data-active={activeId === country.id ? "true" : "false"}
                   onClick={() => setActiveId(country.id)}
                 >
-                  <span className="passport-flag">{flagEmoji(country.country_code)}</span>
+                  <div className="passport-cover">
+                    {country.cover_url ? (
+                      <img src={country.cover_url} alt={country.country_name} />
+                    ) : (
+                      <Globe2 size={24} />
+                    )}
+                  </div>
+                  <span>{country.country_code}</span>
                   <strong>{country.country_name}</strong>
-                  {country.city && <small>{country.city}</small>}
+                  <small>{country.note || "Álbum de viaje"}</small>
                 </button>
               ))}
             </section>
@@ -221,14 +231,9 @@ export default function PassportPage() {
               <section className="passport-album">
                 <header>
                   <div>
-                    <span className="passport-album-flag">
-                      {flagEmoji(active.country_code)}
-                    </span>
-                    <div>
-                      <h2>{active.country_name}</h2>
-                      {active.city && <strong>{active.city}</strong>}
-                      {active.note && <p>{active.note}</p>}
-                    </div>
+                    <span>Álbum activo</span>
+                    <h2>{active.country_name}</h2>
+                    <p>{active.note || "Guarda aquí tus mejores momentos de este país."}</p>
                   </div>
                   <button type="button" onClick={() => setPhotoOpen(true)}>
                     <ImagePlus size={16} />
@@ -240,18 +245,14 @@ export default function PassportPage() {
                   <div className="passport-empty compact">
                     <Camera size={24} />
                     <strong>Aún no hay fotos.</strong>
+                    <p>Sube la primera y empieza a construir el álbum.</p>
                   </div>
                 ) : (
                   <div className="passport-grid">
                     {activeMedia.map((item: any) => (
                       <figure key={item.id}>
-                        {item.media_url && (
-                          <img
-                            src={item.media_url}
-                            alt={item.caption || active.country_name}
-                          />
-                        )}
-                        {item.caption && <figcaption>{item.caption}</figcaption>}
+                        {item.media_url && <img src={item.media_url} alt={item.caption || active.country_name} />}
+                        <figcaption>{item.caption || "Recuerdo de viaje"}</figcaption>
                       </figure>
                     ))}
                   </div>
@@ -262,74 +263,70 @@ export default function PassportPage() {
         )}
 
         {countryOpen && (
-          <div className="passport-backdrop">
+          <div className="passport-backdrop" onMouseDown={(e) => e.target === e.currentTarget && setCountryOpen(false)}>
             <section className="passport-modal">
-              <header>
-                <div>
-                  <span>Nuevo destino</span>
-                  <h3>Añadir país</h3>
+              <header className="passport-modal-header-v2">
+                <button
+                  type="button"
+                  className="passport-modal-close"
+                  onClick={() => setCountryOpen(false)}
+                  aria-label="Cerrar"
+                  disabled={busy}
+                >
+                  <X size={17} />
+                  <span>Cerrar</span>
+                </button>
+
+                <div className="passport-modal-title">
+                  <span>Nuevo país</span>
+                  <h3>Dale identidad a este destino.</h3>
                 </div>
-                <button type="button" onClick={() => setCountryOpen(false)}>
-                  <X size={18} />
+
+                <button
+                  type="button"
+                  className="passport-modal-confirm"
+                  disabled={
+                    busy ||
+                    !form.country_name.trim() ||
+                    !form.country_code.trim()
+                  }
+                  onClick={() => void createCountry()}
+                  aria-label="Crear país"
+                >
+                  <Check size={17} />
+                  <span>{busy ? "Creando..." : "Crear"}</span>
                 </button>
               </header>
 
               <div className="passport-body">
-                <label>
-                  <span>País</span>
-                  <select
-                    value={form.country_code}
-                    onChange={(event) =>
-                      setForm((current) => ({
-                        ...current,
-                        country_code: event.target.value,
-                      }))
-                    }
-                  >
-                    <option value="">Selecciona un país</option>
-                    {COUNTRIES.map((country) => (
-                      <option key={country.code} value={country.code}>
-                        {flagEmoji(country.code)} {country.name}
-                      </option>
-                    ))}
-                  </select>
-                </label>
+                <div className="passport-two">
+                  <label>
+                    <span>País</span>
+                    <input value={form.country_name} onChange={(e) => setForm((c) => ({ ...c, country_name: e.target.value }))} placeholder="Ej. España" />
+                  </label>
+                  <label>
+                    <span>Código</span>
+                    <input value={form.country_code} maxLength={3} onChange={(e) => setForm((c) => ({ ...c, country_code: e.target.value }))} placeholder="ES" />
+                  </label>
+                </div>
 
                 <label>
-                  <span>Ciudad</span>
-                  <input
-                    value={form.city}
-                    onChange={(event) =>
-                      setForm((current) => ({ ...current, city: event.target.value }))
-                    }
-                    placeholder="Ej. Cayalá"
-                  />
-                </label>
-
-                <label>
-                  <span>Comentario</span>
-                  <textarea
-                    value={form.note}
-                    onChange={(event) =>
-                      setForm((current) => ({ ...current, note: event.target.value }))
-                    }
-                    placeholder="Ej. Amigos + Fiesta"
-                  />
+                  <span>Nota</span>
+                  <textarea value={form.note} onChange={(e) => setForm((c) => ({ ...c, note: e.target.value }))} placeholder="Qué hizo especial este destino." />
                 </label>
 
                 <div className="passport-themes">
-                  <span>Diseño</span>
+                  <span>Diseño del álbum</span>
                   <div>
-                    {THEMES.map(([id, label]) => (
+                    {THEMES.map(([id, label, description]) => (
                       <button
                         key={id}
                         type="button"
                         data-active={form.theme_style === id ? "true" : "false"}
-                        onClick={() =>
-                          setForm((current) => ({ ...current, theme_style: id }))
-                        }
+                        onClick={() => setForm((c) => ({ ...c, theme_style: id }))}
                       >
-                        {label}
+                        <strong>{label}</strong>
+                        <small>{description}</small>
                       </button>
                     ))}
                   </div>
@@ -337,70 +334,93 @@ export default function PassportPage() {
 
                 <label>
                   <span>Portada opcional</span>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={(event) =>
-                      setCountryFile(event.target.files?.[0] || null)
-                    }
-                  />
+                  <input type="file" accept="image/*" onChange={(e) => setCountryFile(e.target.files?.[0] || null)} />
                 </label>
               </div>
 
               <button
                 type="button"
-                className="passport-submit"
-                disabled={busy || !form.country_code}
+                className="passport-mobile-submit"
+                data-visible="country"
+                disabled={
+                  busy ||
+                  !form.country_name.trim() ||
+                  !form.country_code.trim()
+                }
                 onClick={() => void createCountry()}
               >
                 {busy ? "Creando..." : "Crear país"}
               </button>
+
+              <footer>
+                <span>Un país, un estilo, un álbum.</span>
+                <button type="button" disabled={busy || !form.country_name.trim() || !form.country_code.trim()} onClick={() => void createCountry()}>
+                  {busy ? "Creando..." : "Crear país"}
+                </button>
+              </footer>
             </section>
           </div>
         )}
 
         {photoOpen && active && (
-          <div className="passport-backdrop">
+          <div className="passport-backdrop" onMouseDown={(e) => e.target === e.currentTarget && setPhotoOpen(false)}>
             <section className="passport-modal">
-              <header>
-                <div>
-                  <span>{flagEmoji(active.country_code)} {active.country_name}</span>
-                  <h3>Agregar foto</h3>
+              <header className="passport-modal-header-v2">
+                <button
+                  type="button"
+                  className="passport-modal-close"
+                  onClick={() => setPhotoOpen(false)}
+                  aria-label="Cerrar"
+                  disabled={busy}
+                >
+                  <X size={17} />
+                  <span>Cerrar</span>
+                </button>
+
+                <div className="passport-modal-title">
+                  <span>Nueva foto</span>
+                  <h3>Agrega un recuerdo a {active.country_name}.</h3>
                 </div>
-                <button type="button" onClick={() => setPhotoOpen(false)}>
-                  <X size={18} />
+
+                <button
+                  type="button"
+                  className="passport-modal-confirm"
+                  disabled={busy || !photoFile}
+                  onClick={() => void addPhoto()}
+                  aria-label="Guardar foto"
+                >
+                  <Check size={17} />
+                  <span>{busy ? "Subiendo..." : "Guardar"}</span>
                 </button>
               </header>
 
               <div className="passport-body">
                 <label>
                   <span>Foto</span>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={(event) =>
-                      setPhotoFile(event.target.files?.[0] || null)
-                    }
-                  />
+                  <input type="file" accept="image/*" onChange={(e) => setPhotoFile(e.target.files?.[0] || null)} />
                 </label>
                 <label>
-                  <span>Comentario</span>
-                  <textarea
-                    value={caption}
-                    onChange={(event) => setCaption(event.target.value)}
-                    placeholder="Cuenta algo de esta foto."
-                  />
+                  <span>Descripción</span>
+                  <textarea value={caption} onChange={(e) => setCaption(e.target.value)} placeholder="Ej. Atardecer en Lisboa" />
                 </label>
               </div>
 
               <button
                 type="button"
-                className="passport-submit"
+                className="passport-mobile-submit"
+                data-visible="photo"
                 disabled={busy || !photoFile}
                 onClick={() => void addPhoto()}
               >
-                {busy ? "Guardando..." : "Guardar foto"}
+                {busy ? "Subiendo..." : "Guardar foto"}
               </button>
+
+              <footer>
+                <span>La foto quedará dentro del álbum del país.</span>
+                <button type="button" disabled={busy || !photoFile} onClick={() => void addPhoto()}>
+                  {busy ? "Subiendo..." : "Guardar foto"}
+                </button>
+              </footer>
             </section>
           </div>
         )}
@@ -408,3 +428,13 @@ export default function PassportPage() {
     </AppShell>
   );
 }
+
+/* ALUMNI_2_2_0_FIX1_PASSPORT */
+
+/* ALUMNI_2_2_1_PASSPORT_CREATE_FIX:PAGE */
+
+/* ALUMNI_2_2_2_PASSPORT_MOBILE_ACTION:PAGE */
+
+/* ALUMNI_2_2_3_PASSPORT_INNER_CONFIRM:PAGE */
+
+/* ALUMNI_2_2_4_PASSPORT_CREATE_BUTTON_VISIBLE:PAGE */
