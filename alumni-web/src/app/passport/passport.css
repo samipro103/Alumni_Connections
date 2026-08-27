@@ -404,3 +404,65 @@
 }
 
 /* ALUMNI_2_2_3_PASSPORT_INNER_CONFIRM:STYLE */
+
+
+/* ============================================================
+   ALUMNI 2.2.4 — visible in-editor confirm action
+   ============================================================ */
+
+.passport-mobile-submit {
+  display: none;
+}
+
+@media (max-width: 700px) {
+  .passport-mobile-submit {
+    position: fixed;
+    right: 16px;
+    bottom: calc(84px + env(safe-area-inset-bottom));
+    left: 16px;
+    z-index: 2147482950;
+
+    display: inline-flex;
+    min-height: 50px;
+    align-items: center;
+    justify-content: center;
+
+    border: 0;
+    border-radius: 14px;
+
+    background: var(--app-accent);
+    color: var(--app-on-accent);
+
+    font-size: 12px;
+    font-weight: 950;
+
+    box-shadow:
+      0 14px 36px
+      color-mix(
+        in srgb,
+        var(--app-accent) 28%,
+        transparent
+      );
+  }
+
+  .passport-mobile-submit:disabled {
+    opacity: .48;
+  }
+
+  .passport-body {
+    padding-bottom: calc(120px + env(safe-area-inset-bottom)) !important;
+  }
+
+  /* prevent invisible header-only flow on mobile */
+  .passport-modal > footer {
+    display: none !important;
+  }
+}
+
+@media (min-width: 701px) {
+  .passport-mobile-submit {
+    display: none !important;
+  }
+}
+
+/* ALUMNI_2_2_4_PASSPORT_CREATE_BUTTON_VISIBLE:STYLE */

@@ -338,6 +338,20 @@ export default function PassportPage() {
                 </label>
               </div>
 
+              <button
+                type="button"
+                className="passport-mobile-submit"
+                data-visible="country"
+                disabled={
+                  busy ||
+                  !form.country_name.trim() ||
+                  !form.country_code.trim()
+                }
+                onClick={() => void createCountry()}
+              >
+                {busy ? "Creando..." : "Crear país"}
+              </button>
+
               <footer>
                 <span>Un país, un estilo, un álbum.</span>
                 <button type="button" disabled={busy || !form.country_name.trim() || !form.country_code.trim()} onClick={() => void createCountry()}>
@@ -391,6 +405,16 @@ export default function PassportPage() {
                 </label>
               </div>
 
+              <button
+                type="button"
+                className="passport-mobile-submit"
+                data-visible="photo"
+                disabled={busy || !photoFile}
+                onClick={() => void addPhoto()}
+              >
+                {busy ? "Subiendo..." : "Guardar foto"}
+              </button>
+
               <footer>
                 <span>La foto quedará dentro del álbum del país.</span>
                 <button type="button" disabled={busy || !photoFile} onClick={() => void addPhoto()}>
@@ -412,3 +436,5 @@ export default function PassportPage() {
 /* ALUMNI_2_2_2_PASSPORT_MOBILE_ACTION:PAGE */
 
 /* ALUMNI_2_2_3_PASSPORT_INNER_CONFIRM:PAGE */
+
+/* ALUMNI_2_2_4_PASSPORT_CREATE_BUTTON_VISIBLE:PAGE */
