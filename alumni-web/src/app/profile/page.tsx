@@ -25,6 +25,7 @@ import { useAuth } from "@/components/auth/AuthProvider";
 import { supabase } from "@/lib/supabase";
 import AppShell from "@/components/layout/AppShell";
 import ProfileMusicCard from "@/components/profile/ProfileMusicCard";
+import ProfilePassportPreview from "@/components/profile/ProfilePassportPreview";
 import HDProfileImage from "@/components/profile/HDProfileImage";
 import ProfileSocialLinks from "@/components/profile/ProfileSocialLinks";
 import ProfileIdentityMeta from "@/components/profile/ProfileIdentityMeta";
@@ -510,6 +511,12 @@ export default function ProfilePage() {
 
             <ProfileMusicCard track={profileMusic} className="mt-5" />
 
+            <ProfilePassportPreview
+              userId={profile.id}
+              username={profile.username}
+              own
+            />
+
             <div className="alumni-profile-stats mt-6 flex gap-8 border-t border-white/[0.06] pt-5">
               <Stat value={posts.length} label="Publicaciones" />
               <Stat value={followers} label="Seguidores" />
@@ -751,3 +758,5 @@ function Detail({
 /* ALUMNI_1_8_0_IDENTITY_CONNECTIONS:OWN_PROFILE */
 
 /* ALUMNI_1_8_1_PROFILE_RESTORE_PIN_EDIT_LIMITS:OWN_PROFILE */
+
+/* ALUMNI_2_3_0_SOCIAL_PASSPORT:OWNER_PROFILE */

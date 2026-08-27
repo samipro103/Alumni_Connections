@@ -1,0 +1,417 @@
+.social-passport {
+  padding-bottom: 42px;
+}
+
+.social-passport-hero {
+  padding: 8px 0 26px;
+  border-bottom: 1px solid var(--app-border);
+}
+
+.social-passport-back {
+  display: inline-flex;
+  min-height: 34px;
+  align-items: center;
+  gap: 6px;
+  color: var(--app-muted-2);
+  font-size: 10px;
+  font-weight: 850;
+}
+
+.social-passport-owner {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-top: 18px;
+}
+
+.social-passport-avatar {
+  display: flex;
+  width: 56px;
+  height: 56px;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--app-soft);
+  color: var(--app-text);
+  font-size: 13px;
+  font-weight: 950;
+}
+
+.social-passport-avatar img,
+.social-passport-countries img,
+.social-passport-media img,
+.social-passport-comment-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.social-passport-owner > div > span,
+.social-passport-album-head > div > span,
+.social-passport-comments header span {
+  color: var(--app-muted-2);
+  font-size: 9px;
+  font-weight: 900;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+}
+
+.social-passport-owner h1 {
+  margin-top: 4px;
+  color: var(--app-text);
+  font-size: 24px;
+  font-weight: 950;
+  letter-spacing: -.035em;
+}
+
+.social-passport-owner p {
+  margin-top: 5px;
+  color: var(--app-muted);
+  font-size: 10px;
+}
+
+.social-passport-countries {
+  display: flex;
+  gap: 14px;
+  overflow-x: auto;
+  padding: 26px 0 28px;
+  border-bottom: 1px solid var(--app-border);
+  scrollbar-width: none;
+}
+
+.social-passport-countries::-webkit-scrollbar {
+  display: none;
+}
+
+.social-passport-countries > button {
+  position: relative;
+  width: 146px;
+  flex: 0 0 146px;
+  overflow: hidden;
+  padding: 0 0 13px;
+  border: 1px solid var(--app-border);
+  border-radius: 20px;
+  background: transparent;
+  text-align: left;
+  isolation: isolate;
+}
+
+.social-passport-countries > button::after {
+  content: "";
+  position: absolute;
+  right: -34px;
+  bottom: -34px;
+  width: 100px;
+  height: 100px;
+  border-radius: 999px;
+  opacity: .44;
+  filter: blur(23px);
+  z-index: -1;
+}
+
+.social-passport-countries .theme-aurora::after {
+  background: #737aff;
+}
+.social-passport-countries .theme-sunset::after {
+  background: #ff966b;
+}
+.social-passport-countries .theme-night::after {
+  background: #725cff;
+}
+.social-passport-countries .theme-coast::after {
+  background: #52dce4;
+}
+.social-passport-countries .theme-stamp::after {
+  background: #bd9772;
+}
+
+.social-passport-countries > button[data-active="true"] {
+  border-color: color-mix(in srgb, var(--app-accent) 72%, transparent);
+  box-shadow: inset 0 -2px 0 var(--app-accent);
+}
+
+.social-passport-countries > button > div {
+  display: flex;
+  height: 110px;
+  align-items: center;
+  justify-content: center;
+  border-bottom: 1px solid var(--app-border);
+  color: var(--app-accent);
+}
+
+.social-passport-countries > button > span,
+.social-passport-countries > button > strong {
+  display: block;
+  margin-inline: 11px;
+}
+
+.social-passport-countries > button > span {
+  margin-top: 9px;
+  color: var(--app-muted-2);
+  font-size: 8px;
+  font-weight: 900;
+  letter-spacing: .1em;
+}
+
+.social-passport-countries > button > strong {
+  margin-top: 4px;
+  color: var(--app-text);
+  font-size: 12px;
+  font-weight: 930;
+}
+
+.social-passport-album {
+  padding: 28px 0 0;
+}
+
+.social-passport-album-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 20px;
+  padding-bottom: 22px;
+  border-bottom: 1px solid var(--app-border);
+}
+
+.social-passport-album-head h2 {
+  margin-top: 5px;
+  color: var(--app-text);
+  font-size: 32px;
+  font-weight: 950;
+  letter-spacing: -.045em;
+}
+
+.social-passport-album-head p {
+  max-width: 590px;
+  margin-top: 8px;
+  color: var(--app-muted);
+  font-size: 11px;
+  line-height: 1.6;
+}
+
+.social-passport-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+}
+
+.social-passport-actions button {
+  position: relative;
+  display: inline-flex;
+  min-height: 40px;
+  align-items: center;
+  gap: 7px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--app-muted-2);
+  font-size: 10px;
+  font-weight: 900;
+}
+
+.social-passport-actions button::after {
+  content: "";
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  height: 2px;
+  background: transparent;
+}
+
+.social-passport-actions button[data-active="true"] {
+  color: var(--app-accent);
+}
+
+.social-passport-actions button[data-active="true"]::after {
+  background: var(--app-accent);
+}
+
+.social-passport-media {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+  padding: 24px 0 30px;
+  border-bottom: 1px solid var(--app-border);
+}
+
+.social-passport-media figure {
+  overflow: hidden;
+  border-radius: 18px;
+  border: 1px solid var(--app-border);
+}
+
+.social-passport-media img {
+  display: block;
+  aspect-ratio: 4 / 5;
+}
+
+.social-passport-media figcaption {
+  padding: 11px 12px;
+  color: var(--app-text-soft);
+  font-size: 9px;
+  line-height: 1.5;
+}
+
+.social-passport-comments {
+  padding: 26px 0 10px;
+}
+
+.social-passport-comments > header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.social-passport-comments h3 {
+  margin-top: 4px;
+  color: var(--app-text);
+  font-size: 15px;
+  font-weight: 900;
+}
+
+.social-passport-comments > header > svg {
+  color: var(--app-muted-2);
+}
+
+.social-passport-comment-list {
+  margin-top: 18px;
+  border-top: 1px solid var(--app-border);
+}
+
+.social-passport-comment-list article {
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr);
+  gap: 10px;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--app-border);
+}
+
+.social-passport-comment-avatar {
+  display: flex;
+  width: 32px;
+  height: 32px;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--app-soft);
+  color: var(--app-text);
+  font-size: 8px;
+  font-weight: 900;
+}
+
+.social-passport-comment-list strong {
+  display: block;
+  color: var(--app-text);
+  font-size: 10px;
+  font-weight: 900;
+}
+
+.social-passport-comment-list p {
+  margin-top: 4px;
+  color: var(--app-muted);
+  font-size: 10px;
+  line-height: 1.55;
+}
+
+.social-passport-comment-box {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 16px;
+  border-bottom: 1px solid var(--app-border);
+}
+
+.social-passport-comment-box input {
+  min-width: 0;
+  min-height: 45px;
+  flex: 1;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--app-text);
+  font-size: 11px;
+}
+
+.social-passport-comment-box button {
+  display: flex;
+  width: 36px;
+  height: 36px;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  background: transparent;
+  color: var(--app-accent);
+}
+
+.social-passport-comment-box button:disabled {
+  opacity: .4;
+}
+
+.social-passport-empty,
+.social-passport-state {
+  padding: 68px 0;
+  text-align: center;
+}
+
+.social-passport-empty svg {
+  margin: 0 auto 11px;
+  color: var(--app-accent);
+}
+
+.social-passport-empty strong {
+  display: block;
+  color: var(--app-text);
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.social-passport-empty p,
+.social-passport-state {
+  color: var(--app-muted-2);
+  font-size: 10px;
+}
+
+.social-passport-empty p {
+  max-width: 360px;
+  margin: 7px auto 0;
+  line-height: 1.55;
+}
+
+.social-passport-empty.compact {
+  padding: 34px 0;
+  border-bottom: 1px solid var(--app-border);
+}
+
+@media (max-width: 1023px) {
+  .social-passport {
+    padding-top: 30px;
+  }
+}
+
+@media (max-width: 700px) {
+  .social-passport-album-head {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .social-passport-media {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 9px;
+  }
+
+  .social-passport-countries > button {
+    width: 128px;
+    flex-basis: 128px;
+  }
+
+  .social-passport-countries > button > div {
+    height: 98px;
+  }
+}
+
+/* ALUMNI_2_3_0_SOCIAL_PASSPORT_STYLE */
