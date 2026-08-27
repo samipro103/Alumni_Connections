@@ -504,6 +504,7 @@ export function MessageReplyQuote({
   messages,
   currentUserId,
   peerUsername,
+  onJump,
 }: {
   message: any;
   messages: any[];
@@ -511,6 +512,7 @@ export function MessageReplyQuote({
     | string
     | null;
   peerUsername?: string;
+  onJump?: (messageId: number) => void;
 }) {
   const reply =
     message?.reply_to_id
@@ -536,13 +538,25 @@ export function MessageReplyQuote({
 
   return (
     <div
-      className="alumni-reply-quote"
+      className={`alumni-reply-quote ${onJump ? "cursor-pointer" : ""}`}
       data-owner={
         message.sender_id ===
         currentUserId
           ? "mine"
           : "other"
       }
+      role={onJump ? "button" : undefined}
+      tabIndex={onJump ? 0 : undefined}
+      onClick={() => onJump?.(reply.id)}
+      onKeyDown={(event) => {
+        if (
+          onJump &&
+          (event.key === "Enter" || event.key === " ")
+        ) {
+          event.preventDefault();
+          onJump(reply.id);
+        }
+      }}
     >
       <div className="alumni-reply-quote-body">
         <p className="alumni-reply-author">
@@ -615,3 +629,5 @@ export function ComposerReplyPreview({
 }
 
 /* ALUMNI_1_4_2_THEME_CHAT_PROFILE_POLISH:REPLY */
+
+/* ALUMNI_1_5_0_MESSAGING_2_HOME_NAV:REPLY_JUMP */

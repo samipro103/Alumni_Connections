@@ -2912,3 +2912,42 @@ html[data-theme] [class*="bg-black/"][class*="text-white"] {
 }
 
 /* ALUMNI_1_4_2_THEME_CHAT_PROFILE_POLISH:GLOBALS */
+
+
+/* ===============================================================
+   ALUMNI 1.5.0 — MESSAGING 2
+   =============================================================== */
+
+.alumni-message-bubble {
+  transition:
+    background-color .16s ease,
+    opacity .16s ease,
+    transform .12s ease;
+}
+
+.alumni-chat-stage [id^="message-"],
+.alumni-chat-stage [id^="group-message-"] {
+  scroll-margin-block: 110px;
+}
+
+.alumni-chat-stage .alumni-reply-quote[role="button"]:hover {
+  background:
+    color-mix(
+      in srgb,
+      var(--app-accent-soft) 72%,
+      var(--app-surface-2)
+    );
+}
+
+html[data-theme="light"] .alumni-message-other {
+  border:
+    1px solid
+    var(--app-border);
+}
+
+html[data-theme="pride"] .alumni-message-mine .alumni-reply-quote {
+  background:
+    rgba(255,255,255,.12);
+}
+
+/* ALUMNI_1_5_0_MESSAGING_2_HOME_NAV:GLOBALS */

@@ -258,6 +258,19 @@ export default function MobileNav() {
               <Link
                 key={label}
                 href={href}
+                onClick={(event) => {
+                  if (
+                    label === "Inicio" &&
+                    pathname === "/feed"
+                  ) {
+                    event.preventDefault();
+
+                    window.scrollTo({
+                      top: 0,
+                      behavior: "smooth",
+                    });
+                  }
+                }}
                 className="flex min-h-12 flex-col items-center justify-center gap-1"
               >
                 <span
@@ -305,3 +318,5 @@ export default function MobileNav() {
 }
 
 /* ALUMNI_1_3_7_MOBILE_NAV_PORTAL */
+
+/* ALUMNI_1_5_0_MESSAGING_2_HOME_NAV:MOBILE_NAV */

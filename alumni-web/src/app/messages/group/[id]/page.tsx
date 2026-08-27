@@ -4,6 +4,8 @@ import {
   ArrowLeft,
   Check,
   CheckCheck,
+  ChevronDown,
+  Clock3,
   ImagePlus,
   Loader2,
   MoreHorizontal,
@@ -38,11 +40,18 @@ import {
   createMessageMediaPreview,
 } from "@/lib/messageMedia";
 import {
+  outboxFor,
+  queueOutbox,
+  removeOutbox,
+} from "@/lib/messageOutbox";
+import {
   supabase,
 } from "@/lib/supabase";
 
 const BUCKET =
   "group-message-media";
+const MESSAGE_PAGE_SIZE =
+  50;
 
 type Member = {
   user_id: string;
@@ -117,6 +126,36 @@ export default function GroupChatPage() {
     groupInfoOpen,
     setGroupInfoOpen,
   ] = useState(false);
+
+  const [
+    editingMessage,
+    setEditingMessage,
+  ] = useState<any>(null);
+
+  const [
+    hasMoreHistory,
+    setHasMoreHistory,
+  ] = useState(true);
+
+  const [
+    loadingOlder,
+    setLoadingOlder,
+  ] = useState(false);
+
+  const [
+    unreadBoundaryId,
+    setUnreadBoundaryId,
+  ] = useState<number | null>(null);
+
+  const [
+    newBelowCount,
+    setNewBelowCount,
+  ] = useState(0);
+
+  const [
+    flashMessageId,
+    setFlashMessageId,
+  ] = useState<number | null>(null);
 
   const fileRef =
     useRef<HTMLInputElement>(
@@ -204,6 +243,19 @@ export default function GroupChatPage() {
                 suppressOwnInsertUntilRef.current
             ) {
               return;
+            }
+
+            if (
+              payload?.eventType ===
+                "INSERT" &&
+              row?.sender_id !==
+                user.id &&
+              !stickToBottomRef.current
+            ) {
+              setNewBelowCount(
+                (count) =>
+                  count + 1
+              );
             }
 
             scheduleRefresh();
@@ -316,6 +368,104 @@ export default function GroupChatPage() {
     };
   }, [mediaPreview]);
 
+  useEffect(() => {
+    if (!user) return;
+
+    const key =
+      `alumni:draft:group:${user.id}:${groupId}`;
+
+    const saved =
+      localStorage.getItem(
+        key
+      );
+
+    if (saved && !text) {
+      setText(saved);
+    }
+  }, [user?.id, groupId]);
+
+  useEffect(() => {
+    if (!user) return;
+
+    const key =
+      `alumni:draft:group:${user.id}:${groupId}`;
+
+    if (text) {
+      localStorage.setItem(
+        key,
+        text
+      );
+    } else {
+      localStorage.removeItem(
+        key
+      );
+    }
+  }, [
+    user?.id,
+    groupId,
+    text,
+  ]);
+
+  useEffect(() => {
+    if (!user || !groupId) return;
+
+    const flush = async () => {
+      if (!navigator.onLine) return;
+
+      const queued =
+        outboxFor(
+          "group",
+          groupId
+        );
+
+      for (const item of queued) {
+        const { error } =
+          await supabase
+            .from(
+              "group_messages"
+            )
+            .insert({
+              group_id:
+                groupId,
+              sender_id:
+                user.id,
+              content:
+                item.content,
+              message_type:
+                "text",
+              reply_to_id:
+                item.replyToId ||
+                null,
+            });
+
+        if (!error) {
+          removeOutbox(
+            item.id
+          );
+        }
+      }
+
+      scheduleRefresh();
+    };
+
+    void flush();
+
+    window.addEventListener(
+      "online",
+      flush
+    );
+
+    return () => {
+      window.removeEventListener(
+        "online",
+        flush
+      );
+    };
+  }, [
+    user?.id,
+    groupId,
+  ]);
+
   function scheduleRefresh() {
     if (
       refreshTimerRef.current !==
@@ -395,8 +545,11 @@ export default function GroupChatPage() {
           "created_at",
           {
             ascending:
-              true,
+              false,
           }
+        )
+        .limit(
+          MESSAGE_PAGE_SIZE
         ),
     ]);
 
@@ -508,11 +661,13 @@ export default function GroupChatPage() {
         })
       ) as Member[];
 
-    const nextMessages =
-      (
-        messagesResult.data ||
-        []
-      ).map(
+    let nextMessages =
+      [
+        ...(messagesResult.data ||
+          []),
+      ]
+        .reverse()
+        .map(
         (message: any) => ({
           ...message,
           sender_profile:
@@ -522,6 +677,101 @@ export default function GroupChatPage() {
           reactions: [],
         })
       );
+
+    setHasMoreHistory(
+      (messagesResult.data ||
+        []).length ===
+        MESSAGE_PAGE_SIZE
+    );
+
+    const groupHiddenIds =
+      nextMessages.map(
+        (message: any) =>
+          message.id
+      );
+
+    if (groupHiddenIds.length) {
+      const {
+        data:
+          hiddenRows,
+      } = await supabase
+        .from(
+          "message_hidden_users"
+        )
+        .select(
+          "message_id"
+        )
+        .eq(
+          "user_id",
+          user.id
+        )
+        .eq(
+          "message_scope",
+          "group"
+        )
+        .in(
+          "message_id",
+          groupHiddenIds
+        );
+
+      const hidden =
+        new Set(
+          (hiddenRows || []).map(
+            (row: any) =>
+              Number(
+                row.message_id
+              )
+          )
+        );
+
+      nextMessages =
+        nextMessages.filter(
+          (message: any) =>
+            !hidden.has(
+              Number(
+                message.id
+              )
+            )
+        );
+    }
+
+    if (
+      showLoader &&
+      unreadBoundaryId === null
+    ) {
+      const ownMember =
+        memberRows.find(
+          (row: any) =>
+            row.user_id ===
+            user.id
+        );
+
+      const lastRead =
+        ownMember?.last_read_at
+          ? new Date(
+              ownMember.last_read_at
+            ).getTime()
+          : 0;
+
+      const firstUnread =
+        nextMessages.find(
+          (message: any) =>
+            message.sender_id !==
+              user.id &&
+            new Date(
+              message.created_at
+            ).getTime() >
+              lastRead
+        );
+
+      if (firstUnread) {
+        setUnreadBoundaryId(
+          Number(
+            firstUnread.id
+          )
+        );
+      }
+    }
 
     const messageIds =
       nextMessages.map(
@@ -652,6 +902,302 @@ export default function GroupChatPage() {
         target.scrollHeight,
       behavior,
     });
+  }
+
+  async function loadOlderMessages() {
+    if (
+      !user ||
+      loadingOlder ||
+      !hasMoreHistory ||
+      !messages.length
+    ) {
+      return;
+    }
+
+    const oldest =
+      messages.find(
+        (message) =>
+          Number(
+            message.id
+          ) > 0
+      );
+
+    if (!oldest) return;
+
+    const target =
+      scrollRef.current;
+    const oldHeight =
+      target?.scrollHeight || 0;
+    const oldTop =
+      target?.scrollTop || 0;
+
+    setLoadingOlder(true);
+
+    try {
+      const {
+        data,
+        error,
+      } = await supabase
+        .from(
+          "group_messages"
+        )
+        .select("*")
+        .eq(
+          "group_id",
+          groupId
+        )
+        .lt(
+          "created_at",
+          oldest.created_at
+        )
+        .order(
+          "created_at",
+          {
+            ascending:
+              false,
+          }
+        )
+        .limit(
+          MESSAGE_PAGE_SIZE
+        );
+
+      if (error) throw error;
+
+      const rows =
+        [...(data || [])].reverse();
+
+      setHasMoreHistory(
+        (data || []).length ===
+          MESSAGE_PAGE_SIZE
+      );
+
+      if (!rows.length) return;
+
+      const ids =
+        rows.map(
+          (message: any) =>
+            message.id
+        );
+
+      const senderIds =
+        [
+          ...new Set(
+            rows.map(
+              (message: any) =>
+                message.sender_id
+            )
+          ),
+        ];
+
+      const [
+        profilesResult,
+        reactionsResult,
+        hiddenResult,
+      ] = await Promise.all([
+        supabase
+          .from("profiles")
+          .select(
+            "id,username,avatar_url"
+          )
+          .in(
+            "id",
+            senderIds
+          ),
+        supabase
+          .from(
+            "group_message_reactions"
+          )
+          .select(
+            "message_id,user_id,emoji"
+          )
+          .in(
+            "message_id",
+            ids
+          ),
+        supabase
+          .from(
+            "message_hidden_users"
+          )
+          .select(
+            "message_id"
+          )
+          .eq(
+            "user_id",
+            user.id
+          )
+          .eq(
+            "message_scope",
+            "group"
+          )
+          .in(
+            "message_id",
+            ids
+          ),
+      ]);
+
+      const profiles =
+        new Map(
+          (
+            profilesResult.data ||
+            []
+          ).map(
+            (profile: any) => [
+              profile.id,
+              profile,
+            ]
+          )
+        );
+
+      const hidden =
+        new Set(
+          (
+            hiddenResult.data ||
+            []
+          ).map(
+            (row: any) =>
+              Number(
+                row.message_id
+              )
+          )
+        );
+
+      const reactions =
+        new Map<
+          number,
+          any[]
+        >();
+
+      for (
+        const reaction of
+        reactionsResult.data ||
+        []
+      ) {
+        const current =
+          reactions.get(
+            reaction.message_id
+          ) || [];
+
+        current.push(
+          reaction
+        );
+        reactions.set(
+          reaction.message_id,
+          current
+        );
+      }
+
+      const older =
+        rows
+          .filter(
+            (message: any) =>
+              !hidden.has(
+                Number(
+                  message.id
+                )
+              )
+          )
+          .map(
+            (message: any) => ({
+              ...message,
+              sender_profile:
+                profiles.get(
+                  message.sender_id
+                ) || null,
+              reactions:
+                reactions.get(
+                  message.id
+                ) || [],
+            })
+          );
+
+      setMessages(
+        (current) => {
+          const currentIds =
+            new Set(
+              current.map(
+                (message) =>
+                  message.id
+              )
+            );
+
+          return [
+            ...older.filter(
+              (message) =>
+                !currentIds.has(
+                  message.id
+                )
+            ),
+            ...current,
+          ];
+        }
+      );
+
+      window.requestAnimationFrame(
+        () => {
+          const next =
+            scrollRef.current;
+
+          if (!next) return;
+
+          next.scrollTop =
+            next.scrollHeight -
+            oldHeight +
+            oldTop;
+        }
+      );
+    } catch (error) {
+      console.error(
+        "No se pudo cargar historial del grupo:",
+        error
+      );
+    } finally {
+      setLoadingOlder(false);
+    }
+  }
+
+  function flashAndScrollToMessage(
+    messageId: number
+  ) {
+    const element =
+      document.getElementById(
+        `group-message-${messageId}`
+      );
+
+    if (!element) {
+      void loadOlderMessages().then(
+        () => {
+          window.setTimeout(
+            () =>
+              flashAndScrollToMessage(
+                messageId
+              ),
+            40
+          );
+        }
+      );
+      return;
+    }
+
+    setFlashMessageId(
+      messageId
+    );
+
+    element.scrollIntoView({
+      behavior: "smooth",
+      block: "center",
+    });
+
+    window.setTimeout(
+      () =>
+        setFlashMessageId(
+          (current) =>
+            current ===
+            messageId
+              ? null
+              : current
+        ),
+      1400
+    );
   }
 
   function clearMedia() {
@@ -792,6 +1338,65 @@ export default function GroupChatPage() {
     event?.preventDefault();
 
     if (
+      editingMessage
+    ) {
+      const value =
+        text.trim();
+
+      if (
+        !value ||
+        !user ||
+        sending
+      ) {
+        return;
+      }
+
+      setSending(true);
+
+      const { error } =
+        await supabase.rpc(
+          "alumni_edit_group_message",
+          {
+            p_message_id:
+              editingMessage.id,
+            p_content:
+              value,
+          }
+        );
+
+      setSending(false);
+
+      if (error) {
+        alert(
+          error.message
+        );
+        return;
+      }
+
+      setMessages(
+        (current) =>
+          current.map(
+            (message) =>
+              message.id ===
+              editingMessage.id
+                ? {
+                    ...message,
+                    content:
+                      value,
+                    edited_at:
+                      new Date()
+                        .toISOString(),
+                  }
+                : message
+          )
+      );
+
+      setEditingMessage(null);
+      setText("");
+      return;
+    }
+
+    if (
       !user ||
       sending ||
       (!text.trim() &&
@@ -805,6 +1410,82 @@ export default function GroupChatPage() {
 
     const fileToSend =
       mediaFile;
+
+    if (
+      typeof navigator !==
+        "undefined" &&
+      !navigator.onLine
+    ) {
+      if (fileToSend) {
+        alert(
+          "Sin conexión. El archivo se mantendrá listo para enviar cuando vuelvas a conectarte."
+        );
+        return;
+      }
+
+      const queueId =
+        `group-${Date.now()}`;
+
+      queueOutbox({
+        id: queueId,
+        scope: "group",
+        conversationId:
+          groupId,
+        content:
+          textToSend,
+        replyToId:
+          replyingTo?.id ||
+          null,
+        createdAt:
+          new Date()
+            .toISOString(),
+      });
+
+      const me =
+        members.find(
+          (member) =>
+            member.user_id ===
+            user.id
+        );
+
+      setMessages(
+        (current) => [
+          ...current,
+          {
+            id:
+              -Date.now(),
+            group_id:
+              groupId,
+            sender_id:
+              user.id,
+            content:
+              textToSend,
+            message_type:
+              "text",
+            reply_to_id:
+              replyingTo?.id ||
+              null,
+            created_at:
+              new Date()
+                .toISOString(),
+            sender_profile:
+              me || null,
+            reactions: [],
+            _queued:
+              true,
+          },
+        ]
+      );
+
+      setText("");
+      setReplyingTo(null);
+      stickToBottomRef.current =
+        true;
+      scrollBottom(
+        "smooth"
+      );
+      return;
+    }
 
     const replyToSend =
       replyingTo;
@@ -1092,6 +1773,150 @@ export default function GroupChatPage() {
     }
   }
 
+  function beginEdit(
+    message: any
+  ) {
+    if (
+      message.sender_id !==
+        user?.id ||
+      message.deleted_at ||
+      message.message_type ===
+        "deleted" ||
+      message.message_type ===
+        "system"
+    ) {
+      return;
+    }
+
+    clearMedia();
+    setReplyingTo(null);
+    setEditingMessage(
+      message
+    );
+    setText(
+      String(
+        message.content ||
+          ""
+      )
+    );
+    window.requestAnimationFrame(
+      () =>
+        textareaRef.current?.focus()
+    );
+  }
+
+  async function hideMessageForMe(
+    message: any
+  ) {
+    const previous =
+      messages;
+
+    setMessages(
+      (current) =>
+        current.filter(
+          (item) =>
+            item.id !==
+            message.id
+        )
+    );
+
+    const { error } =
+      await supabase.rpc(
+        "alumni_hide_message_for_me",
+        {
+          p_scope:
+            "group",
+          p_message_id:
+            message.id,
+        }
+      );
+
+    if (error) {
+      setMessages(
+        previous
+      );
+      alert(
+        error.message
+      );
+    }
+  }
+
+  async function deleteMessageForEveryone(
+    message: any
+  ) {
+    if (
+      message.sender_id !==
+        user?.id ||
+      message.message_type ===
+        "system"
+    ) {
+      return;
+    }
+
+    if (
+      !confirm(
+        "¿Eliminar este mensaje para todos?"
+      )
+    ) {
+      return;
+    }
+
+    const mediaPath =
+      message.media_path;
+
+    const { error } =
+      await supabase.rpc(
+        "alumni_delete_group_message_for_everyone",
+        {
+          p_message_id:
+            message.id,
+        }
+      );
+
+    if (error) {
+      alert(
+        error.message
+      );
+      return;
+    }
+
+    setMessages(
+      (current) =>
+        current.map(
+          (item) =>
+            item.id ===
+            message.id
+              ? {
+                  ...item,
+                  content:
+                    null,
+                  media_path:
+                    null,
+                  media_type:
+                    null,
+                  message_type:
+                    "deleted",
+                  deleted_at:
+                    new Date()
+                      .toISOString(),
+                  edited_at:
+                    null,
+                  reactions:
+                    [],
+                }
+              : item
+        )
+    );
+
+    if (mediaPath) {
+      void supabase.storage
+        .from(BUCKET)
+        .remove([
+          mediaPath,
+        ]);
+    }
+  }
+
   async function toggleReaction(
     messageId: number,
     emoji: string
@@ -1373,6 +2198,21 @@ export default function GroupChatPage() {
                 target.scrollTop -
                 target.clientHeight <
               160;
+
+            if (
+              stickToBottomRef.current
+            ) {
+              setNewBelowCount(0);
+            }
+
+            if (
+              target.scrollTop <
+                90 &&
+              hasMoreHistory &&
+              !loadingOlder
+            ) {
+              void loadOlderMessages();
+            }
           }}
           className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-2.5 py-3 sm:px-5 sm:py-4"
           style={{
@@ -1444,8 +2284,24 @@ export default function GroupChatPage() {
                       key={
                         message.id
                       }
-                      className="mt-2"
+                      id={`group-message-${message.id}`}
+                      className={`mt-2 rounded-[10px] transition-colors duration-700 ${
+                        flashMessageId ===
+                        message.id
+                          ? "bg-[var(--app-accent-soft)]"
+                          : ""
+                      }`}
                     >
+                      {message.id ===
+                        unreadBoundaryId && (
+                        <div className="my-4 flex items-center gap-3">
+                          <span className="h-px flex-1 bg-[var(--app-border)]" />
+                          <span className="rounded-full bg-[var(--app-accent-soft)] px-3 py-1 text-[11px] font-black text-[var(--app-accent)]">
+                            Mensajes nuevos
+                          </span>
+                          <span className="h-px flex-1 bg-[var(--app-border)]" />
+                        </div>
+                      )}
                       <SwipeToReply
                         onReply={() =>
                           beginReply(
@@ -1498,9 +2354,15 @@ export default function GroupChatPage() {
                                   .sender_profile
                                   ?.username
                               }
+                              onJump={flashAndScrollToMessage}
                             />
 
-                            {message.media_path && (
+                            {message.message_type ===
+                            "deleted" ? (
+                              <p className="py-1 text-[14px] italic opacity-75">
+                                Mensaje eliminado
+                              </p>
+                            ) : message.media_path && (
                               <div className="mb-2 w-fit max-w-full overflow-hidden rounded-[14px]">
                                 <DeferredMessageMedia
                                   bucket={
@@ -1535,7 +2397,9 @@ export default function GroupChatPage() {
                               </div>
                             )}
 
-                            {message.content && (
+                            {message.message_type !==
+                              "deleted" &&
+                              message.content && (
                               <p className="whitespace-pre-wrap break-words text-[15px] leading-[1.45]">
                                 {
                                   message.content
@@ -1544,11 +2408,25 @@ export default function GroupChatPage() {
                             )}
 
                             <div className="mt-1 flex items-center justify-end gap-1 text-[10px] text-[var(--app-muted-3)]">
+                              {message.edited_at && (
+                                <span className="mr-1 text-[9px]">
+                                  Editado
+                                </span>
+                              )}
                               {time(
                                 message.created_at
                               )}
                               {mine &&
-                                (seenByAll ? (
+                                (message._queued ? (
+                                  <Clock3
+                                    size={12}
+                                  />
+                                ) : message._pending ? (
+                                  <Loader2
+                                    size={12}
+                                    className="animate-spin"
+                                  />
+                                ) : seenByAll ? (
                                   <CheckCheck
                                     size={13}
                                     className="text-[var(--app-accent)]"
@@ -1605,6 +2483,21 @@ export default function GroupChatPage() {
                             emoji
                           )
                         }
+                        onEdit={() =>
+                          beginEdit(
+                            message
+                          )
+                        }
+                        onDeleteForMe={() =>
+                          void hideMessageForMe(
+                            message
+                          )
+                        }
+                        onDeleteForEveryone={() =>
+                          void deleteMessageForEveryone(
+                            message
+                          )
+                        }
                       />
                     </div>
                   );
@@ -1629,6 +2522,31 @@ export default function GroupChatPage() {
           )}
         </div>
 
+        {!stickToBottomRef.current && (
+          <button
+            type="button"
+            onClick={() => {
+              stickToBottomRef.current =
+                true;
+              setNewBelowCount(0);
+              scrollBottom(
+                "smooth"
+              );
+            }}
+            className="absolute bottom-[82px] right-4 z-[70] flex h-10 min-w-10 items-center justify-center gap-1 rounded-full border border-[var(--app-border)] bg-[var(--app-surface)] px-3 text-[11px] font-black text-[var(--app-text)] shadow-[0_10px_30px_var(--app-shadow)]"
+            aria-label="Ir a mensajes recientes"
+          >
+            <ChevronDown
+              size={17}
+            />
+            {newBelowCount > 0 && (
+              <span>
+                {newBelowCount}
+              </span>
+            )}
+          </button>
+        )}
+
         {typingName && (
           <div className="shrink-0 px-4 pb-1.5 text-[12px] font-semibold text-[var(--app-muted-2)]">
             @{typingName} está escribiendo…
@@ -1641,6 +2559,30 @@ export default function GroupChatPage() {
           }
           className="shrink-0 border-t border-[var(--app-border)] bg-[color-mix(in_srgb,var(--app-surface)_96%,transparent)] px-2 pb-[max(8px,env(safe-area-inset-bottom))] pt-2 backdrop-blur-2xl sm:px-3 sm:pb-3"
         >
+          {editingMessage && (
+            <div className="alumni-composer-reply-preview">
+              <div className="alumni-composer-reply-copy">
+                <p className="alumni-reply-author">
+                  Editando mensaje
+                </p>
+                <p className="alumni-reply-summary">
+                  {editingMessage.content}
+                </p>
+              </div>
+              <button
+                type="button"
+                className="alumni-composer-reply-close"
+                onClick={() => {
+                  setEditingMessage(null);
+                  setText("");
+                }}
+                aria-label="Cancelar edición"
+              >
+                <X size={15} />
+              </button>
+            </div>
+          )}
+
           <ComposerReplyPreview
             message={
               replyingTo
@@ -1722,7 +2664,10 @@ export default function GroupChatPage() {
                 fileRef.current?.click()
               }
               disabled={
-                sending
+                sending ||
+                Boolean(
+                  editingMessage
+                )
               }
               className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-[var(--app-accent)] disabled:opacity-40"
             >
@@ -1824,3 +2769,5 @@ export default function GroupChatPage() {
 /* ALUMNI_1_3_5_MEDIA_MODAL_SPOTIFY_FIX:GROUP */
 
 /* ALUMNI_1_3_7_MESSAGING_GLOBAL_STABILITY:GROUP_CHAT */
+
+/* ALUMNI_1_5_0_MESSAGING_2_HOME_NAV:GROUP */

@@ -11,6 +11,8 @@ import {
   ArrowLeft,
   Check,
   CheckCheck,
+  ChevronDown,
+  Clock3,
   ImagePlus,
   Images,
   Loader2,
@@ -32,6 +34,11 @@ import MessageProTools from "@/components/messages/MessageProTools";
 import DeferredMessageMedia from "@/components/messages/DeferredMessageMedia";
 import { createMessageMediaPreview } from "@/lib/messageMedia";
 import {
+  outboxFor,
+  queueOutbox,
+  removeOutbox,
+} from "@/lib/messageOutbox";
+import {
   ComposerReplyPreview,
   MessageReplyQuote,
   SwipeToReply,
@@ -42,6 +49,7 @@ const MAX_IMAGE =
   15 * 1024 * 1024;
 const MAX_VIDEO =
   50 * 1024 * 1024;
+const MESSAGE_PAGE_SIZE = 50;
 
 function safeFileName(
   name: string
@@ -203,6 +211,36 @@ export default function ChatPage() {
     setSharedOpen,
   ] = useState(false);
 
+  const [
+    editingMessage,
+    setEditingMessage,
+  ] = useState<any>(null);
+
+  const [
+    hasMoreHistory,
+    setHasMoreHistory,
+  ] = useState(true);
+
+  const [
+    loadingOlder,
+    setLoadingOlder,
+  ] = useState(false);
+
+  const [
+    unreadBoundaryId,
+    setUnreadBoundaryId,
+  ] = useState<number | null>(null);
+
+  const [
+    newBelowCount,
+    setNewBelowCount,
+  ] = useState(0);
+
+  const [
+    flashMessageId,
+    setFlashMessageId,
+  ] = useState<number | null>(null);
+
   const fileInputRef =
     useRef<HTMLInputElement>(
       null
@@ -325,8 +363,9 @@ const mediaUrlCacheRef =
                 row.id
                   ? {
                       ...message,
-                      read_at:
-                        row.read_at,
+                      ...row,
+                      reactions:
+                        message.reactions || [],
                     }
                   : message
             )
@@ -419,13 +458,31 @@ const mediaUrlCacheRef =
         }
 
         if (
+          row.receiver_id === user.id &&
+          row.sender_id === peerId
+        ) {
+          void supabase.rpc(
+            "alumni_mark_direct_messages_delivered",
+            {
+              p_peer_id: peerId,
+            }
+          );
+        }
+
+        if (
           stickToBottomRef.current
         ) {
+          setNewBelowCount(0);
+
           window.requestAnimationFrame(
             () =>
               scrollToBottom(
                 "smooth"
               )
+          );
+        } else {
+          setNewBelowCount(
+            (count) => count + 1
           );
         }
 
@@ -738,6 +795,101 @@ const mediaUrlCacheRef =
   }, [mediaPreview]);
 
   useEffect(() => {
+    if (!user) return;
+
+    const key =
+      `alumni:draft:direct:${user.id}:${username}`;
+
+    const saved =
+      localStorage.getItem(key);
+
+    if (saved && !newMessage) {
+      setNewMessage(saved);
+    }
+  }, [user?.id, username]);
+
+  useEffect(() => {
+    if (!user) return;
+
+    const key =
+      `alumni:draft:direct:${user.id}:${username}`;
+
+    if (newMessage) {
+      localStorage.setItem(
+        key,
+        newMessage
+      );
+    } else {
+      localStorage.removeItem(
+        key
+      );
+    }
+  }, [
+    user?.id,
+    username,
+    newMessage,
+  ]);
+
+  useEffect(() => {
+    if (!user || !receiver) return;
+
+    const flush = async () => {
+      if (!navigator.onLine) return;
+
+      const queued =
+        outboxFor(
+          "direct",
+          username
+        );
+
+      for (const item of queued) {
+        const { error } =
+          await supabase
+            .from("messages")
+            .insert({
+              sender_id: user.id,
+              receiver_id:
+                item.receiverId ||
+                receiver.id,
+              content:
+                item.content,
+              message_type:
+                "text",
+              reply_to_id:
+                item.replyToId ||
+                null,
+            });
+
+        if (!error) {
+          removeOutbox(
+            item.id
+          );
+        }
+      }
+
+      scheduleChatRefresh(20);
+    };
+
+    void flush();
+
+    window.addEventListener(
+      "online",
+      flush
+    );
+
+    return () => {
+      window.removeEventListener(
+        "online",
+        flush
+      );
+    };
+  }, [
+    user?.id,
+    receiver?.id,
+    username,
+  ]);
+
+  useEffect(() => {
     if (
       !newMessage &&
       textareaRef.current
@@ -1009,11 +1161,14 @@ const mediaUrlCacheRef =
         `and(sender_id.eq.${user.id},receiver_id.eq.${receiverData.id}),and(sender_id.eq.${receiverData.id},receiver_id.eq.${user.id})`
       )
         .order(
-    "created_at",
-    {
-      ascending: true,
-    }
-  );
+          "created_at",
+          {
+            ascending: false,
+          }
+        )
+        .limit(
+          MESSAGE_PAGE_SIZE
+        );
 
 if (
   requestId !==
@@ -1024,10 +1179,72 @@ if (
 
 if (!error) {
 
+      const baseRows =
+        [...(data || [])].reverse();
+
+      setHasMoreHistory(
+        (data || []).length ===
+          MESSAGE_PAGE_SIZE
+      );
+
       const hydrated =
-  await hydrateMedia(
-    data || []
-  );
+        await hydrateMedia(
+          baseRows
+        );
+
+      const hydratedIds =
+        hydrated.map(
+          (message: any) =>
+            message.id
+        );
+
+      let hiddenIds =
+        new Set<number>();
+
+      if (hydratedIds.length) {
+        const {
+          data:
+            hiddenRows,
+        } = await supabase
+          .from(
+            "message_hidden_users"
+          )
+          .select(
+            "message_id"
+          )
+          .eq(
+            "user_id",
+            user.id
+          )
+          .eq(
+            "message_scope",
+            "direct"
+          )
+          .in(
+            "message_id",
+            hydratedIds
+          );
+
+        hiddenIds =
+          new Set(
+            (hiddenRows || []).map(
+              (row: any) =>
+                Number(
+                  row.message_id
+                )
+            )
+          );
+      }
+
+      const visibleHydrated =
+        hydrated.filter(
+          (message: any) =>
+            !hiddenIds.has(
+              Number(
+                message.id
+              )
+            )
+        );
 
 if (
   requestId !==
@@ -1037,7 +1254,7 @@ if (
 }
 
 const messageIds =
-  hydrated.map(
+  visibleHydrated.map(
     (message: any) =>
       message.id
   );
@@ -1090,7 +1307,7 @@ for (
 }
 
 const nextMessages =
-  hydrated.map(
+  visibleHydrated.map(
     (message: any) => ({
       ...message,
       reactions:
@@ -1099,6 +1316,37 @@ const nextMessages =
         ) || [],
     })
   );
+
+if (
+  showLoader &&
+  unreadBoundaryId === null
+) {
+  const firstUnread =
+    nextMessages.find(
+      (message: any) =>
+        message.receiver_id ===
+          user.id &&
+        message.sender_id ===
+          receiverData.id &&
+        !message.read_at
+    );
+
+  if (firstUnread) {
+    setUnreadBoundaryId(
+      Number(
+        firstUnread.id
+      )
+    );
+  }
+}
+
+void supabase.rpc(
+  "alumni_mark_direct_messages_delivered",
+  {
+    p_peer_id:
+      receiverData.id,
+  }
+);
 
 setMessages(
   (current) => {
@@ -1119,6 +1367,14 @@ setMessages(
               next.id ||
             message.read_at !==
               next.read_at ||
+            message.delivered_at !==
+              next.delivered_at ||
+            message.edited_at !==
+              next.edited_at ||
+            message.deleted_at !==
+              next.deleted_at ||
+            message.message_type !==
+              next.message_type ||
             message.content !==
               next.content ||
             message.media_url !==
@@ -1214,6 +1470,264 @@ setMessages(
   }
 }
 
+
+  async function loadOlderMessages() {
+    if (
+      !user ||
+      !receiver ||
+      loadingOlder ||
+      !hasMoreHistory ||
+      !messages.length
+    ) {
+      return;
+    }
+
+    const oldest =
+      messages.find(
+        (message) =>
+          Number(message.id) > 0
+      );
+
+    if (!oldest) return;
+
+    const target =
+      scrollRef.current;
+
+    const oldHeight =
+      target?.scrollHeight || 0;
+
+    const oldTop =
+      target?.scrollTop || 0;
+
+    setLoadingOlder(true);
+
+    try {
+      const {
+        data,
+        error,
+      } = await supabase
+        .from("messages")
+        .select("*")
+        .or(
+          `and(sender_id.eq.${user.id},receiver_id.eq.${receiver.id}),and(sender_id.eq.${receiver.id},receiver_id.eq.${user.id})`
+        )
+        .lt(
+          "created_at",
+          oldest.created_at
+        )
+        .order(
+          "created_at",
+          {
+            ascending: false,
+          }
+        )
+        .limit(
+          MESSAGE_PAGE_SIZE
+        );
+
+      if (error) throw error;
+
+      const rows =
+        [...(data || [])].reverse();
+
+      setHasMoreHistory(
+        (data || []).length ===
+          MESSAGE_PAGE_SIZE
+      );
+
+      if (!rows.length) return;
+
+      const ids =
+        rows.map(
+          (message: any) =>
+            message.id
+        );
+
+      const [
+        reactionsResult,
+        hiddenResult,
+      ] = await Promise.all([
+        supabase
+          .from(
+            "message_reactions"
+          )
+          .select(
+            "message_id,user_id,emoji"
+          )
+          .in(
+            "message_id",
+            ids
+          ),
+        supabase
+          .from(
+            "message_hidden_users"
+          )
+          .select(
+            "message_id"
+          )
+          .eq(
+            "user_id",
+            user.id
+          )
+          .eq(
+            "message_scope",
+            "direct"
+          )
+          .in(
+            "message_id",
+            ids
+          ),
+      ]);
+
+      const hidden =
+        new Set(
+          (
+            hiddenResult.data ||
+            []
+          ).map(
+            (row: any) =>
+              Number(
+                row.message_id
+              )
+          )
+        );
+
+      const reactions =
+        new Map<
+          number,
+          any[]
+        >();
+
+      for (
+        const reaction of
+        reactionsResult.data ||
+        []
+      ) {
+        const current =
+          reactions.get(
+            reaction.message_id
+          ) || [];
+
+        current.push(
+          reaction
+        );
+
+        reactions.set(
+          reaction.message_id,
+          current
+        );
+      }
+
+      const older =
+        rows
+          .filter(
+            (message: any) =>
+              !hidden.has(
+                Number(
+                  message.id
+                )
+              )
+          )
+          .map(
+            (message: any) => ({
+              ...message,
+              reactions:
+                reactions.get(
+                  message.id
+                ) || [],
+            })
+          );
+
+      setMessages(
+        (current) => {
+          const ids =
+            new Set(
+              current.map(
+                (message) =>
+                  message.id
+              )
+            );
+
+          return [
+            ...older.filter(
+              (message) =>
+                !ids.has(
+                  message.id
+                )
+            ),
+            ...current,
+          ];
+        }
+      );
+
+      window.requestAnimationFrame(
+        () => {
+          const next =
+            scrollRef.current;
+
+          if (!next) return;
+
+          next.scrollTop =
+            next.scrollHeight -
+            oldHeight +
+            oldTop;
+        }
+      );
+    } catch (error) {
+      console.error(
+        "No se pudo cargar historial:",
+        error
+      );
+    } finally {
+      setLoadingOlder(false);
+    }
+  }
+
+  function flashAndScrollToMessage(
+    messageId: number
+  ) {
+    const element =
+      document.getElementById(
+        `message-${messageId}`
+      );
+
+    if (!element) {
+      void loadOlderMessages().then(
+        () => {
+          window.setTimeout(
+            () =>
+              flashAndScrollToMessage(
+                messageId
+              ),
+            40
+          );
+        }
+      );
+
+      return;
+    }
+
+    setFlashMessageId(
+      messageId
+    );
+
+    element.scrollIntoView({
+      behavior: "smooth",
+      block: "center",
+    });
+
+    window.setTimeout(
+      () =>
+        setFlashMessageId(
+          (current) =>
+            current ===
+            messageId
+              ? null
+              : current
+        ),
+      1400
+    );
+  }
 
   function clearMedia() {
     if (
@@ -1369,6 +1883,68 @@ setMessages(
     event?.preventDefault();
 
     if (
+      editingMessage
+    ) {
+      const value =
+        newMessage.trim();
+
+      if (
+        !value ||
+        !user ||
+        sending
+      ) {
+        return;
+      }
+
+      setSending(true);
+
+      const {
+        error,
+      } = await supabase.rpc(
+        "alumni_edit_direct_message",
+        {
+          p_message_id:
+            editingMessage.id,
+          p_content:
+            value,
+        }
+      );
+
+      setSending(false);
+
+      if (error) {
+        alert(
+          error.message
+        );
+        return;
+      }
+
+      setMessages(
+        (current) =>
+          current.map(
+            (message) =>
+              message.id ===
+              editingMessage.id
+                ? {
+                    ...message,
+                    content:
+                      value,
+                    edited_at:
+                      new Date()
+                        .toISOString(),
+                  }
+                : message
+          )
+      );
+
+      setEditingMessage(
+        null
+      );
+      setNewMessage("");
+      return;
+    }
+
+    if (
       (!newMessage.trim() &&
         !mediaFile) ||
       !user ||
@@ -1383,6 +1959,80 @@ setMessages(
 
     const fileToSend =
       mediaFile;
+
+    if (
+      typeof navigator !==
+        "undefined" &&
+      !navigator.onLine
+    ) {
+      if (fileToSend) {
+        alert(
+          "Sin conexión. La foto o video se mantendrá listo para enviar cuando vuelvas a conectarte."
+        );
+        return;
+      }
+
+      const queueId =
+        `direct-${Date.now()}`;
+
+      queueOutbox({
+        id: queueId,
+        scope: "direct",
+        conversationId:
+          username,
+        receiverId:
+          receiver.id,
+        content:
+          textToSend,
+        replyToId:
+          replyingTo?.id ||
+          null,
+        createdAt:
+          new Date()
+            .toISOString(),
+      });
+
+      setMessages(
+        (current) => [
+          ...current,
+          {
+            id:
+              -Date.now(),
+            sender_id:
+              user.id,
+            receiver_id:
+              receiver.id,
+            content:
+              textToSend,
+            message_type:
+              "text",
+            reply_to_id:
+              replyingTo?.id ||
+              null,
+            created_at:
+              new Date()
+                .toISOString(),
+            reactions: [],
+            _queued:
+              true,
+          },
+        ]
+      );
+
+      setNewMessage("");
+      setReplyingTo(null);
+      stickToBottomRef.current =
+        true;
+
+      window.requestAnimationFrame(
+        () =>
+          scrollToBottom(
+            "smooth"
+          )
+      );
+
+      return;
+    }
 
     const replyToSend =
       replyingTo;
@@ -1647,6 +2297,146 @@ setMessages(
           textareaRef.current?.focus();
         }
       );
+    }
+  }
+
+  function beginEdit(
+    message: any
+  ) {
+    if (
+      message.sender_id !==
+        user?.id ||
+      message.deleted_at ||
+      message.message_type ===
+        "deleted"
+    ) {
+      return;
+    }
+
+    clearMedia();
+    setReplyingTo(null);
+    setEditingMessage(
+      message
+    );
+    setNewMessage(
+      String(
+        message.content ||
+          ""
+      )
+    );
+
+    window.requestAnimationFrame(
+      () =>
+        textareaRef.current?.focus()
+    );
+  }
+
+  async function hideMessageForMe(
+    message: any
+  ) {
+    const previous =
+      messages;
+
+    setMessages(
+      (current) =>
+        current.filter(
+          (item) =>
+            item.id !==
+            message.id
+        )
+    );
+
+    const { error } =
+      await supabase.rpc(
+        "alumni_hide_message_for_me",
+        {
+          p_scope:
+            "direct",
+          p_message_id:
+            message.id,
+        }
+      );
+
+    if (error) {
+      setMessages(
+        previous
+      );
+      alert(
+        error.message
+      );
+    }
+  }
+
+  async function deleteMessageForEveryone(
+    message: any
+  ) {
+    if (
+      message.sender_id !==
+      user?.id
+    ) {
+      return;
+    }
+
+    const approved =
+      confirm(
+        "¿Eliminar este mensaje para todos?"
+      );
+
+    if (!approved) return;
+
+    const mediaPath =
+      message.media_path;
+
+    const { error } =
+      await supabase.rpc(
+        "alumni_delete_direct_message_for_everyone",
+        {
+          p_message_id:
+            message.id,
+        }
+      );
+
+    if (error) {
+      alert(
+        error.message
+      );
+      return;
+    }
+
+    setMessages(
+      (current) =>
+        current.map(
+          (item) =>
+            item.id ===
+            message.id
+              ? {
+                  ...item,
+                  content:
+                    null,
+                  media_path:
+                    null,
+                  media_type:
+                    null,
+                  message_type:
+                    "deleted",
+                  deleted_at:
+                    new Date()
+                      .toISOString(),
+                  edited_at:
+                    null,
+                  reactions:
+                    [],
+                }
+              : item
+        )
+    );
+
+    if (mediaPath) {
+      void supabase.storage
+        .from(BUCKET)
+        .remove([
+          mediaPath,
+        ]);
     }
   }
 
@@ -2073,6 +2863,21 @@ setMessages(
                 target.scrollTop -
                 target.clientHeight <
               160;
+
+            if (
+              stickToBottomRef.current
+            ) {
+              setNewBelowCount(0);
+            }
+
+            if (
+              target.scrollTop <
+                90 &&
+              hasMoreHistory &&
+              !loadingOlder
+            ) {
+              void loadOlderMessages();
+            }
           }}
           className="alumni-chat-scroll alumni-chat-wallpaper scrollbar-thin min-h-0 flex-1 overscroll-contain overflow-y-auto px-2.5 py-3 sm:px-5 sm:py-4"
           style={{
@@ -2224,7 +3029,25 @@ setMessages(
                       key={
                         message.id
                       }
+                      id={`message-${message.id}`}
+                      className={`rounded-[10px] transition-colors duration-700 ${
+                        flashMessageId ===
+                        message.id
+                          ? "bg-[var(--app-accent-soft)]"
+                          : ""
+                      }`}
                     >
+                      {message.id ===
+                        unreadBoundaryId && (
+                        <div className="my-4 flex items-center gap-3">
+                          <span className="h-px flex-1 bg-[var(--app-border)]" />
+                          <span className="rounded-full bg-[var(--app-accent-soft)] px-3 py-1 text-[11px] font-black text-[var(--app-accent)]">
+                            Mensajes nuevos
+                          </span>
+                          <span className="h-px flex-1 bg-[var(--app-border)]" />
+                        </div>
+                      )}
+
                       {showDay && (
                         <div className="my-3 flex items-center justify-center">
                           <span className="rounded-full border border-[var(--app-border)] bg-[color-mix(in_srgb,var(--app-surface)_88%,transparent)] px-3 py-1.5 text-[10px] font-black text-[var(--app-muted-2)] backdrop-blur-xl">
@@ -2253,7 +3076,20 @@ setMessages(
                             : "mt-1.5"
                         }`}
                       >
-                        {story ? (
+                        {message.message_type ===
+                        "deleted" ? (
+                          <div
+                            className={`alumni-message-bubble max-w-[78%] px-3 py-2 italic sm:max-w-[62%] ${
+                              mine
+                                ? "alumni-message-mine opacity-80"
+                                : "alumni-message-other opacity-80"
+                            }`}
+                          >
+                            <p className="text-[14px]">
+                              Mensaje eliminado
+                            </p>
+                          </div>
+                        ) : story ? (
                           <div
                             className={`max-w-[80%] overflow-hidden rounded-[18px] border sm:max-w-[66%] ${
                               mine
@@ -2272,6 +3108,7 @@ setMessages(
                               messages={messages}
                               currentUserId={user?.id}
                               peerUsername={receiver?.username}
+                              onJump={flashAndScrollToMessage}
                             />
 
                             {message.story_media_url && (
@@ -2299,14 +3136,33 @@ setMessages(
                               </p>
 
                               <div className="mt-1.5 flex items-center justify-end gap-1.5 text-[9px] text-[var(--app-muted-3)]">
+                                {message.edited_at && (
+                                  <span className="mr-1 text-[9px]">
+                                    Editado
+                                  </span>
+                                )}
                                 {time(
                                   message.created_at
                                 )}
 
                                 {mine &&
-                                  (message.read_at ? (
-                                    <CheckCheck
+                                  (message._queued ? (
+                                    <Clock3
                                       size={12}
+                                    />
+                                  ) : message._pending ? (
+                                    <Loader2
+                                      size={12}
+                                      className="animate-spin"
+                                    />
+                                  ) : message.read_at ? (
+                                    <CheckCheck
+                                      size={13}
+                                      className="text-[var(--app-accent)]"
+                                    />
+                                  ) : message.delivered_at ? (
+                                    <CheckCheck
+                                      size={13}
                                     />
                                   ) : (
                                     <Check
@@ -2329,6 +3185,7 @@ setMessages(
                               messages={messages}
                               currentUserId={user?.id}
                               peerUsername={receiver?.username}
+                              onJump={flashAndScrollToMessage}
                             />
 
                             <DeferredMessageMedia
@@ -2370,14 +3227,33 @@ setMessages(
                               )}
 
                               <div className="mt-1 flex items-center justify-end gap-1.5 text-[9px] text-[var(--app-muted-3)]">
+                                {message.edited_at && (
+                                  <span className="mr-1 text-[9px]">
+                                    Editado
+                                  </span>
+                                )}
                                 {time(
                                   message.created_at
                                 )}
 
                                 {mine &&
-                                  (message.read_at ? (
-                                    <CheckCheck
+                                  (message._queued ? (
+                                    <Clock3
                                       size={12}
+                                    />
+                                  ) : message._pending ? (
+                                    <Loader2
+                                      size={12}
+                                      className="animate-spin"
+                                    />
+                                  ) : message.read_at ? (
+                                    <CheckCheck
+                                      size={13}
+                                      className="text-[var(--app-accent)]"
+                                    />
+                                  ) : message.delivered_at ? (
+                                    <CheckCheck
+                                      size={13}
                                     />
                                   ) : (
                                     <Check
@@ -2408,6 +3284,7 @@ setMessages(
                               messages={messages}
                               currentUserId={user?.id}
                               peerUsername={receiver?.username}
+                              onJump={flashAndScrollToMessage}
                             />
 
                             <p className="whitespace-pre-wrap break-words text-[15px] leading-[1.45]">
@@ -2424,15 +3301,34 @@ setMessages(
                               }`}
                             >
                               <span className="text-[10px]">
+                                {message.edited_at && (
+                                  <span className="mr-1 text-[9px]">
+                                    Editado
+                                  </span>
+                                )}
                                 {time(
                                   message.created_at
                                 )}
                               </span>
 
                               {mine &&
-                                (message.read_at ? (
-                                  <CheckCheck
+                                (message._queued ? (
+                                  <Clock3
                                     size={12}
+                                  />
+                                ) : message._pending ? (
+                                  <Loader2
+                                    size={12}
+                                    className="animate-spin"
+                                  />
+                                ) : message.read_at ? (
+                                  <CheckCheck
+                                    size={13}
+                                    className="text-[var(--app-accent)]"
+                                  />
+                                ) : message.delivered_at ? (
+                                  <CheckCheck
+                                    size={13}
                                   />
                                 ) : (
                                   <Check
@@ -2461,14 +3357,33 @@ setMessages(
                             emoji
                           )
                         }
+                        onEdit={() =>
+                          beginEdit(
+                            message
+                          )
+                        }
+                        onDeleteForMe={() =>
+                          void hideMessageForMe(
+                            message
+                          )
+                        }
+                        onDeleteForEveryone={() =>
+                          void deleteMessageForEveryone(
+                            message
+                          )
+                        }
                       />
 
                       {mine &&
                         isLastOwn &&
-                        message.read_at &&
-                        !searchOpen && (
-                          <p className="mt-1.5 pr-1 text-right text-[10px] font-semibold text-[var(--app-muted-3)]">
-                            Visto
+                        !searchOpen &&
+                        Number(message.id) > 0 && (
+                          <p className="mt-1.5 pr-1 text-right text-[10px] font-semibold text-[var(--app-muted-2)]">
+                            {message.read_at
+                              ? "Visto"
+                              : message.delivered_at
+                              ? "Entregado"
+                              : "Enviado"}
                           </p>
                         )}
                     </div>
@@ -2478,6 +3393,31 @@ setMessages(
             </div>
           )}
         </div>
+
+        {!stickToBottomRef.current && (
+          <button
+            type="button"
+            onClick={() => {
+              stickToBottomRef.current =
+                true;
+              setNewBelowCount(0);
+              scrollToBottom(
+                "smooth"
+              );
+            }}
+            className="absolute bottom-[82px] right-4 z-[70] flex h-10 min-w-10 items-center justify-center gap-1 rounded-full border border-[var(--app-border)] bg-[var(--app-surface)] px-3 text-[11px] font-black text-[var(--app-text)] shadow-[0_10px_30px_var(--app-shadow)]"
+            aria-label="Ir a mensajes recientes"
+          >
+            <ChevronDown
+              size={17}
+            />
+            {newBelowCount > 0 && (
+              <span>
+                {newBelowCount}
+              </span>
+            )}
+          </button>
+        )}
 
         {receiverTyping && (
           <div className="shrink-0 px-4 pb-1.5 text-[12px] font-semibold text-[var(--app-muted-2)]">
@@ -2491,6 +3431,30 @@ setMessages(
           }
           className="alumni-chat-composer-shell shrink-0 border-t border-[var(--app-border)] bg-[color-mix(in_srgb,var(--app-surface)_96%,transparent)] px-2 pb-[max(7px,env(safe-area-inset-bottom))] pt-1.5 backdrop-blur-2xl sm:px-3 sm:pb-3 sm:pt-2"
         >
+          {editingMessage && (
+            <div className="alumni-composer-reply-preview">
+              <div className="alumni-composer-reply-copy">
+                <p className="alumni-reply-author">
+                  Editando mensaje
+                </p>
+                <p className="alumni-reply-summary">
+                  {editingMessage.content}
+                </p>
+              </div>
+              <button
+                type="button"
+                className="alumni-composer-reply-close"
+                onClick={() => {
+                  setEditingMessage(null);
+                  setNewMessage("");
+                }}
+                aria-label="Cancelar edición"
+              >
+                <X size={15} />
+              </button>
+            </div>
+          )}
+
           <ComposerReplyPreview
             message={replyingTo}
             currentUserId={user?.id}
@@ -2582,7 +3546,10 @@ setMessages(
               }
               disabled={
                 !receiver ||
-                sending
+                sending ||
+                Boolean(
+                  editingMessage
+                )
               }
               className="flex h-[38px] w-[38px] shrink-0 items-center justify-center rounded-full text-[var(--app-accent)] transition active:bg-[var(--app-accent-soft)] disabled:opacity-40"
               aria-label="Adjuntar foto o video"
@@ -2804,3 +3771,7 @@ setMessages(
 /* ALUMNI_1_3_5_MEDIA_MODAL_SPOTIFY_FIX:DIRECT */
 
 /* ALUMNI_1_3_7_MESSAGING_GLOBAL_STABILITY:DIRECT_CHAT */
+
+/* ALUMNI_1_5_0_MESSAGING_2_HOME_NAV:DIRECT */
+
+/* ALUMNI_1_5_0_FIX3_VISIBLE_HYDRATED_ORDER */
