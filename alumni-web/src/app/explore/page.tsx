@@ -27,6 +27,7 @@ import {
 } from "@/lib/feedMedia";
 import ExplorePostCard from "@/components/explore/ExplorePostCard";
 import ExplorePersonRow from "@/components/explore/ExplorePersonRow";
+import ExploreSocialPulse from "@/components/explore/ExploreSocialPulse";
 import "./explore-pro.css";
 
 type Mode = "all" | "people" | "posts";
@@ -522,6 +523,8 @@ function ExploreContent() {
           )}
         </header>
 
+        {!activeSearch && <ExploreSocialPulse />}
+
         {!activeSearch && recents.length > 0 && (
           <section className="alumni-explore-section">
             <div className="alumni-explore-section-title">
@@ -829,3 +832,5 @@ export default function ExplorePage() {
 }
 
 /* ALUMNI_1_6_0_EXPLORE_DISCOVERY */
+
+/* ALUMNI_2_2_0_FIX1_SAFE_ADDITIVE:EXPLORE */
