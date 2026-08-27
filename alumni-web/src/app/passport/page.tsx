@@ -271,6 +271,16 @@ export default function PassportPage() {
           </>
         )}
 
+        <button
+          type="button"
+          className="passport-mobile-create"
+          onClick={() => setCountryOpen(true)}
+          aria-label="Añadir país al Pasaporte Alumni"
+        >
+          <Plus size={17} />
+          Añadir país
+        </button>
+
         {countryOpen && (
           <div className="passport-backdrop" onMouseDown={(e) => e.target === e.currentTarget && setCountryOpen(false)}>
             <section className="passport-modal">
@@ -371,3 +381,5 @@ export default function PassportPage() {
 /* ALUMNI_2_2_0_FIX1_PASSPORT */
 
 /* ALUMNI_2_2_1_PASSPORT_CREATE_FIX:PAGE */
+
+/* ALUMNI_2_2_2_PASSPORT_MOBILE_ACTION:PAGE */
