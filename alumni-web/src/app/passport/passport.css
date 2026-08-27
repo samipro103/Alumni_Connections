@@ -240,3 +240,167 @@
 }
 
 /* ALUMNI_2_2_2_PASSPORT_MOBILE_ACTION:STYLE */
+
+
+/* ============================================================
+   ALUMNI 2.2.3 — confirm actions INSIDE Passport editor
+   ============================================================ */
+
+.passport-modal-header-v2 {
+  display: grid !important;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: start !important;
+  gap: 14px !important;
+}
+
+.passport-modal-title {
+  min-width: 0;
+}
+
+.passport-modal-close,
+.passport-modal-confirm {
+  display: inline-flex !important;
+  min-height: 38px !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 6px !important;
+
+  padding: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+
+  font-size: 10px !important;
+  font-weight: 900 !important;
+}
+
+.passport-modal-close {
+  color: var(--app-muted-2) !important;
+}
+
+.passport-modal-confirm {
+  color: var(--app-accent) !important;
+}
+
+.passport-modal-confirm:disabled {
+  color: var(--app-muted-3) !important;
+  opacity: .55;
+}
+
+.passport-modal-close > span,
+.passport-modal-confirm > span {
+  display: inline !important;
+  color: inherit !important;
+  font-size: inherit !important;
+  font-weight: inherit !important;
+  letter-spacing: 0 !important;
+  text-transform: none !important;
+}
+
+/* old duplicated outside action is never shown */
+.passport-mobile-create {
+  display: none !important;
+}
+
+@media (max-width: 700px) {
+  .passport-modal {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100dvh;
+    max-height: 100dvh;
+  }
+
+  .passport-modal-header-v2 {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+
+    grid-template-columns: 42px minmax(0, 1fr) 54px !important;
+
+    width: 100%;
+
+    padding:
+      max(
+        12px,
+        env(safe-area-inset-top)
+      )
+      16px
+      12px !important;
+
+    background:
+      color-mix(
+        in srgb,
+        var(--app-bg) 98%,
+        transparent
+      );
+
+    backdrop-filter: blur(20px);
+  }
+
+  .passport-modal-close,
+  .passport-modal-confirm {
+    width: 100%;
+    min-height: 42px !important;
+  }
+
+  .passport-modal-close > span,
+  .passport-modal-confirm > span {
+    display: none !important;
+  }
+
+  .passport-modal-close svg,
+  .passport-modal-confirm svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  .passport-modal-title {
+    align-self: center;
+    text-align: center;
+  }
+
+  .passport-modal-title > span {
+    display: block;
+    font-size: 8px !important;
+  }
+
+  .passport-modal-title h3 {
+    margin-top: 3px;
+    font-size: 17px;
+    line-height: 1.18;
+  }
+
+  .passport-body {
+    min-height: 0;
+    flex: 1 1 auto;
+    overflow-y: auto;
+
+    padding-bottom:
+      calc(
+        32px +
+        env(safe-area-inset-bottom)
+      );
+  }
+
+  /* mobile has ONE confirm action: top-right check */
+  .passport-modal > footer {
+    display: none !important;
+  }
+
+  .passport-empty-create {
+    display: none !important;
+  }
+
+  .passport-empty-first {
+    padding-top: 48px;
+  }
+}
+
+@media (min-width: 701px) {
+  /* desktop keeps footer button as secondary confirmation */
+  .passport-modal > footer {
+    display: flex;
+  }
+}
+
+/* ALUMNI_2_2_3_PASSPORT_INNER_CONFIRM:STYLE */

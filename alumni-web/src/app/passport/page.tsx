@@ -1,6 +1,6 @@
 "use client";
 
-import { Camera, Globe2, ImagePlus, Plus } from "lucide-react";
+import { Camera, Check, Globe2, ImagePlus, Plus, X } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import AppShell from "@/components/layout/AppShell";
 import { useAuth } from "@/components/auth/AuthProvider";
@@ -200,16 +200,7 @@ export default function PassportPage() {
           <section className="passport-empty passport-empty-first">
             <Globe2 size={28} />
             <strong>Tu pasaporte está esperando su primer destino.</strong>
-            <p>Crea un país, elige un estilo y empieza a guardar recuerdos.</p>
-
-            <button
-              type="button"
-              className="passport-empty-create"
-              onClick={() => setCountryOpen(true)}
-            >
-              <Plus size={16} />
-              Crear primer país
-            </button>
+            <p>Usa “Añadir país” arriba para crear tu primer álbum de viaje.</p>
           </section>
         ) : (
           <>
@@ -271,25 +262,40 @@ export default function PassportPage() {
           </>
         )}
 
-        <button
-          type="button"
-          className="passport-mobile-create"
-          onClick={() => setCountryOpen(true)}
-          aria-label="Añadir país al Pasaporte Alumni"
-        >
-          <Plus size={17} />
-          Añadir país
-        </button>
-
         {countryOpen && (
           <div className="passport-backdrop" onMouseDown={(e) => e.target === e.currentTarget && setCountryOpen(false)}>
             <section className="passport-modal">
-              <header>
-                <div>
+              <header className="passport-modal-header-v2">
+                <button
+                  type="button"
+                  className="passport-modal-close"
+                  onClick={() => setCountryOpen(false)}
+                  aria-label="Cerrar"
+                  disabled={busy}
+                >
+                  <X size={17} />
+                  <span>Cerrar</span>
+                </button>
+
+                <div className="passport-modal-title">
                   <span>Nuevo país</span>
                   <h3>Dale identidad a este destino.</h3>
                 </div>
-                <button type="button" onClick={() => setCountryOpen(false)}>Cerrar</button>
+
+                <button
+                  type="button"
+                  className="passport-modal-confirm"
+                  disabled={
+                    busy ||
+                    !form.country_name.trim() ||
+                    !form.country_code.trim()
+                  }
+                  onClick={() => void createCountry()}
+                  aria-label="Crear país"
+                >
+                  <Check size={17} />
+                  <span>{busy ? "Creando..." : "Crear"}</span>
+                </button>
               </header>
 
               <div className="passport-body">
@@ -345,12 +351,33 @@ export default function PassportPage() {
         {photoOpen && active && (
           <div className="passport-backdrop" onMouseDown={(e) => e.target === e.currentTarget && setPhotoOpen(false)}>
             <section className="passport-modal">
-              <header>
-                <div>
+              <header className="passport-modal-header-v2">
+                <button
+                  type="button"
+                  className="passport-modal-close"
+                  onClick={() => setPhotoOpen(false)}
+                  aria-label="Cerrar"
+                  disabled={busy}
+                >
+                  <X size={17} />
+                  <span>Cerrar</span>
+                </button>
+
+                <div className="passport-modal-title">
                   <span>Nueva foto</span>
                   <h3>Agrega un recuerdo a {active.country_name}.</h3>
                 </div>
-                <button type="button" onClick={() => setPhotoOpen(false)}>Cerrar</button>
+
+                <button
+                  type="button"
+                  className="passport-modal-confirm"
+                  disabled={busy || !photoFile}
+                  onClick={() => void addPhoto()}
+                  aria-label="Guardar foto"
+                >
+                  <Check size={17} />
+                  <span>{busy ? "Subiendo..." : "Guardar"}</span>
+                </button>
               </header>
 
               <div className="passport-body">
@@ -383,3 +410,5 @@ export default function PassportPage() {
 /* ALUMNI_2_2_1_PASSPORT_CREATE_FIX:PAGE */
 
 /* ALUMNI_2_2_2_PASSPORT_MOBILE_ACTION:PAGE */
+
+/* ALUMNI_2_2_3_PASSPORT_INNER_CONFIRM:PAGE */
