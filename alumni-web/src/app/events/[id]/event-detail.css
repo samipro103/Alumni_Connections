@@ -221,3 +221,115 @@
     padding-top: 12px;
   }
 }
+
+/* ALUMNI 2.1.2 — clearer event controls */
+.event-rsvp-v2 {
+  align-items: flex-start;
+}
+
+.event-rsvp-heading p {
+  margin-top: 5px;
+  color: var(--app-muted-2);
+  font-size: 10px;
+  line-height: 1.45;
+}
+
+.event-rsvp-choice {
+  display: grid;
+  width: min(100%, 480px);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  border-top: 1px solid var(--app-border);
+  border-bottom: 1px solid var(--app-border);
+}
+
+.event-rsvp-choice > button {
+  position: relative;
+  display: grid;
+  grid-template-columns: 20px minmax(0, 1fr);
+  min-height: 62px;
+  align-items: center;
+  gap: 7px;
+  padding: 0 12px;
+  border: 0;
+  border-right: 1px solid var(--app-border);
+  background: transparent;
+  color: var(--app-muted-2);
+  text-align: left;
+}
+
+.event-rsvp-choice > button:last-child {
+  border-right: 0;
+}
+
+.event-rsvp-choice > button::after {
+  content: "";
+  position: absolute;
+  right: 12px;
+  bottom: -1px;
+  left: 12px;
+  height: 2px;
+  background: transparent;
+}
+
+.event-rsvp-choice > button[data-active="true"] {
+  color: var(--app-text);
+}
+
+.event-rsvp-choice > button[data-active="true"]::after {
+  background: var(--app-accent);
+}
+
+.event-rsvp-choice strong,
+.event-rsvp-choice small {
+  display: block;
+}
+
+.event-rsvp-choice strong {
+  color: inherit;
+  font-size: 10px;
+  font-weight: 900;
+}
+
+.event-rsvp-choice small {
+  margin-top: 2px;
+  color: var(--app-muted-2);
+  font-size: 8px;
+}
+
+.event-attendance-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.event-attendance-actions > button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 0;
+  background: transparent;
+  color: var(--app-muted-2);
+  font-size: 10px;
+  font-weight: 850;
+}
+
+@media (max-width: 620px) {
+  .event-rsvp-choice {
+    width: 100%;
+  }
+
+  .event-rsvp-choice > button {
+    min-height: 66px;
+    grid-template-columns: 18px minmax(0, 1fr);
+    padding-inline: 8px;
+  }
+
+  .event-rsvp-choice small {
+    display: none;
+  }
+
+  .event-attendance > header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}

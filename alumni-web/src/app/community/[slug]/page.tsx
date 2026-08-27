@@ -22,6 +22,7 @@ import { useParams } from "next/navigation";
 import AppShell from "@/components/layout/AppShell";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { supabase } from "@/lib/supabase";
+import SocialInvitePicker from "@/components/social/SocialInvitePicker";
 import "../community-2.css";
 import "./community-detail.css";
 
@@ -274,26 +275,36 @@ export default function CommunityDetailPage() {
           </div>
 
           {user && (
-            <button
-              type="button"
-              onClick={() => void joinOrLeave()}
-              disabled={
-                joining ||
-                membership?.role === "owner" ||
-                membership?.status === "pending"
-              }
-              className="community-detail-join"
-            >
-              {membership?.role === "owner"
-                ? "Tu comunidad"
-                : membership?.status === "pending"
-                ? "Solicitud enviada"
-                : membership?.status === "active"
-                ? "Salir"
-                : community.visibility === "private"
-                ? "Solicitar acceso"
-                : "Unirme"}
-            </button>
+            <div className="community-detail-actions">
+              {membership?.status === "active" && (
+                <SocialInvitePicker
+                  scope="community"
+                  targetId={community.id}
+                  label="Invitar personas"
+                />
+              )}
+
+              <button
+                type="button"
+                onClick={() => void joinOrLeave()}
+                disabled={
+                  joining ||
+                  membership?.role === "owner" ||
+                  membership?.status === "pending"
+                }
+                className="community-detail-join"
+              >
+                {membership?.role === "owner"
+                  ? "Tu comunidad"
+                  : membership?.status === "pending"
+                  ? "Solicitud enviada"
+                  : membership?.status === "active"
+                  ? "Salir"
+                  : community.visibility === "private"
+                  ? "Solicitar acceso"
+                  : "Unirme"}
+              </button>
+            </div>
           )}
         </header>
 
@@ -494,3 +505,4 @@ export default function CommunityDetailPage() {
 }
 
 /* ALUMNI_2_1_COMMUNITY_DETAIL */
+/* ALUMNI_2_1_2_COMMUNITY_INVITES */

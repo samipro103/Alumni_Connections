@@ -6,6 +6,7 @@ import RightSidebar from "./RightSidebar";
 import TopBar from "./TopBar";
 import MobileNav from "./MobileNav";
 import AppUtilities from "./AppUtilities";
+import EventReminderBootstrap from "@/components/events/EventReminderBootstrap";
 
 interface Props {
   children: ReactNode;
@@ -22,6 +23,7 @@ export default function AppShell({
 }: Props) {
   return (
     <>
+      <EventReminderBootstrap />
       <div
         className={
           immersiveMobile
@@ -84,3 +86,5 @@ export default function AppShell({
 }
 
 /* ALUMNI_1_3_6_CHAT_STABILITY_MEDIA_SPOTIFY:APP_SHELL */
+
+/* ALUMNI_2_1_2_EVENT_REMINDER_BOOTSTRAP:MOUNT */

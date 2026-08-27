@@ -3,6 +3,7 @@
 import {
   AtSign,
   Bell,
+  CalendarDays,
   CheckCheck,
   ChevronDown,
   Heart,
@@ -24,6 +25,7 @@ import AppShell from "@/components/layout/AppShell";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { supabase } from "@/lib/supabase";
 import { hydratePostMediaItems } from "@/lib/feedMedia";
+import InvitationNotificationActions from "@/components/social/InvitationNotificationActions";
 import "./notifications-pro.css";
 
 type FilterType =
@@ -73,7 +75,15 @@ function categoryOf(
   const target = String(targetType || "").toLowerCase();
 
   if (
-    ["follow", "follow_request", "follow_request_accepted"].includes(t)
+    [
+      "follow",
+      "follow_request",
+      "follow_request_accepted",
+      "community_invite",
+      "community_join_request",
+      "event_invite",
+      "event_reminder",
+    ].includes(t)
   ) {
     return "connections";
   }
@@ -193,6 +203,18 @@ function notificationCopy(group: GroupedNotification) {
         ? "te mencionaron en un grupo"
         : "te mencionó en un grupo";
 
+    case "community_invite":
+      return "te invitó a una comunidad";
+
+    case "community_join_request":
+      return "quiere entrar a tu comunidad";
+
+    case "event_invite":
+      return "te invitó a un evento";
+
+    case "event_reminder":
+      return "te recuerda que tienes un evento dentro de las próximas 24 horas";
+
     default:
       return plural
         ? "interactuaron con tu contenido"
@@ -218,12 +240,24 @@ function iconFor(group: GroupedNotification) {
     case "group_mention":
       return AtSign;
 
+    case "event_invite":
+    case "event_reminder":
+      return CalendarDays;
+
+    case "community_invite":
+    case "community_join_request":
+      return UserPlus;
+
     default:
       return Heart;
   }
 }
 
 function actorText(group: GroupedNotification) {
+  if (group.type === "event_reminder") {
+    return "Alumni";
+  }
+
   const names = group.actors
     .map((actor) => actor?.username)
     .filter(Boolean);
@@ -624,6 +658,26 @@ export default function NotificationsPage() {
       return;
     }
 
+    if (group.targetType === "event") {
+      router.push(`/events/${encodeURIComponent(group.targetId)}`);
+      return;
+    }
+
+    if (group.targetType === "community") {
+      const { data: community } = await supabase
+        .from("communities")
+        .select("slug")
+        .eq("id", group.targetId)
+        .maybeSingle();
+
+      if (community?.slug) {
+        router.push(`/community/${community.slug}`);
+      } else {
+        router.push("/community");
+      }
+      return;
+    }
+
     if (group.type === "story_reply") {
       if (actorUsername) {
         router.push(`/messages/${actorUsername}`);
@@ -982,6 +1036,15 @@ export default function NotificationsPage() {
                                 </button>
                               </div>
                             )}
+
+                            <InvitationNotificationActions
+                              type={group.type}
+                              targetId={group.targetId}
+                              actorId={group.actors[0]?.id || null}
+                              onDone={() =>
+                                loadPage(0, true, false)
+                              }
+                            />
                           </article>
                         );
                       })}
@@ -1114,3 +1177,5 @@ export default function NotificationsPage() {
 }
 
 /* ALUMNI_1_7_0_NOTIFICATIONS_ACTIVITY_2 */
+
+/* ALUMNI_2_1_2_NOTIFICATION_INVITES */

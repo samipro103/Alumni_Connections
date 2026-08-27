@@ -324,3 +324,18 @@
     padding-top: 12px;
   }
 }
+
+/* ALUMNI 2.1.2 — clearer community actions */
+.community-detail-actions {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 16px;
+}
+
+@media (max-width: 620px) {
+  .community-detail-actions {
+    width: 100%;
+    justify-content: space-between;
+  }
+}

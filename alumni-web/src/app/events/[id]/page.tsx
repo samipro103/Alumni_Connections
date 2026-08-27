@@ -3,10 +3,12 @@
 import {
   ArrowLeft,
   CalendarDays,
+  CheckCircle2,
   Clock3,
   MapPin,
   Share2,
-  Users,
+  Sparkles,
+  XCircle,
 } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
@@ -14,6 +16,7 @@ import { useParams } from "next/navigation";
 import AppShell from "@/components/layout/AppShell";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { supabase } from "@/lib/supabase";
+import SocialInvitePicker from "@/components/social/SocialInvitePicker";
 import "../events-2.css";
 import "./event-detail.css";
 
@@ -233,20 +236,25 @@ export default function EventDetailPage() {
           )}
         </header>
 
-        <section className="event-rsvp">
-          <div>
+        <section className="event-rsvp event-rsvp-v2">
+          <div className="event-rsvp-heading">
             <span>Tu respuesta</span>
-            <h2>¿Te apuntas?</h2>
+            <h2>¿Vas a ir?</h2>
+            <p>Elige una opción. Puedes cambiarla cuando quieras.</p>
           </div>
 
-          <div className="event-rsvp-actions">
+          <div className="event-rsvp-choice" role="group" aria-label="Respuesta al evento">
             <button
               type="button"
               data-active={myStatus === "going" ? "true" : "false"}
               disabled={Boolean(busy)}
               onClick={() => void setRsvp("going")}
             >
-              Voy
+              <CheckCircle2 size={17} />
+              <span>
+                <strong>Voy</strong>
+                <small>Cuenta conmigo</small>
+              </span>
             </button>
 
             <button
@@ -255,7 +263,11 @@ export default function EventDetailPage() {
               disabled={Boolean(busy)}
               onClick={() => void setRsvp("interested")}
             >
-              Me interesa
+              <Sparkles size={17} />
+              <span>
+                <strong>Me interesa</strong>
+                <small>Tal vez vaya</small>
+              </span>
             </button>
 
             <button
@@ -264,7 +276,11 @@ export default function EventDetailPage() {
               disabled={Boolean(busy)}
               onClick={() => void setRsvp("not_going")}
             >
-              No puedo
+              <XCircle size={17} />
+              <span>
+                <strong>No puedo</strong>
+                <small>Esta vez no</small>
+              </span>
             </button>
           </div>
         </section>
@@ -278,10 +294,21 @@ export default function EventDetailPage() {
               </h2>
             </div>
 
-            <button type="button" onClick={() => void shareEvent()}>
-              <Share2 size={15} />
-              Compartir
-            </button>
+            <div className="event-attendance-actions">
+              {user && (
+                <SocialInvitePicker
+                  scope="event"
+                  targetId={event.id}
+                  communityId={event.community_id}
+                  label="Invitar personas"
+                />
+              )}
+
+              <button type="button" onClick={() => void shareEvent()}>
+                <Share2 size={15} />
+                Compartir
+              </button>
+            </div>
           </header>
 
           {going.length > 0 && (
@@ -320,3 +347,4 @@ export default function EventDetailPage() {
 }
 
 /* ALUMNI_2_1_EVENT_DETAIL */
+/* ALUMNI_2_1_2_EVENT_CONTROLS_INVITES */
