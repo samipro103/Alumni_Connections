@@ -1,17 +1,10 @@
 "use client";
 
-import {
-  ArrowRight,
-  Globe2,
-  MapPinned,
-  Pencil,
-  Plane,
-  Plus,
-  X,
-} from "lucide-react";
+import { ArrowRight, Pencil, Plane, X } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
+import { flagEmoji } from "@/lib/countries";
 import styles from "./ProfilePassportPreview.module.css";
 
 type Props = {
@@ -20,16 +13,6 @@ type Props = {
   own?: boolean;
 };
 
-async function sign(path?: string | null) {
-  if (!path) return null;
-
-  const { data, error } = await supabase.storage
-    .from("passport-media")
-    .createSignedUrl(path, 60 * 30);
-
-  return error ? null : data?.signedUrl || null;
-}
-
 export default function ProfilePassportPreview({
   userId,
   username,
@@ -37,91 +20,57 @@ export default function ProfilePassportPreview({
 }: Props) {
   const [countries, setCountries] = useState<any[]>([]);
   const [travel, setTravel] = useState<any>(null);
-  const [editingDestination, setEditingDestination] =
-    useState(false);
-  const [savingDestination, setSavingDestination] =
-    useState(false);
-  const [destinationForm, setDestinationForm] = useState({
-    name: "",
-    code: "",
-  });
+  const [editingDestination, setEditingDestination] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [form, setForm] = useState({ name: "", code: "" });
 
   useEffect(() => {
     void load();
   }, [userId]);
 
   async function load() {
-    const [countryResult, travelResult] =
-      await Promise.all([
-        supabase
-          .from("passport_countries")
-          .select(
-            "id,country_name,country_code,note,theme_style,cover_media_path,created_at"
-          )
-          .eq("user_id", userId)
-          .order("created_at", { ascending: false })
-          .limit(5),
-        supabase
-          .from("profile_travel_status")
-          .select(
-            "next_destination_name,next_destination_code,source_passport_country_id"
-          )
-          .eq("user_id", userId)
-          .maybeSingle(),
-      ]);
+    const [countryResult, travelResult] = await Promise.all([
+      supabase
+        .from("passport_countries")
+        .select("id,country_name,country_code,city,note,theme_style,created_at")
+        .eq("user_id", userId)
+        .order("created_at", { ascending: false })
+        .limit(6),
+      supabase
+        .from("profile_travel_status")
+        .select("next_destination_name,next_destination_code,source_passport_country_id")
+        .eq("user_id", userId)
+        .maybeSingle(),
+    ]);
 
-    const hydrated = await Promise.all(
-      (countryResult.data || []).map(
-        async (row: any) => ({
-          ...row,
-          cover_url: await sign(
-            row.cover_media_path
-          ),
-        })
-      )
-    );
-
-    setCountries(hydrated);
+    setCountries(countryResult.data || []);
     setTravel(travelResult.data || null);
 
     if (travelResult.data) {
-      setDestinationForm({
-        name:
-          travelResult.data
-            .next_destination_name || "",
-        code:
-          travelResult.data
-            .next_destination_code || "",
+      setForm({
+        name: travelResult.data.next_destination_name || "",
+        code: travelResult.data.next_destination_code || "",
       });
     }
   }
 
   async function saveDestination() {
-    const name =
-      destinationForm.name.trim();
+    if (!own || !form.name.trim() || saving) return;
 
-    if (!own || !name || savingDestination) {
-      return;
-    }
-
-    setSavingDestination(true);
-
+    setSaving(true);
     const { error } = await supabase
       .from("profile_travel_status")
       .upsert(
         {
           user_id: userId,
-          next_destination_name: name,
-          next_destination_code:
-            destinationForm.code
-              .trim()
-              .toUpperCase() || null,
+          next_destination_name: form.name.trim(),
+          next_destination_code: form.code.trim().toUpperCase() || null,
           source_passport_country_id: null,
         },
         { onConflict: "user_id" }
       );
 
-    setSavingDestination(false);
+    setSaving(false);
 
     if (error) {
       alert(error.message);
@@ -132,175 +81,83 @@ export default function ProfilePassportPreview({
     await load();
   }
 
-  if (
-    !own &&
-    countries.length === 0 &&
-    !travel?.next_destination_name
-  ) {
+  if (!own && countries.length === 0 && !travel?.next_destination_name) {
     return null;
   }
 
   return (
     <section className={styles.root}>
       <header className={styles.header}>
-        <div>
-          <span>Pasaporte Alumni</span>
-          <h3>
-            {own
-              ? "Tus lugares cuentan parte de tu historia."
-              : `Los lugares de @${username}.`}
-          </h3>
-        </div>
-
-        <Link
-          href={
-            own
-              ? "/passport"
-              : `/passport/${username}`
-          }
-        >
-          {own
-            ? "Gestionar"
-            : "Ver pasaporte"}
-          <ArrowRight size={14} />
+        <Link href={own ? "/passport" : `/passport/${username}`}>
+          Pasaporte Alumni
+          <ArrowRight size={13} />
         </Link>
-      </header>
 
-      {travel?.next_destination_name ? (
-        <div className={styles.nextDestination}>
-          <div className={styles.nextIcon}>
-            <Plane size={18} />
-          </div>
-
-          <div>
-            <span>Próximo destino</span>
-            <strong>
-              {travel.next_destination_name}
-            </strong>
-            {travel.next_destination_code && (
-              <small>
-                {travel.next_destination_code}
-              </small>
+        {travel?.next_destination_name ? (
+          <div className={styles.next}>
+            <span className={styles.flag}>
+              {flagEmoji(travel.next_destination_code)}
+            </span>
+            <span>Próximo destino:</span>
+            <strong>{travel.next_destination_name}</strong>
+            {own && (
+              <button
+                type="button"
+                onClick={() => setEditingDestination(true)}
+                aria-label="Editar próximo destino"
+              >
+                <Pencil size={12} />
+              </button>
             )}
           </div>
+        ) : own ? (
+          <button
+            type="button"
+            className={styles.addNext}
+            onClick={() => setEditingDestination(true)}
+          >
+            <Plane size={13} />
+            Próximo destino
+          </button>
+        ) : null}
+      </header>
 
-          {own && (
-            <button
-              type="button"
-              onClick={() =>
-                setEditingDestination(true)
-              }
-              aria-label="Editar próximo destino"
-            >
-              <Pencil size={14} />
-            </button>
-          )}
-        </div>
-      ) : own ? (
-        <button
-          type="button"
-          className={styles.addDestination}
-          onClick={() =>
-            setEditingDestination(true)
-          }
-        >
-          <Plane size={16} />
-          <span>
-            <strong>
-              Añadir próximo destino
-            </strong>
-            <small>
-              Cuéntale a tu red dónde te gustaría ir.
-            </small>
-          </span>
-          <Plus size={15} />
-        </button>
-      ) : null}
-
-      {countries.length > 0 ? (
-        <div className={styles.countryStrip}>
+      {countries.length > 0 && (
+        <div className={styles.strip}>
           {countries.map((country: any) => (
             <Link
               key={country.id}
-              href={
-                own
-                  ? `/passport`
-                  : `/passport/${username}?country=${country.id}`
-              }
-              className={`${styles.country} ${
-                styles[
-                  `theme_${country.theme_style || "aurora"}`
-                ]
-              }`}
+              href={own ? "/passport" : `/passport/${username}?country=${country.id}`}
+              className={styles.country}
             >
-              <div className={styles.countryMedia}>
-                {country.cover_url ? (
-                  <img
-                    src={country.cover_url}
-                    alt={country.country_name}
-                  />
-                ) : (
-                  <Globe2 size={21} />
-                )}
-              </div>
-
-              <span>
-                {country.country_code}
+              <span className={styles.countryFlag}>
+                {flagEmoji(country.country_code)}
               </span>
-              <strong>
-                {country.country_name}
-              </strong>
+              <span>
+                <strong>{country.country_name}</strong>
+                {country.city && <small>{country.city}</small>}
+              </span>
             </Link>
           ))}
         </div>
-      ) : own ? (
-        <Link
-          href="/passport"
-          className={styles.emptyPassport}
-        >
-          <MapPinned size={17} />
-          <span>
-            <strong>
-              Empieza tu Pasaporte
-            </strong>
-            <small>
-              Crea tu primer país y álbum.
-            </small>
-          </span>
-          <ArrowRight size={15} />
-        </Link>
-      ) : null}
+      )}
 
       {editingDestination && own && (
         <div
           className={styles.backdrop}
           onMouseDown={(event) => {
-            if (
-              event.target === event.currentTarget
-            ) {
+            if (event.target === event.currentTarget) {
               setEditingDestination(false);
             }
           }}
         >
-          <section
-            className={styles.modal}
-            role="dialog"
-            aria-modal="true"
-          >
+          <section className={styles.modal}>
             <header>
               <div>
                 <span>Próximo destino</span>
-                <h4>
-                  ¿A dónde quieres ir después?
-                </h4>
+                <h4>¿A dónde quieres ir?</h4>
               </div>
-
-              <button
-                type="button"
-                onClick={() =>
-                  setEditingDestination(false)
-                }
-              >
+              <button type="button" onClick={() => setEditingDestination(false)}>
                 <X size={17} />
               </button>
             </header>
@@ -308,14 +165,9 @@ export default function ProfilePassportPreview({
             <label>
               <span>Destino</span>
               <input
-                value={destinationForm.name}
+                value={form.name}
                 onChange={(event) =>
-                  setDestinationForm(
-                    (current) => ({
-                      ...current,
-                      name: event.target.value,
-                    })
-                  )
+                  setForm((current) => ({ ...current, name: event.target.value }))
                 }
                 placeholder="Ej. Japón"
                 autoFocus
@@ -323,17 +175,12 @@ export default function ProfilePassportPreview({
             </label>
 
             <label>
-              <span>Código · opcional</span>
+              <span>Código del país · opcional</span>
               <input
-                value={destinationForm.code}
-                maxLength={3}
+                value={form.code}
+                maxLength={2}
                 onChange={(event) =>
-                  setDestinationForm(
-                    (current) => ({
-                      ...current,
-                      code: event.target.value,
-                    })
-                  )
+                  setForm((current) => ({ ...current, code: event.target.value }))
                 }
                 placeholder="JP"
               />
@@ -342,17 +189,10 @@ export default function ProfilePassportPreview({
             <button
               type="button"
               className={styles.save}
-              disabled={
-                savingDestination ||
-                !destinationForm.name.trim()
-              }
-              onClick={() =>
-                void saveDestination()
-              }
+              disabled={saving || !form.name.trim()}
+              onClick={() => void saveDestination()}
             >
-              {savingDestination
-                ? "Guardando..."
-                : "Guardar próximo destino"}
+              {saving ? "Guardando..." : "Guardar"}
             </button>
           </section>
         </div>
@@ -360,5 +200,3 @@ export default function ProfilePassportPreview({
     </section>
   );
 }
-
-/* ALUMNI_2_3_0_PROFILE_PASSPORT_PREVIEW */

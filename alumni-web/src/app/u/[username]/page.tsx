@@ -23,6 +23,7 @@ import { supabase } from "@/lib/supabase";
 import AppShell from "@/components/layout/AppShell";
 import ProfileMusicCard from "@/components/profile/ProfileMusicCard";
 import ProfilePassportPreview from "@/components/profile/ProfilePassportPreview";
+import ProfileMiniStats from "@/components/profile/ProfileMiniStats";
 import ProfileSpotifyAction from "@/components/music/ProfileSpotifyAction";
 import HDProfileImage from "@/components/profile/HDProfileImage";
 import ProfileSocialLinks from "@/components/profile/ProfileSocialLinks";
@@ -568,17 +569,25 @@ export default function UserProfilePage() {
 
           <div className="alumni-profile-body px-5 pb-6 pt-5 sm:px-7 sm:pt-6">
             <div className="alumni-profile-identity flex flex-col gap-5 sm:flex-row sm:items-center">
-              <div className="alumni-profile-avatar flex h-24 w-24 shrink-0 items-center justify-center overflow-hidden rounded-full border border-white/[0.09] bg-[#1a1f29] text-2xl font-black shadow-[0_10px_28px_rgba(0,0,0,.16)] sm:h-28 sm:w-28">
-                {profile.avatar_url ? (
-                  <HDProfileImage
-                    src={profile.avatar_url}
-                    alt="Avatar"
-                    variant="avatar"
-                    className="h-full w-full object-cover"
-/>
-                ) : (
-                  profile.username?.charAt(0)?.toUpperCase() || "U"
-                )}
+              <div className="flex shrink-0 items-center gap-4">
+                <div className="alumni-profile-avatar flex h-24 w-24 shrink-0 items-center justify-center overflow-hidden rounded-full border border-white/[0.09] bg-[#1a1f29] text-2xl font-black shadow-[0_10px_28px_rgba(0,0,0,.16)] sm:h-28 sm:w-28">
+                  {profile.avatar_url ? (
+                    <HDProfileImage
+                      src={profile.avatar_url}
+                      alt="Avatar"
+                      variant="avatar"
+                      className="h-full w-full object-cover"
+  />
+                  ) : (
+                    profile.username?.charAt(0)?.toUpperCase() || "U"
+                  )}
+                </div>
+
+                <ProfileMiniStats
+                  posts={posts.length}
+                  followers={followers}
+                  following={followingCount}
+                />
               </div>
 
               <div className="min-w-0 flex-1">
@@ -686,11 +695,7 @@ export default function UserProfilePage() {
               own={ownProfile}
             />
 
-            <div className="mt-6 flex gap-8 border-t border-white/[0.06] pt-5">
-              <Stat value={posts.length} label="Publicaciones" />
-              <Stat value={followers} label="Seguidores" />
-              <Stat value={followingCount} label="Siguiendo" />
-            </div>
+
           </div>
         </section>
 
@@ -1090,3 +1095,5 @@ function Detail({
 /* ALUMNI_1_8_1_PROFILE_RESTORE_PIN_EDIT_LIMITS:PUBLIC_PROFILE */
 
 /* ALUMNI_2_3_0_SOCIAL_PASSPORT:PUBLIC_PROFILE */
+
+/* ALUMNI_2_3_1_PROFILE_PASSPORT_POLISH:PUBLIC */
