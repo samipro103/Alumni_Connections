@@ -29,7 +29,7 @@ import HDProfileImage from "@/components/profile/HDProfileImage";
 import ProfileSocialLinks from "@/components/profile/ProfileSocialLinks";
 import ProfileIdentityMeta from "@/components/profile/ProfileIdentityMeta";
 import ProfileHeaderFacts from "@/components/profile/ProfileHeaderFacts";
-import ProfessionalProfileOverview from "@/components/profile/ProfessionalProfileOverview";
+import ProfileSocialIdentity from "@/components/profile/ProfileSocialIdentity";
 import { hydratePostMedia } from "@/lib/privateMedia";
 
 
@@ -503,7 +503,7 @@ export default function ProfilePage() {
             )}
           </section>
         ) : (
-          <ProfessionalProfileOverview
+          <ProfileSocialIdentity
             profile={profile}
             posts={posts}
             followers={followers}
@@ -611,3 +611,5 @@ function Detail({
 }
 
 /* ALUMNI_1_2_0_TRUST_BLOCK:OWN_PROFILE_MEDIA */
+
+/* ALUMNI_1_8_0_IDENTITY_CONNECTIONS:OWN_PROFILE */

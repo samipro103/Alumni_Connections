@@ -29,7 +29,7 @@ import ProfileIdentityMeta from "@/components/profile/ProfileIdentityMeta";
 import ProfileHeaderFacts from "@/components/profile/ProfileHeaderFacts";
 import ProfileRepostsTab from "@/components/profile/ProfileRepostsTab";
 import ProfileSavedTab from "@/components/profile/ProfileSavedTab";
-import ProfessionalProfileOverview from "@/components/profile/ProfessionalProfileOverview";
+import ProfileSocialIdentity from "@/components/profile/ProfileSocialIdentity";
 import CommentLikeButton from "@/components/social/CommentLikeButton";
 import UserSafetyActions from "@/components/trust/UserSafetyActions";
 import { hydratePostMedia } from "@/lib/privateMedia";
@@ -839,7 +839,7 @@ export default function UserProfilePage() {
             userId={profile.id}
           />
         ) : (
-          <ProfessionalProfileOverview
+          <ProfileSocialIdentity
             profile={profile}
             posts={posts}
             followers={followers}
@@ -943,3 +943,5 @@ function Detail({
 /* ALUMNI_1_4_1_PROFILE_REPOSTS_SAVED_READABILITY:PROFILE */
 
 /* ALUMNI_1_4_2_THEME_CHAT_PROFILE_POLISH:PROFILE_SAVED */
+
+/* ALUMNI_1_8_0_IDENTITY_CONNECTIONS:PUBLIC_PROFILE */
