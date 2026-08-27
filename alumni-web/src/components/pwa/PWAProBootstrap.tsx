@@ -1,20 +1,22 @@
 "use client";
 
 import {
+  CheckCircle2,
+  CloudOff,
+  Download,
+  RefreshCw,
+  Share2,
+  X,
+} from "lucide-react";
+import {
   useEffect,
   useRef,
   useState,
 } from "react";
-import {
-  CheckCircle2,
-  CloudOff,
-  RefreshCw,
-} from "lucide-react";
-import {
-  useAuth,
-} from "@/components/auth/AuthProvider";
+import { useAuth } from "@/components/auth/AuthProvider";
 import WebPushBootstrap from "@/components/pwa/WebPushBootstrap";
 import NativePushNotifications from "@/components/mobile/NativePushNotifications";
+import styles from "./PWAProBootstrap.module.css";
 
 type ConnectionState =
   | "online"
@@ -28,7 +30,25 @@ type BadgeNavigator =
     ) => Promise<void>;
     clearAppBadge?: () =>
       Promise<void>;
+    standalone?: boolean;
   };
+
+type InstallPromptEvent =
+  Event & {
+    prompt: () => Promise<void>;
+    userChoice: Promise<{
+      outcome:
+        | "accepted"
+        | "dismissed";
+      platform: string;
+    }>;
+  };
+
+const INSTALL_DISMISS_KEY =
+  "alumni:pwa:install-dismissed:v2";
+
+const CHUNK_RECOVERY_KEY =
+  "alumni:pwa:last-chunk-recovery:v2";
 
 function isNativeCapacitor() {
   const value =
@@ -46,16 +66,94 @@ function isNativeCapacitor() {
   );
 }
 
+function isStandalone() {
+  const nav =
+    navigator as BadgeNavigator;
+
+  return (
+    window.matchMedia(
+      "(display-mode: standalone)"
+    ).matches ||
+    Boolean(nav.standalone)
+  );
+}
+
+function isIOS() {
+  return /iphone|ipad|ipod/i.test(
+    navigator.userAgent
+  );
+}
+
+function isConversationPath() {
+  const path =
+    window.location.pathname;
+
+  return (
+    path.startsWith(
+      "/messages/"
+    ) &&
+    path !== "/messages"
+  );
+}
+
 function appHasProtectedWork() {
-  return Boolean(
-    document.querySelector(
-      [
-        '[data-pull-refresh-lock="true"]',
-        '[role="dialog"]',
-        ".alumni-story-viewer",
-        ".alumni-story-composer-shell",
-      ].join(",")
+  return (
+    isConversationPath() ||
+    Boolean(
+      document.querySelector(
+        [
+          '[data-pull-refresh-lock="true"]',
+          '[role="dialog"]',
+          ".alumni-story-viewer",
+          ".alumni-story-composer-shell",
+        ].join(",")
+      )
     )
+  );
+}
+
+function installPromptDismissedRecently() {
+  try {
+    const value = Number(
+      localStorage.getItem(
+        INSTALL_DISMISS_KEY
+      ) || 0
+    );
+
+    return (
+      Number.isFinite(value) &&
+      Date.now() - value <
+        14 *
+          24 *
+          60 *
+          60 *
+          1000
+    );
+  } catch {
+    return false;
+  }
+}
+
+function isChunkFailure(
+  value: unknown
+) {
+  const text =
+    value instanceof Error
+      ? `${value.name} ${value.message}`
+      : String(value || "");
+
+  return [
+    "ChunkLoadError",
+    "Loading chunk",
+    "Failed to fetch dynamically imported module",
+    "Importing a module script failed",
+    "Failed to load module script",
+  ].some((needle) =>
+    text
+      .toLowerCase()
+      .includes(
+        needle.toLowerCase()
+      )
   );
 }
 
@@ -74,12 +172,32 @@ export default function PWAProBootstrap() {
   const [
     updateReady,
     setUpdateReady,
-  ] = useState(false);
+  ] =
+    useState(false);
+
+  const [
+    installEvent,
+    setInstallEvent,
+  ] =
+    useState<
+      InstallPromptEvent | null
+    >(null);
+
+  const [
+    showIOSInstall,
+    setShowIOSInstall,
+  ] =
+    useState(false);
 
   const restoredTimer =
     useRef<number | null>(
       null
     );
+
+  const registrationRef =
+    useRef<
+      ServiceWorkerRegistration | null
+    >(null);
 
   useEffect(() => {
     setConnection(
@@ -207,6 +325,89 @@ export default function PWAProBootstrap() {
 
   useEffect(() => {
     if (
+      isNativeCapacitor() ||
+      isStandalone()
+    ) {
+      return;
+    }
+
+    function onBeforeInstall(
+      event: Event
+    ) {
+      event.preventDefault();
+
+      if (
+        installPromptDismissedRecently()
+      ) {
+        return;
+      }
+
+      setInstallEvent(
+        event as InstallPromptEvent
+      );
+    }
+
+    function onInstalled() {
+      setInstallEvent(null);
+      setShowIOSInstall(false);
+
+      try {
+        localStorage.removeItem(
+          INSTALL_DISMISS_KEY
+        );
+      } catch {}
+    }
+
+    window.addEventListener(
+      "beforeinstallprompt",
+      onBeforeInstall
+    );
+
+    window.addEventListener(
+      "appinstalled",
+      onInstalled
+    );
+
+    let iosTimer:
+      | number
+      | null = null;
+
+    if (
+      isIOS() &&
+      !installPromptDismissedRecently()
+    ) {
+      iosTimer =
+        window.setTimeout(
+          () => {
+            setShowIOSInstall(
+              true
+            );
+          },
+          3200
+        );
+    }
+
+    return () => {
+      window.removeEventListener(
+        "beforeinstallprompt",
+        onBeforeInstall
+      );
+
+      window.removeEventListener(
+        "appinstalled",
+        onInstalled
+      );
+
+      if (iosTimer !== null) {
+        window.clearTimeout(
+          iosTimer
+        );
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    if (
       !(
         "serviceWorker" in
         navigator
@@ -217,16 +418,10 @@ export default function PWAProBootstrap() {
     }
 
     let disposed = false;
-    let registration:
-      | ServiceWorkerRegistration
-      | null = null;
+    let reloadScheduled =
+      false;
+    let lastUpdateCheck = 0;
 
-    /*
-      Si ya existía controller antes de registrar,
-      controllerchange sí significa que llegó una
-      versión nueva. En la primera instalación no
-      hacemos reload.
-    */
     const hadController =
       Boolean(
         navigator
@@ -234,18 +429,37 @@ export default function PWAProBootstrap() {
           .controller
       );
 
-    let reloadScheduled =
-      false;
-
     function reloadForUpdate() {
-      if (reloadScheduled) {
+      if (
+        reloadScheduled ||
+        disposed
+      ) {
         return;
       }
 
-      reloadScheduled =
-        true;
-
+      reloadScheduled = true;
       window.location.reload();
+    }
+
+    function activateWorker(
+      worker:
+        | ServiceWorker
+        | null
+        | undefined
+    ) {
+      if (!worker) return;
+
+      if (
+        hadController &&
+        appHasProtectedWork()
+      ) {
+        setUpdateReady(true);
+        return;
+      }
+
+      worker.postMessage({
+        type: "SKIP_WAITING",
+      });
     }
 
     function onControllerChange() {
@@ -266,7 +480,12 @@ export default function PWAProBootstrap() {
       reloadForUpdate();
     }
 
-    async function checkUpdate() {
+    async function checkUpdate(
+      force = false
+    ) {
+      const registration =
+        registrationRef.current;
+
       if (
         !registration ||
         disposed
@@ -274,14 +493,35 @@ export default function PWAProBootstrap() {
         return;
       }
 
+      const now =
+        Date.now();
+
+      if (
+        !force &&
+        now - lastUpdateCheck <
+          60_000
+      ) {
+        return;
+      }
+
+      lastUpdateCheck = now;
+
       try {
         await registration.update();
+
+        if (
+          registration.waiting
+        ) {
+          activateWorker(
+            registration.waiting
+          );
+        }
       } catch {}
     }
 
     async function prepare() {
       try {
-        registration =
+        const registration =
           await navigator
             .serviceWorker
             .register(
@@ -297,14 +537,23 @@ export default function PWAProBootstrap() {
           return;
         }
 
-        void checkUpdate();
+        registrationRef.current =
+          registration;
+
+        if (
+          registration.waiting
+        ) {
+          activateWorker(
+            registration.waiting
+          );
+        }
 
         registration.addEventListener(
           "updatefound",
           () => {
             const worker =
               registration
-                ?.installing;
+                .installing;
 
             if (!worker) {
               return;
@@ -315,21 +564,19 @@ export default function PWAProBootstrap() {
               () => {
                 if (
                   worker.state ===
-                    "installed" &&
-                  navigator
-                    .serviceWorker
-                    .controller
+                  "installed"
                 ) {
-                  worker.postMessage(
-                    {
-                      type:
-                        "SKIP_WAITING",
-                    }
+                  activateWorker(
+                    worker
                   );
                 }
               }
             );
           }
+        );
+
+        void checkUpdate(
+          true
         );
       } catch (error) {
         console.warn(
@@ -352,6 +599,71 @@ export default function PWAProBootstrap() {
       }
     }
 
+    async function recoverChunk(
+      failure: unknown
+    ) {
+      if (
+        !navigator.onLine ||
+        !isChunkFailure(
+          failure
+        )
+      ) {
+        return;
+      }
+
+      if (
+        appHasProtectedWork()
+      ) {
+        setUpdateReady(true);
+        return;
+      }
+
+      try {
+        const previous = Number(
+          sessionStorage.getItem(
+            CHUNK_RECOVERY_KEY
+          ) || 0
+        );
+
+        if (
+          Date.now() -
+            previous <
+          5 * 60 * 1000
+        ) {
+          return;
+        }
+
+        sessionStorage.setItem(
+          CHUNK_RECOVERY_KEY,
+          String(Date.now())
+        );
+      } catch {}
+
+      await checkUpdate(
+        true
+      );
+
+      reloadForUpdate();
+    }
+
+    function onWindowError(
+      event: ErrorEvent
+    ) {
+      void recoverChunk(
+        event.error ||
+          event.message
+      );
+    }
+
+    function onUnhandled(
+      event:
+        PromiseRejectionEvent
+    ) {
+      void recoverChunk(
+        event.reason
+      );
+    }
+
     navigator.serviceWorker.addEventListener(
       "controllerchange",
       onControllerChange
@@ -365,6 +677,16 @@ export default function PWAProBootstrap() {
     document.addEventListener(
       "visibilitychange",
       onVisibility
+    );
+
+    window.addEventListener(
+      "error",
+      onWindowError
+    );
+
+    window.addEventListener(
+      "unhandledrejection",
+      onUnhandled
     );
 
     void prepare();
@@ -386,8 +708,70 @@ export default function PWAProBootstrap() {
         "visibilitychange",
         onVisibility
       );
+
+      window.removeEventListener(
+        "error",
+        onWindowError
+      );
+
+      window.removeEventListener(
+        "unhandledrejection",
+        onUnhandled
+      );
     };
   }, []);
+
+  function dismissInstall() {
+    setInstallEvent(null);
+    setShowIOSInstall(
+      false
+    );
+
+    try {
+      localStorage.setItem(
+        INSTALL_DISMISS_KEY,
+        String(Date.now())
+      );
+    } catch {}
+  }
+
+  async function installApp() {
+    if (!installEvent) {
+      return;
+    }
+
+    try {
+      await installEvent.prompt();
+      await installEvent.userChoice;
+    } finally {
+      setInstallEvent(null);
+    }
+  }
+
+  async function applyUpdate() {
+    const waiting =
+      registrationRef.current
+        ?.waiting;
+
+    if (waiting) {
+      waiting.postMessage({
+        type: "SKIP_WAITING",
+      });
+      return;
+    }
+
+    window.location.reload();
+  }
+
+  const showInstall =
+    Boolean(user) &&
+    connection === "online" &&
+    !updateReady &&
+    !isStandalone() &&
+    Boolean(
+      installEvent ||
+        showIOSInstall
+    );
 
   return (
     <>
@@ -405,60 +789,148 @@ export default function PWAProBootstrap() {
 
       {connection !==
         "online" && (
-        <div className="pointer-events-none fixed inset-x-3 bottom-[92px] z-[96] mx-auto flex max-w-[460px] justify-center lg:bottom-5">
-          <div className="flex min-h-10 items-center gap-2.5 rounded-full border border-white/[0.09] bg-[#0d1119]/94 px-4 text-[10px] font-black uppercase tracking-[0.1em] text-white/70 shadow-[0_12px_38px_rgba(0,0,0,.32)] backdrop-blur-2xl">
+        <div
+          className={
+            styles.statusStrip
+          }
+          data-tone={
+            connection
+          }
+        >
+          <div
+            className={
+              styles.statusInner
+            }
+          >
             {connection ===
             "offline" ? (
               <>
                 <CloudOff
-                  size={14}
-                  className="text-amber-300/80"
+                  size={15}
                 />
-                Sin conexión
+                <strong>
+                  Sin conexión
+                </strong>
+                <span>
+                  Puedes seguir viendo la interfaz; los cambios que requieren internet esperarán a que vuelvas.
+                </span>
               </>
             ) : (
               <>
                 <CheckCircle2
-                  size={14}
-                  className="text-emerald-300/80"
+                  size={15}
                 />
-                Conexión restablecida
+                <strong>
+                  Conexión restablecida
+                </strong>
+                <span>
+                  Alumni volvió a estar en línea.
+                </span>
               </>
             )}
           </div>
         </div>
       )}
 
-      {updateReady && (
-        <div className="fixed inset-x-3 bottom-[92px] z-[97] mx-auto max-w-[520px] lg:bottom-5">
-          <div className="flex items-center gap-3 rounded-[18px] border border-white/[0.10] bg-[#0d1119]/96 px-4 py-3 shadow-[0_18px_50px_rgba(0,0,0,.40)] backdrop-blur-2xl">
-            <RefreshCw
-              size={16}
-              className="shrink-0 text-[#9ca6ff]"
-            />
-
-            <div className="min-w-0 flex-1">
-              <p className="text-[11px] font-black text-white">
-                Actualización lista
-              </p>
-
-              <p className="mt-0.5 text-[10px] text-white/40">
-                Alumni esperó para no perder lo que estabas haciendo.
-              </p>
-            </div>
-
-            <button
-              type="button"
-              onClick={() =>
-                window.location.reload()
+      {updateReady &&
+        connection ===
+          "online" && (
+          <div
+            className={
+              styles.statusStrip
+            }
+          >
+            <div
+              className={
+                styles.statusInner
               }
-              className="shrink-0 text-[10px] font-black uppercase tracking-[0.08em] text-[#aeb6ff]"
             >
-              Actualizar
-            </button>
+              <RefreshCw
+                size={15}
+              />
+
+              <strong>
+                Actualización lista
+              </strong>
+
+              <span>
+                Alumni esperó para no interrumpir lo que estabas haciendo.
+              </span>
+
+              <button
+                type="button"
+                onClick={() =>
+                  void applyUpdate()
+                }
+              >
+                Actualizar
+              </button>
+            </div>
           </div>
-        </div>
-      )}
+        )}
+
+      {showInstall &&
+        connection ===
+          "online" &&
+        !updateReady && (
+          <div
+            className={
+              styles.statusStrip
+            }
+          >
+            <div
+              className={
+                styles.statusInner
+              }
+            >
+              {showIOSInstall ? (
+                <Share2
+                  size={15}
+                />
+              ) : (
+                <Download
+                  size={15}
+                />
+              )}
+
+              <strong>
+                Instala Alumni.
+              </strong>
+
+              <span>
+                {showIOSInstall
+                  ? "En Safari: Compartir → Añadir a pantalla de inicio."
+                  : "Ábrelo como una app, con acceso directo desde tu dispositivo."}
+              </span>
+
+              {installEvent && (
+                <button
+                  type="button"
+                  onClick={() =>
+                    void installApp()
+                  }
+                >
+                  Instalar
+                </button>
+              )}
+
+              <button
+                type="button"
+                onClick={
+                  dismissInstall
+                }
+                className={
+                  styles.dismiss
+                }
+                aria-label="Ocultar"
+              >
+                <X size={14} />
+              </button>
+            </div>
+          </div>
+        )}
     </>
   );
 }
+
+/* ALUMNI_2_0_PWA_STABILITY_BOOTSTRAP */

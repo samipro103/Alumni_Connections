@@ -1,0 +1,77 @@
+.page {
+  display: flex;
+  width: min(100%, 720px);
+  min-height: 100dvh;
+  flex-direction: column;
+  justify-content: center;
+  margin: 0 auto;
+  padding: 48px 24px 110px;
+  color: var(--app-text);
+}
+
+.mark {
+  margin-bottom: 38px;
+  color: var(--app-text);
+  font-size: 23px;
+  font-weight: 950;
+  letter-spacing: -.06em;
+}
+
+.copy {
+  padding: 0 0 24px;
+  border-bottom: 1px solid var(--app-border);
+}
+
+.copy > span {
+  color: var(--app-muted-2);
+  font-size: 9px;
+  font-weight: 900;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+}
+
+.copy h1 {
+  max-width: 560px;
+  margin-top: 7px;
+  color: var(--app-text);
+  font-size: clamp(36px, 8vw, 62px);
+  font-weight: 950;
+  line-height: .98;
+  letter-spacing: -.055em;
+}
+
+.copy p {
+  max-width: 570px;
+  margin-top: 15px;
+  color: var(--app-muted);
+  font-size: 13px;
+  line-height: 1.7;
+}
+
+.page > button {
+  display: inline-flex;
+  width: max-content;
+  min-height: 42px;
+  align-items: center;
+  gap: 7px;
+  margin-top: 20px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--app-accent);
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.line {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 48px;
+  padding-top: 14px;
+  border-top: 1px solid var(--app-border);
+  color: var(--app-muted-2);
+  font-size: 10px;
+}
+
+/* ALUMNI_2_0_OFFLINE_OPEN_DESIGN */

@@ -1,5 +1,8 @@
 import React from "react";
-import type { Metadata } from "next";
+import type {
+  Metadata,
+  Viewport,
+} from "next";
 import Script from "next/script";
 import { AuthProvider } from "@/components/auth/AuthProvider";
 import { ThemeProvider } from "@/components/theme/ThemeProvider";
@@ -26,7 +29,33 @@ export const metadata: Metadata = {
   },
   applicationName: "Alumni.",
   description:
-    "La red para compartir logros, conectar talento y descubrir oportunidades.",
+    "Tu comunidad para compartir, descubrir y mantenerte cerca de tu red.",
+  manifest:
+    "/manifest.webmanifest",
+  icons: {
+    icon: [
+      {
+        url: "/icons/alumni-192.png",
+        sizes: "192x192",
+        type: "image/png",
+      },
+      {
+        url: "/icons/alumni-512.png",
+        sizes: "512x512",
+        type: "image/png",
+      },
+    ],
+    apple: [
+      {
+        url: "/icons/alumni-192.png",
+        sizes: "192x192",
+        type: "image/png",
+      },
+    ],
+  },
+  formatDetection: {
+    telephone: false,
+  },
   appleWebApp: {
     capable: true,
     title: "Alumni.",
@@ -34,10 +63,17 @@ export const metadata: Metadata = {
   },
 };
 
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+  themeColor: "#0b0d12",
+};
+
 const themeScript = `
 (function () {
   try {
-    var allowed = ["dark","light","chill","pride","midnight","emerald","executive"];
+    var allowed = ["dark","light","pride"];
     var saved = localStorage.getItem("alumni-theme") || "dark";
     var theme = allowed.indexOf(saved) >= 0 ? saved : "dark";
 
@@ -85,3 +121,5 @@ export default function RootLayout({
     </html>
   );
 }
+
+/* ALUMNI_2_0_PWA_STABILITY:ROOT_LAYOUT */
