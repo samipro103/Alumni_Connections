@@ -29,10 +29,12 @@ import ProfileIdentityMeta from "@/components/profile/ProfileIdentityMeta";
 import ProfileHeaderFacts from "@/components/profile/ProfileHeaderFacts";
 import ProfileRepostsTab from "@/components/profile/ProfileRepostsTab";
 import ProfileSavedTab from "@/components/profile/ProfileSavedTab";
-import ProfileSocialIdentity from "@/components/profile/ProfileSocialIdentity";
+import ProfessionalProfileOverview from "@/components/profile/ProfessionalProfileOverview";
 import CommentLikeButton from "@/components/social/CommentLikeButton";
 import UserSafetyActions from "@/components/trust/UserSafetyActions";
 import { hydratePostMedia } from "@/lib/privateMedia";
+import ProfilePostOwnerMenu from "@/components/profile/ProfilePostOwnerMenu";
+import "@/components/profile/ProfilePostOwnerMenu.css";
 
 type ProfileTab = "posts" | "reposts" | "saved" | "about";
 
@@ -147,13 +149,31 @@ export default function UserProfilePage() {
         (postsData || []) as any[]
       );
 
-    setPosts(
-      hydratedPosts.map((post: any) => ({
+    const { data: pinnedRows } = await supabase
+      .from("profile_pinned_posts")
+      .select("post_id,sort_order")
+      .eq("user_id", profileData.id)
+      .order("sort_order", { ascending: true });
+
+    const pinOrder = new Map(
+      (pinnedRows || []).map(
+        (row: any) => [
+          Number(row.post_id),
+          Number(row.sort_order),
+        ]
+      )
+    );
+
+    const decoratedPosts =
+      hydratedPosts
+        .map((post: any) => ({
         ...post,
         liked:
           post.likes?.some(
             (like: any) => like.user_id === user?.id
           ) || false,
+        pinned: pinOrder.has(Number(post.id)),
+        pinOrder: pinOrder.get(Number(post.id)) ?? 999,
         comments: comments
           .filter((comment: any) => comment.post_id === post.id)
           .map((comment: any) => ({
@@ -163,7 +183,22 @@ export default function UserProfilePage() {
             ),
           })),
       }))
-    );
+      .sort((a: any, b: any) => {
+        if (a.pinned !== b.pinned) {
+          return a.pinned ? -1 : 1;
+        }
+
+        if (a.pinned && b.pinned) {
+          return a.pinOrder - b.pinOrder;
+        }
+
+        return (
+          new Date(b.created_at).getTime() -
+          new Date(a.created_at).getTime()
+        );
+      });
+
+    setPosts(decoratedPosts);
 
     if (user) {
       const { data: followData } = await supabase
@@ -362,6 +397,69 @@ export default function UserProfilePage() {
       ...current,
       [postId]: true,
     }));
+
+    await getProfile();
+  }
+
+  async function editProfilePost(
+    postId: number,
+    content: string
+  ) {
+    const { error } = await supabase.rpc(
+      "alumni_edit_post",
+      {
+        p_post_id: postId,
+        p_content: content,
+      }
+    );
+
+    if (error) {
+      alert(error.message);
+      throw error;
+    }
+
+    await getProfile();
+  }
+
+  async function toggleProfilePin(
+    postId: number
+  ) {
+    const { error } = await supabase.rpc(
+      "alumni_toggle_profile_pin",
+      {
+        p_post_id: postId,
+      }
+    );
+
+    if (error) {
+      alert(error.message);
+      return;
+    }
+
+    await getProfile();
+  }
+
+  async function deleteProfilePost(
+    postId: number
+  ) {
+    if (!user) return;
+
+    const confirmed = window.confirm(
+      "¿Borrar esta publicación? Esta acción no se puede deshacer."
+    );
+
+    if (!confirmed) return;
+
+    const { error } = await supabase
+      .from("posts")
+      .delete()
+      .eq("id", postId)
+      .eq("user_id", user.id);
+
+    if (error) {
+      alert(error.message);
+      return;
+    }
 
     await getProfile();
   }
@@ -691,12 +789,48 @@ export default function UserProfilePage() {
                         )}
                       </div>
 
-                      {post.image_url && (
-                        <img
-                          src={post.image_url}
-                          alt="Publicación"
-                          className="max-h-[650px] w-full object-contain"
-                        />
+                      {post.image_url ? (
+                        <div className="alumni-profile-post-media-wrap">
+                          <img
+                            src={post.image_url}
+                            alt="Publicación"
+                            className="max-h-[650px] w-full object-contain"
+                          />
+
+                          {ownProfile && (
+                            <ProfilePostOwnerMenu
+                              post={post}
+                              pinned={Boolean(post.pinned)}
+                              onEdit={(content) =>
+                                editProfilePost(post.id, content)
+                              }
+                              onTogglePin={() =>
+                                toggleProfilePin(post.id)
+                              }
+                              onDelete={() =>
+                                deleteProfilePost(post.id)
+                              }
+                            />
+                          )}
+                        </div>
+                      ) : (
+                        ownProfile && (
+                          <div className="alumni-profile-post-text-wrap">
+                            <ProfilePostOwnerMenu
+                              post={post}
+                              pinned={Boolean(post.pinned)}
+                              onEdit={(content) =>
+                                editProfilePost(post.id, content)
+                              }
+                              onTogglePin={() =>
+                                toggleProfilePin(post.id)
+                              }
+                              onDelete={() =>
+                                deleteProfilePost(post.id)
+                              }
+                            />
+                          </div>
+                        )
                       )}
 
                       <div className="px-5 pb-4 pt-3">
@@ -839,7 +973,7 @@ export default function UserProfilePage() {
             userId={profile.id}
           />
         ) : (
-          <ProfileSocialIdentity
+          <ProfessionalProfileOverview
             profile={profile}
             posts={posts}
             followers={followers}
@@ -945,3 +1079,5 @@ function Detail({
 /* ALUMNI_1_4_2_THEME_CHAT_PROFILE_POLISH:PROFILE_SAVED */
 
 /* ALUMNI_1_8_0_IDENTITY_CONNECTIONS:PUBLIC_PROFILE */
+
+/* ALUMNI_1_8_1_PROFILE_RESTORE_PIN_EDIT_LIMITS:PUBLIC_PROFILE */

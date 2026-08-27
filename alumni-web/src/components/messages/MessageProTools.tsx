@@ -57,6 +57,18 @@ export default function MessageProTools({
     Boolean(message?.deleted_at) ||
     message?.message_type === "deleted";
 
+  const createdAt =
+    new Date(
+      message?.created_at || 0
+    ).getTime();
+
+  const canEdit =
+    mine &&
+    Boolean(message?.content) &&
+    Number.isFinite(createdAt) &&
+    Date.now() - createdAt <=
+      30 * 60 * 1000;
+
   const grouped =
     useMemo(() => {
       const map =
@@ -272,10 +284,7 @@ export default function MessageProTools({
               Responder
             </button>
 
-            {mine &&
-              Boolean(
-                message.content
-              ) &&
+            {canEdit &&
               onEdit && (
                 <button
                   type="button"
@@ -326,3 +335,5 @@ export default function MessageProTools({
 }
 
 /* ALUMNI_1_5_0_MESSAGE_TOOLS */
+
+/* ALUMNI_1_8_1_PROFILE_RESTORE_PIN_EDIT_LIMITS:CHAT_EDIT_30_MIN */
