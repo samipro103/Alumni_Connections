@@ -11,6 +11,7 @@ import { X } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import "./feed-pro.css";
 import "./feed-visual-2-4.css";
+import "./feed-visual-2-5.css";
 import { supabase } from "@/lib/supabase";
 import AppShell from "@/components/layout/AppShell";
 import PostComposer from "@/components/feed/PostComposer";

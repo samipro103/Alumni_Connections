@@ -3,6 +3,7 @@
 import {
   Crop,
   Globe2,
+  GripVertical,
   ImagePlus,
   Play,
   Plus,
@@ -14,6 +15,8 @@ import {
   useMemo,
   useRef,
   useState,
+  type KeyboardEvent as ReactKeyboardEvent,
+  type PointerEvent as ReactPointerEvent,
 } from "react";
 import { useAuth } from "@/components/auth/AuthProvider";
 import ImageCropEditor from "@/components/feed/ImageCropEditor";
@@ -33,6 +36,11 @@ type Preview = {
   url: string;
 };
 
+type ReorderState = {
+  pointerId: number;
+  file: File;
+};
+
 export default function PostComposer({
   content,
   setContent,
@@ -42,6 +50,11 @@ export default function PostComposer({
 }: Props) {
   const inputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const previewsRowRef = useRef<HTMLDivElement>(null);
+  const mediaFilesRef = useRef<File[]>(mediaFiles);
+  const fileKeysRef = useRef<WeakMap<File, string>>(new WeakMap());
+  const fileKeyCounterRef = useRef(0);
+  const reorderRef = useRef<ReorderState | null>(null);
   const { user } = useAuth();
 
   const [profile, setProfile] = useState<any>(null);
@@ -49,6 +62,11 @@ export default function PostComposer({
   const [publishing, setPublishing] = useState(false);
   const [previews, setPreviews] = useState<Preview[]>([]);
   const [cropQueue, setCropQueue] = useState<File[]>([]);
+  const [draggingFile, setDraggingFile] = useState<File | null>(null);
+
+  useEffect(() => {
+    mediaFilesRef.current = mediaFiles;
+  }, [mediaFiles]);
 
   useEffect(() => {
     if (!user) {
@@ -138,6 +156,123 @@ export default function PostComposer({
     ? mediaFiles.indexOf(currentCropFile)
     : -1;
 
+  function keyForFile(file: File) {
+    const existing = fileKeysRef.current.get(file);
+    if (existing) return existing;
+
+    fileKeyCounterRef.current += 1;
+    const next = `media-${fileKeyCounterRef.current}`;
+    fileKeysRef.current.set(file, next);
+    return next;
+  }
+
+  function commitMediaFiles(next: File[]) {
+    mediaFilesRef.current = next;
+    setMediaFiles(next);
+  }
+
+  function moveFileToIndex(file: File, targetIndex: number) {
+    const current = mediaFilesRef.current;
+    const fromIndex = current.indexOf(file);
+
+    if (
+      fromIndex < 0 ||
+      targetIndex < 0 ||
+      targetIndex >= current.length ||
+      fromIndex === targetIndex
+    ) {
+      return;
+    }
+
+    const next = [...current];
+    next.splice(fromIndex, 1);
+    next.splice(targetIndex, 0, file);
+    commitMediaFiles(next);
+  }
+
+  function moveFileBy(file: File, delta: number) {
+    const current = mediaFilesRef.current;
+    const fromIndex = current.indexOf(file);
+    if (fromIndex < 0) return;
+
+    const targetIndex = Math.max(
+      0,
+      Math.min(current.length - 1, fromIndex + delta)
+    );
+    moveFileToIndex(file, targetIndex);
+  }
+
+  function startReorder(
+    event: ReactPointerEvent<HTMLButtonElement>,
+    file: File
+  ) {
+    if (mediaFilesRef.current.length < 2 || publishing) return;
+
+    event.preventDefault();
+    event.stopPropagation();
+    event.currentTarget.setPointerCapture(event.pointerId);
+    reorderRef.current = {
+      pointerId: event.pointerId,
+      file,
+    };
+    setDraggingFile(file);
+  }
+
+  function moveReorder(event: ReactPointerEvent<HTMLButtonElement>) {
+    const active = reorderRef.current;
+    if (!active || active.pointerId !== event.pointerId) return;
+
+    event.preventDefault();
+
+    const row = previewsRowRef.current;
+    if (row) {
+      const rect = row.getBoundingClientRect();
+      const edge = 42;
+
+      if (event.clientX < rect.left + edge) {
+        row.scrollBy({ left: -14 });
+      } else if (event.clientX > rect.right - edge) {
+        row.scrollBy({ left: 14 });
+      }
+    }
+
+    const target = document
+      .elementFromPoint(event.clientX, event.clientY)
+      ?.closest<HTMLElement>("[data-alumni-media-index]");
+
+    if (!target) return;
+
+    const targetIndex = Number(target.dataset.alumniMediaIndex);
+    if (!Number.isInteger(targetIndex)) return;
+
+    moveFileToIndex(active.file, targetIndex);
+  }
+
+  function endReorder(event: ReactPointerEvent<HTMLButtonElement>) {
+    const active = reorderRef.current;
+    if (!active || active.pointerId !== event.pointerId) return;
+
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+      event.currentTarget.releasePointerCapture(event.pointerId);
+    }
+
+    reorderRef.current = null;
+    setDraggingFile(null);
+  }
+
+  function reorderWithKeyboard(
+    event: ReactKeyboardEvent<HTMLButtonElement>,
+    file: File
+  ) {
+    if (event.key === "ArrowLeft") {
+      event.preventDefault();
+      moveFileBy(file, -1);
+    } else if (event.key === "ArrowRight") {
+      event.preventDefault();
+      moveFileBy(file, 1);
+    }
+  }
+
   function openComposer() {
     if (!user) {
       window.location.href = "/login";
@@ -155,19 +290,23 @@ export default function PostComposer({
     if (!list?.length) return;
 
     try {
-      const available = Math.max(0, 10 - mediaFiles.length);
+      const current = mediaFilesRef.current;
+      const available = Math.max(0, 10 - current.length);
       const appended = Array.from(list).slice(0, available);
-      const next = [...mediaFiles, ...appended];
+      const next = [...current, ...appended];
 
       validatePostMediaFiles(next);
-      setMediaFiles(next);
+      commitMediaFiles(next);
 
       const imagesToCrop = appended.filter((file) =>
         file.type.startsWith("image/")
       );
 
       if (imagesToCrop.length) {
-        setCropQueue((current) => [...current, ...imagesToCrop]);
+        setCropQueue((currentQueue) => [
+          ...currentQueue,
+          ...imagesToCrop,
+        ]);
       }
     } catch (error: any) {
       alert(error?.message || "No se pudieron agregar los archivos.");
@@ -179,15 +318,16 @@ export default function PostComposer({
   }
 
   function removeFile(index: number) {
-    const target = mediaFiles[index];
+    const current = mediaFilesRef.current;
+    const target = current[index];
 
-    setMediaFiles(
-      mediaFiles.filter((_, current) => current !== index)
+    commitMediaFiles(
+      current.filter((_, currentIndex) => currentIndex !== index)
     );
 
     if (target) {
-      setCropQueue((current) =>
-        current.filter((file) => file !== target)
+      setCropQueue((currentQueue) =>
+        currentQueue.filter((file) => file !== target)
       );
     }
   }
@@ -201,14 +341,16 @@ export default function PostComposer({
     const sourceFile = cropQueue[0];
     if (!sourceFile) return;
 
-    setMediaFiles(
-      mediaFiles.map((file) => (file === sourceFile ? croppedFile : file))
+    commitMediaFiles(
+      mediaFilesRef.current.map((file) =>
+        file === sourceFile ? croppedFile : file
+      )
     );
-    setCropQueue((current) => current.slice(1));
+    setCropQueue((currentQueue) => currentQueue.slice(1));
   }
 
   function skipCrop() {
-    setCropQueue((current) => current.slice(1));
+    setCropQueue((currentQueue) => currentQueue.slice(1));
   }
 
   async function publish() {
@@ -222,6 +364,7 @@ export default function PostComposer({
       if (ok) {
         setExpanded(false);
         setCropQueue([]);
+        setDraggingFile(null);
       }
     } catch (error) {
       console.error("Post publish error:", error);
@@ -232,8 +375,9 @@ export default function PostComposer({
 
   function cancel() {
     setContent("");
-    setMediaFiles([]);
+    commitMediaFiles([]);
     setCropQueue([]);
+    setDraggingFile(null);
     setExpanded(false);
   }
 
@@ -302,11 +446,19 @@ export default function PostComposer({
               />
 
               {previews.length > 0 && (
-                <div className="alumni-pro-composer-previews">
+                <div
+                  ref={previewsRowRef}
+                  className="alumni-pro-composer-previews alumni-feed-reorder-row"
+                  data-reordering={draggingFile ? "true" : "false"}
+                >
                   {previews.map((preview, index) => (
                     <div
-                      key={`${preview.file.name}-${preview.file.lastModified}-${index}`}
+                      key={keyForFile(preview.file)}
                       className="alumni-pro-composer-preview alumni-feed-visual-preview"
+                      data-alumni-media-index={index}
+                      data-dragging={
+                        draggingFile === preview.file ? "true" : "false"
+                      }
                     >
                       {preview.file.type.startsWith("video/") ? (
                         <>
@@ -337,6 +489,31 @@ export default function PostComposer({
                             <span>Ajustar</span>
                           </button>
                         </>
+                      )}
+
+                      {previews.length > 1 && (
+                        <button
+                          type="button"
+                          className="alumni-feed-preview-reorder"
+                          onPointerDown={(event) =>
+                            startReorder(event, preview.file)
+                          }
+                          onPointerMove={moveReorder}
+                          onPointerUp={endReorder}
+                          onPointerCancel={endReorder}
+                          onLostPointerCapture={() => {
+                            reorderRef.current = null;
+                            setDraggingFile(null);
+                          }}
+                          onKeyDown={(event) =>
+                            reorderWithKeyboard(event, preview.file)
+                          }
+                          disabled={publishing}
+                          aria-label={`Reordenar archivo ${index + 1}. Usa flechas izquierda o derecha con teclado.`}
+                          title="Mantén y arrastra para ordenar"
+                        >
+                          <GripVertical size={15} />
+                        </button>
                       )}
 
                       <button
@@ -380,7 +557,7 @@ export default function PostComposer({
                 </button>
 
                 <span className="alumni-pro-composer-limit">
-                  Hasta 10 archivos · Fotos 4:5
+                  Hasta 10 · Arrastra para ordenar · Fotos 4:5
                 </span>
 
                 <div className="alumni-pro-composer-submit">
@@ -426,7 +603,10 @@ export default function PostComposer({
               .filter((item) => item.file.type.startsWith("image/"))
               .findIndex((item) => item.file === currentCropFile) + 1
           )}
-          total={previews.filter((item) => item.file.type.startsWith("image/")).length}
+          total={
+            previews.filter((item) => item.file.type.startsWith("image/"))
+              .length
+          }
           onApply={applyCrop}
           onSkip={skipCrop}
           onClose={() => setCropQueue([])}
@@ -436,4 +616,4 @@ export default function PostComposer({
   );
 }
 
-/* ALUMNI_2_4_0_FEED_VISUAL_COMPOSER */
+/* ALUMNI_2_5_0_FEED_VISUAL_COMPOSER */

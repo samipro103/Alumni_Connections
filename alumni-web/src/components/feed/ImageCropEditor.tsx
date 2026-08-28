@@ -23,6 +23,20 @@ type Size = {
   height: number;
 };
 
+type DragState = {
+  pointerId: number;
+  x: number;
+  y: number;
+  offsetX: number;
+  offsetY: number;
+};
+
+type PinchState = {
+  distance: number;
+  zoom: number;
+  anchorVector: Point;
+};
+
 type Props = {
   file: File;
   position: number;
@@ -39,6 +53,17 @@ const MAX_ZOOM = 3;
 
 function clamp(value: number, min: number, max: number) {
   return Math.min(max, Math.max(min, value));
+}
+
+function distanceBetween(a: Point, b: Point) {
+  return Math.hypot(b.x - a.x, b.y - a.y);
+}
+
+function midpoint(a: Point, b: Point): Point {
+  return {
+    x: (a.x + b.x) / 2,
+    y: (a.y + b.y) / 2,
+  };
 }
 
 function canvasToBlob(
@@ -67,13 +92,11 @@ export default function ImageCropEditor({
 }: Props) {
   const stageRef = useRef<HTMLDivElement>(null);
   const imageRef = useRef<HTMLImageElement>(null);
-  const dragRef = useRef<{
-    pointerId: number;
-    x: number;
-    y: number;
-    offsetX: number;
-    offsetY: number;
-  } | null>(null);
+  const dragRef = useRef<DragState | null>(null);
+  const pinchRef = useRef<PinchState | null>(null);
+  const pointersRef = useRef<Map<number, Point>>(new Map());
+  const zoomRef = useRef(1);
+  const offsetRef = useRef<Point>({ x: 0, y: 0 });
 
   const [natural, setNatural] = useState<Size>({ width: 0, height: 0 });
   const [viewport, setViewport] = useState<Size>({ width: 0, height: 0 });
@@ -89,6 +112,19 @@ export default function ImageCropEditor({
   }, [objectUrl]);
 
   useEffect(() => {
+    zoomRef.current = zoom;
+  }, [zoom]);
+
+  useEffect(() => {
+    offsetRef.current = offset;
+  }, [offset]);
+
+  useEffect(() => {
+    zoomRef.current = 1;
+    offsetRef.current = { x: 0, y: 0 };
+    pointersRef.current.clear();
+    dragRef.current = null;
+    pinchRef.current = null;
     setZoom(1);
     setOffset({ x: 0, y: 0 });
     setNatural({ width: 0, height: 0 });
@@ -125,7 +161,7 @@ export default function ImageCropEditor({
     return () => observer.disconnect();
   }, []);
 
-  const metrics = useMemo(() => {
+  function metricsForZoom(nextZoom: number) {
     if (!natural.width || !natural.height || !viewport.width || !viewport.height) {
       return {
         scale: 1,
@@ -140,7 +176,7 @@ export default function ImageCropEditor({
       viewport.width / natural.width,
       viewport.height / natural.height
     );
-    const scale = coverScale * zoom;
+    const scale = coverScale * nextZoom;
     const width = natural.width * scale;
     const height = natural.height * scale;
 
@@ -151,48 +187,164 @@ export default function ImageCropEditor({
       maxX: Math.max(0, (width - viewport.width) / 2),
       maxY: Math.max(0, (height - viewport.height) / 2),
     };
-  }, [natural, viewport, zoom]);
+  }
+
+  const metrics = useMemo(
+    () => metricsForZoom(zoom),
+    [natural, viewport, zoom]
+  );
+
+  function commitOffset(next: Point, nextZoom = zoomRef.current) {
+    const bounds = metricsForZoom(nextZoom);
+    const clamped = {
+      x: clamp(next.x, -bounds.maxX, bounds.maxX),
+      y: clamp(next.y, -bounds.maxY, bounds.maxY),
+    };
+
+    offsetRef.current = clamped;
+    setOffset(clamped);
+  }
 
   useEffect(() => {
-    setOffset((current) => ({
-      x: clamp(current.x, -metrics.maxX, metrics.maxX),
-      y: clamp(current.y, -metrics.maxY, metrics.maxY),
-    }));
+    setOffset((current) => {
+      const next = {
+        x: clamp(current.x, -metrics.maxX, metrics.maxX),
+        y: clamp(current.y, -metrics.maxY, metrics.maxY),
+      };
+      offsetRef.current = next;
+      return next;
+    });
   }, [metrics.maxX, metrics.maxY]);
 
   function reset() {
+    zoomRef.current = 1;
+    offsetRef.current = { x: 0, y: 0 };
     setZoom(1);
     setOffset({ x: 0, y: 0 });
+  }
+
+  function beginPinch() {
+    const points = [...pointersRef.current.values()];
+    const stage = stageRef.current;
+
+    if (points.length < 2 || !stage) {
+      pinchRef.current = null;
+      return;
+    }
+
+    const first = points[0];
+    const second = points[1];
+    const center = midpoint(first, second);
+    const rect = stage.getBoundingClientRect();
+
+    pinchRef.current = {
+      distance: Math.max(1, distanceBetween(first, second)),
+      zoom: zoomRef.current,
+      anchorVector: {
+        x: center.x - (rect.left + rect.width / 2) - offsetRef.current.x,
+        y: center.y - (rect.top + rect.height / 2) - offsetRef.current.y,
+      },
+    };
+    dragRef.current = null;
   }
 
   function pointerDown(event: ReactPointerEvent<HTMLDivElement>) {
     if (saving) return;
 
+    event.preventDefault();
     event.currentTarget.setPointerCapture(event.pointerId);
+    pointersRef.current.set(event.pointerId, {
+      x: event.clientX,
+      y: event.clientY,
+    });
+
+    if (pointersRef.current.size >= 2) {
+      beginPinch();
+      return;
+    }
+
     dragRef.current = {
       pointerId: event.pointerId,
       x: event.clientX,
       y: event.clientY,
-      offsetX: offset.x,
-      offsetY: offset.y,
+      offsetX: offsetRef.current.x,
+      offsetY: offsetRef.current.y,
     };
   }
 
   function pointerMove(event: ReactPointerEvent<HTMLDivElement>) {
+    if (!pointersRef.current.has(event.pointerId)) return;
+
+    event.preventDefault();
+    pointersRef.current.set(event.pointerId, {
+      x: event.clientX,
+      y: event.clientY,
+    });
+
+    if (pointersRef.current.size >= 2) {
+      if (!pinchRef.current) beginPinch();
+
+      const pinch = pinchRef.current;
+      const stage = stageRef.current;
+      const points = [...pointersRef.current.values()];
+
+      if (!pinch || !stage || points.length < 2) return;
+
+      const first = points[0];
+      const second = points[1];
+      const nextDistance = Math.max(1, distanceBetween(first, second));
+      const nextZoom = clamp(
+        pinch.zoom * (nextDistance / pinch.distance),
+        MIN_ZOOM,
+        MAX_ZOOM
+      );
+      const currentCenter = midpoint(first, second);
+      const rect = stage.getBoundingClientRect();
+      const relativeCenter = {
+        x: currentCenter.x - (rect.left + rect.width / 2),
+        y: currentCenter.y - (rect.top + rect.height / 2),
+      };
+      const scaleRatio = nextZoom / pinch.zoom;
+      const nextOffset = {
+        x: relativeCenter.x - pinch.anchorVector.x * scaleRatio,
+        y: relativeCenter.y - pinch.anchorVector.y * scaleRatio,
+      };
+
+      zoomRef.current = nextZoom;
+      setZoom(nextZoom);
+      commitOffset(nextOffset, nextZoom);
+      return;
+    }
+
     const drag = dragRef.current;
     if (!drag || drag.pointerId !== event.pointerId) return;
 
-    const nextX = drag.offsetX + event.clientX - drag.x;
-    const nextY = drag.offsetY + event.clientY - drag.y;
-
-    setOffset({
-      x: clamp(nextX, -metrics.maxX, metrics.maxX),
-      y: clamp(nextY, -metrics.maxY, metrics.maxY),
+    commitOffset({
+      x: drag.offsetX + event.clientX - drag.x,
+      y: drag.offsetY + event.clientY - drag.y,
     });
   }
 
   function pointerEnd(event: ReactPointerEvent<HTMLDivElement>) {
-    if (dragRef.current?.pointerId === event.pointerId) {
+    pointersRef.current.delete(event.pointerId);
+
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+      event.currentTarget.releasePointerCapture(event.pointerId);
+    }
+
+    pinchRef.current = null;
+
+    const remaining = [...pointersRef.current.entries()];
+    if (remaining.length === 1) {
+      const [pointerId, point] = remaining[0];
+      dragRef.current = {
+        pointerId,
+        x: point.x,
+        y: point.y,
+        offsetX: offsetRef.current.x,
+        offsetY: offsetRef.current.y,
+      };
+    } else {
       dragRef.current = null;
     }
   }
@@ -221,8 +373,14 @@ export default function ImageCropEditor({
 
       const sourceX = clamp(-imageLeft / metrics.scale, 0, natural.width);
       const sourceY = clamp(-imageTop / metrics.scale, 0, natural.height);
-      const sourceWidth = Math.min(viewport.width / metrics.scale, natural.width - sourceX);
-      const sourceHeight = Math.min(viewport.height / metrics.scale, natural.height - sourceY);
+      const sourceWidth = Math.min(
+        viewport.width / metrics.scale,
+        natural.width - sourceX
+      );
+      const sourceHeight = Math.min(
+        viewport.height / metrics.scale,
+        natural.height - sourceY
+      );
 
       const canvas = document.createElement("canvas");
       canvas.width = OUTPUT_WIDTH;
@@ -324,7 +482,9 @@ export default function ImageCropEditor({
           />
 
           <div className="alumni-feed-crop-grid" aria-hidden="true" />
-          <span className="alumni-feed-crop-hint">Arrastra para encuadrar</span>
+          <span className="alumni-feed-crop-hint">
+            Arrastra · pellizca para acercar
+          </span>
         </div>
 
         <div className="alumni-feed-crop-controls">
@@ -347,14 +507,23 @@ export default function ImageCropEditor({
               step="0.01"
               value={zoom}
               disabled={saving}
-              onChange={(event) => setZoom(Number(event.target.value))}
+              onChange={(event) => {
+                const nextZoom = clamp(
+                  Number(event.target.value),
+                  MIN_ZOOM,
+                  MAX_ZOOM
+                );
+                zoomRef.current = nextZoom;
+                setZoom(nextZoom);
+              }}
               aria-label="Zoom de la fotografía"
             />
           </label>
         </div>
 
         <p className="alumni-feed-crop-copy">
-          La publicación se mostrará en 4:5. Puedes mover la foto y acercarla antes de guardar.
+          La publicación se mostrará en 4:5. Mueve la foto, usa dos dedos para
+          acercar o ajustar el encuadre y guarda cuando esté lista.
         </p>
 
         {error && <p className="alumni-feed-crop-error">{error}</p>}
@@ -383,4 +552,4 @@ export default function ImageCropEditor({
   );
 }
 
-/* ALUMNI_2_4_0_IMAGE_CROP_EDITOR */
+/* ALUMNI_2_5_0_IMAGE_CROP_EDITOR */

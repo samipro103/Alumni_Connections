@@ -60,6 +60,69 @@ function firstUrl(text: string) {
   return text.match(/https?:\/\/[^\s<>"']+/i)?.[0] || "";
 }
 
+function isFourFive(item: PostMediaItem) {
+  const width = Number(item.width || 0);
+  const height = Number(item.height || 0);
+
+  if (!width || !height) return false;
+
+  return Math.abs(width / height - 4 / 5) <= 0.025;
+}
+
+function FeedImage({
+  item,
+  postIndex,
+  onPointerUp,
+}: {
+  item: PostMediaItem;
+  postIndex: number;
+  onPointerUp: () => void;
+}) {
+  const src = item.media_url || "";
+  const contain = !isFourFive(item);
+  const [loaded, setLoaded] = useState(!src);
+
+  useEffect(() => {
+    setLoaded(!src);
+  }, [src]);
+
+  return (
+    <button
+      type="button"
+      className="alumni-pro-image-button alumni-feed-media-loadable"
+      data-fit={contain ? "contain" : "cover"}
+      data-loaded={loaded ? "true" : "false"}
+      onPointerUp={onPointerUp}
+      aria-label="Abrir fotografía"
+      aria-busy={!loaded}
+    >
+      {contain && src && (
+        <img
+          className="alumni-feed-image-backdrop"
+          src={src}
+          alt=""
+          aria-hidden="true"
+          loading="lazy"
+          decoding="async"
+          draggable={false}
+        />
+      )}
+
+      <img
+        className="alumni-feed-image-main"
+        src={src}
+        alt="Publicación"
+        loading={postIndex < 2 ? "eager" : "lazy"}
+        decoding="async"
+        fetchPriority={postIndex === 0 ? "high" : "auto"}
+        draggable={false}
+        onLoad={() => setLoaded(true)}
+        onError={() => setLoaded(true)}
+      />
+    </button>
+  );
+}
+
 function FeedVideo({
   item,
   active,
@@ -70,18 +133,25 @@ function FeedVideo({
   onOpen: () => void;
 }) {
   const ref = useRef<HTMLVideoElement>(null);
+  const src = item.media_url || "";
   const [muted, setMuted] = useState(true);
+  const [ready, setReady] = useState(!src);
+  const [inView, setInView] = useState(false);
+
+  useEffect(() => {
+    setReady(!src);
+  }, [src]);
 
   useEffect(() => {
     const video = ref.current;
     if (!video) return;
 
-    if (active) {
+    if (active && inView) {
       void video.play().catch(() => {});
     } else {
       video.pause();
     }
-  }, [active]);
+  }, [active, inView]);
 
   useEffect(() => {
     const video = ref.current;
@@ -89,14 +159,12 @@ function FeedVideo({
 
     const observer = new IntersectionObserver(
       ([entry]) => {
-        if (!entry?.isIntersecting || entry.intersectionRatio < 0.58) {
-          video.pause();
-          return;
-        }
-
-        if (active) {
-          void video.play().catch(() => {});
-        }
+        setInView(
+          Boolean(
+            entry?.isIntersecting &&
+              entry.intersectionRatio >= 0.58
+          )
+        );
       },
       {
         threshold: [0, 0.58, 0.9],
@@ -106,17 +174,24 @@ function FeedVideo({
     observer.observe(video);
 
     return () => observer.disconnect();
-  }, [active]);
+  }, []);
 
   return (
-    <div className="alumni-feed-video-wrap">
+    <div
+      className="alumni-feed-video-wrap alumni-feed-media-loadable"
+      data-loaded={ready ? "true" : "false"}
+      aria-busy={!ready}
+    >
       <video
         ref={ref}
-        src={item.media_url || ""}
+        src={src}
         playsInline
         muted={muted}
         preload="metadata"
         className="alumni-feed-video"
+        onLoadedData={() => setReady(true)}
+        onCanPlay={() => setReady(true)}
+        onError={() => setReady(true)}
         onClick={() => {
           const video = ref.current;
           if (!video) return;
@@ -179,8 +254,10 @@ export default function FeedPost({
   const [captionExpanded, setCaptionExpanded] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [activeIndex, setActiveIndex] = useState(0);
+  const [carouselMoving, setCarouselMoving] = useState(false);
   const [heartBurst, setHeartBurst] = useState(false);
   const carouselRef = useRef<HTMLDivElement>(null);
+  const carouselTimerRef = useRef<number | null>(null);
   const lastTapRef = useRef(0);
   const singleTapTimerRef = useRef<number | null>(null);
 
@@ -226,9 +303,19 @@ export default function FeedPost({
   }, [menuOpen, post.id]);
 
   useEffect(() => {
+    setActiveIndex((current) =>
+      Math.max(0, Math.min(Math.max(0, media.length - 1), current))
+    );
+  }, [media.length]);
+
+  useEffect(() => {
     return () => {
       if (singleTapTimerRef.current !== null) {
         window.clearTimeout(singleTapTimerRef.current);
+      }
+
+      if (carouselTimerRef.current !== null) {
+        window.clearTimeout(carouselTimerRef.current);
       }
     };
   }, []);
@@ -266,9 +353,24 @@ export default function FeedPost({
     }, 240);
   }
 
+  function markCarouselMoving() {
+    setCarouselMoving(true);
+
+    if (carouselTimerRef.current !== null) {
+      window.clearTimeout(carouselTimerRef.current);
+    }
+
+    carouselTimerRef.current = window.setTimeout(() => {
+      setCarouselMoving(false);
+      carouselTimerRef.current = null;
+    }, 140);
+  }
+
   function syncCarouselIndex() {
     const node = carouselRef.current;
     if (!node || !node.clientWidth) return;
+
+    markCarouselMoving();
 
     const next = Math.round(node.scrollLeft / node.clientWidth);
     setActiveIndex(Math.max(0, Math.min(media.length - 1, next)));
@@ -278,6 +380,7 @@ export default function FeedPost({
     const node = carouselRef.current;
     if (!node) return;
 
+    markCarouselMoving();
     node.scrollTo({
       left: node.clientWidth * index,
       behavior: "smooth",
@@ -482,25 +585,15 @@ export default function FeedPost({
                 {item.media_type === "video" ? (
                   <FeedVideo
                     item={item}
-                    active={activeIndex === index}
+                    active={!carouselMoving && activeIndex === index}
                     onOpen={() => onOpenMedia(item)}
                   />
                 ) : (
-                  <button
-                    type="button"
-                    className="alumni-pro-image-button"
+                  <FeedImage
+                    item={item}
+                    postIndex={postIndex}
                     onPointerUp={() => handleImagePointer(item)}
-                    aria-label="Abrir fotografía"
-                  >
-                    <img
-                      src={item.media_url || ""}
-                      alt="Publicación"
-                      loading={postIndex < 2 ? "eager" : "lazy"}
-                      decoding="async"
-                      fetchPriority={postIndex === 0 ? "high" : "auto"}
-                      draggable={false}
-                    />
-                  </button>
+                  />
                 )}
               </div>
             ))}
@@ -672,6 +765,4 @@ export default function FeedPost({
   );
 }
 
-/* ALUMNI_1_4_0_FEED_POST */
-
-/* ALUMNI_1_4_2_THEME_CHAT_PROFILE_POLISH:FEED_METRICS */
+/* ALUMNI_2_5_0_FEED_POST */
