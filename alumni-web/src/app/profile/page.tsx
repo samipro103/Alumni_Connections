@@ -22,6 +22,7 @@ import {
 import { formatDistanceToNow } from "date-fns";
 import { es } from "date-fns/locale";
 import { useAuth } from "@/components/auth/AuthProvider";
+import { useAlumniUX } from "@/components/ui/AlumniUXProvider";
 import { supabase } from "@/lib/supabase";
 import AppShell from "@/components/layout/AppShell";
 import ProfileMusicCard from "@/components/profile/ProfileMusicCard";
@@ -57,6 +58,7 @@ const profilePageCache =
 export default function ProfilePage() {
   const router = useRouter();
   const { user, loading } = useAuth();
+  const { notify, confirm } = useAlumniUX();
 
   const [profile, setProfile] = useState<any>(null);
   const [followers, setFollowers] = useState(0);
@@ -333,7 +335,10 @@ export default function ProfilePage() {
         });
       } else {
         await navigator.clipboard.writeText(url);
-        alert("Enlace del perfil copiado.");
+        notify(
+          "Enlace del perfil copiado.",
+          "success"
+        );
       }
     } catch {
       // Compartir cancelado.
@@ -353,11 +358,15 @@ export default function ProfilePage() {
     );
 
     if (error) {
-      alert(error.message);
+      notify(error.message, "error");
       throw error;
     }
 
     await getProfile(false);
+    notify(
+      "Publicación actualizada.",
+      "success"
+    );
   }
 
   async function toggleProfilePin(
@@ -371,11 +380,15 @@ export default function ProfilePage() {
     );
 
     if (error) {
-      alert(error.message);
+      notify(error.message, "error");
       return;
     }
 
     await getProfile(false);
+    notify(
+      "Perfil actualizado.",
+      "success"
+    );
   }
 
   async function deleteProfilePost(
@@ -383,9 +396,14 @@ export default function ProfilePage() {
   ) {
     if (!user) return;
 
-    const confirmed = window.confirm(
-      "¿Borrar esta publicación? Esta acción no se puede deshacer."
-    );
+    const confirmed = await confirm({
+      title: "Eliminar publicación",
+      description:
+        "Esta publicación se eliminará de Alumni y no se puede deshacer.",
+      confirmLabel: "Eliminar",
+      cancelLabel: "Cancelar",
+      tone: "danger",
+    });
 
     if (!confirmed) return;
 
@@ -396,11 +414,15 @@ export default function ProfilePage() {
       .eq("user_id", user.id);
 
     if (error) {
-      alert(error.message);
+      notify(error.message, "error");
       return;
     }
 
     await getProfile(false);
+    notify(
+      "Publicación eliminada.",
+      "success"
+    );
   }
 
   const links = useMemo(
@@ -767,3 +789,5 @@ function Detail({
 /* ALUMNI_2_3_0_SOCIAL_PASSPORT:OWNER_PROFILE */
 
 /* ALUMNI_2_3_2_RECOVERY_PROFILE_PASSPORT_NAV:OWNER_PROFILE */
+
+/* ALUMNI_2_6_0_GLOBAL_UX:PROFILE */

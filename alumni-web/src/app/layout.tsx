@@ -8,8 +8,10 @@ import { AuthProvider } from "@/components/auth/AuthProvider";
 import { ThemeProvider } from "@/components/theme/ThemeProvider";
 import GlobalPullToRefresh from "@/components/layout/GlobalPullToRefresh";
 import PWAProBootstrap from "@/components/pwa/PWAProBootstrap";
+import { AlumniUXProvider } from "@/components/ui/AlumniUXProvider";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import "@/components/ui/alumni-ux.css";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -65,6 +67,8 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
   viewportFit: "cover",
   themeColor: "#0b0d12",
 };
@@ -103,7 +107,8 @@ export default function RootLayout({
         />
 
         <ThemeProvider>
-          <AuthProvider>
+          <AlumniUXProvider>
+            <AuthProvider>
             <GlobalPullToRefresh />
             <PWAProBootstrap />
 
@@ -113,7 +118,8 @@ export default function RootLayout({
             >
               {children}
             </div>
-          </AuthProvider>
+            </AuthProvider>
+          </AlumniUXProvider>
         </ThemeProvider>
       </body>
     </html>
@@ -122,3 +128,5 @@ export default function RootLayout({
 
 /* ALUMNI_2_0_PWA_STABILITY:ROOT_LAYOUT */
 /* ALUMNI_1_0_13_DISABLE_LEGACY_MFA_ROUTE_GUARD */
+
+/* ALUMNI_2_6_0_GLOBAL_UX:ROOT_LAYOUT */

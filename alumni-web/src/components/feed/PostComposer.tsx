@@ -19,6 +19,7 @@ import {
   type PointerEvent as ReactPointerEvent,
 } from "react";
 import { useAuth } from "@/components/auth/AuthProvider";
+import { useAlumniUX } from "@/components/ui/AlumniUXProvider";
 import ImageCropEditor from "@/components/feed/ImageCropEditor";
 import { supabase } from "@/lib/supabase";
 import { validatePostMediaFiles } from "@/lib/feedMedia";
@@ -56,6 +57,7 @@ export default function PostComposer({
   const fileKeyCounterRef = useRef(0);
   const reorderRef = useRef<ReorderState | null>(null);
   const { user } = useAuth();
+  const { notify } = useAlumniUX();
 
   const [profile, setProfile] = useState<any>(null);
   const [expanded, setExpanded] = useState(false);
@@ -309,7 +311,10 @@ export default function PostComposer({
         ]);
       }
     } catch (error: any) {
-      alert(error?.message || "No se pudieron agregar los archivos.");
+      notify(
+        error?.message || "No se pudieron agregar los archivos.",
+        "error"
+      );
     } finally {
       if (inputRef.current) {
         inputRef.current.value = "";
@@ -617,3 +622,5 @@ export default function PostComposer({
 }
 
 /* ALUMNI_2_5_0_FEED_VISUAL_COMPOSER */
+
+/* ALUMNI_2_6_0_GLOBAL_UX:POST_COMPOSER */
