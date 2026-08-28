@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  Crop,
   Globe2,
   ImagePlus,
   Play,
@@ -15,6 +16,7 @@ import {
   useState,
 } from "react";
 import { useAuth } from "@/components/auth/AuthProvider";
+import ImageCropEditor from "@/components/feed/ImageCropEditor";
 import { supabase } from "@/lib/supabase";
 import { validatePostMediaFiles } from "@/lib/feedMedia";
 
@@ -46,6 +48,7 @@ export default function PostComposer({
   const [expanded, setExpanded] = useState(false);
   const [publishing, setPublishing] = useState(false);
   const [previews, setPreviews] = useState<Preview[]>([]);
+  const [cropQueue, setCropQueue] = useState<File[]>([]);
 
   useEffect(() => {
     if (!user) {
@@ -89,6 +92,12 @@ export default function PostComposer({
   }, [mediaFiles]);
 
   useEffect(() => {
+    setCropQueue((current) =>
+      current.filter((file) => mediaFiles.includes(file))
+    );
+  }, [mediaFiles]);
+
+  useEffect(() => {
     const textarea = textareaRef.current;
     if (!textarea || !expanded) return;
 
@@ -99,7 +108,9 @@ export default function PostComposer({
     )}px`;
   }, [content, expanded]);
 
-  const canPublish = Boolean(content.trim() || mediaFiles.length);
+  const canPublish = Boolean(
+    (content.trim() || mediaFiles.length) && !cropQueue.length
+  );
 
   const mediaLabel = useMemo(() => {
     if (!mediaFiles.length) return "Foto o video";
@@ -122,6 +133,11 @@ export default function PostComposer({
     return parts.join(" · ");
   }, [mediaFiles]);
 
+  const currentCropFile = cropQueue[0] || null;
+  const currentCropIndex = currentCropFile
+    ? mediaFiles.indexOf(currentCropFile)
+    : -1;
+
   function openComposer() {
     if (!user) {
       window.location.href = "/login";
@@ -139,9 +155,20 @@ export default function PostComposer({
     if (!list?.length) return;
 
     try {
-      const next = [...mediaFiles, ...Array.from(list)].slice(0, 10);
+      const available = Math.max(0, 10 - mediaFiles.length);
+      const appended = Array.from(list).slice(0, available);
+      const next = [...mediaFiles, ...appended];
+
       validatePostMediaFiles(next);
       setMediaFiles(next);
+
+      const imagesToCrop = appended.filter((file) =>
+        file.type.startsWith("image/")
+      );
+
+      if (imagesToCrop.length) {
+        setCropQueue((current) => [...current, ...imagesToCrop]);
+      }
     } catch (error: any) {
       alert(error?.message || "No se pudieron agregar los archivos.");
     } finally {
@@ -152,9 +179,36 @@ export default function PostComposer({
   }
 
   function removeFile(index: number) {
+    const target = mediaFiles[index];
+
     setMediaFiles(
       mediaFiles.filter((_, current) => current !== index)
     );
+
+    if (target) {
+      setCropQueue((current) =>
+        current.filter((file) => file !== target)
+      );
+    }
+  }
+
+  function editFile(file: File) {
+    if (!file.type.startsWith("image/")) return;
+    setCropQueue([file]);
+  }
+
+  function applyCrop(croppedFile: File) {
+    const sourceFile = cropQueue[0];
+    if (!sourceFile) return;
+
+    setMediaFiles(
+      mediaFiles.map((file) => (file === sourceFile ? croppedFile : file))
+    );
+    setCropQueue((current) => current.slice(1));
+  }
+
+  function skipCrop() {
+    setCropQueue((current) => current.slice(1));
   }
 
   async function publish() {
@@ -167,6 +221,7 @@ export default function PostComposer({
 
       if (ok) {
         setExpanded(false);
+        setCropQueue([]);
       }
     } catch (error) {
       console.error("Post publish error:", error);
@@ -178,175 +233,207 @@ export default function PostComposer({
   function cancel() {
     setContent("");
     setMediaFiles([]);
+    setCropQueue([]);
     setExpanded(false);
   }
 
   return (
-    <section
-      id="composer"
-      className="alumni-pro-composer"
-      data-pull-refresh-lock={
-        expanded && canPublish ? "true" : undefined
-      }
-    >
-      <div className="alumni-pro-composer-row">
-        <div className="alumni-pro-composer-avatar">
-          {profile?.avatar_url ? (
-            <img
-              src={profile.avatar_url}
-              alt=""
-            />
-          ) : (
-            profile?.username?.charAt(0)?.toUpperCase() || "A"
-          )}
-        </div>
-
-        {!expanded ? (
-          <>
-            <button
-              type="button"
-              className="alumni-pro-composer-open"
-              onClick={openComposer}
-            >
-              ¿Qué quieres compartir hoy?
-            </button>
-
-            <button
-              type="button"
-              className="alumni-pro-composer-media-shortcut"
-              onClick={() => {
-                openComposer();
-                window.setTimeout(
-                  () => inputRef.current?.click(),
-                  80
-                );
-              }}
-              aria-label="Agregar fotos o videos"
-            >
-              <ImagePlus size={21} />
-            </button>
-          </>
-        ) : (
-          <div className="alumni-pro-composer-main">
-            <div className="alumni-pro-composer-meta">
-              <strong>@{profile?.username || "alumni"}</strong>
-              <span>
-                <Globe2 size={12} />
-                Comunidad Alumni
-              </span>
-            </div>
-
-            <textarea
-              ref={textareaRef}
-              rows={3}
-              value={content}
-              placeholder="Comparte una idea, un logro, una pregunta o algo que quieras contar..."
-              onChange={(event) => setContent(event.target.value)}
-            />
-
-            {previews.length > 0 && (
-              <div className="alumni-pro-composer-previews">
-                {previews.map((preview, index) => (
-                  <div
-                    key={`${preview.file.name}-${index}`}
-                    className="alumni-pro-composer-preview"
-                  >
-                    {preview.file.type.startsWith("video/") ? (
-                      <>
-                        <video
-                          src={preview.url}
-                          muted
-                          playsInline
-                          preload="metadata"
-                        />
-                        <span className="alumni-pro-composer-video-badge">
-                          <Play size={14} fill="currentColor" />
-                        </span>
-                      </>
-                    ) : (
-                      <img
-                        src={preview.url}
-                        alt=""
-                      />
-                    )}
-
-                    <button
-                      type="button"
-                      onClick={() => removeFile(index)}
-                      aria-label="Quitar archivo"
-                    >
-                      <X size={15} />
-                    </button>
-
-                    {previews.length > 1 && (
-                      <span className="alumni-pro-composer-order">
-                        {index + 1}
-                      </span>
-                    )}
-                  </div>
-                ))}
-
-                {previews.length < 10 && (
-                  <button
-                    type="button"
-                    className="alumni-pro-composer-add-more"
-                    onClick={() => inputRef.current?.click()}
-                  >
-                    <Plus size={22} />
-                    <span>Agregar</span>
-                  </button>
-                )}
-              </div>
+    <>
+      <section
+        id="composer"
+        className="alumni-pro-composer"
+        data-pull-refresh-lock={
+          expanded && (canPublish || cropQueue.length) ? "true" : undefined
+        }
+      >
+        <div className="alumni-pro-composer-row">
+          <div className="alumni-pro-composer-avatar">
+            {profile?.avatar_url ? (
+              <img
+                src={profile.avatar_url}
+                alt=""
+              />
+            ) : (
+              profile?.username?.charAt(0)?.toUpperCase() || "A"
             )}
+          </div>
 
-            <div className="alumni-pro-composer-footer">
+          {!expanded ? (
+            <>
               <button
                 type="button"
-                className="alumni-pro-composer-media-button"
-                onClick={() => inputRef.current?.click()}
+                className="alumni-pro-composer-open"
+                onClick={openComposer}
               >
-                <ImagePlus size={18} />
-                {mediaLabel}
+                ¿Qué quieres compartir hoy?
               </button>
 
-              <span className="alumni-pro-composer-limit">
-                Hasta 10 archivos
-              </span>
+              <button
+                type="button"
+                className="alumni-pro-composer-media-shortcut"
+                onClick={() => {
+                  openComposer();
+                  window.setTimeout(
+                    () => inputRef.current?.click(),
+                    80
+                  );
+                }}
+                aria-label="Agregar fotos o videos"
+              >
+                <ImagePlus size={21} />
+              </button>
+            </>
+          ) : (
+            <div className="alumni-pro-composer-main">
+              <div className="alumni-pro-composer-meta">
+                <strong>@{profile?.username || "alumni"}</strong>
+                <span>
+                  <Globe2 size={12} />
+                  Comunidad Alumni
+                </span>
+              </div>
 
-              <div className="alumni-pro-composer-submit">
+              <textarea
+                ref={textareaRef}
+                rows={3}
+                value={content}
+                placeholder="Comparte una idea, un logro, una pregunta o algo que quieras contar..."
+                onChange={(event) => setContent(event.target.value)}
+              />
+
+              {previews.length > 0 && (
+                <div className="alumni-pro-composer-previews">
+                  {previews.map((preview, index) => (
+                    <div
+                      key={`${preview.file.name}-${preview.file.lastModified}-${index}`}
+                      className="alumni-pro-composer-preview alumni-feed-visual-preview"
+                    >
+                      {preview.file.type.startsWith("video/") ? (
+                        <>
+                          <video
+                            src={preview.url}
+                            muted
+                            playsInline
+                            preload="metadata"
+                          />
+                          <span className="alumni-pro-composer-video-badge">
+                            <Play size={14} fill="currentColor" />
+                          </span>
+                        </>
+                      ) : (
+                        <>
+                          <img
+                            src={preview.url}
+                            alt=""
+                          />
+
+                          <button
+                            type="button"
+                            className="alumni-feed-preview-crop"
+                            onClick={() => editFile(preview.file)}
+                            aria-label={`Ajustar foto ${index + 1}`}
+                          >
+                            <Crop size={14} />
+                            <span>Ajustar</span>
+                          </button>
+                        </>
+                      )}
+
+                      <button
+                        type="button"
+                        className="alumni-feed-preview-remove"
+                        onClick={() => removeFile(index)}
+                        aria-label="Quitar archivo"
+                      >
+                        <X size={15} />
+                      </button>
+
+                      {previews.length > 1 && (
+                        <span className="alumni-pro-composer-order">
+                          {index + 1}
+                        </span>
+                      )}
+                    </div>
+                  ))}
+
+                  {previews.length < 10 && (
+                    <button
+                      type="button"
+                      className="alumni-pro-composer-add-more alumni-feed-visual-add-more"
+                      onClick={() => inputRef.current?.click()}
+                    >
+                      <Plus size={22} />
+                      <span>Agregar</span>
+                    </button>
+                  )}
+                </div>
+              )}
+
+              <div className="alumni-pro-composer-footer">
                 <button
                   type="button"
-                  onClick={cancel}
-                  disabled={publishing}
+                  className="alumni-pro-composer-media-button"
+                  onClick={() => inputRef.current?.click()}
                 >
-                  Cancelar
+                  <ImagePlus size={18} />
+                  {mediaLabel}
                 </button>
 
-                <button
-                  type="button"
-                  className="is-primary"
-                  onClick={publish}
-                  disabled={!canPublish || publishing}
-                >
-                  <Send size={15} />
-                  {publishing ? "Publicando..." : "Publicar"}
-                </button>
+                <span className="alumni-pro-composer-limit">
+                  Hasta 10 archivos · Fotos 4:5
+                </span>
+
+                <div className="alumni-pro-composer-submit">
+                  <button
+                    type="button"
+                    onClick={cancel}
+                    disabled={publishing}
+                  >
+                    Cancelar
+                  </button>
+
+                  <button
+                    type="button"
+                    className="is-primary"
+                    onClick={publish}
+                    disabled={!canPublish || publishing}
+                  >
+                    <Send size={15} />
+                    {publishing ? "Publicando..." : "Publicar"}
+                  </button>
+                </div>
               </div>
             </div>
-          </div>
-        )}
+          )}
 
-        <input
-          ref={inputRef}
-          hidden
-          multiple
-          type="file"
-          accept="image/jpeg,image/png,image/webp,video/mp4,video/webm,video/quicktime"
-          onChange={(event) => addFiles(event.target.files)}
+          <input
+            ref={inputRef}
+            hidden
+            multiple
+            type="file"
+            accept="image/jpeg,image/png,image/webp,video/mp4,video/webm,video/quicktime"
+            onChange={(event) => addFiles(event.target.files)}
+          />
+        </div>
+      </section>
+
+      {currentCropFile && currentCropIndex >= 0 && (
+        <ImageCropEditor
+          file={currentCropFile}
+          position={Math.max(
+            1,
+            previews
+              .filter((item) => item.file.type.startsWith("image/"))
+              .findIndex((item) => item.file === currentCropFile) + 1
+          )}
+          total={previews.filter((item) => item.file.type.startsWith("image/")).length}
+          onApply={applyCrop}
+          onSkip={skipCrop}
+          onClose={() => setCropQueue([])}
         />
-      </div>
-    </section>
+      )}
+    </>
   );
 }
 
-/* ALUMNI_1_4_0_MULTI_MEDIA_COMPOSER */
+/* ALUMNI_2_4_0_FEED_VISUAL_COMPOSER */
