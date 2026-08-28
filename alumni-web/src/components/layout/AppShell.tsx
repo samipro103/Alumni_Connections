@@ -7,7 +7,6 @@ import TopBar from "./TopBar";
 import MobileNav from "./MobileNav";
 import AppUtilities from "./AppUtilities";
 import EventReminderBootstrap from "@/components/events/EventReminderBootstrap";
-import useEmail2FAGuard from "@/components/auth/useEmail2FAGuard";
 
 interface Props {
   children: ReactNode;
@@ -22,12 +21,6 @@ export default function AppShell({
   children,
   immersiveMobile = false,
 }: Props) {
-  const email2faReady = useEmail2FAGuard();
-
-  if (!email2faReady) {
-    return null;
-  }
-
   return (
     <>
       <EventReminderBootstrap />
@@ -74,10 +67,6 @@ export default function AppShell({
         </div>
       </div>
 
-      {/*
-        FIXED UI fuera del contenedor transformable.
-        Así jamás desaparece por el gesto de refresh.
-      */}
       {immersiveMobile ? (
         <div className="hidden lg:block">
           <AppUtilities />
@@ -93,9 +82,6 @@ export default function AppShell({
 }
 
 /* ALUMNI_1_3_6_CHAT_STABILITY_MEDIA_SPOTIFY:APP_SHELL */
-
 /* ALUMNI_2_1_2_EVENT_REMINDER_BOOTSTRAP:MOUNT */
-
 /* ALUMNI_2_1_4_IOS_SAFE_HEADER:APP_SHELL */
-
-/* ALUMNI_2_4_0_EMAIL_2FA_APP_GUARD */
+/* ALUMNI_1_0_12_NO_LOGIN_2FA_GUARD */
