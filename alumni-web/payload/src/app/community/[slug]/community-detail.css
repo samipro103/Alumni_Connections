@@ -1,0 +1,341 @@
+.community-detail {
+  padding-bottom: 40px;
+}
+
+.community-detail-back {
+  display: inline-flex;
+  min-height: 34px;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 10px;
+  color: var(--app-muted-2);
+  font-size: 10px;
+  font-weight: 820;
+}
+
+.community-detail-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 8px 0 26px;
+  border-bottom: 1px solid var(--app-border);
+}
+
+.community-detail-title > span,
+.community-events-strip header span,
+.community-feed > header span {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--app-muted-2);
+  font-size: 9px;
+  font-weight: 900;
+  letter-spacing: .15em;
+  text-transform: uppercase;
+}
+
+.community-detail-title h1 {
+  margin-top: 7px;
+  color: var(--app-text);
+  font-size: clamp(36px, 7vw, 58px);
+  font-weight: 950;
+  line-height: .98;
+  letter-spacing: -.06em;
+}
+
+.community-detail-title > p {
+  max-width: 680px;
+  margin-top: 14px;
+  color: var(--app-muted);
+  font-size: 13px;
+  line-height: 1.7;
+}
+
+.community-detail-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 15px;
+}
+
+.community-detail-meta span,
+.community-detail-meta button {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  border: 0;
+  background: transparent;
+  color: var(--app-muted-2);
+  font-size: 10px;
+  font-weight: 720;
+}
+
+.community-detail-join {
+  min-height: 38px;
+  flex: 0 0 auto;
+  border: 0;
+  background: transparent;
+  color: var(--app-accent);
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.community-detail-join:disabled {
+  color: var(--app-muted-3);
+}
+
+.community-composer {
+  padding: 20px 0;
+  border-bottom: 1px solid var(--app-border);
+}
+
+.community-composer textarea {
+  width: 100%;
+  min-height: 92px;
+  resize: vertical;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--app-text);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.community-composer > div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding-top: 10px;
+  border-top: 1px solid color-mix(in srgb, var(--app-border) 70%, transparent);
+}
+
+.community-composer > div span {
+  color: var(--app-muted-3);
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: 9px;
+}
+
+.community-composer button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 0;
+  background: transparent;
+  color: var(--app-accent);
+  font-size: 10px;
+  font-weight: 900;
+}
+
+.community-events-strip {
+  padding: 22px 0;
+  border-bottom: 1px solid var(--app-border);
+}
+
+.community-events-strip > header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: 10px;
+}
+
+.community-events-strip h2,
+.community-feed > header h2 {
+  margin-top: 4px;
+  color: var(--app-text);
+  font-size: 18px;
+  font-weight: 930;
+  letter-spacing: -.025em;
+}
+
+.community-events-strip > header a {
+  color: var(--app-accent);
+  font-size: 10px;
+  font-weight: 850;
+}
+
+.community-event-row {
+  display: grid;
+  grid-template-columns: 26px minmax(0,1fr);
+  min-height: 58px;
+  align-items: center;
+  gap: 8px;
+  border-bottom: 1px solid color-mix(in srgb, var(--app-border) 72%, transparent);
+  color: var(--app-muted-2);
+}
+
+.community-event-row:last-child {
+  border-bottom: 0;
+}
+
+.community-event-row strong {
+  display: block;
+  color: var(--app-text-soft);
+  font-size: 12px;
+  font-weight: 850;
+}
+
+.community-event-row small {
+  display: block;
+  margin-top: 3px;
+  color: var(--app-muted-2);
+  font-size: 9px;
+}
+
+.community-feed {
+  padding: 24px 0;
+}
+
+.community-feed > header {
+  margin-bottom: 8px;
+}
+
+.community-post {
+  padding: 18px 0 20px;
+  border-bottom: 1px solid var(--app-border);
+}
+
+.community-post > header a {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.community-post-avatar {
+  display: flex;
+  width: 36px;
+  height: 36px;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--app-soft);
+  color: var(--app-text);
+  font-size: 10px;
+  font-weight: 900;
+}
+
+.community-post-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.community-post header strong,
+.community-member-row strong {
+  display: block;
+  color: var(--app-text);
+  font-size: 11px;
+  font-weight: 880;
+}
+
+.community-post header small,
+.community-member-row small {
+  display: block;
+  margin-top: 2px;
+  color: var(--app-muted-2);
+  font-size: 9px;
+}
+
+.community-post > p {
+  max-width: 720px;
+  margin-top: 13px;
+  color: var(--app-text-soft);
+  font-size: 14px;
+  line-height: 1.7;
+  white-space: pre-wrap;
+}
+
+.community-members-list {
+  padding-bottom: 14px;
+}
+
+.community-member-row {
+  display: grid;
+  grid-template-columns: 36px minmax(0,1fr) auto;
+  min-height: 58px;
+  align-items: center;
+  gap: 9px;
+  border-bottom: 1px solid var(--app-border);
+}
+
+.community-member-row > div {
+  display: flex;
+  gap: 4px;
+}
+
+.community-member-row > div button,
+.community-member-remove {
+  display: inline-flex;
+  min-height: 28px;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  background: transparent;
+  color: var(--app-accent);
+  font-size: 9px;
+  font-weight: 850;
+}
+
+.community-member-row > div button {
+  width: 28px;
+}
+
+.community-member-row > div button:last-child,
+.community-member-remove {
+  color: var(--app-muted-2);
+}
+
+.community-detail-empty {
+  max-width: 700px;
+  margin: 0 auto;
+  padding: 80px 0;
+}
+
+.community-detail-empty h1 {
+  color: var(--app-text);
+  font-size: 32px;
+  font-weight: 930;
+}
+
+.community-detail-empty a {
+  display: inline-block;
+  margin-top: 14px;
+  color: var(--app-accent);
+  font-size: 11px;
+  font-weight: 850;
+}
+
+@media (max-width: 620px) {
+  .community-detail-header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
+
+/* ALUMNI_2_1_COMMUNITY_DETAIL_OPEN_DESIGN */
+
+/* ALUMNI_2_1_1_MOBILE_HEADER_SPACING */
+@media (max-width: 1023px) {
+  .community-detail {
+    padding-top: 12px;
+  }
+}
+
+/* ALUMNI 2.1.2 — clearer community actions */
+.community-detail-actions {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 16px;
+}
+
+@media (max-width: 620px) {
+  .community-detail-actions {
+    width: 100%;
+    justify-content: space-between;
+  }
+}

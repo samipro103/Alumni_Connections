@@ -7,6 +7,7 @@ import TopBar from "./TopBar";
 import MobileNav from "./MobileNav";
 import AppUtilities from "./AppUtilities";
 import EventReminderBootstrap from "@/components/events/EventReminderBootstrap";
+import useEmail2FAGuard from "@/components/auth/useEmail2FAGuard";
 
 interface Props {
   children: ReactNode;
@@ -21,6 +22,12 @@ export default function AppShell({
   children,
   immersiveMobile = false,
 }: Props) {
+  const email2faReady = useEmail2FAGuard();
+
+  if (!email2faReady) {
+    return null;
+  }
+
   return (
     <>
       <EventReminderBootstrap />
@@ -90,3 +97,5 @@ export default function AppShell({
 /* ALUMNI_2_1_2_EVENT_REMINDER_BOOTSTRAP:MOUNT */
 
 /* ALUMNI_2_1_4_IOS_SAFE_HEADER:APP_SHELL */
+
+/* ALUMNI_2_4_0_EMAIL_2FA_APP_GUARD */

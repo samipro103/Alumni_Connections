@@ -1,0 +1,51 @@
+SPOTIFY - REVISION DE CREDENCIALES
+=================================
+
+El error "Spotify rechazó las credenciales de la aplicación" ocurre ANTES
+de hacer la búsqueda: Spotify no está aceptando el par Client ID + Secret.
+
+El parche 2.2 hace el backend más tolerante a errores de pegado, por ejemplo:
+- "abc123"
+- 'abc123'
+- SPOTIFY_CLIENT_ID=abc123
+
+PERO revisa Vercel de todos modos:
+
+Variable:
+SPOTIFY_CLIENT_ID
+Value:
+PEGA SOLO EL CLIENT ID
+
+Variable:
+SPOTIFY_CLIENT_SECRET
+Value:
+PEGA SOLO EL CLIENT SECRET
+
+Variable:
+SPOTIFY_MARKET
+Value:
+SV
+
+NO escribas dentro del Value:
+SPOTIFY_CLIENT_ID=...
+SPOTIFY_CLIENT_SECRET=...
+
+VERCEL:
+Settings > Environment Variables
+
+Las variables deben incluir Production.
+Después de guardar:
+Deployments > ultimo deployment > Redeploy
+
+IMPORTANTE - SPOTIFY 2026
+Las apps nuevas en Development Mode requieren que EL DUEÑO de la app tenga
+Spotify Premium activo. Si el dueño no tiene Premium, la Web API de la app
+puede dejar de funcionar.
+
+Si el error persiste:
+Spotify for Developers > Dashboard > AlumniConnections > Settings
+1. confirma que Client ID corresponde a esa app;
+2. View client secret;
+3. si tienes duda, resetea/regenera el secret;
+4. actualiza SPOTIFY_CLIENT_SECRET en Vercel;
+5. Redeploy.

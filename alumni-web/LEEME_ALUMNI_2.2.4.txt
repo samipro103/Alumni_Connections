@@ -1,0 +1,44 @@
+ALUMNI 2.2.4 — PASSPORT CREATE BUTTON VISIBLE
+================================================
+
+CORRECCIÓN REAL
+===============
+El problema está DENTRO del creador del Pasaporte:
+llenas país, código, nota y diseño, pero no se ve ninguna acción
+para confirmar.
+
+SOLUCIÓN
+========
+En móvil, ahora el editor tendrá un botón fijo y visible:
+
+- Crear país
+- Guardar foto
+
+Ese botón queda dentro del flujo del editor,
+fijo arriba de la barra inferior.
+
+No depende del header ni del footer.
+
+Además:
+- no mete botones nuevos afuera
+- no requiere SQL
+
+APLICAR
+=======
+APLICAR_ALUMNI_2.2.4.bat
+
+DESPUÉS
+=======
+npm run build
+
+COMMIT
+======
+git status
+
+git add src/app/passport/page.tsx
+git add src/app/passport/passport.css
+
+git commit -m "2.2.4 - Make Passport create and save buttons clearly visible on mobile"
+git push origin main
+
+NO uses git add .

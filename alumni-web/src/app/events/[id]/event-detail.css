@@ -215,10 +215,10 @@
 
 /* ALUMNI_2_1_EVENT_DETAIL_OPEN_DESIGN */
 
-/* ALUMNI_2_1_1_MOBILE_HEADER_SPACING */
+/* ALUMNI_2_1_3_HEADER_POSITION */
 @media (max-width: 1023px) {
   .event-detail {
-    padding-top: 12px;
+    padding-top: 30px;
   }
 }
 

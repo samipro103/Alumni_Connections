@@ -1,0 +1,143 @@
+ALUMNI PWA PUSH IPHONE 1.0 - SIN PAGAR APPLE DEVELOPER
+======================================================
+
+ESTA VERSION ES GRATIS
+----------------------
+No usa TestFlight.
+No necesita Apple Developer Program.
+No cuesta $99.
+No reemplaza Android/FCM.
+
+REQUISITO
+---------
+iPhone/iPad con iOS 16.4 o superior.
+
+MUY IMPORTANTE
+--------------
+En iPhone, Web Push funciona para la web app agregada a la pantalla de inicio.
+No basta con abrir Alumni como una pestaña normal de Safari.
+
+PASO 1 - APLICAR
+----------------
+Ejecuta:
+
+APLICAR_PWA_PUSH_IPHONE_1_0.bat
+
+PASO 2 - SQL
+------------
+Supabase > SQL Editor > New query
+
+Ejecuta:
+WEB_PUSH_IPHONE_PWA_1_0.sql
+
+Debe dar Success.
+
+PASO 3 - VAPID + EDGE FUNCTION
+------------------------------
+Ejecuta:
+
+CONFIGURAR_VAPID_Y_DEPLOY_PUSH.bat
+
+Ese BAT:
+- genera las claves VAPID;
+- guarda las claves como Secrets de Supabase;
+- despliega la Edge Function "push" actualizada;
+- elimina la clave privada temporal.
+
+Los webhooks que ya tenías:
+notifications INSERT -> push
+messages INSERT      -> push
+
+SIGUEN SIRVIENDO. No crees otros.
+
+PASO 4 - BUILD
+--------------
+cd /d "C:\Users\SAMI PC\Documents\Alumni_Connections\alumni-web"
+npm run build
+
+PASO 5 - GIT
+------------
+git add src/app/manifest.ts
+git add src/app/apple-icon.png
+git add src/components/pwa/WebPushBootstrap.tsx
+git add src/components/auth/AuthProvider.tsx
+git add public/sw.js
+git add public/icons/alumni-192.png
+git add public/icons/alumni-512.png
+git add public/icons/alumni-512-maskable.png
+git add public/icons/alumni-badge-96.png
+git add supabase/sql/WEB_PUSH_IPHONE_PWA_1_0.sql
+git add supabase/functions/push/index.ts
+git commit -m "Agrega Web Push PWA para iPhone"
+git push
+
+NO uses git add .
+
+PASO 6
+------
+Espera a que Vercel quede READY.
+
+PASO 7 - IPHONE
+---------------
+1. Abre Safari.
+2. Entra a:
+   https://alumni-connections.vercel.app
+3. Inicia sesión.
+4. Verás el aviso "Activa Alumni en tu iPhone".
+5. Toca Compartir.
+6. Toca "Agregar a pantalla de inicio".
+7. Cierra Safari.
+8. Abre Alumni DESDE EL NUEVO ICONO.
+9. Verás "Notificaciones en iPhone".
+10. Toca "Activar notificaciones".
+11. iPhone mostrará el permiso normal del sistema.
+12. Toca "Permitir".
+
+PASO 8 - PRUEBA
+---------------
+Cuando quede activado aparecerá:
+"Probar notificación"
+
+Tócalo.
+
+La prueba se envía con unos 4 segundos de retraso.
+Puedes salir de Alumni o bloquear el iPhone.
+
+Debe aparecer:
+
+AlumniConnections
+Las notificaciones ya están funcionando en tu iPhone 🎉
+
+PASO 9 - CONFIRMAR EN SUPABASE
+------------------------------
+Ejecuta:
+
+select
+  user_id,
+  platform,
+  active,
+  left(endpoint, 45) || '...' as endpoint_preview,
+  last_seen_at
+from public.web_push_subscriptions
+order by last_seen_at desc;
+
+Debe aparecer:
+platform = ios-pwa
+active   = true
+
+SI NO APARECE
+-------------
+Comprueba:
+- iOS 16.4 o superior.
+- Alumni se agregó a pantalla de inicio.
+- abriste Alumni desde el icono, no desde Safari.
+- aceptaste el permiso.
+- el SQL dio Success.
+- CONFIGURAR_VAPID_Y_DEPLOY_PUSH.bat terminó OK.
+- Vercel está READY con el último push.
+
+SEGURIDAD
+---------
+La clave VAPID privada queda únicamente como Secret de Supabase.
+El BAT borra el archivo temporal.
+Las suscripciones están ligadas al usuario y protegidas por RLS.

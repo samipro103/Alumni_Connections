@@ -1,0 +1,223 @@
+.root {
+  margin-top: 20px;
+  padding-top: 18px;
+  border-top: 1px solid var(--app-border);
+}
+
+.passportRow {
+  display: grid;
+  grid-template-columns: 82px minmax(0, 1fr);
+  align-items: center;
+  gap: 16px;
+}
+
+.passportBook {
+  position: relative;
+  display: flex;
+  width: 82px;
+  height: 112px;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+
+  border: 1px solid
+    color-mix(
+      in srgb,
+      var(--app-accent) 28%,
+      var(--app-border)
+    );
+  border-radius: 7px 13px 13px 7px;
+
+  background:
+    radial-gradient(
+      circle at 80% 20%,
+      color-mix(
+        in srgb,
+        var(--app-accent) 18%,
+        transparent
+      ),
+      transparent 42%
+    ),
+    color-mix(
+      in srgb,
+      var(--app-surface) 90%,
+      var(--app-bg)
+    );
+
+  color: var(--app-text);
+
+  box-shadow:
+    inset 3px 0 0
+      color-mix(
+        in srgb,
+        var(--app-accent) 16%,
+        transparent
+      );
+}
+
+.bookTop {
+  position: absolute;
+  top: 11px;
+  font-size: 6px;
+  font-weight: 950;
+  letter-spacing: .21em;
+  color: var(--app-muted-2);
+}
+
+.passportBook > svg {
+  color: var(--app-accent);
+}
+
+.passportBook strong {
+  margin-top: 6px;
+  font-size: 10px;
+  font-weight: 950;
+  letter-spacing: .04em;
+}
+
+.passportBook small {
+  margin-top: 4px;
+  color: var(--app-muted-2);
+  font-size: 7px;
+}
+
+.passportInfo {
+  min-width: 0;
+}
+
+.passportTitle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.passportTitle > a:first-child {
+  display: inline-flex;
+  min-height: 34px;
+  align-items: center;
+  gap: 5px;
+
+  color: var(--app-text);
+  font-size: 11px;
+  font-weight: 950;
+}
+
+.addCountry {
+  display: inline-flex;
+  min-height: 34px;
+  align-items: center;
+  gap: 5px;
+
+  color: var(--app-accent);
+  font-size: 9px;
+  font-weight: 900;
+}
+
+.nextDestination {
+  display: flex;
+  min-height: 36px;
+  max-width: 100%;
+  align-items: center;
+  gap: 6px;
+
+  padding: 0;
+  border: 0;
+  background: transparent;
+
+  color: var(--app-muted-2);
+  font-size: 9px;
+  text-align: left;
+}
+
+.nextDestination b {
+  font-size: 18px;
+  line-height: 1;
+}
+
+.nextDestination strong {
+  overflow: hidden;
+  color: var(--app-text);
+  font-size: 9px;
+  font-weight: 900;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.nextDestination:disabled {
+  opacity: 1;
+}
+
+.destinationEditor {
+  padding: 9px 0 3px;
+  border-top: 1px solid
+    var(--app-border);
+}
+
+.destinationEditor select {
+  width: 100%;
+  min-height: 42px;
+
+  border: 0;
+  border-bottom: 1px solid
+    var(--app-border);
+  outline: 0;
+
+  background: transparent;
+  color: var(--app-text);
+
+  font-size: 10px;
+}
+
+.destinationActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 16px;
+  padding-top: 9px;
+}
+
+.destinationActions button {
+  min-height: 32px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+
+  color: var(--app-muted-2);
+  font-size: 9px;
+  font-weight: 900;
+}
+
+.destinationActions
+  .saveDestination {
+  color: var(--app-accent);
+}
+
+.destinationActions
+  .saveDestination:disabled {
+  opacity: .4;
+}
+
+@media (max-width: 420px) {
+  .passportRow {
+    grid-template-columns: 72px minmax(0, 1fr);
+    gap: 13px;
+  }
+
+  .passportBook {
+    width: 72px;
+    height: 100px;
+  }
+
+  .passportTitle {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .addCountry {
+    min-height: 28px;
+  }
+}
+
+/* ALUMNI_2_3_3_PROFILE_PASSPORT_CARD_STYLE */

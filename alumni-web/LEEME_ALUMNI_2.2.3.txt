@@ -1,0 +1,54 @@
+ALUMNI 2.2.3 — PASSPORT INNER CONFIRM
+======================================
+
+CORRECCIÓN
+==========
+El problema NO estaba afuera.
+
+Afuera:
+- queda únicamente Añadir país del encabezado.
+- se elimina Crear primer país duplicado.
+- si aplicaste 2.2.2, también se elimina su botón flotante.
+
+ADENTRO DEL CREADOR
+===================
+Nuevo país:
+X cerrar                      ✓ crear
+
+Nueva foto:
+X cerrar                      ✓ guardar
+
+En móvil:
+- los iconos quedan arriba dentro del editor.
+- permanecen visibles mientras haces scroll.
+- el check se activa cuando ya están los datos obligatorios.
+- ya no dependes de un botón escondido abajo.
+- se oculta el footer para no duplicar confirmación.
+
+En escritorio:
+- los controles superiores también existen.
+- el botón del footer se conserva como segunda opción.
+
+SQL
+===
+NO requiere SQL.
+
+APLICAR
+=======
+APLICAR_ALUMNI_2.2.3.bat
+
+DESPUÉS
+=======
+npm run build
+
+COMMIT
+======
+git status
+
+git add src/app/passport/page.tsx
+git add src/app/passport/passport.css
+
+git commit -m "2.2.3 - Put Passport create and save controls inside mobile editor"
+git push origin main
+
+NO uses git add .

@@ -1,0 +1,108 @@
+.statusStrip {
+  position: fixed;
+  right: 0;
+  bottom: 72px;
+  left: 0;
+  z-index: 95;
+  border-top: 1px solid var(--app-border);
+  border-bottom: 1px solid var(--app-border);
+  background:
+    color-mix(
+      in srgb,
+      var(--app-surface) 96%,
+      transparent
+    );
+  box-shadow:
+    0 -10px 35px
+      color-mix(
+        in srgb,
+        var(--app-shadow) 62%,
+        transparent
+      );
+  backdrop-filter: blur(18px);
+}
+
+.statusInner {
+  display: flex;
+  width: 100%;
+  max-width: 980px;
+  min-height: 44px;
+  align-items: center;
+  gap: 9px;
+  margin: 0 auto;
+  padding: 7px 16px;
+  color: var(--app-muted-2);
+  font-size: 10px;
+}
+
+.statusInner > svg {
+  flex: 0 0 auto;
+  color: var(--app-accent);
+}
+
+.statusInner strong {
+  flex: 0 0 auto;
+  color: var(--app-text);
+  font-size: 10px;
+  font-weight: 900;
+}
+
+.statusInner span {
+  min-width: 0;
+  flex: 1 1 auto;
+  color: var(--app-muted-2);
+  line-height: 1.4;
+}
+
+.statusInner button {
+  min-height: 30px;
+  flex: 0 0 auto;
+  padding: 0 8px;
+  border: 0;
+  background: transparent;
+  color: var(--app-accent);
+  font-size: 10px;
+  font-weight: 900;
+}
+
+.statusInner .dismiss {
+  display: flex;
+  width: 30px;
+  padding: 0;
+  align-items: center;
+  justify-content: center;
+  color: var(--app-muted-3);
+}
+
+.statusStrip[data-tone="offline"]
+  .statusInner
+  > svg {
+  color: #d5a94d;
+}
+
+.statusStrip[data-tone="restored"]
+  .statusInner
+  > svg {
+  color: #5ab78c;
+}
+
+@media (min-width: 1024px) {
+  .statusStrip {
+    bottom: 0;
+  }
+}
+
+@media (max-width: 620px) {
+  .statusInner {
+    gap: 7px;
+    padding-inline: 12px;
+  }
+
+  .statusInner span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+/* ALUMNI_2_0_PWA_STABILITY_STRIP — intentionally open, no cards */

@@ -1,0 +1,27 @@
+SPOTIFY SEARCH - VARIABLES
+===========================
+
+NO uses NEXT_PUBLIC_ porque el Client Secret NUNCA debe llegar al navegador.
+
+Agrega a:
+C:\Users\SAMI PC\Documents\Alumni_Connections\alumni-web\.env.local
+
+SPOTIFY_CLIENT_ID=e05309560b4d434c9f94ce775362b87be05309560b4d434c9f94ce775362b87b
+SPOTIFY_CLIENT_SECRET=e27ccb57aeda4a88b22fbddaf6bb8407
+SPOTIFY_MARKET=SV
+
+En Vercel agrega exactamente las mismas variables:
+Project > Settings > Environment Variables
+
+Después haz un Redeploy.
+
+Spotify Developer Dashboard:
+1. Crea una app.
+2. Copia Client ID.
+3. Abre Settings / View client secret.
+4. Copia Client Secret.
+5. No necesitas conectar la cuenta Spotify de cada usuario para esta búsqueda:
+   Alumni usa Client Credentials desde el servidor.
+
+IMPORTANTE
+Nunca pongas SPOTIFY_CLIENT_SECRET en una variable NEXT_PUBLIC_.

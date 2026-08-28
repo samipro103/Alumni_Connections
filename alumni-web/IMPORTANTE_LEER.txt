@@ -1,0 +1,13 @@
+ALTERNATIVA DE EJECUCION
+
+1. Descomprime todo el ZIP.
+2. Prueba primero:
+   APLICAR_REFRESH_BRAND_DESIGN.bat
+
+Si Windows no lo abre, usa:
+   APLICAR_REFRESH_BRAND_DESIGN.cmd
+
+Ambos hacen exactamente lo mismo.
+
+IMPORTANTE:
+No ejecutes el archivo desde dentro del ZIP. Primero extrae/descomprime la carpeta completa.

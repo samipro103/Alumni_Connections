@@ -1,0 +1,335 @@
+.event-detail {
+  padding-bottom: 40px;
+}
+
+.event-detail-back {
+  display: inline-flex;
+  min-height: 34px;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 10px;
+  color: var(--app-muted-2);
+  font-size: 10px;
+  font-weight: 820;
+}
+
+.event-detail-header {
+  padding: 8px 0 28px;
+  border-bottom: 1px solid var(--app-border);
+}
+
+.event-detail-header > span,
+.event-rsvp > div:first-child > span,
+.event-attendance header span {
+  color: var(--app-muted-2);
+  font-size: 9px;
+  font-weight: 900;
+  letter-spacing: .15em;
+  text-transform: uppercase;
+}
+
+.event-detail-header h1 {
+  max-width: 780px;
+  margin-top: 8px;
+  color: var(--app-text);
+  font-size: clamp(38px, 7vw, 64px);
+  font-weight: 950;
+  line-height: .98;
+  letter-spacing: -.06em;
+}
+
+.event-detail-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-top: 18px;
+}
+
+.event-detail-meta span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--app-muted-2);
+  font-size: 10px;
+}
+
+.event-detail-header > p {
+  max-width: 720px;
+  margin-top: 18px;
+  color: var(--app-text-soft);
+  font-size: 14px;
+  line-height: 1.75;
+  white-space: pre-wrap;
+}
+
+.event-detail-community {
+  display: inline-block;
+  margin-top: 16px;
+  color: var(--app-accent);
+  font-size: 10px;
+  font-weight: 850;
+}
+
+.event-rsvp {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 22px;
+  padding: 22px 0;
+  border-bottom: 1px solid var(--app-border);
+}
+
+.event-rsvp h2,
+.event-attendance header h2 {
+  margin-top: 4px;
+  color: var(--app-text);
+  font-size: 18px;
+  font-weight: 930;
+}
+
+.event-rsvp-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.event-rsvp-actions button {
+  min-height: 34px;
+  padding: 0 10px;
+  border: 1px solid var(--app-border);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--app-muted-2);
+  font-size: 10px;
+  font-weight: 850;
+}
+
+.event-rsvp-actions button[data-active="true"] {
+  border-color: color-mix(in srgb, var(--app-accent) 42%, var(--app-border));
+  color: var(--app-text);
+  background: color-mix(in srgb, var(--app-accent) 9%, transparent);
+}
+
+.event-attendance {
+  padding: 24px 0;
+}
+
+.event-attendance > header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.event-attendance > header button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 0;
+  background: transparent;
+  color: var(--app-accent);
+  font-size: 10px;
+  font-weight: 850;
+}
+
+.event-going-list {
+  display: grid;
+  grid-template-columns: repeat(2,minmax(0,1fr));
+  column-gap: 26px;
+  margin-top: 14px;
+}
+
+.event-going-list a {
+  display: flex;
+  min-height: 58px;
+  align-items: center;
+  gap: 9px;
+  border-bottom: 1px solid var(--app-border);
+}
+
+.event-going-list a > span {
+  display: flex;
+  width: 34px;
+  height: 34px;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--app-soft);
+  color: var(--app-text);
+  font-size: 9px;
+  font-weight: 900;
+}
+
+.event-going-list img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.event-going-list strong {
+  overflow: hidden;
+  color: var(--app-text-soft);
+  font-size: 11px;
+  font-weight: 850;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.event-capacity {
+  margin-top: 16px;
+  color: var(--app-muted-2);
+  font-size: 10px;
+}
+
+.event-detail-empty {
+  max-width: 700px;
+  margin: 0 auto;
+  padding: 80px 0;
+}
+
+.event-detail-empty h1 {
+  color: var(--app-text);
+  font-size: 32px;
+  font-weight: 930;
+}
+
+.event-detail-empty a {
+  display: inline-block;
+  margin-top: 14px;
+  color: var(--app-accent);
+  font-size: 11px;
+  font-weight: 850;
+}
+
+@media (max-width: 620px) {
+  .event-rsvp {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .event-going-list {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ALUMNI_2_1_EVENT_DETAIL_OPEN_DESIGN */
+
+/* ALUMNI_2_1_1_MOBILE_HEADER_SPACING */
+@media (max-width: 1023px) {
+  .event-detail {
+    padding-top: 12px;
+  }
+}
+
+/* ALUMNI 2.1.2 — clearer event controls */
+.event-rsvp-v2 {
+  align-items: flex-start;
+}
+
+.event-rsvp-heading p {
+  margin-top: 5px;
+  color: var(--app-muted-2);
+  font-size: 10px;
+  line-height: 1.45;
+}
+
+.event-rsvp-choice {
+  display: grid;
+  width: min(100%, 480px);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  border-top: 1px solid var(--app-border);
+  border-bottom: 1px solid var(--app-border);
+}
+
+.event-rsvp-choice > button {
+  position: relative;
+  display: grid;
+  grid-template-columns: 20px minmax(0, 1fr);
+  min-height: 62px;
+  align-items: center;
+  gap: 7px;
+  padding: 0 12px;
+  border: 0;
+  border-right: 1px solid var(--app-border);
+  background: transparent;
+  color: var(--app-muted-2);
+  text-align: left;
+}
+
+.event-rsvp-choice > button:last-child {
+  border-right: 0;
+}
+
+.event-rsvp-choice > button::after {
+  content: "";
+  position: absolute;
+  right: 12px;
+  bottom: -1px;
+  left: 12px;
+  height: 2px;
+  background: transparent;
+}
+
+.event-rsvp-choice > button[data-active="true"] {
+  color: var(--app-text);
+}
+
+.event-rsvp-choice > button[data-active="true"]::after {
+  background: var(--app-accent);
+}
+
+.event-rsvp-choice strong,
+.event-rsvp-choice small {
+  display: block;
+}
+
+.event-rsvp-choice strong {
+  color: inherit;
+  font-size: 10px;
+  font-weight: 900;
+}
+
+.event-rsvp-choice small {
+  margin-top: 2px;
+  color: var(--app-muted-2);
+  font-size: 8px;
+}
+
+.event-attendance-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.event-attendance-actions > button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 0;
+  background: transparent;
+  color: var(--app-muted-2);
+  font-size: 10px;
+  font-weight: 850;
+}
+
+@media (max-width: 620px) {
+  .event-rsvp-choice {
+    width: 100%;
+  }
+
+  .event-rsvp-choice > button {
+    min-height: 66px;
+    grid-template-columns: 18px minmax(0, 1fr);
+    padding-inline: 8px;
+  }
+
+  .event-rsvp-choice small {
+    display: none;
+  }
+
+  .event-attendance > header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}

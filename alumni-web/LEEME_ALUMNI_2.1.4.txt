@@ -1,0 +1,56 @@
+ALUMNI 2.1.4 — IOS SAFE HEADER
+================================
+
+PROBLEMA REAL
+=============
+En iPhone el TopBar estaba usando 68px desde el borde físico de pantalla,
+sin reservar la zona segura del reloj / Dynamic Island.
+
+Por eso:
+- Alumni. quedaba demasiado arriba.
+- iconos del encabezado quedaban demasiado arriba.
+- el contenido de Feed arrancaba antes de donde debía.
+
+SOLUCIÓN
+========
+TopBar:
+68px + env(safe-area-inset-top)
+
+El contenido interno del TopBar recibe:
+padding-top: env(safe-area-inset-top)
+
+AppShell:
+84px + env(safe-area-inset-top)
+
+Así el contenido empieza debajo de TODO el encabezado real.
+
+IMPORTANTE
+==========
+- iPhone / PWA / WebView: usa automáticamente su safe area.
+- Android sin notch superior web: normalmente suma 0.
+- Escritorio: conserva 68px / 84px.
+- chats inmersivos móviles no cambian.
+
+SQL
+===
+NO requiere SQL.
+
+APLICAR
+=======
+APLICAR_ALUMNI_2.1.4.bat
+
+DESPUÉS
+=======
+npm run build
+
+COMMIT
+======
+git status
+
+git add src/components/layout/TopBar.tsx
+git add src/components/layout/AppShell.tsx
+
+git commit -m "2.1.4 - Respect iOS safe area in header and global content spacing"
+git push origin main
+
+NO uses git add .

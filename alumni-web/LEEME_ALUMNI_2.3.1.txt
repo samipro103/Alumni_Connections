@@ -1,0 +1,78 @@
+ALUMNI 2.3.1 — PROFILE + PASSPORT POLISH
+========================================
+
+CAMBIOS
+=======
+- Catálogo de 249 países.
+- Banderas reales usando el código ISO.
+- Ya no se muestran GT / ES / JP como diseño principal.
+- Añadir país ahora pide:
+  País
+  Ciudad
+  Comentario
+  Diseño
+  Portada opcional
+
+- Se reconstruyó el editor para solucionar el bloqueo móvil.
+- Crear país queda visible dentro del editor.
+
+GUATEMALA
+=========
+Producción ya actualizada:
+País: Guatemala
+Ciudad: Cayalá
+Comentario: Amigos + Fiesta
+
+PERFIL
+======
+- Pasaporte Alumni más simple.
+- Próximo destino con bandera.
+- Publicaciones / Seguidores / Siguiendo junto a la foto de perfil.
+- Se elimina la fila grande de métricas de abajo.
+
+FORMACIÓN
+=========
+El bloque Acerca de se simplifica:
+solo encabezado Formación y debajo:
+Carrera
+Institución
+Programa
+Ubicación
+Nacionalidad
+
+Se eliminan textos como Perfil profesional, Contexto,
+Actividad, Presencia y Enfoque actual.
+
+SUPABASE
+========
+YA actualizado en producción.
+NO ejecutar SQL.
+
+APLICAR
+=======
+APLICAR_ALUMNI_2.3.1.bat
+
+DESPUÉS
+=======
+npm run build
+
+COMMIT
+======
+git status
+
+git add src/lib/countries.ts
+git add src/components/profile/ProfileMiniStats.tsx
+git add src/components/profile/ProfileMiniStats.module.css
+git add src/components/profile/ProfilePassportPreview.tsx
+git add src/components/profile/ProfilePassportPreview.module.css
+git add src/components/profile/ProfessionalProfileOverview.tsx
+git add src/app/passport/page.tsx
+git add src/app/passport/passport.css
+git add "src/app/passport/[username]/page.tsx"
+git add src/app/profile/page.tsx
+git add "src/app/u/[username]/page.tsx"
+
+git commit -m "2.3.1 - Polish profile stats passport flags cities and formation"
+git push origin main
+
+NO uses git add .

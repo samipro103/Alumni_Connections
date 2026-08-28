@@ -1,0 +1,38 @@
+ALUMNI 2.2.1 — PASSPORT CREATE FIX
+====================================
+
+CORRECCIÓN
+==========
+El Pasaporte vacío no tenía botón visible para crear el primer país.
+
+Ahora:
+- aparece Crear primer país dentro del estado vacío
+- Añadir país del encabezado se conserva
+- dentro del formulario el botón dice Crear país
+- en móvil el botón queda fijo abajo
+- en móvil ocupa todo el ancho
+- no se pierde aunque el formulario tenga scroll
+
+SQL
+===
+NO requiere SQL.
+
+APLICAR
+=======
+APLICAR_ALUMNI_2.2.1.bat
+
+DESPUÉS
+=======
+npm run build
+
+COMMIT
+======
+git status
+
+git add src/app/passport/page.tsx
+git add src/app/passport/passport.css
+
+git commit -m "2.2.1 - Fix Passport country creation actions on mobile"
+git push origin main
+
+NO uses git add .

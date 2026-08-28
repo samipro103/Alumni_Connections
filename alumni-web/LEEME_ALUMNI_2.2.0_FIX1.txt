@@ -1,0 +1,59 @@
+ALUMNI 2.2.0 FIX1 — SAFE ADDITIVE
+===================================
+
+CORRIGE EL ERROR:
+No encuentra src/app/explore/explore-2.css
+
+TU PROYECTO REAL USA:
+src/app/explore/explore-pro.css
+
+Y además este FIX evita una regresión importante:
+NO reemplaza el Explore actual.
+
+SE CONSERVA:
+- búsqueda
+- Todo / Personas / Publicaciones
+- tendencias
+- hashtags
+- miembros nuevos
+- recomendaciones actuales
+- señales de discovery
+- publicaciones
+
+SE AGREGA:
+- Radar Alumni
+- Recomendaciones entre amigos
+- Pasaporte Alumni
+- /passport
+- acceso móvil Más > Pasaporte
+
+SUPABASE
+========
+YA APLICADO EN PRODUCCIÓN:
+alumni_2_2_0_passport_recommendations
+
+NO EJECUTES SQL.
+
+APLICAR
+=======
+APLICAR_ALUMNI_2.2.0_FIX1.bat
+
+DESPUÉS
+=======
+npm run build
+
+SI BUILD TERMINA BIEN
+=====================
+git status
+
+git add src/app/explore/page.tsx
+git add src/components/explore/ExploreSocialPulse.tsx
+git add src/components/explore/ExploreSocialPulse.module.css
+git add src/app/passport/page.tsx
+git add src/app/passport/passport.css
+git add src/components/layout/MobileNav.tsx
+
+git commit -m "2.2.0 - Add Alumni Radar Passport and friend recommendations safely"
+git push origin main
+
+NO uses git add .

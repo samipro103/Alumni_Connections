@@ -1,0 +1,3 @@
+Migración aplicada: alumni_2_3_1_passport_city_profile_polish
+Guatemala actualizada a Cayalá.
+NO ejecutar SQL.

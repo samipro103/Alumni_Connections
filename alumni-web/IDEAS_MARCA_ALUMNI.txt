@@ -1,0 +1,88 @@
+ALUMNI. — SISTEMA DE MARCA
+===========================
+
+MARCA OFICIAL
+-------------
+Alumni.
+
+El punto SIEMPRE forma parte del nombre.
+
+USO COMPLETO
+------------
+Usar "Alumni." en:
+- Landing
+- Login
+- Registro
+- Splash
+- Web/Desktop
+- Material promocional
+- App Store / Google Play
+- Correos y comunicaciones
+
+USO COMPACTO
+------------
+Usar "A." en:
+- Icono de la aplicación
+- Espacios móviles muy pequeños
+- Favicon
+- Splash compacto
+- Marca secundaria
+
+IDEAS PARA EL ICONO A.
+----------------------
+
+OPCIÓN 1 — A. MINIMAL
+Una A gruesa, geométrica, centrada.
+El punto pequeño abajo a la derecha.
+Fondo oscuro.
+Punto con el color acento de Alumni.
+
+Esta es la recomendada.
+
+OPCIÓN 2 — A + PUNTO VIVO
+Misma A limpia.
+El punto se convierte en la firma visual:
+puede brillar suavemente en splash/animaciones.
+En el icono estático permanece sólido.
+
+OPCIÓN 3 — MONOGRAMA GEOMÉTRICO
+Una A construida con dos trazos simples.
+El punto separado funciona como tercer elemento.
+Más tecnológico y distintivo.
+
+RECOMENDACIÓN
+-------------
+Marca completa:
+Alumni.
+
+Marca compacta:
+A.
+
+No usar:
+AC
+AL
+Al
+AlumniConnections
+
+Porque debilitan la identidad y no aprovechan el punto como firma.
+
+COLOR
+-----
+La palabra debe adaptarse a Light/Dark.
+El punto puede usar el Accent Color activo de Alumni.
+Para el icono oficial conviene elegir un único acento de marca,
+aunque dentro de la app los temas sigan siendo personalizables.
+
+IMPORTANTE
+----------
+v1.0.6 cambia la identidad textual y el monograma compacto de la UI,
+pero NO reemplaza los PNG del launcher de Android/PWA.
+
+Primero elegir una de las 3 direcciones de icono.
+Después se generan todos los tamaños:
+- 192x192
+- 512x512
+- 512x512 maskable
+- Android adaptive icon
+- iOS icon
+- favicon

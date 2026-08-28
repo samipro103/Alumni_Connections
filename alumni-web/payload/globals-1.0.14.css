@@ -1,0 +1,59 @@
+
+/* ================================================================
+   ALUMNI 1.0.14 — Composición de perfil
+   ================================================================ */
+
+.alumni-profile-body {
+  padding-top: 24px !important;
+}
+
+.alumni-profile-identity {
+  margin-top: 0 !important;
+  align-items: center;
+}
+
+.alumni-profile-avatar {
+  border: 1px solid var(--app-border) !important;
+  box-shadow:
+    0 12px 34px color-mix(in srgb, var(--app-shadow) 66%, transparent),
+    0 0 0 1px color-mix(in srgb, var(--app-border) 80%, transparent) !important;
+}
+
+.alumni-profile-header-facts {
+  min-height: 24px;
+  padding-right: 2px;
+}
+
+.alumni-academic-showcase {
+  border-top: 1px solid var(--app-border);
+  padding-top: 22px;
+}
+
+.alumni-academic-showcase .alumni-original-logo {
+  transition: transform .18s ease, opacity .18s ease;
+}
+
+.alumni-academic-showcase:hover .alumni-original-logo {
+  transform: translateY(-1px);
+}
+
+@media (max-width: 639px) {
+  .alumni-profile-body {
+    padding-top: 18px !important;
+    padding-inline: 4px !important;
+  }
+
+  .alumni-profile-identity {
+    margin-top: 0 !important;
+    align-items: flex-start;
+  }
+
+  .alumni-profile-header-facts {
+    justify-content: flex-start !important;
+    padding-right: 0;
+  }
+
+  .alumni-academic-showcase {
+    margin-top: 26px !important;
+  }
+}

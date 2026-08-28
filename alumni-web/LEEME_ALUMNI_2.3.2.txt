@@ -1,0 +1,82 @@
+ALUMNI 2.3.2 — RECOVERY PROFILE + PASSPORT + NAV
+=================================================
+
+ESTE PARCHE NO REDISEÑA EL PASAPORTE.
+
+PASAPORTE
+=========
+/passport vuelve EXACTAMENTE a la versión aprobada 2.2.4.
+
+También se restaura el Pasaporte social a 2.3.0:
+- likes
+- comentarios
+- Quiero ir
+continúan funcionando.
+
+PERFIL
+======
+Las páginas de perfil vuelven a la base 2.3.0 para recuperar
+el flujo conocido de Publicaciones.
+
+Se conserva únicamente el cambio pedido:
+Publicaciones / Seguidores / Siguiendo pequeños junto a la foto.
+
+FORMACIÓN
+=========
+NO se toca el componente Formación actual.
+
+PASAPORTE EN PERFIL
+===================
+Ahora es compacto:
+
+Pasaporte Alumni       Próximo destino: 🇯🇵 Japón
+
+No aparecen tarjetas de países dentro del encabezado del perfil.
+Al tocar Pasaporte Alumni se abre el pasaporte.
+
+PRÓXIMO DESTINO
+===============
+El único cambio funcional del Pasaporte del perfil:
+- toca Próximo destino
+- aparece un selector abierto debajo
+- eliges un país con bandera
+- Guardar
+- sin modal
+- sin caja
+- sin escribir códigos manualmente
+
+MÁS
+===
+Se elimina el espacio entre las opciones y la barra inferior.
+Las opciones siguen siendo filas abiertas con separadores.
+No se agregan cards.
+
+SQL
+===
+NO requiere SQL.
+
+APLICAR
+=======
+APLICAR_ALUMNI_2.3.2.bat
+
+DESPUÉS
+=======
+npm run build
+
+COMMIT
+======
+git status
+
+git add src/app/passport/page.tsx
+git add src/app/passport/passport.css
+git add "src/app/passport/[username]/page.tsx"
+git add src/app/profile/page.tsx
+git add "src/app/u/[username]/page.tsx"
+git add src/components/profile/ProfilePassportPreview.tsx
+git add src/components/profile/ProfilePassportPreview.module.css
+git add src/components/layout/MobileNav.tsx
+
+git commit -m "2.3.2 - Restore Passport profile posts and tighten mobile More menu"
+git push origin main
+
+NO uses git add .

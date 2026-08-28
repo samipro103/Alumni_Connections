@@ -1,0 +1,184 @@
+
+/* ================================================================
+   ALUMNI 1.0.16 — Refinamiento del editor de perfil
+   ================================================================ */
+
+.alumni-profile-editor-top {
+  position: relative !important;
+  top: auto !important;
+  z-index: auto !important;
+  padding: 4px 0 14px !important;
+  margin: 0 !important;
+  background: transparent !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  border-bottom: 1px solid var(--app-border) !important;
+}
+
+.alumni-profile-editor-top-copy {
+  min-width: 0;
+  flex: 1;
+}
+
+.alumni-profile-editor-top-copy p {
+  margin: 0 !important;
+  font-size: 19px !important;
+  line-height: 1.2 !important;
+  font-weight: 900 !important;
+  letter-spacing: -.035em !important;
+  color: var(--app-text) !important;
+}
+
+.alumni-profile-editor-save {
+  display: inline-flex;
+  height: 38px;
+  align-items: center;
+  gap: 7px;
+  padding: 0 2px;
+  border: 0;
+  background: transparent;
+  color: var(--app-text-soft);
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: -.01em;
+  transition:
+    color .18s ease,
+    opacity .18s ease,
+    transform .18s ease;
+}
+
+.alumni-profile-editor-save svg {
+  color: var(--app-accent);
+}
+
+.alumni-profile-editor-save:hover {
+  color: var(--app-text);
+  transform: translateY(-1px);
+}
+
+.alumni-profile-editor-save:disabled {
+  opacity: .45;
+  transform: none;
+}
+
+.alumni-profile-editor-photo-row {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 20px 4px 0;
+}
+
+.alumni-profile-editor-avatar-cluster {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: flex-end;
+  gap: 10px;
+}
+
+.alumni-profile-editor-avatar {
+  position: relative;
+  width: 116px !important;
+  height: 116px !important;
+  flex: 0 0 116px !important;
+  margin: 0 !important;
+  overflow: hidden;
+  border: 1px solid var(--app-border) !important;
+  border-radius: 999px;
+  background: var(--app-soft-strong);
+  box-shadow:
+    0 14px 34px color-mix(in srgb, var(--app-shadow) 62%, transparent),
+    0 0 0 1px color-mix(in srgb, var(--app-border) 65%, transparent) !important;
+}
+
+.alumni-profile-editor-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  image-rendering: auto;
+}
+
+.alumni-profile-editor-camera {
+  display: flex;
+  width: 38px;
+  height: 38px;
+  flex: 0 0 38px;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 6px;
+  border: 1px solid var(--app-border);
+  border-radius: 999px;
+  background: var(--app-surface);
+  color: var(--app-text-soft);
+  box-shadow: 0 8px 20px color-mix(in srgb, var(--app-shadow) 46%, transparent);
+  transition:
+    border-color .18s ease,
+    background-color .18s ease,
+    color .18s ease,
+    transform .18s ease;
+}
+
+.alumni-profile-editor-camera:hover {
+  border-color: color-mix(in srgb, var(--app-accent) 38%, var(--app-border));
+  background: var(--app-soft);
+  color: var(--app-accent);
+  transform: translateY(-1px);
+}
+
+.alumni-profile-editor-photo-copy strong {
+  font-size: 13px;
+  font-weight: 900;
+  color: var(--app-text);
+}
+
+.alumni-editor-section-head {
+  margin-bottom: 8px !important;
+}
+
+.alumni-editor-section-head h3 {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.25;
+  font-weight: 900;
+  letter-spacing: -.015em;
+  color: var(--app-text-soft);
+}
+
+@media (max-width: 639px) {
+  .alumni-profile-editor-top {
+    padding-top: 2px !important;
+  }
+
+  .alumni-profile-editor-top-copy p {
+    font-size: 18px !important;
+  }
+
+  .alumni-profile-editor-save {
+    font-size: 0;
+    width: 38px;
+    justify-content: center;
+    padding: 0;
+  }
+
+  .alumni-profile-editor-save svg {
+    width: 17px;
+    height: 17px;
+  }
+
+  .alumni-profile-editor-photo-row {
+    gap: 14px;
+    padding-top: 16px;
+  }
+
+  .alumni-profile-editor-avatar {
+    width: 96px !important;
+    height: 96px !important;
+    flex-basis: 96px !important;
+  }
+
+  .alumni-profile-editor-camera {
+    width: 36px;
+    height: 36px;
+    flex-basis: 36px;
+    margin-bottom: 4px;
+  }
+}

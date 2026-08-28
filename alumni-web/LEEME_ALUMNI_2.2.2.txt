@@ -1,0 +1,47 @@
+ALUMNI 2.2.2 — PASSPORT MOBILE ACTION
+======================================
+
+PROBLEMA
+========
+El código ya contiene los botones de creación, pero en algunos
+viewport/WebView móviles la acción queda fuera de la zona visible.
+
+SOLUCIÓN
+========
+En móvil ahora aparece SIEMPRE:
+
++ Añadir país
+
+como acción persistente justo encima de la navegación inferior.
+
+Además:
+- Crear primer país se refuerza con botón principal visible.
+- Al abrir el editor:
+  Crear país queda fijo abajo.
+- El formulario hace scroll independientemente.
+- Respeta safe-area del iPhone.
+- No depende de que el usuario llegue al final del formulario.
+
+SQL
+===
+NO requiere SQL.
+
+APLICAR
+=======
+APLICAR_ALUMNI_2.2.2.bat
+
+DESPUÉS
+=======
+npm run build
+
+COMMIT
+======
+git status
+
+git add src/app/passport/page.tsx
+git add src/app/passport/passport.css
+
+git commit -m "2.2.2 - Make Passport creation always accessible on mobile"
+git push origin main
+
+NO uses git add .

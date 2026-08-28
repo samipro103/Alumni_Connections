@@ -1,0 +1,201 @@
+
+/* ALUMNI 1.8.1 — PROFILE POST ACTIONS */
+
+.alumni-profile-post-media-wrap,
+.alumni-profile-post-text-wrap {
+  position: relative;
+}
+
+.alumni-profile-post-owner-menu {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 20;
+}
+
+.alumni-profile-post-owner-trigger {
+  display: flex;
+  width: 34px;
+  height: 34px;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid color-mix(in srgb, var(--app-border) 68%, transparent);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--app-bg) 78%, transparent);
+  color: var(--app-text);
+  box-shadow: 0 8px 28px var(--app-shadow);
+  backdrop-filter: blur(12px);
+}
+
+.alumni-profile-post-owner-popover {
+  position: absolute;
+  top: 40px;
+  right: 0;
+  width: 220px;
+  overflow: hidden;
+  padding: 5px;
+  border: 1px solid var(--app-border);
+  border-radius: 15px;
+  background: var(--app-surface);
+  box-shadow: 0 18px 50px var(--app-shadow);
+}
+
+.alumni-profile-post-owner-popover > button {
+  display: grid;
+  grid-template-columns: 18px minmax(0,1fr);
+  width: 100%;
+  min-height: 42px;
+  align-items: center;
+  gap: 9px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--app-text-soft);
+  font-size: 12px;
+  font-weight: 800;
+  text-align: left;
+}
+
+.alumni-profile-post-owner-popover > button:hover {
+  background: var(--app-soft);
+}
+
+.alumni-profile-post-owner-popover small {
+  grid-column: 2;
+  margin-top: -8px;
+  color: var(--app-muted-3);
+  font-size: 9px;
+  font-weight: 650;
+}
+
+.alumni-profile-post-owner-popover > button[data-danger="true"] {
+  color: #ef6b75;
+}
+
+.alumni-profile-post-edit-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 2147482600;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  background: rgba(0,0,0,.50);
+  backdrop-filter: blur(8px);
+}
+
+.alumni-profile-post-edit-modal {
+  width: 100%;
+  max-height: 84dvh;
+  padding: 0 18px max(18px, env(safe-area-inset-bottom));
+  border-radius: 22px 22px 0 0;
+  background: var(--app-surface);
+  box-shadow: 0 -22px 70px var(--app-shadow);
+}
+
+.alumni-profile-post-edit-modal > header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 15px;
+  padding: 18px 0 14px;
+  border-bottom: 1px solid var(--app-border);
+}
+
+.alumni-profile-post-edit-modal header span {
+  color: var(--app-muted-2);
+  font-size: 9px;
+  font-weight: 900;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+}
+
+.alumni-profile-post-edit-modal header h2 {
+  margin-top: 3px;
+  color: var(--app-text);
+  font-size: 18px;
+  font-weight: 930;
+}
+
+.alumni-profile-post-edit-modal header p {
+  margin-top: 5px;
+  color: var(--app-muted-2);
+  font-size: 10px;
+}
+
+.alumni-profile-post-edit-modal header > button {
+  display: flex;
+  width: 34px;
+  height: 34px;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: 999px;
+  background: var(--app-soft);
+  color: var(--app-muted);
+}
+
+.alumni-profile-post-edit-modal textarea {
+  width: 100%;
+  min-height: 170px;
+  margin-top: 14px;
+  resize: vertical;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--app-text);
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+.alumni-profile-post-edit-modal footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  padding-top: 12px;
+  border-top: 1px solid var(--app-border);
+}
+
+.alumni-profile-post-edit-modal footer > span {
+  margin-right: auto;
+  color: var(--app-muted-3);
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: 9px;
+}
+
+.alumni-profile-post-edit-modal footer button {
+  min-height: 38px;
+  padding: 0 13px;
+  border: 1px solid var(--app-border);
+  border-radius: 11px;
+  background: transparent;
+  color: var(--app-muted);
+  font-size: 11px;
+  font-weight: 850;
+}
+
+.alumni-profile-post-edit-modal footer button:last-child {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border-color: transparent;
+  background: var(--app-accent-fill);
+  color: var(--app-on-accent);
+}
+
+@media (min-width: 720px) {
+  .alumni-profile-post-edit-backdrop {
+    align-items: center;
+    padding: 24px;
+  }
+
+  .alumni-profile-post-edit-modal {
+    max-width: 560px;
+    border: 1px solid var(--app-border);
+    border-radius: 22px;
+  }
+}
+
+/* ALUMNI_1_8_1_PROFILE_POST_MENU_CSS */

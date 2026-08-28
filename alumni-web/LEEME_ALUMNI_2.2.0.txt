@@ -1,0 +1,71 @@
+ALUMNI 2.2.0 — RADAR + PASAPORTE + RECOMENDACIONES
+=======================================================
+
+QUÉ TRAE
+========
+1) RADAR ALUMNI
+- dentro de Explorar
+- recomienda personas con contexto real
+- se apoya en universidad, carrera, ciudad y comunidades en común
+- botón Seguir directo
+- diseño abierto, sin lenguaje de tabla
+
+2) RECOMENDACIONES ENTRE AMIGOS
+- dentro de Explorar
+- categorías: restaurantes, lugares, películas, viajes, música
+- búsqueda
+- filtro visual por categorías
+- publicar recomendación con foto opcional
+- pensado para recomendaciones humanas, no impersonales
+
+3) PASAPORTE ALUMNI
+- nueva ruta: /passport
+- cada país se convierte en un álbum
+- estilos visuales distintos:
+  Aurora / Sunset / Night / Coast / Stamp
+- portada por país
+- nota breve
+- fotos dentro de cada país
+
+ARCHIVOS TOCADOS
+================
+Reemplaza:
+- src/app/explore/page.tsx
+- src/app/explore/explore-2.css
+
+Crea:
+- src/app/passport/page.tsx
+- src/app/passport/passport.css
+
+SQL NUEVO
+=========
+- supabase/alumni_2_2_0_radar_passport_recommendations.sql
+
+IMPORTANTE
+==========
+Este bloque SÍ requiere SQL en Supabase.
+
+PASOS
+=====
+1) Ejecuta:
+   APLICAR_ALUMNI_2.2.0.bat
+
+2) Luego abre Supabase SQL Editor y pega / ejecuta:
+   supabase/alumni_2_2_0_radar_passport_recommendations.sql
+
+3) Después:
+   npm run build
+
+SI BUILD TERMINA BIEN
+=====================
+git status
+
+git add src/app/explore/page.tsx
+git add src/app/explore/explore-2.css
+git add src/app/passport/page.tsx
+git add src/app/passport/passport.css
+
+git commit -m "2.2.0 - Add Alumni Radar, Passport albums and friend recommendations"
+git push origin main
+
+NO uses git add .

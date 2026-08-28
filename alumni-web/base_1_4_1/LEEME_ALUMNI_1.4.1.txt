@@ -1,0 +1,94 @@
+ALUMNI 1.4.1 — PROFILE REPOSTS + SAVED + READABILITY
+
+REQUISITO
+=========
+Aplicar sobre ALUMNI 1.4.0 Feed Pro.
+
+NO REQUIERE SQL.
+Las tablas post_reposts y post_saves ya existen en producción.
+
+PERFIL PÚBLICO
+==============
+Ahora las pestañas quedan:
+- Publicaciones
+- Compartidos
+- Acerca de
+
+Compartidos:
+- muestra todos los reposts que hizo esa persona
+- conserva la publicación original
+- muestra autor original
+- media original
+- likes y comentarios
+- enlace a la publicación original
+- respeta privacidad/RLS
+
+AJUSTES
+=======
+Ajustes > Perfil ahora tiene:
+- Cuenta privada
+- Solicitudes
+- Guardados
+- Editar perfil
+
+Guardados:
+- solo los ve el propietario de la cuenta
+- lista todas las publicaciones guardadas
+- muestra autor, texto y primer media
+- acceso a la publicación original
+- permite quitar de Guardados
+
+FEED
+====
+Menú de tres puntos:
+- sigue arriba a la derecha SOBRE la imagen
+- si la imagen es baja/pequeña, el menú ya no se recorta
+- el popover puede extenderse fuera del rectángulo de la foto
+
+TIPOGRAFÍA
+==========
+Aumentada:
+- autor y metadata
+- hora
+- repost label
+- estadísticas
+- previews de comentarios
+- comentarios completos
+- botón Me gusta de comentarios
+- menú ...
+- preview de links
+
+ARCHIVOS
+========
+src/app/u/[username]/page.tsx
+src/app/settings/page.tsx
+src/components/settings/ProfileSettingsHub.tsx
+src/app/feed/feed-pro.css
+src/components/social/CommentLikeButton.tsx
+src/components/profile/ProfileRepostsTab.tsx
+src/components/settings/SavedPostsPanel.tsx
+
+APLICAR
+=======
+APLICAR_ALUMNI_1.4.1.bat
+
+DESPUÉS
+=======
+npm run build
+
+SI COMPILA
+==========
+git status
+
+git add "src/app/u/[username]/page.tsx"
+git add src/app/settings/page.tsx
+git add src/components/settings/ProfileSettingsHub.tsx
+git add src/app/feed/feed-pro.css
+git add src/components/social/CommentLikeButton.tsx
+git add src/components/profile/ProfileRepostsTab.tsx
+git add src/components/settings/SavedPostsPanel.tsx
+
+git commit -m "1.4.1 - Add profile reposts saved posts and improve feed readability"
+git push origin main
+
+NO uses git add .

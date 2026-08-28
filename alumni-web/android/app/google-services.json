@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "642471759803",
+    "project_id": "alumniconnections-450b7",
+    "storage_bucket": "alumniconnections-450b7.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:642471759803:android:7998a9e2e64996323afe9e",
+        "android_client_info": {
+          "package_name": "com.alumniconnections.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyASCScc0xgAz-vly0F60Drs-SVdLyCHXG0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

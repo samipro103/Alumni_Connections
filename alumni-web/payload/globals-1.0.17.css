@@ -1,0 +1,121 @@
+
+/* ================================================================
+   ALUMNI 1.0.17 — Aislamiento visual del compositor de historias
+   Mantiene StoryComposer independiente del tema global.
+   ================================================================ */
+
+.alumni-story-composer-shell {
+  z-index: 1000 !important;
+
+  --app-bg: #050506 !important;
+  --app-bg-2: #090b0f !important;
+  --app-surface: #0b0e13 !important;
+  --app-surface-2: #171b23 !important;
+  --app-soft: rgba(255,255,255,.04) !important;
+  --app-soft-strong: rgba(255,255,255,.075) !important;
+  --app-border: rgba(255,255,255,.09) !important;
+  --app-text: #ffffff !important;
+  --app-text-soft: #e4e4e7 !important;
+  --app-muted: #a1a1aa !important;
+  --app-muted-2: #71717a !important;
+  --app-muted-3: #52525b !important;
+  --app-accent: #8d98ff !important;
+  --app-accent-2: #6d7cff !important;
+  --app-accent-soft: rgba(109,124,255,.14) !important;
+  --app-on-accent: #ffffff !important;
+
+  color: #fff !important;
+  color-scheme: dark !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+.alumni-story-composer-surface {
+  position: relative;
+  isolation: isolate;
+  background: #0b0e13 !important;
+  color: #fff !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+/* Evita que las reglas del tema Light/Chill/otros recoloreen
+   textos del editor oscuro y terminen ocultándolos. */
+.alumni-story-composer-shell [class~="text-white"] {
+  color: #fff !important;
+}
+
+.alumni-story-composer-shell [class~="text-zinc-300"] {
+  color: #d4d4d8 !important;
+}
+
+.alumni-story-composer-shell [class~="text-zinc-400"] {
+  color: #a1a1aa !important;
+}
+
+.alumni-story-composer-shell [class~="text-zinc-500"] {
+  color: #8b8b95 !important;
+}
+
+.alumni-story-composer-shell [class~="text-zinc-600"],
+.alumni-story-composer-shell [class~="text-zinc-650"] {
+  color: #71717a !important;
+}
+
+.alumni-story-composer-shell [class~="text-zinc-700"] {
+  color: #52525b !important;
+}
+
+.alumni-story-composer-shell [class~="text-zinc-800"] {
+  color: #3f3f46 !important;
+}
+
+.alumni-story-composer-shell [class~="text-[#8d98ff]"],
+.alumni-story-composer-shell [class~="text-[#9ba5ff]"],
+.alumni-story-composer-shell [class~="text-[#a7afff]"] {
+  color: #9ba5ff !important;
+}
+
+.alumni-story-composer-shell [class~="bg-[#0b0e13]"],
+.alumni-story-composer-shell [class~="bg-[#0b0e13]/95"],
+.alumni-story-composer-shell [class~="bg-[#0b0e13]/96"] {
+  background-color: #0b0e13 !important;
+}
+
+.alumni-story-composer-shell [class~="bg-[#090b10]"] {
+  background-color: #090b10 !important;
+}
+
+.alumni-story-composer-shell .story-field {
+  color: #e4e4e7 !important;
+  background: rgba(255,255,255,.035) !important;
+  border-color: rgba(255,255,255,.075) !important;
+}
+
+.alumni-story-composer-shell .story-field::placeholder {
+  color: #52525b !important;
+}
+
+.alumni-story-composer-shell select,
+.alumni-story-composer-shell option {
+  color: #e4e4e7 !important;
+  background-color: #101318 !important;
+}
+
+/* El primer selector debe ser visible aun si una regla de tema falla. */
+.alumni-story-composer-shell .alumni-story-kind-list {
+  position: relative;
+  z-index: 2;
+  color: #fff;
+  background: transparent !important;
+}
+
+@media (max-width: 639px) {
+  .alumni-story-composer-shell {
+    align-items: stretch !important;
+  }
+
+  .alumni-story-composer-surface {
+    min-height: 100dvh;
+  }
+}

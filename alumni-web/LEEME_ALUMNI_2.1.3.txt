@@ -1,0 +1,56 @@
+ALUMNI 2.1.3 — HEADER + VOLVER
+================================
+
+CORRECCIÓN 1 — ENCABEZADOS
+===========================
+El ajuste anterior de 12px era demasiado pequeño.
+
+Ahora en móvil/tablet:
+- Comunidades
+- Comunidad individual
+- Eventos
+- Evento individual
+
+usan 30px de aire adicional arriba.
+
+Desktop no cambia.
+
+CORRECCIÓN 2 — CREAR EVENTO
+============================
+Antes:
+- solo una X arriba a la derecha.
+
+Ahora:
+- botón claro ← Volver.
+- en móvil el formulario ocupa la pantalla completa.
+- encabezado del formulario queda visible arriba.
+- Crear evento queda accesible abajo.
+- se siente como una pantalla real, no una caja flotante.
+- escritorio conserva el modal.
+
+SQL
+===
+NO requiere SQL.
+
+APLICAR
+=======
+APLICAR_ALUMNI_2.1.3.bat
+
+DESPUÉS
+=======
+npm run build
+
+SI BUILD TERMINA BIEN
+=====================
+git status
+
+git add src/app/events/page.tsx
+git add src/app/events/events-2.css
+git add "src/app/events/[id]/event-detail.css"
+git add src/app/community/community-2.css
+git add "src/app/community/[slug]/community-detail.css"
+
+git commit -m "2.1.3 - Fix mobile header spacing and event creation back navigation"
+git push origin main
+
+NO uses git add .

@@ -1,0 +1,19 @@
+ALUMNI 1.5.0 FIX 3
+
+Corrige únicamente:
+src/app/messages/[username]/page.tsx
+
+Error corregido:
+Block-scoped variable 'visibleHydrated' used before its declaration.
+
+Causa:
+hydratedIds debe calcularse desde hydrated.
+El FIX anterior sustituyó ese uso por visibleHydrated demasiado pronto.
+
+Aplicar:
+APLICAR_ALUMNI_1.5.0_FIX3.bat
+
+Después:
+npm run build
+
+NO hagas commit hasta que el build termine completamente bien.
