@@ -2951,3 +2951,8 @@ html[data-theme="pride"] .alumni-message-mine .alumni-reply-quote {
 }
 
 /* ALUMNI_1_5_0_MESSAGING_2_HOME_NAV:GLOBALS */
+
+/* ALUMNI_BRAND_LOGOS_FULL_COLOR_V1 */
+.alumni-original-logo:has(.alumni-original-logo-image) { background: #fff !important; border-radius: 10px !important; padding: 3px !important; overflow: hidden !important; }
+.alumni-original-logo-image { filter: none !important; mix-blend-mode: normal !important; opacity: 1 !important; }
+html[data-theme] .alumni-original-logo-image { filter: none !important; mix-blend-mode: normal !important; opacity: 1 !important; }
