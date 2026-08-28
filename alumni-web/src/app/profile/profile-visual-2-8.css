@@ -389,3 +389,229 @@ button[data-active="true"] {
 }
 
 /* ALUMNI_2_8_0_PROFILE_VISUAL */
+
+
+
+/* =========================================================
+   ALUMNI 2.8.1 — HOTFIX PROFILE LAYOUT
+   ========================================================= */
+
+/* Desktop: una grilla estable para avatar / identidad / acciones. */
+@media (min-width: 641px) {
+  .alumni-profile-v2 .alumni-profile-identity {
+    display: grid !important;
+    grid-template-columns:
+      112px
+      minmax(0, 1fr)
+      auto;
+    align-items: end !important;
+    column-gap: 20px !important;
+    row-gap: 0 !important;
+    margin-top: -56px !important;
+  }
+
+  .alumni-profile-v2
+  .alumni-profile-avatar-column {
+    display: block !important;
+    min-width: 0;
+  }
+
+  .alumni-profile-v2
+  .alumni-profile-main-copy {
+    min-width: 0;
+    padding-bottom: 7px;
+  }
+
+  .alumni-profile-v2
+  .alumni-profile-actions {
+    align-self: end;
+    margin-left: 0 !important;
+    padding-bottom: 4px;
+  }
+
+  .alumni-profile-v2
+  .alumni-profile-stats-row {
+    width: min(420px, calc(100% - 132px));
+    margin:
+      14px
+      0
+      0
+      132px;
+  }
+
+  .alumni-profile-v2
+  .alumni-profile-stats-row
+  > div {
+    display: grid !important;
+    width: 100% !important;
+    grid-template-columns:
+      repeat(3, minmax(0, 1fr));
+    gap: 0 !important;
+  }
+
+  .alumni-profile-v2
+  .alumni-profile-stats-row
+  > div
+  > div {
+    text-align: left !important;
+  }
+
+  .alumni-profile-v2
+  .alumni-profile-stats-row
+  > div
+  > div
+  + div {
+    padding-left: 22px;
+    border-left:
+      1px
+      solid
+      var(--app-border);
+  }
+
+  .alumni-profile-v2
+  .alumni-profile-stats-row
+  strong {
+    font-size: 15px !important;
+  }
+
+  .alumni-profile-v2
+  .alumni-profile-stats-row
+  span {
+    margin-top: 5px !important;
+    font-size: 9px !important;
+  }
+}
+
+/* Mobile: estadísticas centradas y en una fila propia. */
+@media (max-width: 640px) {
+  .alumni-profile-v2 .alumni-profile-identity {
+    display: grid !important;
+    grid-template-columns:
+      88px
+      minmax(0, 1fr);
+    align-items: end !important;
+    column-gap: 14px !important;
+    row-gap: 12px !important;
+    margin-top: -34px !important;
+  }
+
+  .alumni-profile-v2
+  .alumni-profile-avatar-column {
+    grid-column: 1;
+    grid-row: 1;
+    display: block !important;
+  }
+
+  .alumni-profile-v2
+  .alumni-profile-main-copy {
+    grid-column: 2;
+    grid-row: 1;
+    min-width: 0;
+    padding-bottom: 5px;
+  }
+
+  .alumni-profile-v2
+  .alumni-profile-actions {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    width: 100%;
+    margin: 0 !important;
+  }
+
+  .alumni-profile-v2
+  .alumni-profile-stats-row {
+    width: 100%;
+    margin: 15px 0 0;
+    padding:
+      12px
+      0;
+    border-top:
+      1px
+      solid
+      var(--app-border);
+    border-bottom:
+      1px
+      solid
+      var(--app-border);
+  }
+
+  .alumni-profile-v2
+  .alumni-profile-stats-row
+  > div {
+    display: grid !important;
+    width: 100% !important;
+    grid-template-columns:
+      repeat(3, minmax(0, 1fr));
+    gap: 0 !important;
+  }
+
+  .alumni-profile-v2
+  .alumni-profile-stats-row
+  > div
+  > div {
+    min-width: 0;
+    text-align: center !important;
+  }
+
+  .alumni-profile-v2
+  .alumni-profile-stats-row
+  > div
+  > div
+  + div {
+    border-left:
+      1px
+      solid
+      var(--app-border);
+  }
+
+  .alumni-profile-v2
+  .alumni-profile-stats-row
+  strong {
+    font-size: 15px !important;
+  }
+
+  .alumni-profile-v2
+  .alumni-profile-stats-row
+  span {
+    margin-top: 5px !important;
+    font-size: 9px !important;
+    line-height: 1.15 !important;
+  }
+}
+
+@media (max-width: 390px) {
+  .alumni-profile-v2 .alumni-profile-identity {
+    grid-template-columns:
+      84px
+      minmax(0, 1fr);
+    column-gap: 12px !important;
+  }
+
+  .alumni-profile-v2
+  .alumni-profile-stats-row
+  span {
+    font-size: 8.5px !important;
+  }
+}
+
+@media (max-width: 360px) {
+  .alumni-profile-v2 .alumni-profile-identity {
+    grid-template-columns:
+      80px
+      minmax(0, 1fr);
+  }
+
+  .alumni-profile-v2
+  .alumni-profile-stats-row
+  strong {
+    font-size: 14px !important;
+  }
+
+  .alumni-profile-v2
+  .alumni-profile-stats-row
+  span {
+    font-size: 8px !important;
+  }
+}
+
+/* ALUMNI_2_8_1_PROFILE_LAYOUT_HOTFIX */

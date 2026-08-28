@@ -487,7 +487,7 @@ export default function ProfilePage() {
 
           <div className="alumni-profile-body px-5 pb-6 pt-5 sm:px-7 sm:pt-6">
             <div className="alumni-profile-identity flex flex-col gap-5 sm:flex-row sm:items-center">
-              <div className="flex shrink-0 items-center gap-4">
+              <div className="alumni-profile-avatar-column">
                 <div className="alumni-profile-avatar flex h-24 w-24 shrink-0 items-center justify-center overflow-hidden rounded-full border border-white/[0.09] bg-[#1a1f29] text-2xl font-black shadow-[0_10px_28px_rgba(0,0,0,.16)] sm:h-28 sm:w-28">
                   {profile.avatar_url ? (
                     <HDProfileImage
@@ -500,15 +500,9 @@ export default function ProfilePage() {
                     profile.username?.charAt(0)?.toUpperCase() || "U"
                   )}
                 </div>
-
-                <ProfileMiniStats
-                  posts={posts.length}
-                  followers={followers}
-                  following={following}
-                />
               </div>
 
-              <div className="min-w-0 flex-1">
+              <div className="alumni-profile-main-copy min-w-0 flex-1">
                 <h1 className="truncate text-2xl font-black tracking-[-0.035em]">
                   @{profile.username}
                 </h1>
@@ -536,6 +530,14 @@ export default function ProfilePage() {
                   <Share2 size={16} />
                 </button>
               </div>
+            </div>
+
+            <div className="alumni-profile-stats-row">
+              <ProfileMiniStats
+                posts={posts.length}
+                followers={followers}
+                following={following}
+              />
             </div>
 
             <ProfileHeaderFacts profile={profile} />
@@ -833,3 +835,5 @@ function Detail({
 /* ALUMNI_2_7_0_LOADING_STATES:PROFILE */
 
 /* ALUMNI_2_8_0_PROFILE_VISUAL:PROFILE */
+
+/* ALUMNI_2_8_1_PROFILE_LAYOUT_HOTFIX:PROFILE */

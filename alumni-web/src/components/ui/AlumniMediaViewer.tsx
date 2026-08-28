@@ -2,7 +2,9 @@
 
 import {
   useEffect,
+  useState,
 } from "react";
+import { createPortal } from "react-dom";
 import { X } from "lucide-react";
 
 export default function AlumniMediaViewer({
@@ -16,7 +18,20 @@ export default function AlumniMediaViewer({
   alt?: string;
   onClose: () => void;
 }) {
+  const [mounted, setMounted] =
+    useState(false);
+
   useEffect(() => {
+    setMounted(true);
+
+    return () => {
+      setMounted(false);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!mounted || !src) return;
+
     const previous =
       document.body.style.overflow;
 
@@ -45,17 +60,22 @@ export default function AlumniMediaViewer({
       document.body.style.overflow =
         previous;
     };
-  }, [onClose]);
+  }, [mounted, src, onClose]);
 
-  if (!src) return null;
+  if (
+    !mounted ||
+    !src ||
+    typeof document === "undefined"
+  ) {
+    return null;
+  }
 
-  return (
+  return createPortal(
     <div
-      className="fixed inset-0 z-[2147483500] flex items-center justify-center overflow-auto bg-[#030405]/[.97]"
       role="dialog"
       aria-modal="true"
       aria-label="Visor de contenido"
-      onMouseDown={(event) => {
+      onPointerDown={(event) => {
         if (
           event.target ===
           event.currentTarget
@@ -63,21 +83,50 @@ export default function AlumniMediaViewer({
           onClose();
         }
       }}
+      style={{
+        position: "fixed",
+        inset: 0,
+        zIndex: 2147483646,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        overflow: "auto",
+        background: "rgba(3,4,5,.98)",
+      }}
     >
       <button
         type="button"
         onClick={onClose}
         aria-label="Cerrar visor"
         title="Cerrar"
-        className="fixed right-[14px] z-[2147483600] flex h-12 w-12 items-center justify-center rounded-full border border-white/20 bg-black/75 text-white shadow-[0_10px_32px_rgba(0,0,0,.38)] backdrop-blur-xl transition hover:bg-black/90 focus:outline-none focus-visible:ring-2 focus-visible:ring-white"
         style={{
+          position: "fixed",
           top:
             "max(14px, env(safe-area-inset-top))",
+          right:
+            "max(14px, env(safe-area-inset-right))",
+          zIndex: 2147483647,
+          width: 52,
+          height: 52,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          padding: 0,
+          border: "2px solid rgba(255,255,255,.92)",
+          borderRadius: "999px",
+          background: "rgba(0,0,0,.84)",
+          color: "#fff",
+          boxShadow:
+            "0 10px 34px rgba(0,0,0,.55)",
+          cursor: "pointer",
+          WebkitTapHighlightColor:
+            "transparent",
         }}
       >
         <X
-          size={25}
-          strokeWidth={2.4}
+          size={28}
+          strokeWidth={2.8}
+          aria-hidden="true"
         />
       </button>
 
@@ -87,18 +136,35 @@ export default function AlumniMediaViewer({
           controls
           autoPlay
           playsInline
-          className="block max-h-[100dvh] w-auto max-w-[100vw] bg-black object-contain"
+          style={{
+            display: "block",
+            width: "auto",
+            maxWidth: "100vw",
+            maxHeight: "100dvh",
+            objectFit: "contain",
+            background: "#000",
+          }}
         />
       ) : (
         <img
           src={src}
           alt={alt}
-          className="m-auto block h-auto max-h-[100dvh] w-auto max-w-[100vw] select-none object-contain"
           draggable={false}
+          style={{
+            display: "block",
+            width: "auto",
+            height: "auto",
+            maxWidth: "100vw",
+            maxHeight: "100dvh",
+            margin: "auto",
+            objectFit: "contain",
+            userSelect: "none",
+          }}
         />
       )}
-    </div>
+    </div>,
+    document.body
   );
 }
 
-/* ALUMNI_2_8_0_MEDIA_VIEWER */
+/* ALUMNI_2_8_1_MEDIA_VIEWER_PORTAL */
