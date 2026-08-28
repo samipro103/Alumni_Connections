@@ -6,6 +6,7 @@ import { CalendarDays, MapPin, UserPlus, Users } from "lucide-react";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { supabase } from "@/lib/supabase";
 import { getRecommendedProfiles, RecommendedProfile } from "@/lib/recommendations";
+import { AlumniAvatar } from "@/components/ui/AlumniImage";
 
 /* ALUMNI_1_2_2_NAV_STABILITY:RIGHT_SIDEBAR */
 let cachedEvents: any[] | null =
@@ -135,11 +136,13 @@ export default function RightSidebar() {
               <div key={person.id} className="flex items-center gap-3 rounded-2xl px-2 py-3 transition hover:bg-white/[0.035]">
                 <Link href={`/u/${person.username}`} className="flex min-w-0 flex-1 items-center gap-3">
                   <div className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[#181d27] text-sm font-bold text-white ring-1 ring-white/10">
-                    {person.avatar_url ? (
-                      <img src={person.avatar_url} alt={person.username} className="h-full w-full object-cover" />
-                    ) : (
-                      person.username?.charAt(0)?.toUpperCase() || "U"
-                    )}
+                    <AlumniAvatar
+                      src={person.avatar_url}
+                      name={person.username}
+                      alt={person.username}
+                      className="h-full w-full"
+                      imageClassName="h-full w-full object-cover"
+                    />
                   </div>
                   <div className="min-w-0">
                     <p className="truncate text-sm font-bold text-zinc-100">@{person.username}</p>
@@ -197,3 +200,5 @@ export default function RightSidebar() {
     </div>
   );
 }
+
+/* ALUMNI_2_9_0_IMAGE_LAYER:RIGHT_SIDEBAR */

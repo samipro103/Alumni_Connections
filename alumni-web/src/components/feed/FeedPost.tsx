@@ -26,6 +26,7 @@ import {
 import { formatDistanceToNow } from "date-fns";
 import { es } from "date-fns/locale";
 import LinkPreviewCard from "@/components/feed/LinkPreviewCard";
+import { AlumniAvatar } from "@/components/ui/AlumniImage";
 import type { PostMediaItem } from "@/lib/feedMedia";
 
 function compactRepeatedLines(text: string) {
@@ -499,14 +500,14 @@ export default function FeedPost({
           href={`/u/${post.profiles?.username}`}
           className="alumni-pro-avatar"
         >
-          {post.profiles?.avatar_url ? (
-            <img
-              src={post.profiles.avatar_url}
-              alt=""
-            />
-          ) : (
-            post.profiles?.username?.charAt(0)?.toUpperCase() || "A"
-          )}
+          <AlumniAvatar
+            src={post.profiles?.avatar_url}
+            name={post.profiles?.username}
+            alt=""
+            className="h-full w-full"
+            imageClassName="h-full w-full object-cover"
+            priority={postIndex < 2}
+          />
         </a>
 
         <div className="alumni-pro-author">
@@ -766,3 +767,5 @@ export default function FeedPost({
 }
 
 /* ALUMNI_2_5_0_FEED_POST */
+
+/* ALUMNI_2_9_0_IMAGE_LAYER:FEED_POST */

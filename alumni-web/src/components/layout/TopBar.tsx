@@ -20,6 +20,7 @@ import {
   supabase,
 } from "@/lib/supabase";
 import BrandMark from "@/components/brand/BrandMark";
+import { AlumniAvatar } from "@/components/ui/AlumniImage";
 
 type TopBarCachedState = {
   profile: any;
@@ -306,22 +307,14 @@ export default function TopBar() {
             aria-label="Ver mi perfil"
             title="Ver mi perfil"
           >
-            {profile?.avatar_url ? (
-              <img
-                src={
-                  profile.avatar_url
-                }
-                alt="Perfil"
-                className="h-full w-full object-cover"
-              />
-            ) : (
-              <span>
-                {profile?.username
-                  ?.charAt(0)
-                  ?.toUpperCase() ||
-                  "A"}
-              </span>
-            )}
+            <AlumniAvatar
+              src={profile?.avatar_url}
+              name={profile?.username}
+              alt="Perfil"
+              className="h-full w-full"
+              imageClassName="h-full w-full object-cover"
+              priority
+            />
           </Link>
         </div>
       </div>
@@ -330,3 +323,5 @@ export default function TopBar() {
 }
 
 /* ALUMNI_2_1_4_IOS_SAFE_HEADER:TOPBAR */
+
+/* ALUMNI_2_9_0_IMAGE_LAYER:TOPBAR */

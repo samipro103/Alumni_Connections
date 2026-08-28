@@ -31,6 +31,7 @@ import ProfileMusicCard from "@/components/profile/ProfileMusicCard";
 import ProfilePassportPreview from "@/components/profile/ProfilePassportPreview";
 import ProfileMiniStats from "@/components/profile/ProfileMiniStats";
 import HDProfileImage from "@/components/profile/HDProfileImage";
+import { AlumniAvatar } from "@/components/ui/AlumniImage";
 import ProfileSocialLinks from "@/components/profile/ProfileSocialLinks";
 import ProfileIdentityMeta from "@/components/profile/ProfileIdentityMeta";
 import ProfileHeaderFacts from "@/components/profile/ProfileHeaderFacts";
@@ -593,16 +594,13 @@ export default function ProfilePage() {
                     <div className="p-5">
                       <div className="alumni-profile-v2-post-header flex items-center gap-3">
                         <div className="alumni-profile-v2-post-avatar flex h-10 w-10 items-center justify-center overflow-hidden rounded-full bg-[#1a1f29] text-xs font-bold">
-                          {profile.avatar_url ? (
-                            <img
-                              src={profile.avatar_url}
-                              alt="Avatar"
-                              className="h-full w-full object-cover"
-                            />
-                          ) : (
-                            profile.username?.charAt(0)?.toUpperCase() ||
-                            "U"
-                          )}
+                          <AlumniAvatar
+                            src={profile.avatar_url}
+                            name={profile.username}
+                            alt="Avatar"
+                            className="h-full w-full"
+                            imageClassName="h-full w-full object-cover"
+                          />
                         </div>
 
                         <div className="alumni-profile-v2-post-author">
@@ -837,3 +835,5 @@ function Detail({
 /* ALUMNI_2_8_0_PROFILE_VISUAL:PROFILE */
 
 /* ALUMNI_2_8_1_PROFILE_LAYOUT_HOTFIX:PROFILE */
+
+/* ALUMNI_2_9_0_IMAGE_LAYER:PROFILE */

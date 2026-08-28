@@ -91,7 +91,8 @@ export default function AlumniMediaViewer({
         alignItems: "center",
         justifyContent: "center",
         overflow: "auto",
-        background: "rgba(3,4,5,.98)",
+        background:
+          "rgba(3,4,5,.98)",
       }}
     >
       <button
@@ -112,9 +113,11 @@ export default function AlumniMediaViewer({
           alignItems: "center",
           justifyContent: "center",
           padding: 0,
-          border: "2px solid rgba(255,255,255,.92)",
+          border:
+            "2px solid rgba(255,255,255,.92)",
           borderRadius: "999px",
-          background: "rgba(0,0,0,.84)",
+          background:
+            "rgba(0,0,0,.84)",
           color: "#fff",
           boxShadow:
             "0 10px 34px rgba(0,0,0,.55)",
@@ -167,4 +170,4 @@ export default function AlumniMediaViewer({
   );
 }
 
-/* ALUMNI_2_8_1_MEDIA_VIEWER_PORTAL */
+/* ALUMNI_2_9_0_MEDIA_VIEWER */

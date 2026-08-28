@@ -5,6 +5,7 @@ import {
   UserPlus,
   UserRoundCheck,
 } from "lucide-react";
+import { AlumniAvatar } from "@/components/ui/AlumniImage";
 
 export default function ExplorePersonRow({
   person,
@@ -29,15 +30,13 @@ export default function ExplorePersonRow({
         className="flex min-w-0 flex-1 items-center gap-3"
       >
         <span className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[var(--app-soft-strong)] text-sm font-black text-[var(--app-text)]">
-          {person.avatar_url ? (
-            <img
-              src={person.avatar_url}
-              alt=""
-              className="h-full w-full object-cover"
-            />
-          ) : (
-            person.username?.charAt(0)?.toUpperCase() || "A"
-          )}
+          <AlumniAvatar
+            src={person.avatar_url}
+            name={person.username}
+            alt=""
+            className="h-full w-full"
+            imageClassName="h-full w-full object-cover"
+          />
         </span>
 
         <span className="min-w-0 flex-1">
@@ -99,3 +98,5 @@ export default function ExplorePersonRow({
 }
 
 /* ALUMNI_1_6_0_EXPLORE_PERSON_ROW */
+
+/* ALUMNI_2_9_0_IMAGE_LAYER:EXPLORE_PERSON */

@@ -23,6 +23,7 @@ import {
 import { useRouter } from "next/navigation";
 import AppShell from "@/components/layout/AppShell";
 import { NotificationsLoadingSkeleton } from "@/components/ui/AlumniLoading";
+import AlumniImage, { AlumniAvatar } from "@/components/ui/AlumniImage";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { supabase } from "@/lib/supabase";
 import { hydratePostMediaItems } from "@/lib/feedMedia";
@@ -954,16 +955,13 @@ export default function NotificationsPage() {
                                         zIndex: 3 - index,
                                       }}
                                     >
-                                      {actor.avatar_url ? (
-                                        <img
-                                          src={actor.avatar_url}
-                                          alt=""
-                                        />
-                                      ) : (
-                                        actor.username
-                                          ?.charAt(0)
-                                          ?.toUpperCase() || "A"
-                                      )}
+                                      <AlumniAvatar
+                                        src={actor.avatar_url}
+                                        name={actor.username}
+                                        alt=""
+                                        className="h-full w-full"
+                                        imageClassName="h-full w-full object-cover"
+                                      />
                                     </span>
                                   ))}
 
@@ -996,9 +994,11 @@ export default function NotificationsPage() {
 
                               {group.previewUrl && (
                                 <span className="alumni-notification-preview">
-                                  <img
+                                  <AlumniImage
                                     src={group.previewUrl}
                                     alt=""
+                                    shellClassName="h-full w-full"
+                                    className="h-full w-full object-cover"
                                   />
                                 </span>
                               )}
@@ -1180,3 +1180,5 @@ export default function NotificationsPage() {
 /* ALUMNI_2_1_2_NOTIFICATION_INVITES */
 
 /* ALUMNI_2_7_0_LOADING_STATES:NOTIFICATIONS */
+
+/* ALUMNI_2_9_0_IMAGE_LAYER:NOTIFICATIONS */

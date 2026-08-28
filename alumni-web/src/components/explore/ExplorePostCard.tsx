@@ -7,6 +7,7 @@ import {
   ArrowUpRight,
 } from "lucide-react";
 import { useMemo } from "react";
+import { AlumniAvatar } from "@/components/ui/AlumniImage";
 
 export default function ExplorePostCard({
   post,
@@ -47,15 +48,13 @@ export default function ExplorePostCard({
           href={`/u/${post.profiles?.username}`}
           className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[var(--app-soft-strong)] text-[12px] font-black text-[var(--app-text)]"
         >
-          {post.profiles?.avatar_url ? (
-            <img
-              src={post.profiles.avatar_url}
-              alt=""
-              className="h-full w-full object-cover"
-            />
-          ) : (
-            post.profiles?.username?.charAt(0)?.toUpperCase() || "A"
-          )}
+          <AlumniAvatar
+            src={post.profiles?.avatar_url}
+            name={post.profiles?.username}
+            alt=""
+            className="h-full w-full"
+            imageClassName="h-full w-full object-cover"
+          />
         </a>
 
         <div className="min-w-0 flex-1">
@@ -152,3 +151,5 @@ export default function ExplorePostCard({
 }
 
 /* ALUMNI_1_6_0_EXPLORE_POST_CARD */
+
+/* ALUMNI_2_9_0_IMAGE_LAYER:EXPLORE_POST */
