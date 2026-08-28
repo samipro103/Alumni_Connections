@@ -25,6 +25,7 @@ import { useAuth } from "@/components/auth/AuthProvider";
 import { useAlumniUX } from "@/components/ui/AlumniUXProvider";
 import { supabase } from "@/lib/supabase";
 import AppShell from "@/components/layout/AppShell";
+import AlumniMediaViewer from "@/components/ui/AlumniMediaViewer";
 import { ProfileLoadingSkeleton, AlumniEmptyState } from "@/components/ui/AlumniLoading";
 import ProfileMusicCard from "@/components/profile/ProfileMusicCard";
 import ProfilePassportPreview from "@/components/profile/ProfilePassportPreview";
@@ -37,6 +38,7 @@ import ProfessionalProfileOverview from "@/components/profile/ProfessionalProfil
 import { hydratePostMedia } from "@/lib/privateMedia";
 import ProfilePostOwnerMenu from "@/components/profile/ProfilePostOwnerMenu";
 import "@/components/profile/ProfilePostOwnerMenu.css";
+import "./profile-visual-2-8.css";
 
 
 type ProfileTab = "posts" | "about";
@@ -70,6 +72,11 @@ export default function ProfilePage() {
     loadingProfile,
     setLoadingProfile,
   ] = useState(true);
+
+  const [
+    selectedProfileMedia,
+    setSelectedProfileMedia,
+  ] = useState<string | null>(null);
 
   const [tab, setTab] =
     useState<ProfileTab>(
@@ -461,7 +468,7 @@ export default function ProfilePage() {
 
   return (
     <AppShell>
-      <div className="alumni-profile-page mx-auto w-full max-w-[980px]">
+      <div className="alumni-profile-page alumni-profile-v2 mx-auto w-full max-w-[980px]">
         <section className="alumni-profile-hero">
           <div className="alumni-profile-banner overflow-hidden rounded-[24px]">
             <div className="relative h-48 bg-[#151a23] sm:h-60">
@@ -512,10 +519,10 @@ export default function ProfilePage() {
                 )}
               </div>
 
-              <div className="flex shrink-0 gap-2">
+              <div className="alumni-profile-actions flex shrink-0 gap-2">
                 <Link
                   href="/settings?section=profile&edit=1"
-                  className="flex h-10 items-center gap-2 rounded-xl bg-[#6d7cff] px-4 text-xs font-black text-white transition hover:bg-[#7b87ff]"
+                  className="alumni-profile-edit-action"
                 >
                   <Pencil size={15} />
                   Editar perfil
@@ -523,7 +530,7 @@ export default function ProfilePage() {
 
                 <button
                   onClick={shareProfile}
-                  className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/[0.07] bg-white/[0.035] text-zinc-500 transition hover:text-white"
+                  className="alumni-profile-share-action"
                   aria-label="Compartir perfil"
                 >
                   <Share2 size={16} />
@@ -534,7 +541,7 @@ export default function ProfilePage() {
             <ProfileHeaderFacts profile={profile} />
 
             {profile.bio && (
-              <p className="mt-5 max-w-2xl whitespace-pre-wrap text-sm leading-6 text-zinc-400">
+              <p className="alumni-profile-bio mt-5 max-w-2xl whitespace-pre-wrap text-sm leading-6 text-zinc-400">
                 {profile.bio}
               </p>
             )}
@@ -569,21 +576,21 @@ export default function ProfilePage() {
         </div>
 
         {tab === "posts" ? (
-          <section className="pt-4">
+          <section className="alumni-profile-v2-posts pt-4">
             {posts.length === 0 ? (
               <div className="alumni-empty-state rounded-[24px] border border-dashed border-white/[0.09] px-6 py-14 text-center text-sm text-zinc-600">
                 Todavía no has publicado nada.
               </div>
             ) : (
-              <div className="space-y-4">
+              <div className="alumni-profile-v2-post-list space-y-4">
                 {posts.map((post: any) => (
                   <article
                     key={post.id}
-                    className="alumni-post-card overflow-hidden rounded-[24px] border border-white/[0.07] bg-[#101318]/95"
+                    className="alumni-post-card alumni-profile-v2-post overflow-hidden rounded-[24px] border border-white/[0.07] bg-[#101318]/95"
                   >
                     <div className="p-5">
-                      <div className="flex items-center gap-3">
-                        <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-full bg-[#1a1f29] text-xs font-bold">
+                      <div className="alumni-profile-v2-post-header flex items-center gap-3">
+                        <div className="alumni-profile-v2-post-avatar flex h-10 w-10 items-center justify-center overflow-hidden rounded-full bg-[#1a1f29] text-xs font-bold">
                           {profile.avatar_url ? (
                             <img
                               src={profile.avatar_url}
@@ -596,7 +603,7 @@ export default function ProfilePage() {
                           )}
                         </div>
 
-                        <div>
+                        <div className="alumni-profile-v2-post-author">
                           <p className="text-sm font-black">
                             @{profile.username}
                           </p>
@@ -610,10 +617,16 @@ export default function ProfilePage() {
                             )}
                           </p>
                         </div>
+
+                        {post.pinned && (
+                          <span className="alumni-profile-v2-pinned">
+                            Fijada
+                          </span>
+                        )}
                       </div>
 
                       {post.content && (
-                        <p className="mt-4 whitespace-pre-wrap text-[15px] leading-6 text-zinc-300">
+                        <p className="alumni-profile-v2-post-copy mt-4 whitespace-pre-wrap text-[15px] leading-6 text-zinc-300">
                           {post.content}
                         </p>
                       )}
@@ -621,11 +634,22 @@ export default function ProfilePage() {
 
                     {post.image_url ? (
                       <div className="alumni-profile-post-media-wrap">
-                        <img
-                          src={post.image_url}
-                          alt="Publicación"
-                          className="max-h-[650px] w-full object-contain"
-                        />
+                        <button
+                          type="button"
+                          className="alumni-profile-v2-media-button"
+                          onClick={() =>
+                            setSelectedProfileMedia(
+                              post.image_url
+                            )
+                          }
+                          aria-label="Abrir fotografía"
+                        >
+                          <img
+                            src={post.image_url}
+                            alt="Publicación"
+                            className="max-h-[650px] w-full object-contain"
+                          />
+                        </button>
 
                         <ProfilePostOwnerMenu
                           post={post}
@@ -659,7 +683,7 @@ export default function ProfilePage() {
                       </div>
                     )}
 
-                    <div className="flex items-center gap-5 px-5 py-3 text-xs font-bold text-zinc-600">
+                    <div className="alumni-profile-v2-engagement flex items-center gap-5 px-5 py-3 text-xs font-bold text-zinc-600">
                       <span className="flex items-center gap-1.5">
                         <Heart size={15} />
                         {post.likes?.length || 0}
@@ -688,13 +712,24 @@ export default function ProfilePage() {
         <div className="mt-7 flex justify-end">
           <Link
             href="/settings"
-            className="flex items-center gap-1.5 text-xs font-bold text-zinc-600 hover:text-zinc-300"
+            className="alumni-profile-settings-link flex items-center gap-1.5 text-xs font-bold text-zinc-600 hover:text-zinc-300"
           >
             <Settings size={14} />
             Configuración
           </Link>
         </div>
       </div>
+
+      {selectedProfileMedia && (
+        <AlumniMediaViewer
+          src={selectedProfileMedia}
+          type="image"
+          alt="Publicación ampliada"
+          onClose={() =>
+            setSelectedProfileMedia(null)
+          }
+        />
+      )}
     </AppShell>
   );
 }
@@ -796,3 +831,5 @@ function Detail({
 /* ALUMNI_2_6_0_GLOBAL_UX:PROFILE */
 
 /* ALUMNI_2_7_0_LOADING_STATES:PROFILE */
+
+/* ALUMNI_2_8_0_PROFILE_VISUAL:PROFILE */

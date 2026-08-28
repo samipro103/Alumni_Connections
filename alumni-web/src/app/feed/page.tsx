@@ -7,13 +7,13 @@ import {
   useRef,
   useState,
 } from "react";
-import { X } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import "./feed-pro.css";
 import "./feed-visual-2-4.css";
 import "./feed-visual-2-5.css";
 import { supabase } from "@/lib/supabase";
 import AppShell from "@/components/layout/AppShell";
+import AlumniMediaViewer from "@/components/ui/AlumniMediaViewer";
 import { FeedLoadingSkeleton, AlumniEmptyState } from "@/components/ui/AlumniLoading";
 import PostComposer from "@/components/feed/PostComposer";
 import StoriesRail from "@/components/feed/StoriesRail";
@@ -1351,36 +1351,16 @@ function FeedContent() {
       />
 
       {selectedMedia && (
-        <div
-          className="alumni-pro-media-viewer"
-          onMouseDown={(event) => {
-            if (event.currentTarget === event.target) {
-              setSelectedMedia(null);
-            }
-          }}
-        >
-          <button
-            type="button"
-            onClick={() => setSelectedMedia(null)}
-            aria-label="Cerrar"
-          >
-            <X size={22} />
-          </button>
-
-          {selectedMedia.media_type === "video" ? (
-            <video
-              src={selectedMedia.media_url || ""}
-              controls
-              autoPlay
-              playsInline
-            />
-          ) : (
-            <img
-              src={selectedMedia.media_url || ""}
-              alt="Publicación ampliada"
-            />
-          )}
-        </div>
+        <AlumniMediaViewer
+          src={selectedMedia.media_url || ""}
+          type={
+            selectedMedia.media_type === "video"
+              ? "video"
+              : "image"
+          }
+          alt="Publicación ampliada"
+          onClose={() => setSelectedMedia(null)}
+        />
       )}
 
       {toast && (
@@ -1415,3 +1395,5 @@ export default function FeedPage() {
 /* ALUMNI_2_3_3_PASSPORT_PROFILE_FEED_FIX:FEED_RESILIENT_LOAD */
 
 /* ALUMNI_2_7_0_LOADING_STATES:FEED */
+
+/* ALUMNI_2_8_0_MEDIA_VIEWER:FEED */
