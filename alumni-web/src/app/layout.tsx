@@ -8,7 +8,6 @@ import { AuthProvider } from "@/components/auth/AuthProvider";
 import { ThemeProvider } from "@/components/theme/ThemeProvider";
 import GlobalPullToRefresh from "@/components/layout/GlobalPullToRefresh";
 import PWAProBootstrap from "@/components/pwa/PWAProBootstrap";
-import MfaRouteGuard from "@/components/auth/MfaRouteGuard";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 
@@ -107,7 +106,6 @@ export default function RootLayout({
           <AuthProvider>
             <GlobalPullToRefresh />
             <PWAProBootstrap />
-            <MfaRouteGuard />
 
             <div
               id="alumni-root-content"
@@ -123,3 +121,4 @@ export default function RootLayout({
 }
 
 /* ALUMNI_2_0_PWA_STABILITY:ROOT_LAYOUT */
+/* ALUMNI_1_0_13_DISABLE_LEGACY_MFA_ROUTE_GUARD */
