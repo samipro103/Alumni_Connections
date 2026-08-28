@@ -22,6 +22,7 @@ import {
 } from "react";
 import { useRouter } from "next/navigation";
 import AppShell from "@/components/layout/AppShell";
+import { NotificationsLoadingSkeleton } from "@/components/ui/AlumniLoading";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { supabase } from "@/lib/supabase";
 import { hydratePostMediaItems } from "@/lib/feedMedia";
@@ -899,9 +900,7 @@ export default function NotificationsPage() {
         )}
 
         {loadingRows ? (
-          <div className="alumni-notifications-empty">
-            Cargando actividad...
-          </div>
+          <NotificationsLoadingSkeleton />
         ) : filteredGroups.length === 0 ? (
           <div className="alumni-notifications-empty">
             <Bell size={28} />
@@ -1179,3 +1178,5 @@ export default function NotificationsPage() {
 /* ALUMNI_1_7_0_NOTIFICATIONS_ACTIVITY_2 */
 
 /* ALUMNI_2_1_2_NOTIFICATION_INVITES */
+
+/* ALUMNI_2_7_0_LOADING_STATES:NOTIFICATIONS */

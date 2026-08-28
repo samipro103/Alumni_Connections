@@ -20,6 +20,7 @@ import {
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import AppShell from "@/components/layout/AppShell";
+import { ListLoadingSkeleton } from "@/components/ui/AlumniLoading";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { supabase } from "@/lib/supabase";
 import "./events-2.css";
@@ -287,7 +288,7 @@ export default function EventsPage() {
         </div>
 
         {loading ? (
-          <p className="events2-state">Cargando eventos...</p>
+          <ListLoadingSkeleton rows={5} />
         ) : filtered.length === 0 ? (
           <section className="events2-empty">
             <CalendarDays size={25} />
@@ -684,3 +685,5 @@ export default function EventsPage() {
 }
 
 /* ALUMNI_2_1_5_EVENTS_EDITORIAL_REDESIGN */
+
+/* ALUMNI_2_7_0_LOADING_STATES:EVENTS */

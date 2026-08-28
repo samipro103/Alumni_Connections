@@ -14,6 +14,7 @@ import "./feed-visual-2-4.css";
 import "./feed-visual-2-5.css";
 import { supabase } from "@/lib/supabase";
 import AppShell from "@/components/layout/AppShell";
+import { FeedLoadingSkeleton, AlumniEmptyState } from "@/components/ui/AlumniLoading";
 import PostComposer from "@/components/feed/PostComposer";
 import StoriesRail from "@/components/feed/StoriesRail";
 import FeedPost from "@/components/feed/FeedPost";
@@ -1232,15 +1233,27 @@ function FeedContent() {
         </nav>
 
         {loading ? (
-          <div className="alumni-pro-feed-status">
-            Cargando publicaciones...
-          </div>
+          <FeedLoadingSkeleton />
         ) : visiblePosts.length === 0 ? (
-          <div className="alumni-pro-feed-status">
-            {feedMode === "following"
-              ? "Todavía no hay publicaciones recientes de tus conexiones."
-              : "Todavía no hay publicaciones."}
-          </div>
+          <AlumniEmptyState
+            eyebrow={
+              feedMode === "following"
+                ? "Tu red"
+                : "Inicio"
+            }
+            title={
+              feedMode === "following"
+                ? "Tu red está tranquila por ahora."
+                : "Todavía no hay publicaciones."
+            }
+            description={
+              feedMode === "following"
+                ? "Cuando tus conexiones publiquen o compartan algo, aparecerá aquí."
+                : "Explora personas y comunidades para empezar a darle vida a tu Feed."
+            }
+            actionHref="/explore"
+            actionLabel="Explorar Alumni"
+          />
         ) : (
           <div className="alumni-pro-feed-list">
             {visiblePosts.map((post, postIndex) => (
@@ -1400,3 +1413,5 @@ export default function FeedPage() {
 /* ALUMNI_1_6_0_EXPLORE_DISCOVERY:FEED_SIGNALS */
 
 /* ALUMNI_2_3_3_PASSPORT_PROFILE_FEED_FIX:FEED_RESILIENT_LOAD */
+
+/* ALUMNI_2_7_0_LOADING_STATES:FEED */

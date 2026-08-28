@@ -25,6 +25,7 @@ import { useAuth } from "@/components/auth/AuthProvider";
 import { useAlumniUX } from "@/components/ui/AlumniUXProvider";
 import { supabase } from "@/lib/supabase";
 import AppShell from "@/components/layout/AppShell";
+import { ProfileLoadingSkeleton, AlumniEmptyState } from "@/components/ui/AlumniLoading";
 import ProfileMusicCard from "@/components/profile/ProfileMusicCard";
 import ProfilePassportPreview from "@/components/profile/ProfilePassportPreview";
 import ProfileMiniStats from "@/components/profile/ProfileMiniStats";
@@ -439,9 +440,7 @@ export default function ProfilePage() {
   if (loadingProfile) {
     return (
       <AppShell>
-        <div className="py-16 text-center text-sm text-zinc-600">
-          Cargando perfil...
-        </div>
+        <ProfileLoadingSkeleton />
       </AppShell>
     );
   }
@@ -449,9 +448,13 @@ export default function ProfilePage() {
   if (!profile) {
     return (
       <AppShell>
-        <div className="py-16 text-center text-sm text-zinc-600">
-          No se encontró tu perfil.
-        </div>
+        <AlumniEmptyState
+          eyebrow="Perfil"
+          title="No pudimos mostrar tu perfil."
+          description="Vuelve a intentarlo o revisa la configuración de tu cuenta."
+          actionHref="/settings?section=profile"
+          actionLabel="Abrir configuración"
+        />
       </AppShell>
     );
   }
@@ -791,3 +794,5 @@ function Detail({
 /* ALUMNI_2_3_2_RECOVERY_PROFILE_PASSPORT_NAV:OWNER_PROFILE */
 
 /* ALUMNI_2_6_0_GLOBAL_UX:PROFILE */
+
+/* ALUMNI_2_7_0_LOADING_STATES:PROFILE */

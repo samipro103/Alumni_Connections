@@ -18,6 +18,7 @@ import {
 } from "react";
 import { useSearchParams } from "next/navigation";
 import AppShell from "@/components/layout/AppShell";
+import { ExploreSearchSkeleton, ExploreDiscoverySkeleton, AppLoadingSkeleton } from "@/components/ui/AlumniLoading";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { supabase } from "@/lib/supabase";
 import { getRecommendedProfiles } from "@/lib/recommendations";
@@ -564,9 +565,7 @@ function ExploreContent() {
         {activeSearch ? (
           <section className="alumni-explore-search-results">
             {searching ? (
-              <div className="alumni-explore-empty">
-                Buscando en Alumni...
-              </div>
+              <ExploreSearchSkeleton />
             ) : (
               <>
                 {(mode === "all" || mode === "people") && (
@@ -746,9 +745,7 @@ function ExploreContent() {
               </div>
 
               {loading ? (
-                <div className="alumni-explore-empty">
-                  Preparando descubrimientos...
-                </div>
+                <ExploreDiscoverySkeleton />
               ) : trendingPosts.length ? (
                 <div className="alumni-explore-post-grid">
                   {trendingPosts.slice(0, 8).map((post) => (
@@ -820,11 +817,7 @@ function ExploreContent() {
 export default function ExplorePage() {
   return (
     <Suspense
-      fallback={
-        <div className="flex min-h-screen items-center justify-center bg-[var(--app-bg)] text-sm text-[var(--app-muted)]">
-          Cargando Explorar...
-        </div>
-      }
+      fallback={<AppLoadingSkeleton />}
     >
       <ExploreContent />
     </Suspense>
@@ -834,3 +827,5 @@ export default function ExplorePage() {
 /* ALUMNI_1_6_0_EXPLORE_DISCOVERY */
 
 /* ALUMNI_2_2_0_FIX1_SAFE_ADDITIVE:EXPLORE */
+
+/* ALUMNI_2_7_0_LOADING_STATES:EXPLORE */

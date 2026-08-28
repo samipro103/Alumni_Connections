@@ -17,6 +17,7 @@ import {
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import AppShell from "@/components/layout/AppShell";
+import { ListLoadingSkeleton } from "@/components/ui/AlumniLoading";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { supabase } from "@/lib/supabase";
 import "./community-2.css";
@@ -284,9 +285,7 @@ export default function CommunityPage() {
         </div>
 
         {loading ? (
-          <p className="community2-state">
-            Cargando comunidades...
-          </p>
+          <ListLoadingSkeleton rows={5} />
         ) : filtered.length === 0 ? (
           <section className="community2-empty">
             <Users size={25} />
@@ -647,3 +646,5 @@ export default function CommunityPage() {
 }
 
 /* ALUMNI_2_1_5_COMMUNITIES_EDITORIAL_REDESIGN */
+
+/* ALUMNI_2_7_0_LOADING_STATES:COMMUNITY */

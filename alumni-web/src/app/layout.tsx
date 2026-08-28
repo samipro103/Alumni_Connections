@@ -12,6 +12,7 @@ import { AlumniUXProvider } from "@/components/ui/AlumniUXProvider";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import "@/components/ui/alumni-ux.css";
+import "@/components/ui/alumni-loading.css";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -130,3 +131,5 @@ export default function RootLayout({
 /* ALUMNI_1_0_13_DISABLE_LEGACY_MFA_ROUTE_GUARD */
 
 /* ALUMNI_2_6_0_GLOBAL_UX:ROOT_LAYOUT */
+
+/* ALUMNI_2_7_0_LOADING_STATES:ROOT_LAYOUT */
