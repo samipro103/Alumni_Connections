@@ -107,9 +107,10 @@ export default function ImageCropEditor({
   useEffect(() => {
     const node = stageRef.current;
     if (!node) return;
+    const stage = node;
 
     function measure() {
-      const rect = node.getBoundingClientRect();
+      const rect = stage.getBoundingClientRect();
       setViewport({
         width: Math.max(1, rect.width),
         height: Math.max(1, rect.height),
@@ -119,7 +120,7 @@ export default function ImageCropEditor({
     measure();
 
     const observer = new ResizeObserver(measure);
-    observer.observe(node);
+    observer.observe(stage);
 
     return () => observer.disconnect();
   }, []);
