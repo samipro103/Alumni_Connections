@@ -6,6 +6,7 @@ import {
 } from "react";
 import { createPortal } from "react-dom";
 import { X } from "lucide-react";
+import { toPublicImageCdnUrl } from "@/lib/imageCdn";
 
 export default function AlumniMediaViewer({
   src,
@@ -21,6 +22,11 @@ export default function AlumniMediaViewer({
   const [mounted, setMounted] =
     useState(false);
 
+  const resolvedSrc =
+    type === "image"
+      ? toPublicImageCdnUrl(src)
+      : src;
+
   useEffect(() => {
     setMounted(true);
 
@@ -30,7 +36,7 @@ export default function AlumniMediaViewer({
   }, []);
 
   useEffect(() => {
-    if (!mounted || !src) return;
+    if (!mounted || !resolvedSrc) return;
 
     const previous =
       document.body.style.overflow;
@@ -60,11 +66,11 @@ export default function AlumniMediaViewer({
       document.body.style.overflow =
         previous;
     };
-  }, [mounted, src, onClose]);
+  }, [mounted, resolvedSrc, onClose]);
 
   if (
     !mounted ||
-    !src ||
+    !resolvedSrc ||
     typeof document === "undefined"
   ) {
     return null;
@@ -150,7 +156,7 @@ export default function AlumniMediaViewer({
         />
       ) : (
         <img
-          src={src}
+          src={resolvedSrc}
           alt={alt}
           draggable={false}
           style={{
@@ -171,3 +177,5 @@ export default function AlumniMediaViewer({
 }
 
 /* ALUMNI_2_9_0_MEDIA_VIEWER */
+
+/* ALUMNI_2_9_2_PUBLIC_IMAGE_CDN:MEDIA_VIEWER */

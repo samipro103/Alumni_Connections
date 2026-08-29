@@ -28,6 +28,7 @@ import { es } from "date-fns/locale";
 import LinkPreviewCard from "@/components/feed/LinkPreviewCard";
 import { AlumniAvatar } from "@/components/ui/AlumniImage";
 import type { PostMediaItem } from "@/lib/feedMedia";
+import { toPublicImageCdnUrl } from "@/lib/imageCdn";
 
 function compactRepeatedLines(text: string) {
   const lines = text.split(/\r?\n/);
@@ -79,7 +80,10 @@ function FeedImage({
   postIndex: number;
   onPointerUp: () => void;
 }) {
-  const src = item.media_url || "";
+  const src =
+    toPublicImageCdnUrl(
+      item.media_url || ""
+    );
   const contain = !isFourFive(item);
   const [loaded, setLoaded] = useState(!src);
 
@@ -769,3 +773,5 @@ export default function FeedPost({
 /* ALUMNI_2_5_0_FEED_POST */
 
 /* ALUMNI_2_9_0_IMAGE_LAYER:FEED_POST */
+
+/* ALUMNI_2_9_2_PUBLIC_IMAGE_CDN:FEED_POST */

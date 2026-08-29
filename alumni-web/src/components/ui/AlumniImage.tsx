@@ -7,6 +7,7 @@ import {
   type ReactNode,
 } from "react";
 import { ImageOff } from "lucide-react";
+import { toPublicImageCdnUrl } from "@/lib/imageCdn";
 
 const loadedSources =
   new Set<string>();
@@ -36,10 +37,15 @@ export default function AlumniImage({
   onError,
   ...rest
 }: AlumniImageProps) {
-  const source =
+  const rawSource =
     typeof src === "string"
       ? src.trim()
       : "";
+
+  const source =
+    toPublicImageCdnUrl(
+      rawSource
+    );
 
   const initialState =
     !source
@@ -179,3 +185,5 @@ export function AlumniAvatar({
 }
 
 /* ALUMNI_2_9_0_IMAGE_LAYER */
+
+/* ALUMNI_2_9_2_PUBLIC_IMAGE_CDN:ALUMNI_IMAGE */
