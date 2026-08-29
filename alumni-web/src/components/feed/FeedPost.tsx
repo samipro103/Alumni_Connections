@@ -74,22 +74,33 @@ function isFourFive(item: PostMediaItem) {
 function FeedImage({
   item,
   postIndex,
+  mediaIndex,
+  shouldLoad,
+  active,
   onPointerUp,
 }: {
   item: PostMediaItem;
   postIndex: number;
+  mediaIndex: number;
+  shouldLoad: boolean;
+  active: boolean;
   onPointerUp: () => void;
 }) {
   const src =
-    toPublicImageCdnUrl(
-      item.media_url || ""
-    );
+    shouldLoad
+      ? toPublicImageCdnUrl(
+          item.media_url || ""
+        )
+      : "";
   const contain = !isFourFive(item);
-  const [loaded, setLoaded] = useState(!src);
+  const [loaded, setLoaded] =
+    useState(!shouldLoad || !src);
 
   useEffect(() => {
-    setLoaded(!src);
-  }, [src]);
+    setLoaded(
+      !shouldLoad || !src
+    );
+  }, [shouldLoad, src]);
 
   return (
     <button
@@ -113,17 +124,31 @@ function FeedImage({
         />
       )}
 
-      <img
-        className="alumni-feed-image-main"
-        src={src}
-        alt="Publicación"
-        loading={postIndex < 2 ? "eager" : "lazy"}
-        decoding="async"
-        fetchPriority={postIndex === 0 ? "high" : "auto"}
-        draggable={false}
-        onLoad={() => setLoaded(true)}
-        onError={() => setLoaded(true)}
-      />
+      {src && (
+        <img
+          className="alumni-feed-image-main"
+          src={src}
+          alt="Publicación"
+          loading={
+            postIndex === 0 &&
+            mediaIndex === 0 &&
+            active
+              ? "eager"
+              : "lazy"
+          }
+          decoding="async"
+          fetchPriority={
+            postIndex === 0 &&
+            mediaIndex === 0 &&
+            active
+              ? "high"
+              : "auto"
+          }
+          draggable={false}
+          onLoad={() => setLoaded(true)}
+          onError={() => setLoaded(true)}
+        />
+      )}
     </button>
   );
 }
@@ -259,6 +284,10 @@ export default function FeedPost({
   const [captionExpanded, setCaptionExpanded] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [activeIndex, setActiveIndex] = useState(0);
+  const [
+    requestedImageIndexes,
+    setRequestedImageIndexes,
+  ] = useState<number[]>([0, 1]);
   const [carouselMoving, setCarouselMoving] = useState(false);
   const [heartBurst, setHeartBurst] = useState(false);
   const carouselRef = useRef<HTMLDivElement>(null);
@@ -312,6 +341,39 @@ export default function FeedPost({
       Math.max(0, Math.min(Math.max(0, media.length - 1), current))
     );
   }, [media.length]);
+
+  useEffect(() => {
+    setRequestedImageIndexes(
+      (current) => {
+        const next =
+          new Set(
+            current.filter(
+              (index) =>
+                index >= 0 &&
+                index < media.length
+            )
+          );
+
+        if (
+          activeIndex >= 0 &&
+          activeIndex < media.length
+        ) {
+          next.add(activeIndex);
+        }
+
+        if (
+          activeIndex + 1 <
+          media.length
+        ) {
+          next.add(
+            activeIndex + 1
+          );
+        }
+
+        return Array.from(next);
+      }
+    );
+  }, [activeIndex, media.length]);
 
   useEffect(() => {
     return () => {
@@ -597,6 +659,15 @@ export default function FeedPost({
                   <FeedImage
                     item={item}
                     postIndex={postIndex}
+                    mediaIndex={index}
+                    shouldLoad={
+                      requestedImageIndexes.includes(
+                        index
+                      )
+                    }
+                    active={
+                      activeIndex === index
+                    }
                     onPointerUp={() => handleImagePointer(item)}
                   />
                 )}
@@ -775,3 +846,5 @@ export default function FeedPost({
 /* ALUMNI_2_9_0_IMAGE_LAYER:FEED_POST */
 
 /* ALUMNI_2_9_2_PUBLIC_IMAGE_CDN:FEED_POST */
+
+/* ALUMNI_2_9_3_FEED_MEDIA_DEFER */
