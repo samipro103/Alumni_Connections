@@ -390,10 +390,7 @@ export default function ExploreSocialPulse() {
       <section className={styles.section}>
         <header className={styles.sectionHeader}>
           <div>
-            <span>Radar Alumni</span>
-            <h2>
-              Personas con las que probablemente conectes.
-            </h2>
+            <h2>Radar Alumni</h2>
           </div>
         </header>
 
@@ -471,8 +468,7 @@ export default function ExploreSocialPulse() {
           </div>
         ) : (
           <p className={styles.empty}>
-            Tu radar irá mejorando con tu perfil,
-            comunidades y conexiones.
+            Sin sugerencias por ahora.
           </p>
         )}
       </section>
@@ -480,11 +476,7 @@ export default function ExploreSocialPulse() {
       <section className={styles.section}>
         <header className={styles.sectionHeader}>
           <div>
-            <span>Recomendaciones entre amigos</span>
-            <h2>
-              Cosas que vale la pena conocer porque alguien
-              de tu red las recomienda.
-            </h2>
+            <h2>Recomendaciones entre amigos</h2>
           </div>
 
           <button
@@ -589,10 +581,7 @@ export default function ExploreSocialPulse() {
       <section className={styles.section}>
         <header className={styles.sectionHeader}>
           <div>
-            <span>Pasaporte Alumni</span>
-            <h2>
-              Países que se convierten en álbumes vivos.
-            </h2>
+            <h2>Pasaporte Alumni</h2>
           </div>
 
           <Link href="/passport">
@@ -644,7 +633,7 @@ export default function ExploreSocialPulse() {
           </div>
         ) : (
           <p className={styles.empty}>
-            Tu pasaporte está esperando su primer país.
+            Aún no hay países.
           </p>
         )}
       </section>
@@ -665,8 +654,7 @@ export default function ExploreSocialPulse() {
           >
             <header>
               <div>
-                <span>Nueva recomendación</span>
-                <h3>Comparte algo que sí recomendarías.</h3>
+                <h3>Nueva recomendación</h3>
               </div>
 
               <button
@@ -788,10 +776,6 @@ export default function ExploreSocialPulse() {
             </div>
 
             <footer>
-              <span>
-                Recomendaciones reales, de personas reales.
-              </span>
-
               <button
                 type="button"
                 disabled={
@@ -814,3 +798,5 @@ export default function ExploreSocialPulse() {
 }
 
 /* ALUMNI_2_2_0_FIX1_EXPLORE_SOCIAL_PULSE */
+
+/* ALUMNI_3_1_1_PRODUCT_COPY_CLEANUP */

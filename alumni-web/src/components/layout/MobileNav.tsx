@@ -60,19 +60,16 @@ const moreItems = [
   {
     href: "/community",
     label: "Comunidades",
-    description: "Tus grupos y espacios",
     icon: Users,
   },
   {
     href: "/events",
     label: "Eventos",
-    description: "Planes y encuentros",
     icon: CalendarDays,
   },
   {
     href: "/settings",
     label: "Ajustes",
-    description: "Cuenta y preferencias",
     icon: Settings,
   },
 ];
@@ -307,7 +304,7 @@ export default function MobileNav() {
             <div className="mx-auto w-full max-w-lg px-4 pt-1 pb-0">
               <div className="flex min-h-9 items-center justify-between border-b border-[var(--app-border)]">
                 <span className="text-[11px] font-semibold tracking-[0.01em] text-[var(--app-muted)]">
-                  Más en Alumni
+                  Más
                 </span>
 
                 <button
@@ -325,7 +322,6 @@ export default function MobileNav() {
                 ({
                   href,
                   label,
-                  description,
                   icon: Icon,
                 }) => {
                   const active =
@@ -341,7 +337,7 @@ export default function MobileNav() {
                       onClick={() =>
                         setMoreOpen(false)
                       }
-                      className="flex min-h-[58px] items-center gap-3 border-b border-[var(--app-border)] last:border-b-0"
+                      className="flex min-h-[52px] items-center gap-3 border-b border-[var(--app-border)] last:border-b-0"
                     >
                       <Icon
                         size={19}
@@ -363,9 +359,6 @@ export default function MobileNav() {
                           {label}
                         </strong>
 
-                        <small className="mt-0.5 block text-[11px] text-[var(--app-muted)]">
-                          {description}
-                        </small>
                       </span>
                     </Link>
                   );
@@ -514,3 +507,5 @@ export default function MobileNav() {
 /* ALUMNI_2_3_3_PASSPORT_PROFILE_FEED_FIX:REMOVE_PASSPORT_FROM_MORE */
 
 /* ALUMNI_3_1_0_PROFESSIONAL_VISUAL_CORE */
+
+/* ALUMNI_3_1_1_PRODUCT_COPY_CLEANUP */

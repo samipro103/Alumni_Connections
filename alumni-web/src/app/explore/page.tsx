@@ -460,16 +460,6 @@ function ExploreContent() {
     <AppShell>
       <main className="alumni-explore-pro mx-auto w-full max-w-[1040px]">
         <header className="alumni-explore-hero">
-          <p className="alumni-explore-eyebrow">
-            Explorar Alumni.
-          </p>
-
-          <h1>Descubre tu próxima conexión.</h1>
-
-          <p className="alumni-explore-lead">
-            Personas, publicaciones, carreras, instituciones y temas
-            que se mueven dentro de tu comunidad.
-          </p>
 
           <div className="alumni-explore-search">
             <Search size={19} />
@@ -524,13 +514,85 @@ function ExploreContent() {
           )}
         </header>
 
+{!activeSearch && user && recommendedUnique.length > 0 && (
+              <section className="alumni-explore-section">
+                <div className="alumni-explore-section-title">
+                  <div>
+                    <h2>Para tu red</h2>
+                  </div>
+                  <UserRoundSearch size={18} />
+                </div>
+
+                <div className="alumni-explore-person-list">
+                  {recommendedUnique.slice(0, 8).map((person) => (
+                    <ExplorePersonRow
+                      key={person.id}
+                      person={person}
+                      following={followingIds.includes(person.id)}
+                      busy={busy === person.id}
+                      reason={person.reason}
+                      onFollow={() => void follow(person)}
+                      onOpen={() =>
+                        void recordSignal(
+                          "profile",
+                          person.id,
+                          2
+                        )
+                      }
+                    />
+                  ))}
+                </div>
+              </section>
+            )}
+
         {!activeSearch && <ExploreSocialPulse />}
+
+        {!activeSearch && (
+          <section className="alumni-explore-section">
+                        <div className="alumni-explore-section-title">
+                          <div>
+                            <h2>Tendencias</h2>
+                          </div>
+                          <TrendingUp size={18} />
+                        </div>
+
+                        {trendingTags.length ? (
+                          <div className="alumni-explore-tags">
+                            {trendingTags.map((item: any, index) => (
+                              <a
+                                key={item.tag}
+                                href={`/explore/tag/${encodeURIComponent(item.tag)}`}
+                                onClick={() =>
+                                  void recordSignal(
+                                    "hashtag",
+                                    item.tag,
+                                    1.4
+                                  )
+                                }
+                              >
+                                <span>{index + 1}</span>
+                                <strong>#{item.tag}</strong>
+                                <small>
+                                  {item.post_count}{" "}
+                                  {Number(item.post_count) === 1
+                                    ? "publicación"
+                                    : "publicaciones"}
+                                </small>
+                              </a>
+                            ))}
+                          </div>
+                        ) : (
+                          <div className="alumni-explore-empty">
+                            Sin tendencias por ahora.
+                          </div>
+                        )}
+                      </section>
+        )}
 
         {!activeSearch && recents.length > 0 && (
           <section className="alumni-explore-section">
             <div className="alumni-explore-section-title">
               <div>
-                <span>Continuar</span>
                 <h2>Búsquedas recientes</h2>
               </div>
               <button
@@ -572,7 +634,6 @@ function ExploreContent() {
                   <section className="alumni-explore-section">
                     <div className="alumni-explore-section-title">
                       <div>
-                        <span>Resultados</span>
                         <h2>Personas</h2>
                       </div>
                       <strong>{peopleResults.length}</strong>
@@ -616,7 +677,6 @@ function ExploreContent() {
                   <section className="alumni-explore-section">
                     <div className="alumni-explore-section-title">
                       <div>
-                        <span>Contenido</span>
                         <h2>Publicaciones</h2>
                       </div>
                       <strong>{posts.length}</strong>
@@ -662,83 +722,13 @@ function ExploreContent() {
           </section>
         ) : (
           <>
-            <section className="alumni-explore-section">
-              <div className="alumni-explore-section-title">
-                <div>
-                  <span>Tendencias</span>
-                  <h2>Temas que están creciendo</h2>
-                </div>
-                <TrendingUp size={18} />
-              </div>
 
-              {trendingTags.length ? (
-                <div className="alumni-explore-tags">
-                  {trendingTags.map((item: any, index) => (
-                    <a
-                      key={item.tag}
-                      href={`/explore/tag/${encodeURIComponent(item.tag)}`}
-                      onClick={() =>
-                        void recordSignal(
-                          "hashtag",
-                          item.tag,
-                          1.4
-                        )
-                      }
-                    >
-                      <span>{index + 1}</span>
-                      <strong>#{item.tag}</strong>
-                      <small>
-                        {item.post_count}{" "}
-                        {Number(item.post_count) === 1
-                          ? "publicación"
-                          : "publicaciones"}
-                      </small>
-                    </a>
-                  ))}
-                </div>
-              ) : (
-                <div className="alumni-explore-empty">
-                  Las tendencias aparecerán cuando la comunidad use hashtags.
-                </div>
-              )}
-            </section>
 
-            {user && recommendedUnique.length > 0 && (
-              <section className="alumni-explore-section">
-                <div className="alumni-explore-section-title">
-                  <div>
-                    <span>Para tu red</span>
-                    <h2>Personas que podrías conocer</h2>
-                  </div>
-                  <UserRoundSearch size={18} />
-                </div>
 
-                <div className="alumni-explore-person-list">
-                  {recommendedUnique.slice(0, 8).map((person) => (
-                    <ExplorePersonRow
-                      key={person.id}
-                      person={person}
-                      following={followingIds.includes(person.id)}
-                      busy={busy === person.id}
-                      reason={person.reason}
-                      onFollow={() => void follow(person)}
-                      onOpen={() =>
-                        void recordSignal(
-                          "profile",
-                          person.id,
-                          2
-                        )
-                      }
-                    />
-                  ))}
-                </div>
-              </section>
-            )}
 
             <section className="alumni-explore-section">
               <div className="alumni-explore-section-title">
                 <div>
-                  <span>Ahora</span>
                   <h2>Publicaciones destacadas</h2>
                 </div>
                 <Sparkles size={18} />
@@ -765,7 +755,7 @@ function ExploreContent() {
                 </div>
               ) : (
                 <div className="alumni-explore-empty">
-                  Todavía no hay suficiente actividad para destacar contenido.
+                  Sin publicaciones destacadas por ahora.
                 </div>
               )}
             </section>
@@ -774,7 +764,6 @@ function ExploreContent() {
               <section className="alumni-explore-section">
                 <div className="alumni-explore-section-title">
                   <div>
-                    <span>Comunidad</span>
                     <h2>Nuevos en Alumni</h2>
                   </div>
                   <Users size={18} />
@@ -829,3 +818,5 @@ export default function ExplorePage() {
 /* ALUMNI_2_2_0_FIX1_SAFE_ADDITIVE:EXPLORE */
 
 /* ALUMNI_2_7_0_LOADING_STATES:EXPLORE */
+
+/* ALUMNI_3_1_1_PRODUCT_COPY_CLEANUP */

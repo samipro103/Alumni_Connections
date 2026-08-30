@@ -7,7 +7,7 @@
 }
 
 .alumni-explore-hero {
-  padding: 8px 0 20px;
+  padding: 0 0 16px;
   border-bottom: 1px solid var(--app-border);
 }
 
@@ -41,7 +41,7 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  margin-top: 18px;
+  margin-top: 0;
   min-height: 52px;
   padding: 0 14px;
   border: 1px solid var(--app-border);
@@ -131,7 +131,7 @@
 }
 
 .alumni-explore-section-title h2 {
-  margin-top: 3px;
+  margin-top: 0;
   color: var(--app-text);
   font-size: 18px;
   font-weight: 930;
@@ -286,3 +286,5 @@
 }
 
 /* ALUMNI_1_6_0_EXPLORE_CSS */
+
+/* ALUMNI_3_1_1_PRODUCT_COPY_CLEANUP */

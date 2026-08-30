@@ -190,9 +190,6 @@ export default function ProfileSettingsHub({
           <p className="text-sm font-black text-[var(--app-text)]">
             Guardados
           </p>
-          <p className="mt-1 text-[12px] leading-5 text-[var(--app-muted-2)]">
-            Publicaciones que guardaste para ver después.
-          </p>
         </div>
 
         <ChevronRight size={18} className="text-[var(--app-muted-3)]" />
@@ -220,3 +217,5 @@ export default function ProfileSettingsHub({
 }
 
 /* ALUMNI_1_4_1_PROFILE_REPOSTS_SAVED_READABILITY:SETTINGS_HUB */
+
+/* ALUMNI_3_1_1_PRODUCT_COPY_CLEANUP */

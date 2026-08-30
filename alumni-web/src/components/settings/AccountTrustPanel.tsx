@@ -432,9 +432,6 @@ export default function AccountTrustPanel({
             <p className="text-sm font-black text-zinc-200">
               Seguridad de la cuenta
             </p>
-            <p className="mt-1 text-xs leading-5 text-zinc-700">
-              Correo, contraseña y controles de acceso.
-            </p>
           </div>
         </div>
 
@@ -739,3 +736,5 @@ export default function AccountTrustPanel({
     </div>
   );
 }
+
+/* ALUMNI_3_1_1_PRODUCT_COPY_CLEANUP */

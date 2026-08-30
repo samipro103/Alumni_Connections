@@ -47,37 +47,31 @@ type SettingsSectionId =
 const SETTINGS_ITEMS: Array<{
   id: SettingsSectionId;
   label: string;
-  description: string;
   icon: React.ComponentType<{ size?: number; className?: string }>;
 }> = [
   {
     id: "appearance",
     label: "Apariencia",
-    description: "Tema y estilo visual de Alumni",
     icon: Palette,
   },
   {
     id: "profile",
     label: "Perfil",
-    description: "Foto, banner, nombre y biografía",
     icon: User,
   },
   {
     id: "links",
     label: "Enlaces",
-    description: "Web y redes profesionales",
     icon: Link2,
   },
   {
     id: "music",
     label: "Música",
-    description: "Tu canción del momento",
     icon: Music2,
   },
   {
     id: "account",
     label: "Cuenta",
-    description: "Sesión y preferencias de cuenta",
     icon: Shield,
   },
 ];
@@ -585,12 +579,6 @@ export default function SettingsPage() {
 
         <div className="alumni-settings-layout grid gap-5 lg:grid-cols-[280px_minmax(0,1fr)]">
           <aside className={`alumni-settings-nav ${profileEditorOpen ? "hidden" : mobileSectionOpen ? "hidden lg:block" : "block"} h-fit lg:sticky lg:top-[88px] lg:overflow-hidden lg:rounded-[24px] lg:border lg:border-white/[0.07] lg:bg-[#101318]/95`}>
-            <div className="border-b border-white/[0.06] px-1 py-4 lg:px-5">
-              <p className="text-[11px] font-black uppercase tracking-[0.14em] text-zinc-700">
-                Ajustes
-              </p>
-            </div>
-
             <nav className="divide-y divide-white/[0.06] lg:divide-y-0 lg:p-2">
               {SETTINGS_ITEMS.map((item) => {
                 const Icon = item.icon;
@@ -899,9 +887,6 @@ function AppearancePanel({
         <p className="text-sm font-black text-zinc-200">
           Tema de la aplicación
         </p>
-        <p className="text-xs leading-5 text-zinc-700">
-          Selecciona un estilo. El cambio se aplica inmediatamente.
-        </p>
       </div>
 
       <div className="mt-5 divide-y divide-white/[0.06]">
@@ -934,9 +919,6 @@ function AppearancePanel({
                   {item.name}
                 </p>
 
-                <p className="mt-1 text-xs leading-5 text-zinc-600">
-                  {item.description}
-                </p>
               </div>
 
               <span
@@ -1475,3 +1457,5 @@ function SocialField({
 /* ALUMNI_1_2_0_TRUST_BLOCK:SETTINGS_TRUST */
 
 /* ALUMNI_1_4_1_PROFILE_REPOSTS_SAVED_READABILITY:SETTINGS */
+
+/* ALUMNI_3_1_1_PRODUCT_COPY_CLEANUP */

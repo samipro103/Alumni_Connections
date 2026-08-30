@@ -163,7 +163,7 @@ export default function RightSidebar() {
           </div>
         ) : (
           <p className="px-2 text-xs leading-5 text-zinc-600">
-            {user ? "Cuando encontremos nuevas conexiones relevantes aparecerán aquí." : "Inicia sesión para recibir recomendaciones."}
+            {user ? "Sin sugerencias por ahora." : "Inicia sesión para recibir recomendaciones."}
           </p>
         )}
       </section>
@@ -202,3 +202,5 @@ export default function RightSidebar() {
 }
 
 /* ALUMNI_2_9_0_IMAGE_LAYER:RIGHT_SIDEBAR */
+
+/* ALUMNI_3_1_1_PRODUCT_COPY_CLEANUP */

@@ -26,37 +26,31 @@ const CATEGORIES = [
   {
     id: "general",
     label: "General",
-    description: "Un espacio abierto alrededor de un tema.",
     icon: Users,
   },
   {
     id: "university",
     label: "Universidad",
-    description: "Personas de la misma institución.",
     icon: GraduationCap,
   },
   {
     id: "career",
     label: "Carrera",
-    description: "Una carrera, facultad o programa.",
     icon: BookOpen,
   },
   {
     id: "generation",
     label: "Generación",
-    description: "Una promoción o año compartido.",
     icon: CalendarDays,
   },
   {
     id: "city",
     label: "Ciudad",
-    description: "Personas conectadas por un lugar.",
     icon: MapPin,
   },
   {
     id: "interest",
     label: "Interés",
-    description: "Un hobby, causa o tema en común.",
     icon: Sparkles,
   },
 ] as const;
@@ -227,14 +221,7 @@ export default function CommunityPage() {
       <main className="alumni-community-2 mx-auto w-full max-w-[920px]">
         <header className="community2-hero">
           <div>
-            <span className="community2-eyebrow">
-              Comunidades
-            </span>
-            <h1>Encuentra donde perteneces.</h1>
-            <p>
-              Universidad, carrera, generación, ciudad o intereses:
-              crea un lugar donde la conversación tenga contexto.
-            </p>
+            <h1>Comunidades</h1>
           </div>
 
           {user && (
@@ -294,11 +281,7 @@ export default function CommunityPage() {
                 ? "Aún no estás en ninguna comunidad."
                 : "No encontramos comunidades."}
             </strong>
-            <p>
-              {mode === "mine"
-                ? "Únete a una o crea tu propio espacio."
-                : "Prueba otra búsqueda o crea la primera."}
-            </p>
+
           </section>
         ) : (
           <section className="community2-list">
@@ -402,11 +385,7 @@ export default function CommunityPage() {
                 </button>
 
                 <div>
-                  <span>Nueva comunidad</span>
-                  <h2>Dale un lugar a algo que ya los une.</h2>
-                  <p>
-                    Define la idea, el contexto y quién puede entrar.
-                  </p>
+                  <h2>Nueva comunidad</h2>
                 </div>
 
                 <span className="community2-editor-progress">
@@ -420,7 +399,6 @@ export default function CommunityPage() {
                     <strong>01</strong>
                     <span>
                       <b>Identidad</b>
-                      <small>Cómo se reconocerá</small>
                     </span>
                   </div>
 
@@ -465,7 +443,6 @@ export default function CommunityPage() {
                     <strong>02</strong>
                     <span>
                       <b>Contexto</b>
-                      <small>Qué tienen en común</small>
                     </span>
                   </div>
 
@@ -475,7 +452,6 @@ export default function CommunityPage() {
                         ({
                           id,
                           label,
-                          description,
                           icon: Icon,
                         }) => (
                           <button
@@ -496,9 +472,6 @@ export default function CommunityPage() {
                             <Icon size={17} />
                             <span>
                               <strong>{label}</strong>
-                              <small>
-                                {description}
-                              </small>
                             </span>
                           </button>
                         )
@@ -559,7 +532,6 @@ export default function CommunityPage() {
                     <strong>03</strong>
                     <span>
                       <b>Acceso</b>
-                      <small>Quién puede entrar</small>
                     </span>
                   </div>
 
@@ -648,3 +620,5 @@ export default function CommunityPage() {
 /* ALUMNI_2_1_5_COMMUNITIES_EDITORIAL_REDESIGN */
 
 /* ALUMNI_2_7_0_LOADING_STATES:COMMUNITY */
+
+/* ALUMNI_3_1_1_PRODUCT_COPY_CLEANUP */

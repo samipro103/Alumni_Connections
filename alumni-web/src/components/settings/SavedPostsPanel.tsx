@@ -279,9 +279,6 @@ export default function SavedPostsPanel({
           <h3 className="text-[17px] font-black text-[var(--app-text)]">
             Guardados
           </h3>
-          <p className="mt-0.5 text-[13px] leading-5 text-[var(--app-muted-2)]">
-            Solo tú puedes ver las publicaciones que guardas.
-          </p>
         </div>
       </div>
 
@@ -298,9 +295,6 @@ export default function SavedPostsPanel({
           />
           <p className="mt-3 text-sm font-black text-[var(--app-text)]">
             Aún no tienes publicaciones guardadas
-          </p>
-          <p className="mx-auto mt-1 max-w-sm text-[13px] leading-5 text-[var(--app-muted-2)]">
-            Usa el menú de tres puntos de una publicación y selecciona Guardar publicación.
           </p>
         </div>
       ) : (
@@ -511,3 +505,5 @@ export default function SavedPostsPanel({
 }
 
 /* ALUMNI_1_4_1_SAVED_POSTS_PANEL */
+
+/* ALUMNI_3_1_1_PRODUCT_COPY_CLEANUP */

@@ -207,9 +207,7 @@ export default function PassportPage() {
       <main className="alumni-passport mx-auto w-full max-w-[1040px]">
         <header className="passport-hero">
           <div>
-            <span>Pasaporte Alumni</span>
-            <h1>Convierte cada país en un álbum con personalidad propia.</h1>
-            <p>Portadas, fotos, recuerdos y estilos visuales que hacen que cada destino se sienta distinto.</p>
+            <h1>Pasaporte Alumni</h1>
           </div>
           <button type="button" onClick={() => setCountryOpen(true)}>
             <Plus size={16} />
@@ -221,7 +219,6 @@ export default function PassportPage() {
           <section className="passport-empty passport-empty-first">
             <Globe2 size={28} />
             <strong>Tu pasaporte está esperando su primer destino.</strong>
-            <p>Usa “Añadir país” arriba para crear tu primer álbum de viaje.</p>
           </section>
         ) : (
           <>
@@ -254,7 +251,7 @@ export default function PassportPage() {
                   <div>
                     <span>Álbum activo</span>
                     <h2>{active.country_name}</h2>
-                    <p>{active.note || "Guarda aquí tus mejores momentos de este país."}</p>
+                    {active.note && <p>{active.note}</p>}
                   </div>
                   <button type="button" onClick={() => setPhotoOpen(true)}>
                     <ImagePlus size={16} />
@@ -266,7 +263,6 @@ export default function PassportPage() {
                   <div className="passport-empty compact">
                     <Camera size={24} />
                     <strong>Aún no hay fotos.</strong>
-                    <p>Sube la primera y empieza a construir el álbum.</p>
                   </div>
                 ) : (
                   <div className="passport-grid">
@@ -299,8 +295,7 @@ export default function PassportPage() {
                 </button>
 
                 <div className="passport-modal-title">
-                  <span>Nuevo país</span>
-                  <h3>Dale identidad a este destino.</h3>
+                  <h3>Nuevo país</h3>
                 </div>
 
                 <button
@@ -339,7 +334,7 @@ export default function PassportPage() {
                 <div className="passport-themes">
                   <span>Diseño del álbum</span>
                   <div>
-                    {THEMES.map(([id, label, description]) => (
+                    {THEMES.map(([id, label]) => (
                       <button
                         key={id}
                         type="button"
@@ -347,7 +342,6 @@ export default function PassportPage() {
                         onClick={() => setForm((c) => ({ ...c, theme_style: id }))}
                       >
                         <strong>{label}</strong>
-                        <small>{description}</small>
                       </button>
                     ))}
                   </div>
@@ -374,7 +368,6 @@ export default function PassportPage() {
               </button>
 
               <footer>
-                <span>Un país, un estilo, un álbum.</span>
                 <button type="button" disabled={busy || !form.country_name.trim() || !form.country_code.trim()} onClick={() => void createCountry()}>
                   {busy ? "Creando..." : "Crear país"}
                 </button>
@@ -399,8 +392,7 @@ export default function PassportPage() {
                 </button>
 
                 <div className="passport-modal-title">
-                  <span>Nueva foto</span>
-                  <h3>Agrega un recuerdo a {active.country_name}.</h3>
+                  <h3>Nueva foto</h3>
                 </div>
 
                 <button
@@ -437,7 +429,6 @@ export default function PassportPage() {
               </button>
 
               <footer>
-                <span>La foto quedará dentro del álbum del país.</span>
                 <button type="button" disabled={busy || !photoFile} onClick={() => void addPhoto()}>
                   {busy ? "Subiendo..." : "Guardar foto"}
                 </button>
@@ -461,3 +452,5 @@ export default function PassportPage() {
 /* ALUMNI_2_2_4_PASSPORT_CREATE_BUTTON_VISIBLE:PAGE */
 
 /* ALUMNI_2_3_3_PASSPORT_PROFILE_FEED_FIX:PASSPORT_ADD_FROM_PROFILE */
+
+/* ALUMNI_3_1_1_PRODUCT_COPY_CLEANUP */

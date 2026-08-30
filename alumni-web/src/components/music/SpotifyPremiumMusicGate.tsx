@@ -308,9 +308,6 @@ export default function SpotifyPremiumMusicGate({
             Música con Spotify Premium
           </p>
 
-          <p className="mx-auto mt-2 max-w-md text-xs leading-5 text-zinc-700">
-            Conecta tu cuenta para elegir tu canción y el fragmento que quieres mostrar.
-          </p>
 
           <button
             type="button"
@@ -342,3 +339,5 @@ export default function SpotifyPremiumMusicGate({
     </>
   );
 }
+
+/* ALUMNI_3_1_1_PRODUCT_COPY_CLEANUP */

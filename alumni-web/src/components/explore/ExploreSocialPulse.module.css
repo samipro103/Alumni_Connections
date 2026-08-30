@@ -27,7 +27,7 @@
 
 .sectionHeader h2 {
   max-width: 700px;
-  margin-top: 5px;
+  margin-top: 0;
   color: var(--app-text);
   font-size: 21px;
   font-weight: 930;
@@ -369,7 +369,7 @@
 }
 
 .modal > header h3 {
-  margin-top: 5px;
+  margin-top: 0;
   color: var(--app-text);
   font-size: 22px;
   font-weight: 950;
@@ -420,6 +420,7 @@
 }
 
 .modal > footer {
+  justify-content: flex-end;
   min-height: 68px;
   padding:
     12px 18px
@@ -486,10 +487,18 @@
 
 @media (max-width: 640px) {
   .sectionHeader,
-  .modal > header,
-  .modal > footer {
+  .modal > header {
     align-items: flex-start;
     flex-direction: column;
+  }
+
+  .modal > footer {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .modal > footer button {
+    width: 100%;
   }
 
   .radarGrid,
@@ -509,3 +518,5 @@
 }
 
 /* ALUMNI_2_2_0_FIX1_SOCIAL_PULSE_STYLE */
+
+/* ALUMNI_3_1_1_PRODUCT_COPY_CLEANUP */

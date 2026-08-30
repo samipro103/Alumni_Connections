@@ -237,12 +237,7 @@ export default function EventsPage() {
       <main className="alumni-events-2 mx-auto w-full max-w-[920px]">
         <header className="events2-hero">
           <div>
-            <span className="events2-eyebrow">Eventos</span>
-            <h1>Planes que sí pasan.</h1>
-            <p>
-              Descubre encuentros de tu comunidad o crea uno
-              para reunir a las personas correctas.
-            </p>
+            <h1>Eventos</h1>
           </div>
 
           {user && (
@@ -297,11 +292,7 @@ export default function EventsPage() {
                 ? "Todavía no tienes planes."
                 : "No hay eventos por aquí."}
             </strong>
-            <p>
-              {filter === "mine"
-                ? "Cuando marques “Voy” o “Me interesa”, aparecerán aquí."
-                : "Puedes crear el primero en unos segundos."}
-            </p>
+
           </section>
         ) : (
           <section className="events2-list">
@@ -395,12 +386,7 @@ export default function EventsPage() {
                 </button>
 
                 <div>
-                  <span>Nuevo evento</span>
-                  <h2>Crea un plan que invite a participar.</h2>
-                  <p>
-                    Solo necesitas lo esencial. Podrás compartirlo
-                    apenas lo publiques.
-                  </p>
+                  <h2>Nuevo evento</h2>
                 </div>
 
                 <span className="events2-editor-progress">
@@ -414,7 +400,6 @@ export default function EventsPage() {
                     <strong>01</strong>
                     <span>
                       <b>La idea</b>
-                      <small>Qué va a pasar</small>
                     </span>
                   </div>
 
@@ -488,7 +473,6 @@ export default function EventsPage() {
                     <strong>02</strong>
                     <span>
                       <b>Cuándo y dónde</b>
-                      <small>Los datos para llegar</small>
                     </span>
                   </div>
 
@@ -566,7 +550,6 @@ export default function EventsPage() {
                     <strong>03</strong>
                     <span>
                       <b>Quién lo verá</b>
-                      <small>Elige el alcance</small>
                     </span>
                   </div>
 
@@ -687,3 +670,5 @@ export default function EventsPage() {
 /* ALUMNI_2_1_5_EVENTS_EDITORIAL_REDESIGN */
 
 /* ALUMNI_2_7_0_LOADING_STATES:EVENTS */
+
+/* ALUMNI_3_1_1_PRODUCT_COPY_CLEANUP */

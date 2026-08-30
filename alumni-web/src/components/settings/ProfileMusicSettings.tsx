@@ -538,9 +538,6 @@ export default function ProfileMusicSettings({
               Tu canción del momento
             </p>
 
-            <p className="mt-1 max-w-2xl text-xs leading-5 text-zinc-600">
-              Elige una canción y marca los 30 segundos que quieres mostrar en tu perfil.
-            </p>
           </div>
         </div>
 
@@ -595,9 +592,6 @@ export default function ProfileMusicSettings({
           Elegir canción
         </p>
 
-        <p className="mt-1 text-xs text-zinc-700">
-          Busca directamente por canción, artista o ambos.
-        </p>
 
         <div className="relative mt-4">
           <Search
@@ -774,3 +768,5 @@ export default function ProfileMusicSettings({
     </div>
   );
 }
+
+/* ALUMNI_3_1_1_PRODUCT_COPY_CLEANUP */

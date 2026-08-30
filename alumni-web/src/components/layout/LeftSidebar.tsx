@@ -47,16 +47,10 @@ export default function LeftSidebar() {
         })}
       </nav>
 
-      <div className="mt-7 border-t border-white/[0.07] pt-5">
-        <p className="px-3 text-xs font-semibold uppercase tracking-[0.14em] text-zinc-700">
-          Red Alumni.
-        </p>
-        <p className="mt-2 px-3 text-xs leading-5 text-zinc-600">
-          Conecta con personas, comunidades y eventos que forman parte de tu mundo.
-        </p>
-      </div>
     </div>
   );
 }
 
 /* ALUMNI_2_1_COMMUNITIES_EVENTS:SIDEBAR_COPY */
+
+/* ALUMNI_3_1_1_PRODUCT_COPY_CLEANUP */

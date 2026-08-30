@@ -466,3 +466,11 @@
 }
 
 /* ALUMNI_2_2_4_PASSPORT_CREATE_BUTTON_VISIBLE:STYLE */
+
+
+/* ALUMNI_3_1_1_PRODUCT_COPY_CLEANUP */
+@media (min-width: 701px) {
+  .passport-modal > footer {
+    justify-content: flex-end;
+  }
+}
