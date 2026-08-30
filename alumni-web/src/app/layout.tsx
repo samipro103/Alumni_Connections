@@ -26,6 +26,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
+  metadataBase:
+    new URL("https://alumnisv.com"),
   title: {
     default: "Alumni.",
     template: "%s · Alumni.",
@@ -33,6 +35,24 @@ export const metadata: Metadata = {
   applicationName: "Alumni.",
   description:
     "Tu comunidad para compartir, descubrir y mantenerte cerca de tu red.",
+  alternates: {
+    canonical: "/",
+  },
+  openGraph: {
+    type: "website",
+    locale: "es_SV",
+    url: "/",
+    siteName: "Alumni.",
+    title: "Alumni.",
+    description:
+      "Tu comunidad para compartir, descubrir y mantenerte cerca de tu red.",
+  },
+  twitter: {
+    card: "summary",
+    title: "Alumni.",
+    description:
+      "Tu comunidad para compartir, descubrir y mantenerte cerca de tu red.",
+  },
   manifest:
     "/manifest.webmanifest",
   icons: {
@@ -136,3 +156,5 @@ export default function RootLayout({
 /* ALUMNI_2_7_0_LOADING_STATES:ROOT_LAYOUT */
 
 /* ALUMNI_2_9_0_IMAGE_LAYER:ROOT_LAYOUT */
+
+/* ALUMNI_2_9_5_OFFICIAL_DOMAIN */

@@ -7,7 +7,7 @@ const config: CapacitorConfig = {
   webDir: 'mobile-shell',
 
   server: {
-    url: 'https://alumni-connections.vercel.app',
+    url: 'https://alumnisv.com',
   },
 
   plugins: {
@@ -24,3 +24,5 @@ const config: CapacitorConfig = {
 };
 
 export default config;
+
+/* ALUMNI_2_9_5_OFFICIAL_DOMAIN */
