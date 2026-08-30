@@ -36,7 +36,7 @@ export default function AppShell({
 
       <div
         id="alumni-global-shell"
-        className="relative z-[41] min-h-[100dvh] overflow-x-clip bg-[var(--app-bg)] text-[var(--app-text)]"
+        className="alumni-professional-shell relative z-[41] min-h-[100dvh] overflow-x-clip bg-[var(--app-bg)] text-[var(--app-text)]"
       >
         <div
           className={
@@ -85,3 +85,5 @@ export default function AppShell({
 /* ALUMNI_2_1_2_EVENT_REMINDER_BOOTSTRAP:MOUNT */
 /* ALUMNI_2_1_4_IOS_SAFE_HEADER:APP_SHELL */
 /* ALUMNI_1_0_12_NO_LOGIN_2FA_GUARD */
+
+/* ALUMNI_3_1_0_PROFESSIONAL_VISUAL_CORE */

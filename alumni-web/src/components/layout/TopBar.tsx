@@ -228,7 +228,7 @@ export default function TopBar() {
   }
 
   return (
-    <header className="fixed inset-x-0 top-0 z-[70] h-[calc(68px+env(safe-area-inset-top))] border-b border-[var(--app-border)] bg-[color-mix(in_srgb,var(--app-surface)_94%,transparent)] backdrop-blur-xl [transform:translateZ(0)] lg:h-[68px]">
+    <header className="fixed inset-x-0 top-0 z-[70] h-[calc(68px+env(safe-area-inset-top))] border-b border-[var(--app-border)] bg-[color-mix(in_srgb,var(--app-surface)_98%,transparent)] backdrop-blur-md [transform:translateZ(0)] lg:h-[68px]">
       <div className="mx-auto flex h-full w-full max-w-[1500px] items-center gap-5 px-4 pt-[env(safe-area-inset-top)] sm:px-6 lg:px-8 lg:pt-0">
         <Link
           href="/feed"
@@ -246,7 +246,7 @@ export default function TopBar() {
           }
           className="mx-auto hidden w-full max-w-[540px] md:block"
         >
-          <div className="flex h-11 items-center rounded-2xl bg-[var(--app-soft)] px-4 ring-1 ring-[var(--app-border)] transition focus-within:ring-[color-mix(in_srgb,var(--app-accent)_45%,var(--app-border))]">
+          <div className="flex h-10 items-center rounded-xl bg-[var(--app-soft)] px-3.5 ring-1 ring-[var(--app-border)] transition-colors focus-within:bg-[var(--app-surface-2)] focus-within:ring-[color-mix(in_srgb,var(--app-accent)_38%,var(--app-border))]">
             <Search
               className="h-[18px] w-[18px] text-[var(--app-muted-2)]"
             />
@@ -269,7 +269,7 @@ export default function TopBar() {
         <div className="ml-auto flex items-center gap-1.5 sm:gap-2">
           <Link
             href="/notifications"
-            className="relative flex h-10 w-10 items-center justify-center rounded-xl text-[var(--app-muted)] transition hover:bg-[var(--app-soft)] hover:text-[var(--app-text)]"
+            className="relative flex h-10 w-10 items-center justify-center rounded-lg text-[var(--app-muted)] transition-colors hover:bg-[var(--app-soft)] hover:text-[var(--app-text)]"
             aria-label="Notificaciones"
           >
             <Bell
@@ -289,7 +289,7 @@ export default function TopBar() {
 
           <Link
             href="/feed#composer"
-            className="alumni-accent-button hidden h-10 items-center gap-2 rounded-xl px-4 text-sm font-bold sm:flex"
+            className="alumni-accent-button hidden h-10 items-center gap-2 rounded-lg px-4 text-sm font-semibold sm:flex"
           >
             <Plus
               size={18}
@@ -325,3 +325,5 @@ export default function TopBar() {
 /* ALUMNI_2_1_4_IOS_SAFE_HEADER:TOPBAR */
 
 /* ALUMNI_2_9_0_IMAGE_LAYER:TOPBAR */
+
+/* ALUMNI_3_1_0_PROFESSIONAL_VISUAL_CORE */

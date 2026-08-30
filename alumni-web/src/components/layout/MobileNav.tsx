@@ -302,11 +302,11 @@ export default function MobileNav() {
 
           <section
             aria-label="Más secciones"
-            className="fixed inset-x-0 bottom-[calc(58px+max(8px,env(safe-area-inset-bottom)))] z-[2147481999] border-t border-[var(--app-border)] bg-[color-mix(in_srgb,var(--app-surface)_98%,transparent)] backdrop-blur-2xl lg:hidden"
+            className="fixed inset-x-0 bottom-[calc(58px+max(8px,env(safe-area-inset-bottom)))] z-[2147481999] border-t border-[var(--app-border)] bg-[color-mix(in_srgb,var(--app-surface)_99%,transparent)] backdrop-blur-md lg:hidden"
           >
             <div className="mx-auto w-full max-w-lg px-4 pt-1 pb-0">
               <div className="flex min-h-9 items-center justify-between border-b border-[var(--app-border)]">
-                <span className="text-[9px] font-black uppercase tracking-[0.15em] text-[var(--app-muted-2)]">
+                <span className="text-[11px] font-semibold tracking-[0.01em] text-[var(--app-muted)]">
                   Más en Alumni
                 </span>
 
@@ -315,7 +315,7 @@ export default function MobileNav() {
                   onClick={() =>
                     setMoreOpen(false)
                   }
-                  className="text-[10px] font-bold text-[var(--app-muted-2)]"
+                  className="text-[11px] font-medium text-[var(--app-muted)]"
                 >
                   Cerrar
                 </button>
@@ -354,7 +354,7 @@ export default function MobileNav() {
 
                       <span className="min-w-0 flex-1">
                         <strong
-                          className={`block text-[12px] font-black ${
+                          className={`block text-[13px] font-semibold ${
                             active
                               ? "text-[var(--app-text)]"
                               : "text-[var(--app-text-soft)]"
@@ -363,7 +363,7 @@ export default function MobileNav() {
                           {label}
                         </strong>
 
-                        <small className="mt-0.5 block text-[9px] text-[var(--app-muted-2)]">
+                        <small className="mt-0.5 block text-[11px] text-[var(--app-muted)]">
                           {description}
                         </small>
                       </span>
@@ -378,7 +378,7 @@ export default function MobileNav() {
 
       <nav
         data-alumni-mobile-nav="true"
-        className="fixed inset-x-0 bottom-0 z-[2147482000] border-t border-[var(--app-border)] bg-[color-mix(in_srgb,var(--app-surface)_96%,transparent)] px-2 pb-[max(8px,env(safe-area-inset-bottom))] pt-2 shadow-[0_-10px_30px_var(--app-shadow)] backdrop-blur-2xl [backface-visibility:hidden] [transform:translateZ(0)] lg:hidden"
+        className="fixed inset-x-0 bottom-0 z-[2147482000] border-t border-[var(--app-border)] bg-[color-mix(in_srgb,var(--app-surface)_98%,transparent)] px-2 pb-[max(8px,env(safe-area-inset-bottom))] pt-1.5 shadow-[0_-1px_0_color-mix(in_srgb,var(--app-border)_80%,transparent)] backdrop-blur-md [backface-visibility:hidden] [transform:translateZ(0)] lg:hidden"
       >
         <div className="mx-auto grid max-w-lg grid-cols-5">
           {items.map(
@@ -421,11 +421,11 @@ export default function MobileNav() {
                   className="flex min-h-12 flex-col items-center justify-center gap-1"
                 >
                   <span
-                    className={`relative flex h-9 w-11 items-center justify-center rounded-xl transition ${
+                    className={`relative flex h-9 w-11 items-center justify-center rounded-lg transition-colors duration-150 ${
                       create
-                        ? "bg-[var(--app-accent)] text-[var(--app-on-accent)] shadow-[0_8px_25px_color-mix(in_srgb,var(--app-accent)_25%,transparent)]"
+                        ? "bg-[var(--app-accent)] text-[var(--app-on-accent)]"
                         : active
-                        ? "bg-[var(--app-soft)] text-[var(--app-text)]"
+                        ? "text-[var(--app-accent)]"
                         : "text-[var(--app-muted-2)]"
                     }`}
                   >
@@ -448,7 +448,7 @@ export default function MobileNav() {
                   <span
                     className={`text-[10px] ${
                       active
-                        ? "font-bold text-[var(--app-text)]"
+                        ? "font-semibold text-[var(--app-text)]"
                         : "text-[var(--app-muted-2)]"
                     }`}
                   >
@@ -476,7 +476,7 @@ export default function MobileNav() {
               className={`relative flex h-9 w-11 items-center justify-center rounded-xl transition ${
                 moreOpen ||
                 moreActive
-                  ? "bg-[var(--app-soft)] text-[var(--app-text)]"
+                  ? "text-[var(--app-accent)]"
                   : "text-[var(--app-muted-2)]"
               }`}
             >
@@ -489,7 +489,7 @@ export default function MobileNav() {
               className={`text-[10px] ${
                 moreOpen ||
                 moreActive
-                  ? "font-bold text-[var(--app-text)]"
+                  ? "font-semibold text-[var(--app-text)]"
                   : "text-[var(--app-muted-2)]"
               }`}
             >
@@ -512,3 +512,5 @@ export default function MobileNav() {
 /* ALUMNI_2_3_2_RECOVERY_PROFILE_PASSPORT_NAV:MOBILE_MORE */
 
 /* ALUMNI_2_3_3_PASSPORT_PROFILE_FEED_FIX:REMOVE_PASSPORT_FROM_MORE */
+
+/* ALUMNI_3_1_0_PROFESSIONAL_VISUAL_CORE */
