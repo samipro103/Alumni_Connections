@@ -2,6 +2,7 @@
 
 import {
   useRef,
+  useState,
 } from "react";
 import {
   ArrowUpRight,
@@ -62,6 +63,12 @@ export type StoryOverlayData = {
   shared_post?:
     | SharedPostStoryPayload
     | null;
+
+  shared_post_transform?: {
+    x: number;
+    y: number;
+    scale?: number;
+  };
 
   /*
     Compatibilidad con Stories 2.0 ya publicadas.
@@ -205,6 +212,8 @@ export default function StoryFreeOverlay({
   editable = false,
   onPositionChange,
   onScaleChange,
+  onSharedPostPositionChange,
+  onSharedPostScaleChange,
 }: {
   overlay?:
     | StoryOverlayData
@@ -217,6 +226,15 @@ export default function StoryFreeOverlay({
     }
   ) => void;
   onScaleChange?: (
+    scale: number
+  ) => void;
+  onSharedPostPositionChange?: (
+    position: {
+      x: number;
+      y: number;
+    }
+  ) => void;
+  onSharedPostScaleChange?: (
     scale: number
   ) => void;
 }) {
@@ -242,6 +260,41 @@ export default function StoryFreeOverlay({
       scale: number;
     } | null>(null);
 
+  const dragOffsetRef =
+    useRef<{
+      x: number;
+      y: number;
+    } | null>(null);
+
+  const sharedPointersRef =
+    useRef(
+      new Map<
+        number,
+        {
+          x: number;
+          y: number;
+        }
+      >()
+    );
+
+  const sharedPinchRef =
+    useRef<{
+      distance: number;
+      scale: number;
+    } | null>(null);
+
+  const sharedDragOffsetRef =
+    useRef<{
+      x: number;
+      y: number;
+    } | null>(null);
+
+  const [guides, setGuides] =
+    useState({
+      x: false,
+      y: false,
+    });
+
   if (!overlay) {
     return null;
   }
@@ -251,6 +304,22 @@ export default function StoryFreeOverlay({
 
   const sharedPost =
     overlay.shared_post;
+
+  const sharedTransform =
+    overlay.shared_post_transform || {
+      x: 50,
+      y: 70,
+      scale: 1,
+    };
+
+  const sharedScale =
+    clamp(
+      Number(
+        sharedTransform.scale || 1
+      ),
+      0.6,
+      1.7
+    );
 
   const scale =
     clamp(
@@ -331,23 +400,54 @@ export default function StoryFreeOverlay({
       return;
     }
 
+    const offset =
+      dragOffsetRef.current || {
+        x: 0,
+        y: 0,
+      };
+
+    const rawX =
+      ((clientX -
+        offset.x -
+        rect.left) /
+        rect.width) *
+      100;
+
+    const rawY =
+      ((clientY -
+        offset.y -
+        rect.top) /
+        rect.height) *
+      100;
+
+    const snapX =
+      Math.abs(rawX - 50) <=
+      2.2;
+
+    const snapY =
+      Math.abs(rawY - 50) <=
+      1.5;
+
+    setGuides({
+      x: snapX,
+      y: snapY,
+    });
+
     onPositionChange({
-      x: clamp(
-        ((clientX -
-          rect.left) /
-          rect.width) *
-          100,
-        10,
-        90
-      ),
-      y: clamp(
-        ((clientY -
-          rect.top) /
-          rect.height) *
-          100,
-        12,
-        82
-      ),
+      x: snapX
+        ? 50
+        : clamp(
+            rawX,
+            10,
+            90
+          ),
+      y: snapY
+        ? 50
+        : clamp(
+            rawY,
+            12,
+            82
+          ),
     });
   }
 
@@ -380,6 +480,119 @@ export default function StoryFreeOverlay({
       pinchRef.current =
         null;
     }
+
+    if (
+      pointersRef.current
+        .size === 0
+    ) {
+      dragOffsetRef.current =
+        null;
+
+      setGuides({
+        x: false,
+        y: false,
+      });
+    }
+  }
+
+  function rememberSharedPointer(
+    event:
+      React.PointerEvent<HTMLDivElement>
+  ) {
+    sharedPointersRef.current.set(
+      event.pointerId,
+      {
+        x: event.clientX,
+        y: event.clientY,
+      }
+    );
+  }
+
+  function releaseSharedPointer(
+    pointerId: number
+  ) {
+    sharedPointersRef.current.delete(
+      pointerId
+    );
+
+    if (
+      sharedPointersRef.current
+        .size < 2
+    ) {
+      sharedPinchRef.current =
+        null;
+    }
+
+    if (
+      sharedPointersRef.current
+        .size === 0
+    ) {
+      sharedDragOffsetRef.current =
+        null;
+
+      setGuides({
+        x: false,
+        y: false,
+      });
+    }
+  }
+
+  function updateSharedPosition(
+    clientX: number,
+    clientY: number
+  ) {
+    const rect =
+      rootRef.current
+        ?.getBoundingClientRect();
+
+    if (
+      !rect ||
+      !onSharedPostPositionChange
+    ) {
+      return;
+    }
+
+    const offset =
+      sharedDragOffsetRef.current || {
+        x: 0,
+        y: 0,
+      };
+
+    const rawX =
+      ((clientX -
+        offset.x -
+        rect.left) /
+        rect.width) *
+      100;
+
+    const rawY =
+      ((clientY -
+        offset.y -
+        rect.top) /
+        rect.height) *
+      100;
+
+    const snapX =
+      Math.abs(rawX - 50) <=
+      2.2;
+
+    const snapY =
+      Math.abs(rawY - 50) <=
+      1.5;
+
+    setGuides({
+      x: snapX,
+      y: snapY,
+    });
+
+    onSharedPostPositionChange({
+      x: snapX
+        ? 50
+        : clamp(rawX, 10, 90),
+      y: snapY
+        ? 50
+        : clamp(rawY, 18, 82),
+    });
   }
 
   return (
@@ -387,19 +600,217 @@ export default function StoryFreeOverlay({
       ref={rootRef}
       className="pointer-events-none absolute inset-0 z-[36]"
     >
+      {editable && guides.x && (
+        <div
+          className="pointer-events-none absolute inset-y-[6%] left-1/2 z-[90] w-px -translate-x-1/2 bg-[#aeb6ff]/90 shadow-[0_0_12px_rgba(174,182,255,.8)]"
+          aria-hidden="true"
+        />
+      )}
+
+      {editable && guides.y && (
+        <div
+          className="pointer-events-none absolute inset-x-[6%] top-1/2 z-[90] h-px -translate-y-1/2 bg-[#aeb6ff]/90 shadow-[0_0_12px_rgba(174,182,255,.8)]"
+          aria-hidden="true"
+        />
+      )}
+
       {sharedPost && (
-        <div className="absolute inset-x-[8%] bottom-[15%]">
-          {editable ? (
+        editable ? (
+          <div
+            className="pointer-events-auto absolute z-[45] w-[84%] cursor-grab touch-none select-none active:cursor-grabbing"
+            style={{
+              left:
+                `${sharedTransform.x}%`,
+              top:
+                `${sharedTransform.y}%`,
+              transform:
+                `translate(-50%, -50%) scale(${sharedScale})`,
+              transformOrigin:
+                "center center",
+            }}
+            onPointerDown={(event) => {
+              event.preventDefault();
+              event.stopPropagation();
+
+              event.currentTarget.setPointerCapture(
+                event.pointerId
+              );
+
+              const rect =
+                rootRef.current
+                  ?.getBoundingClientRect();
+
+              if (
+                rect &&
+                sharedPointersRef.current.size === 0
+              ) {
+                const currentX =
+                  rect.left +
+                  (rect.width *
+                    sharedTransform.x) /
+                    100;
+
+                const currentY =
+                  rect.top +
+                  (rect.height *
+                    sharedTransform.y) /
+                    100;
+
+                sharedDragOffsetRef.current = {
+                  x:
+                    event.clientX -
+                    currentX,
+                  y:
+                    event.clientY -
+                    currentY,
+                };
+              }
+
+              rememberSharedPointer(event);
+
+              const values =
+                Array.from(
+                  sharedPointersRef.current.values()
+                );
+
+              if (
+                values.length >= 2 &&
+                onSharedPostScaleChange
+              ) {
+                sharedPinchRef.current = {
+                  distance:
+                    Math.max(
+                      1,
+                      distance(
+                        values[0],
+                        values[1]
+                      )
+                    ),
+                  scale:
+                    sharedScale,
+                };
+
+                setGuides({
+                  x: false,
+                  y: false,
+                });
+              }
+            }}
+            onPointerMove={(event) => {
+              if (
+                !sharedPointersRef.current.has(
+                  event.pointerId
+                )
+              ) {
+                return;
+              }
+
+              event.preventDefault();
+              event.stopPropagation();
+
+              rememberSharedPointer(event);
+
+              const values =
+                Array.from(
+                  sharedPointersRef.current.values()
+                );
+
+              if (
+                values.length >= 2 &&
+                sharedPinchRef.current &&
+                onSharedPostScaleChange
+              ) {
+                const nextDistance =
+                  Math.max(
+                    1,
+                    distance(
+                      values[0],
+                      values[1]
+                    )
+                  );
+
+                setGuides({
+                  x: false,
+                  y: false,
+                });
+
+                onSharedPostScaleChange(
+                  clamp(
+                    sharedPinchRef.current.scale *
+                      (nextDistance /
+                        sharedPinchRef.current.distance),
+                    0.6,
+                    1.7
+                  )
+                );
+
+                return;
+              }
+
+              if (
+                values.length === 1
+              ) {
+                updateSharedPosition(
+                  event.clientX,
+                  event.clientY
+                );
+              }
+            }}
+            onPointerUp={(event) => {
+              releaseSharedPointer(
+                event.pointerId
+              );
+
+              try {
+                event.currentTarget.releasePointerCapture(
+                  event.pointerId
+                );
+              } catch {}
+            }}
+            onPointerCancel={(event) => {
+              releaseSharedPointer(
+                event.pointerId
+              );
+            }}
+          >
             <SharedPostCard
               post={sharedPost}
               interactive={false}
             />
-          ) : (
+          </div>
+        ) : overlay.shared_post_transform ? (
+          <a
+            href={`/feed?post=${encodeURIComponent(
+              String(sharedPost.id)
+            )}`}
+            onPointerDown={(event) =>
+              event.stopPropagation()
+            }
+            onClick={(event) =>
+              event.stopPropagation()
+            }
+            className="pointer-events-auto absolute z-[45] block w-[84%]"
+            style={{
+              left:
+                `${sharedTransform.x}%`,
+              top:
+                `${sharedTransform.y}%`,
+              transform:
+                `translate(-50%, -50%) scale(${sharedScale})`,
+              transformOrigin:
+                "center center",
+            }}
+          >
+            <SharedPostCard
+              post={sharedPost}
+              interactive
+            />
+          </a>
+        ) : (
+          <div className="absolute inset-x-[8%] bottom-[15%]">
             <a
               href={`/feed?post=${encodeURIComponent(
-                String(
-                  sharedPost.id
-                )
+                String(sharedPost.id)
               )}`}
               onPointerDown={(event) =>
                 event.stopPropagation()
@@ -414,8 +825,8 @@ export default function StoryFreeOverlay({
                 interactive
               />
             </a>
-          )}
-        </div>
+          </div>
+        )
       )}
 
       {text?.value && (
@@ -449,6 +860,40 @@ export default function StoryFreeOverlay({
                     event.pointerId
                   );
 
+                  const rect =
+                    rootRef.current
+                      ?.getBoundingClientRect();
+
+                  if (
+                    rect &&
+                    pointersRef.current.size === 0
+                  ) {
+                    const currentX =
+                      rect.left +
+                      (rect.width *
+                        Number(
+                          text?.x || 50
+                        )) /
+                        100;
+
+                    const currentY =
+                      rect.top +
+                      (rect.height *
+                        Number(
+                          text?.y || 38
+                        )) /
+                        100;
+
+                    dragOffsetRef.current = {
+                      x:
+                        event.clientX -
+                        currentX,
+                      y:
+                        event.clientY -
+                        currentY,
+                    };
+                  }
+
                   rememberPointer(
                     event
                   );
@@ -476,10 +921,10 @@ export default function StoryFreeOverlay({
                         scale,
                       };
                   } else {
-                    updatePosition(
-                      event.clientX,
-                      event.clientY
-                    );
+                    setGuides({
+                      x: false,
+                      y: false,
+                    });
                   }
                 }
               : undefined
@@ -521,6 +966,11 @@ export default function StoryFreeOverlay({
                           values[1]
                         )
                       );
+
+                    setGuides({
+                      x: false,
+                      y: false,
+                    });
 
                     onScaleChange(
                       clamp(
@@ -679,3 +1129,5 @@ function SharedPostCard({
     </div>
   );
 }
+
+/* ALUMNI_3_4_0_STORY_STUDIO_GESTURES_GUIDES */

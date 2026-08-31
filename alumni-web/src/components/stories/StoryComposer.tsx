@@ -1489,6 +1489,15 @@ export default function StoryComposer({
     );
 
   const [
+    sharedPostTransform,
+    setSharedPostTransform,
+  ] = useState({
+    x: 50,
+    y: 70,
+    scale: 1,
+  });
+
+  const [
     storyTextScale,
     setStoryTextScale,
   ] = useState(1);
@@ -1874,6 +1883,12 @@ export default function StoryComposer({
       initialSharedPost
     );
 
+    setSharedPostTransform({
+      x: 50,
+      y: 70,
+      scale: 1,
+    });
+
     setStoryText("");
     setStoryTextPosition({
       x: 50,
@@ -1973,6 +1988,11 @@ export default function StoryComposer({
       []
     );
     setSharedPost(null);
+    setSharedPostTransform({
+      x: 50,
+      y: 70,
+      scale: 1,
+    });
     setEditorTab("content");
   }
 
@@ -2087,6 +2107,10 @@ export default function StoryComposer({
           shared_post:
             sharedPost ||
             undefined,
+          shared_post_transform:
+            sharedPost
+              ? sharedPostTransform
+              : undefined,
         };
       },
       [
@@ -2100,6 +2124,9 @@ export default function StoryComposer({
         storyTextPosition.y,
         storyFilter,
         sharedPost,
+        sharedPostTransform.x,
+        sharedPostTransform.y,
+        sharedPostTransform.scale,
       ]
     );
 
@@ -2795,6 +2822,19 @@ export default function StoryComposer({
             onScaleChange={
               setStoryTextScale
             }
+            onSharedPostPositionChange={(position) =>
+              setSharedPostTransform((current) => ({
+                ...current,
+                x: position.x,
+                y: position.y,
+              }))
+            }
+            onSharedPostScaleChange={(scale) =>
+              setSharedPostTransform((current) => ({
+                ...current,
+                scale,
+              }))
+            }
           />
 
           <div className="absolute left-[max(14px,env(safe-area-inset-left))] top-[max(14px,env(safe-area-inset-top))] z-[80] flex items-center gap-2">
@@ -2964,18 +3004,6 @@ export default function StoryComposer({
                 />
               </button>
 
-              <button
-                type="button"
-                onClick={() =>
-                  mediaInputRef.current?.click()
-                }
-                className="flex h-11 w-11 items-center justify-center rounded-full border border-white/[0.12] bg-black/28 text-white/85 backdrop-blur-2xl transition active:scale-95"
-                aria-label="Cambiar foto o video"
-              >
-                <ImagePlus
-                  size={18}
-                />
-              </button>
             </div>
           )}
 
@@ -3491,8 +3519,10 @@ export default function StoryComposer({
                 size={13}
               />
               {file
-                ? "Cambiar"
-                : "Foto"}
+                ? file.type.startsWith("video/")
+                  ? "Cambiar video"
+                  : "Cambiar foto"
+                : "Foto o video"}
             </button>
           </div>
 
@@ -4675,3 +4705,5 @@ function HiddenInput({
 }
 
 /* ALUMNI_1_2_0_TRUST_BLOCK:STORY_COMPOSER_PRIVATE */
+
+/* ALUMNI_3_4_0_STORY_STUDIO_GESTURES_GUIDES */
