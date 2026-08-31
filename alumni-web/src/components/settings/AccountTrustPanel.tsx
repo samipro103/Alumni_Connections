@@ -1,6 +1,8 @@
 "use client";
 
 import {
+  AlertTriangle,
+  ChevronRight,
   Download,
   KeyRound,
   Loader2,
@@ -11,6 +13,7 @@ import {
   Trash2,
   UserRoundX,
   VolumeX,
+  X,
 } from "lucide-react";
 import Link from "next/link";
 import {
@@ -54,6 +57,21 @@ export default function AccountTrustPanel({
     useState("");
   const [deleting, setDeleting] =
     useState(false);
+
+  const [accountFlow, setAccountFlow] =
+    useState<
+      null |
+      "recovery" |
+      "password" |
+      "delete"
+    >(null);
+
+  const [flowDone, setFlowDone] =
+    useState(false);
+
+  const [deleteStep, setDeleteStep] =
+    useState<1 | 2>(1);
+
   const [blocked, setBlocked] =
     useState<any[]>([]);
   const [muted, setMuted] =
@@ -171,9 +189,7 @@ export default function AccountTrustPanel({
 
       setPassword("");
       setConfirmPassword("");
-      alert(
-        "Contraseña actualizada."
-      );
+      setFlowDone(true);
     } catch (error: any) {
       alert(
         error?.message ||
@@ -207,9 +223,7 @@ export default function AccountTrustPanel({
 
       if (error) throw error;
 
-      alert(
-        "Te enviamos un correo para recuperar o cambiar tu contraseña."
-      );
+      setFlowDone(true);
     } catch (error: any) {
       alert(
         error?.message ||
@@ -384,13 +398,6 @@ export default function AccountTrustPanel({
       return;
     }
 
-    if (
-      !confirm(
-        "Esta acción elimina tu cuenta y no se puede deshacer. ¿Continuar?"
-      )
-    ) {
-      return;
-    }
 
     setDeleting(true);
 
@@ -420,6 +427,37 @@ export default function AccountTrustPanel({
     }
   }
 
+  function openAccountFlow(
+    flow:
+      | "recovery"
+      | "password"
+      | "delete"
+  ) {
+    setFlowDone(false);
+    setDeleteStep(1);
+    setDeleteText("");
+    setPassword("");
+    setConfirmPassword("");
+    setAccountFlow(flow);
+  }
+
+  function closeAccountFlow() {
+    if (
+      changingPassword ||
+      sendingRecovery ||
+      deleting
+    ) {
+      return;
+    }
+
+    setAccountFlow(null);
+    setFlowDone(false);
+    setDeleteStep(1);
+    setDeleteText("");
+    setPassword("");
+    setConfirmPassword("");
+  }
+
   return (
     <div className="space-y-5">
       <Panel>
@@ -445,93 +483,54 @@ export default function AccountTrustPanel({
           </p>
         </div>
 
-        <button
-          type="button"
-          onClick={() =>
-            void sendRecovery()
-          }
-          disabled={sendingRecovery}
-          className="mt-4 flex h-10 items-center gap-2 text-xs font-black text-[#8d98ff] disabled:opacity-50"
-        >
-          {sendingRecovery ? (
-            <Loader2
-              size={15}
-              className="animate-spin"
-            />
-          ) : (
-            <Mail size={15} />
-          )}
-          Enviar correo de recuperación
-        </button>
-      </Panel>
-
-      <Panel>
-        <div className="flex items-center gap-2">
-          <KeyRound
-            size={17}
-            className="text-[#8d98ff]"
-          />
-          <p className="text-sm font-black text-zinc-200">
-            Cambiar contraseña
-          </p>
-        </div>
-
-        <div className="mt-4 grid gap-3 sm:grid-cols-2">
-          <input
-            type="password"
-            value={password}
-            onChange={(event) =>
-              setPassword(
-                event.target.value
+        <div className="mt-1 divide-y divide-[var(--app-border)] border-t border-[var(--app-border)]">
+          <button
+            type="button"
+            onClick={() =>
+              openAccountFlow(
+                "recovery"
               )
             }
-            placeholder="Nueva contraseña"
-            autoComplete="new-password"
-            className="h-11 rounded-xl border border-white/[0.07] bg-white/[0.025] px-3 text-sm text-zinc-300 outline-none"
-          />
-          <input
-            type="password"
-            value={confirmPassword}
-            onChange={(event) =>
-              setConfirmPassword(
-                event.target.value
+            className="flex min-h-[58px] w-full items-center gap-3 text-left"
+          >
+            <Mail
+              size={17}
+              className="text-[var(--app-muted)]"
+            />
+            <span className="min-w-0 flex-1 text-sm font-bold text-[var(--app-text-soft)]">
+              Correo de recuperación
+            </span>
+            <ChevronRight
+              size={17}
+              className="text-[var(--app-muted-2)]"
+            />
+          </button>
+
+          <button
+            type="button"
+            onClick={() =>
+              openAccountFlow(
+                "password"
               )
             }
-            placeholder="Confirmar contraseña"
-            autoComplete="new-password"
-            className="h-11 rounded-xl border border-white/[0.07] bg-white/[0.025] px-3 text-sm text-zinc-300 outline-none"
-          />
+            className="flex min-h-[58px] w-full items-center gap-3 text-left"
+          >
+            <KeyRound
+              size={17}
+              className="text-[var(--app-muted)]"
+            />
+            <span className="min-w-0 flex-1 text-sm font-bold text-[var(--app-text-soft)]">
+              Cambiar contraseña
+            </span>
+            <ChevronRight
+              size={17}
+              className="text-[var(--app-muted-2)]"
+            />
+          </button>
         </div>
-
-        <p className="mt-2 text-[10px] leading-5 text-zinc-700">
-          Mínimo 10 caracteres, con letras y números.
-        </p>
-
-        <button
-          type="button"
-          onClick={() =>
-            void changePassword()
-          }
-          disabled={
-            changingPassword ||
-            password.length < 10 ||
-            !confirmPassword
-          }
-          className="mt-3 flex h-10 items-center gap-2 text-xs font-black text-[#8d98ff] disabled:opacity-40"
-        >
-          {changingPassword ? (
-            <Loader2
-              size={15}
-              className="animate-spin"
-            />
-          ) : (
-            <LockKeyhole
-              size={15}
-            />
-          )}
-          Actualizar contraseña
-        </button>
       </Panel>
+
+
 
       {(blocked.length > 0 ||
         muted.length > 0) && (
@@ -688,53 +687,304 @@ export default function AccountTrustPanel({
       </Panel>
 
       <Panel>
-        <div className="flex items-center gap-2 text-red-400">
-          <Trash2 size={17} />
-          <p className="text-sm font-black">
-            Eliminar cuenta
-          </p>
-        </div>
-
-        <p className="mt-2 text-xs leading-5 text-zinc-700">
-          Elimina permanentemente tu cuenta de Alumni y los datos asociados que podamos vincular a ella. Esta acción no se puede deshacer.
-        </p>
-
-        <input
-          value={deleteText}
-          onChange={(event) =>
-            setDeleteText(
-              event.target.value
-                .toUpperCase()
-                .slice(0, 8)
-            )
-          }
-          placeholder='Escribe "ELIMINAR"'
-          className="mt-4 h-11 w-full rounded-xl border border-red-500/15 bg-red-500/[0.025] px-3 text-sm text-red-300 outline-none"
-        />
-
         <button
           type="button"
           onClick={() =>
-            void deleteAccount()
+            openAccountFlow(
+              "delete"
+            )
           }
-          disabled={
-            deleteText !==
-              "ELIMINAR" ||
-            deleting
-          }
-          className="mt-3 flex h-10 items-center gap-2 text-xs font-black text-red-400 disabled:opacity-30"
+          className="flex min-h-[52px] w-full items-center gap-3 text-left"
         >
-          {deleting && (
-            <Loader2
-              size={15}
-              className="animate-spin"
-            />
-          )}
-          Eliminar mi cuenta
+          <Trash2
+            size={17}
+            className="text-red-400"
+          />
+          <span className="min-w-0 flex-1 text-sm font-bold text-red-300">
+            Eliminar cuenta
+          </span>
+          <ChevronRight
+            size={17}
+            className="text-red-400/45"
+          />
         </button>
       </Panel>
+
+      {accountFlow && (
+        <div
+          className="fixed inset-0 z-[2147483000] flex items-end justify-center bg-black/60 sm:items-center sm:p-5"
+          role="dialog"
+          aria-modal="true"
+          onMouseDown={(event) => {
+            if (
+              event.target ===
+              event.currentTarget
+            ) {
+              closeAccountFlow();
+            }
+          }}
+        >
+          <section className="w-full max-w-[470px] overflow-hidden rounded-t-[24px] border border-[var(--app-border)] bg-[var(--app-surface)] shadow-[0_28px_100px_rgba(0,0,0,.5)] sm:rounded-[24px]">
+            <header className="flex min-h-[64px] items-center gap-3 border-b border-[var(--app-border)] px-5">
+              <h3 className="min-w-0 flex-1 text-[17px] font-black text-[var(--app-text)]">
+                {accountFlow ===
+                "recovery"
+                  ? "Recuperar contraseña"
+                  : accountFlow ===
+                    "password"
+                  ? "Cambiar contraseña"
+                  : "Eliminar cuenta"}
+              </h3>
+
+              <button
+                type="button"
+                onClick={
+                  closeAccountFlow
+                }
+                disabled={
+                  changingPassword ||
+                  sendingRecovery ||
+                  deleting
+                }
+                className="flex h-9 w-9 items-center justify-center rounded-full bg-[var(--app-soft)] text-[var(--app-muted)] disabled:opacity-40"
+                aria-label="Cerrar"
+              >
+                <X size={17} />
+              </button>
+            </header>
+
+            <div className="p-5">
+              {accountFlow ===
+                "recovery" &&
+                (flowDone ? (
+                  <div className="py-5 text-center">
+                    <ShieldCheck
+                      size={28}
+                      className="mx-auto text-emerald-400"
+                    />
+                    <p className="mt-3 text-sm font-black text-[var(--app-text)]">
+                      Correo enviado
+                    </p>
+                    <p className="mt-1 break-all text-xs text-[var(--app-muted)]">
+                      {email}
+                    </p>
+                  </div>
+                ) : (
+                  <>
+                    <p className="text-sm font-semibold text-[var(--app-text-soft)]">
+                      Enviaremos el enlace a
+                    </p>
+                    <p className="mt-1 break-all text-sm text-[var(--app-muted)]">
+                      {email}
+                    </p>
+
+                    <button
+                      type="button"
+                      onClick={() =>
+                        void sendRecovery()
+                      }
+                      disabled={
+                        sendingRecovery
+                      }
+                      className="mt-6 flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-[var(--app-accent)] text-xs font-black text-[var(--app-on-accent)] disabled:opacity-50"
+                    >
+                      {sendingRecovery && (
+                        <Loader2
+                          size={15}
+                          className="animate-spin"
+                        />
+                      )}
+                      Enviar enlace
+                    </button>
+                  </>
+                ))}
+
+              {accountFlow ===
+                "password" &&
+                (flowDone ? (
+                  <div className="py-5 text-center">
+                    <ShieldCheck
+                      size={28}
+                      className="mx-auto text-emerald-400"
+                    />
+                    <p className="mt-3 text-sm font-black text-[var(--app-text)]">
+                      Contraseña actualizada
+                    </p>
+                  </div>
+                ) : (
+                  <>
+                    <div className="grid gap-3">
+                      <input
+                        type="password"
+                        value={password}
+                        onChange={(
+                          event
+                        ) =>
+                          setPassword(
+                            event.target
+                              .value
+                          )
+                        }
+                        placeholder="Nueva contraseña"
+                        autoComplete="new-password"
+                        className="h-12 rounded-xl border border-[var(--app-border)] bg-[var(--app-soft)] px-3 text-[16px] text-[var(--app-text)] outline-none"
+                      />
+
+                      <input
+                        type="password"
+                        value={
+                          confirmPassword
+                        }
+                        onChange={(
+                          event
+                        ) =>
+                          setConfirmPassword(
+                            event.target
+                              .value
+                          )
+                        }
+                        placeholder="Confirmar contraseña"
+                        autoComplete="new-password"
+                        className="h-12 rounded-xl border border-[var(--app-border)] bg-[var(--app-soft)] px-3 text-[16px] text-[var(--app-text)] outline-none"
+                      />
+                    </div>
+
+                    <p className="mt-2 text-[11px] text-[var(--app-muted)]">
+                      Mínimo 10 caracteres,
+                      con letras y números.
+                    </p>
+
+                    <button
+                      type="button"
+                      onClick={() =>
+                        void changePassword()
+                      }
+                      disabled={
+                        changingPassword ||
+                        password.length <
+                          10 ||
+                        !confirmPassword
+                      }
+                      className="mt-5 flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-[var(--app-accent)] text-xs font-black text-[var(--app-on-accent)] disabled:opacity-40"
+                    >
+                      {changingPassword && (
+                        <Loader2
+                          size={15}
+                          className="animate-spin"
+                        />
+                      )}
+                      Continuar
+                    </button>
+                  </>
+                ))}
+
+              {accountFlow ===
+                "delete" &&
+                (deleteStep === 1 ? (
+                  <>
+                    <div className="flex items-start gap-3">
+                      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-red-500/10 text-red-400">
+                        <AlertTriangle
+                          size={18}
+                        />
+                      </span>
+
+                      <div>
+                        <p className="text-sm font-black text-[var(--app-text)]">
+                          Esta acción es
+                          permanente
+                        </p>
+                        <p className="mt-1 text-xs leading-5 text-[var(--app-muted)]">
+                          Esta acción no se
+                          puede deshacer.
+                        </p>
+                      </div>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setDeleteStep(2)
+                      }
+                      className="mt-6 h-11 w-full rounded-xl border border-red-500/25 bg-red-500/10 text-xs font-black text-red-300"
+                    >
+                      Continuar
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <p className="text-sm font-black text-[var(--app-text)]">
+                      Confirmación final
+                    </p>
+                    <p className="mt-1 text-xs text-[var(--app-muted)]">
+                      Escribe ELIMINAR para
+                      continuar.
+                    </p>
+
+                    <input
+                      value={deleteText}
+                      onChange={(
+                        event
+                      ) =>
+                        setDeleteText(
+                          event.target
+                            .value
+                            .toUpperCase()
+                            .slice(
+                              0,
+                              8
+                            )
+                        )
+                      }
+                      placeholder="ELIMINAR"
+                      className="mt-4 h-12 w-full rounded-xl border border-red-500/20 bg-red-500/[0.04] px-3 text-[16px] font-bold text-red-300 outline-none"
+                    />
+
+                    <button
+                      type="button"
+                      onClick={() =>
+                        void deleteAccount()
+                      }
+                      disabled={
+                        deleteText !==
+                          "ELIMINAR" ||
+                        deleting
+                      }
+                      className="mt-4 flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-red-500 text-xs font-black text-white disabled:opacity-35"
+                    >
+                      {deleting && (
+                        <Loader2
+                          size={15}
+                          className="animate-spin"
+                        />
+                      )}
+                      Eliminar cuenta
+                      definitivamente
+                    </button>
+                  </>
+                ))}
+
+              {flowDone &&
+                accountFlow !==
+                  "delete" && (
+                  <button
+                    type="button"
+                    onClick={
+                      closeAccountFlow
+                    }
+                    className="mt-5 h-11 w-full rounded-xl bg-[var(--app-soft)] text-xs font-black text-[var(--app-text)]"
+                  >
+                    Listo
+                  </button>
+                )}
+            </div>
+          </section>
+        </div>
+      )}
     </div>
   );
 }
 
 /* ALUMNI_3_1_1_PRODUCT_COPY_CLEANUP */
+
+/* ALUMNI_3_1_2A_SAFE_PRODUCT_FLOWS */

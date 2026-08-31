@@ -474,3 +474,256 @@
     justify-content: flex-end;
   }
 }
+
+
+/* ============================================================
+   ALUMNI 3.1.2A — Passport picker + live preview
+   ============================================================ */
+
+.passport-country-picker {
+  position: relative;
+  margin-top: 2px;
+}
+
+.passport-country-search {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.passport-country-selected-flag {
+  position: absolute;
+  left: 0;
+  bottom: 10px;
+  z-index: 2;
+  font-size: 19px;
+}
+
+.passport-country-selected-flag + input {
+  padding-left: 31px;
+}
+
+.passport-country-options {
+  max-height: 260px;
+  overflow-y: auto;
+  margin-top: 8px;
+  border:
+    1px solid
+    var(--app-border);
+  border-radius: 16px;
+  background:
+    var(--app-surface);
+  box-shadow:
+    0 18px 50px
+    rgba(0,0,0,.22);
+}
+
+.passport-country-options button {
+  display: grid;
+  width: 100%;
+  min-height: 48px;
+  grid-template-columns:
+    28px
+    minmax(0,1fr)
+    22px;
+  align-items: center;
+  gap: 8px;
+  padding: 0 12px;
+  border: 0;
+  border-bottom:
+    1px solid
+    var(--app-border);
+  background: transparent;
+  color: var(--app-text);
+  text-align: left;
+}
+
+.passport-country-options button:last-of-type {
+  border-bottom: 0;
+}
+
+.passport-country-options button[data-selected="true"] {
+  background:
+    var(--app-soft);
+}
+
+.passport-country-options button > span {
+  font-size: 19px;
+}
+
+.passport-country-options button > strong {
+  overflow: hidden;
+  font-size: 12px;
+  font-weight: 750;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.passport-country-options button > svg {
+  color: var(--app-accent);
+}
+
+.passport-country-options > p {
+  padding: 18px 12px;
+  color: var(--app-muted);
+  font-size: 11px;
+  text-align: center;
+}
+
+.passport-live-preview {
+  position: relative;
+  display: grid;
+  min-height: 190px;
+  grid-template-columns:
+    42%
+    minmax(0,1fr);
+  overflow: hidden;
+  margin-top: 20px;
+  border:
+    1px solid
+    var(--app-border);
+  border-radius: 20px;
+  background:
+    var(--app-surface);
+  isolation: isolate;
+}
+
+.passport-live-preview::before {
+  content: "";
+  position: absolute;
+  right: -45px;
+  bottom: -45px;
+  width: 150px;
+  height: 150px;
+  border-radius: 999px;
+  opacity: .55;
+  filter: blur(27px);
+  z-index: -1;
+}
+
+.passport-live-cover {
+  display: flex;
+  min-height: 190px;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border-right:
+    1px solid
+    var(--app-border);
+  background:
+    color-mix(
+      in srgb,
+      var(--app-soft) 82%,
+      transparent
+    );
+}
+
+.passport-live-cover img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.passport-live-cover > span {
+  font-size: 52px;
+  filter:
+    drop-shadow(
+      0 12px 24px
+      rgba(0,0,0,.22)
+    );
+}
+
+.passport-live-copy {
+  align-self: end;
+  padding: 18px;
+}
+
+.passport-live-copy small {
+  display: block;
+  color:
+    var(--app-muted-2);
+  font-size: 8px;
+  font-weight: 850;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+}
+
+.passport-live-copy strong {
+  display: block;
+  margin-top: 7px;
+  color: var(--app-text);
+  font-size: 22px;
+  font-weight: 950;
+  letter-spacing: -.035em;
+}
+
+.passport-live-copy p {
+  margin-top: 6px;
+  color: var(--app-muted);
+  font-size: 10px;
+  line-height: 1.5;
+}
+
+.passport-live-preview.theme-aurora::before {
+  background:
+    linear-gradient(
+      135deg,
+      #7c7cff,
+      #4ad5cd
+    );
+}
+
+.passport-live-preview.theme-sunset::before {
+  background:
+    linear-gradient(
+      135deg,
+      #ff8a68,
+      #ffd46f
+    );
+}
+
+.passport-live-preview.theme-night::before {
+  background:
+    linear-gradient(
+      135deg,
+      #5684ff,
+      #9c69ff
+    );
+}
+
+.passport-live-preview.theme-coast::before {
+  background:
+    linear-gradient(
+      135deg,
+      #5adce3,
+      #8aedff
+    );
+}
+
+.passport-live-preview.theme-stamp::before {
+  background:
+    linear-gradient(
+      135deg,
+      #ba946f,
+      #dfc8a8
+    );
+}
+
+@media (max-width: 700px) {
+  .passport-live-preview {
+    min-height: 160px;
+    grid-template-columns:
+      40%
+      minmax(0,1fr);
+  }
+
+  .passport-live-cover {
+    min-height: 160px;
+  }
+
+  .passport-country-options {
+    max-height: 220px;
+  }
+}
+
+/* ALUMNI_3_1_2A_SAFE_PRODUCT_FLOWS */

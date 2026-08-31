@@ -113,28 +113,33 @@ export default function AlumniMediaViewer({
           right:
             "max(14px, env(safe-area-inset-right))",
           zIndex: 2147483647,
-          width: 52,
-          height: 52,
+          width: 42,
+          height: 42,
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
           padding: 0,
           border:
-            "2px solid rgba(255,255,255,.92)",
+            "1px solid rgba(255,255,255,.14)",
           borderRadius: "999px",
           background:
-            "rgba(0,0,0,.84)",
-          color: "#fff",
+            "rgba(15,17,21,.72)",
+          color:
+            "rgba(255,255,255,.94)",
           boxShadow:
-            "0 10px 34px rgba(0,0,0,.55)",
+            "0 8px 28px rgba(0,0,0,.32)",
+          backdropFilter:
+            "blur(14px)",
+          WebkitBackdropFilter:
+            "blur(14px)",
           cursor: "pointer",
           WebkitTapHighlightColor:
             "transparent",
         }}
       >
         <X
-          size={28}
-          strokeWidth={2.8}
+          size={20}
+          strokeWidth={2.15}
           aria-hidden="true"
         />
       </button>
@@ -179,3 +184,5 @@ export default function AlumniMediaViewer({
 /* ALUMNI_2_9_0_MEDIA_VIEWER */
 
 /* ALUMNI_2_9_2_PUBLIC_IMAGE_CDN:MEDIA_VIEWER */
+
+/* ALUMNI_3_1_2A_SAFE_PRODUCT_FLOWS */

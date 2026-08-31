@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState } from "react";
 import AppShell from "@/components/layout/AppShell";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { supabase } from "@/lib/supabase";
+import { COUNTRIES } from "@/lib/countries";
 import "./passport.css";
 
 const THEMES = [
@@ -14,6 +15,87 @@ const THEMES = [
   ["coast", "Coast", "Claro, fresco y ligero."],
   ["stamp", "Stamp", "Clásico, editorial y coleccionable."],
 ] as const;
+
+const regionNames =
+  typeof Intl !== "undefined" &&
+  "DisplayNames" in Intl
+    ? new Intl.DisplayNames(
+        ["es"],
+        {
+          type: "region",
+        }
+      )
+    : null;
+
+const PASSPORT_COUNTRIES =
+  COUNTRIES
+    .map((country) => {
+      const code =
+        String(
+          country.code || ""
+        )
+          .trim()
+          .toUpperCase();
+
+      return {
+        code,
+        name:
+          regionNames?.of(
+            code
+          ) ||
+          String(
+            country.name || ""
+          ),
+      };
+    })
+    .filter(
+      (country) =>
+        /^[A-Z]{2}$/.test(
+          country.code
+        ) &&
+        Boolean(
+          country.name
+        )
+    )
+    .sort((a, b) =>
+      a.name.localeCompare(
+        b.name,
+        "es",
+        {
+          sensitivity:
+            "base",
+        }
+      )
+    );
+
+function flagEmoji(
+  code?: string | null
+) {
+  const value =
+    String(code || "")
+      .trim()
+      .toUpperCase();
+
+  if (
+    !/^[A-Z]{2}$/.test(
+      value
+    )
+  ) {
+    return "🌍";
+  }
+
+  return String.fromCodePoint(
+    ...value
+      .split("")
+      .map(
+        (char) =>
+          127397 +
+          char.charCodeAt(
+            0
+          )
+      )
+  );
+}
 
 async function sign(path?: string | null) {
   if (!path) return null;
@@ -43,6 +125,9 @@ export default function PassportPage() {
   const [photoOpen, setPhotoOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const [countryFile, setCountryFile] = useState<File | null>(null);
+  const [countrySearch, setCountrySearch] = useState("");
+  const [countryPickerOpen, setCountryPickerOpen] = useState(false);
+  const [countryCoverPreview, setCountryCoverPreview] = useState("");
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [caption, setCaption] = useState("");
   const [form, setForm] = useState({
@@ -76,6 +161,27 @@ export default function PassportPage() {
       );
     }
   }, []);
+
+  useEffect(() => {
+    if (!countryFile) {
+      setCountryCoverPreview("");
+      return;
+    }
+
+    const url =
+      URL.createObjectURL(
+        countryFile
+      );
+
+    setCountryCoverPreview(
+      url
+    );
+
+    return () =>
+      URL.revokeObjectURL(
+        url
+      );
+  }, [countryFile]);
 
   useEffect(() => {
     if (!countryOpen && !photoOpen) return;
@@ -131,8 +237,56 @@ export default function PassportPage() {
     [media, activeId]
   );
 
+  const filteredCountries =
+    useMemo(() => {
+      const query =
+        countrySearch
+          .trim()
+          .toLocaleLowerCase(
+            "es"
+          );
+
+      if (!query) {
+        return PASSPORT_COUNTRIES;
+      }
+
+      return PASSPORT_COUNTRIES.filter(
+        (country) =>
+          country.name
+            .toLocaleLowerCase(
+              "es"
+            )
+            .includes(
+              query
+            )
+      );
+    }, [countrySearch]);
+
+  const selectedCountry =
+    useMemo(
+      () =>
+        PASSPORT_COUNTRIES.find(
+          (country) =>
+            country.code ===
+              form.country_code &&
+            country.name ===
+              form.country_name
+        ) || null,
+      [
+        form.country_code,
+        form.country_name,
+      ]
+    );
+
   async function createCountry() {
-    if (!user?.id || busy || !form.country_name.trim() || !form.country_code.trim()) return;
+    if (
+      !user?.id ||
+      busy ||
+      !selectedCountry
+    ) {
+      return;
+    }
+
     setBusy(true);
 
     try {
@@ -153,6 +307,8 @@ export default function PassportPage() {
 
       setCountryOpen(false);
       setCountryFile(null);
+      setCountrySearch("");
+      setCountryPickerOpen(false);
       setForm({
         country_name: "",
         country_code: "",
@@ -303,8 +459,7 @@ export default function PassportPage() {
                   className="passport-modal-confirm"
                   disabled={
                     busy ||
-                    !form.country_name.trim() ||
-                    !form.country_code.trim()
+                    !selectedCountry
                   }
                   onClick={() => void createCountry()}
                   aria-label="Crear país"
@@ -315,21 +470,174 @@ export default function PassportPage() {
               </header>
 
               <div className="passport-body">
-                <div className="passport-two">
+                <div className="passport-country-picker">
                   <label>
                     <span>País</span>
-                    <input value={form.country_name} onChange={(e) => setForm((c) => ({ ...c, country_name: e.target.value }))} placeholder="Ej. España" />
+
+                    <div className="passport-country-search">
+                      {form.country_code && (
+                        <span className="passport-country-selected-flag">
+                          {flagEmoji(
+                            form.country_code
+                          )}
+                        </span>
+                      )}
+
+                      <input
+                        value={
+                          countrySearch
+                        }
+                        onFocus={() =>
+                          setCountryPickerOpen(
+                            true
+                          )
+                        }
+                        onChange={(
+                          event
+                        ) => {
+                          setCountrySearch(
+                            event.target
+                              .value
+                          );
+
+                          setCountryPickerOpen(
+                            true
+                          );
+
+                          setForm(
+                            (
+                              current
+                            ) => ({
+                              ...current,
+                              country_name:
+                                "",
+                              country_code:
+                                "",
+                            })
+                          );
+                        }}
+                        placeholder="Buscar país"
+                        autoComplete="off"
+                      />
+                    </div>
                   </label>
-                  <label>
-                    <span>Código</span>
-                    <input value={form.country_code} maxLength={3} onChange={(e) => setForm((c) => ({ ...c, country_code: e.target.value }))} placeholder="ES" />
-                  </label>
+
+                  {countryPickerOpen && (
+                    <div className="passport-country-options">
+                      {filteredCountries.map(
+                        (
+                          country
+                        ) => (
+                          <button
+                            key={
+                              country.code
+                            }
+                            type="button"
+                            data-selected={
+                              form.country_code ===
+                              country.code
+                                ? "true"
+                                : "false"
+                            }
+                            onClick={() => {
+                              setForm(
+                                (
+                                  current
+                                ) => ({
+                                  ...current,
+                                  country_name:
+                                    country.name,
+                                  country_code:
+                                    country.code,
+                                })
+                              );
+
+                              setCountrySearch(
+                                country.name
+                              );
+
+                              setCountryPickerOpen(
+                                false
+                              );
+                            }}
+                          >
+                            <span>
+                              {flagEmoji(
+                                country.code
+                              )}
+                            </span>
+
+                            <strong>
+                              {
+                                country.name
+                              }
+                            </strong>
+
+                            {form.country_code ===
+                              country.code && (
+                              <Check
+                                size={
+                                  15
+                                }
+                              />
+                            )}
+                          </button>
+                        )
+                      )}
+
+                      {filteredCountries.length ===
+                        0 && (
+                        <p>
+                          No encontramos
+                          ese país.
+                        </p>
+                      )}
+                    </div>
+                  )}
                 </div>
 
                 <label>
                   <span>Nota</span>
                   <textarea value={form.note} onChange={(e) => setForm((c) => ({ ...c, note: e.target.value }))} placeholder="Qué hizo especial este destino." />
                 </label>
+
+                <div
+                  className={`passport-live-preview theme-${form.theme_style}`}
+                  aria-label="Vista previa del álbum"
+                >
+                  <div className="passport-live-cover">
+                    {countryCoverPreview ? (
+                      <img
+                        src={
+                          countryCoverPreview
+                        }
+                        alt=""
+                      />
+                    ) : (
+                      <span>
+                        {flagEmoji(
+                          form.country_code
+                        )}
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="passport-live-copy">
+                    <small>
+                      Vista previa
+                    </small>
+
+                    <strong>
+                      {form.country_name ||
+                        "Tu país"}
+                    </strong>
+
+                    <p>
+                      {form.note.trim() ||
+                        "Álbum de viaje"}
+                    </p>
+                  </div>
+                </div>
 
                 <div className="passport-themes">
                   <span>Diseño del álbum</span>
@@ -359,8 +667,7 @@ export default function PassportPage() {
                 data-visible="country"
                 disabled={
                   busy ||
-                  !form.country_name.trim() ||
-                  !form.country_code.trim()
+                  !selectedCountry
                 }
                 onClick={() => void createCountry()}
               >
@@ -368,7 +675,7 @@ export default function PassportPage() {
               </button>
 
               <footer>
-                <button type="button" disabled={busy || !form.country_name.trim() || !form.country_code.trim()} onClick={() => void createCountry()}>
+                <button type="button" disabled={busy || !selectedCountry} onClick={() => void createCountry()}>
                   {busy ? "Creando..." : "Crear país"}
                 </button>
               </footer>
@@ -454,3 +761,5 @@ export default function PassportPage() {
 /* ALUMNI_2_3_3_PASSPORT_PROFILE_FEED_FIX:PASSPORT_ADD_FROM_PROFILE */
 
 /* ALUMNI_3_1_1_PRODUCT_COPY_CLEANUP */
+
+/* ALUMNI_3_1_2A_SAFE_PRODUCT_FLOWS */
