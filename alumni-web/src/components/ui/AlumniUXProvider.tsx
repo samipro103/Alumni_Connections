@@ -17,6 +17,7 @@ import {
   X,
 } from "lucide-react";
 import { Toaster, toast } from "sonner";
+import { nativeHaptic } from "@/lib/nativeExperience";
 
 export type AlumniToastTone =
   | "success"
@@ -99,6 +100,14 @@ function showToast(
 ) {
   const text = normalizedMessage(message);
   if (!text) return;
+
+  if (tone === "success") {
+    void nativeHaptic("success");
+  } else if (tone === "error") {
+    void nativeHaptic("error");
+  } else if (tone === "warning") {
+    void nativeHaptic("warning");
+  }
 
   const options = {
     description:
@@ -478,3 +487,5 @@ export function useAlumniUX() {
 }
 
 /* ALUMNI_2_6_0_GLOBAL_UX_PROVIDER */
+
+/* ALUMNI_3_5_0_NATIVE_EXPERIENCE */

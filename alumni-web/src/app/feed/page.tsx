@@ -25,6 +25,7 @@ import FeedEngagementModal from "@/components/feed/FeedEngagementModal";
 import { rankForYouPosts } from "@/lib/feedRanking";
 import { analyzeImageLocally } from "@/lib/imageModerationClient";
 import { hydratePostMedia } from "@/lib/privateMedia";
+import { shareAlumniContent } from "@/lib/nativeExperience";
 import {
   hydratePostMediaItems,
   removePostMedia,
@@ -1101,20 +1102,26 @@ function FeedContent() {
   async function sharePost(post: any) {
     const url = `${window.location.origin}/feed?post=${post.id}`;
 
-    try {
-      if (navigator.share) {
-        await navigator.share({
-          title: `Publicación de @${post.profiles?.username || "Alumni"}`,
-          text:
-            post.content ||
-            "Mira esta publicación en Alumni.",
-          url,
-        });
-      } else {
-        await navigator.clipboard.writeText(url);
-        showToast("Enlace copiado");
-      }
-    } catch {}
+    const result =
+      await shareAlumniContent({
+        title: `Publicación de @${post.profiles?.username || "Alumni"}`,
+        text:
+          post.content ||
+          "Mira esta publicación en Alumni.",
+        url,
+        dialogTitle:
+          "Compartir publicación",
+      });
+
+    if (result === "copied") {
+      showToast("Enlace copiado");
+    } else if (
+      result === "unavailable"
+    ) {
+      showToast(
+        "No se pudo abrir el menú para compartir."
+      );
+    }
   }
 
   async function copyPostLink(post: any) {
@@ -1425,3 +1432,5 @@ export default function FeedPage() {
 /* ALUMNI_2_8_0_MEDIA_VIEWER:FEED */
 
 /* ALUMNI_3_3_0A_WEB_ADS:FEED */
+
+/* ALUMNI_3_5_0_NATIVE_EXPERIENCE */

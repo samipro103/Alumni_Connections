@@ -7,6 +7,10 @@ import {
   useMemo,
   useState,
 } from "react";
+import {
+  nativeHaptic,
+  syncNativeTheme,
+} from "@/lib/nativeExperience";
 
 export type AlumniTheme =
   | "dark"
@@ -79,6 +83,8 @@ function applyTheme(
     theme === "light"
       ? "light"
       : "dark";
+
+  void syncNativeTheme(theme);
 }
 
 export function ThemeProvider({
@@ -141,6 +147,7 @@ export function ThemeProvider({
     );
 
     applyTheme(next);
+    void nativeHaptic("selection");
   }
 
   const value =
@@ -177,3 +184,5 @@ export function useTheme() {
 }
 
 /* ALUMNI_1_4_2_THREE_THEMES */
+
+/* ALUMNI_3_5_0_NATIVE_EXPERIENCE */

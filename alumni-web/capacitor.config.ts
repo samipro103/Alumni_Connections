@@ -3,7 +3,7 @@ import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
   appId: 'com.alumniconnections.app',
-  appName: 'AlumniConnections',
+  appName: 'Alumni',
   webDir: 'mobile-shell',
 
   server: {
@@ -26,3 +26,5 @@ const config: CapacitorConfig = {
 export default config;
 
 /* ALUMNI_2_9_5_OFFICIAL_DOMAIN */
+
+/* ALUMNI_3_5_0_NATIVE_EXPERIENCE */

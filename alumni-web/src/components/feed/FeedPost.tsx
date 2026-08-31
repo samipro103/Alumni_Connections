@@ -29,6 +29,7 @@ import LinkPreviewCard from "@/components/feed/LinkPreviewCard";
 import { AlumniAvatar } from "@/components/ui/AlumniImage";
 import type { PostMediaItem } from "@/lib/feedMedia";
 import { toPublicImageCdnUrl } from "@/lib/imageCdn";
+import { nativeHaptic } from "@/lib/nativeExperience";
 
 function compactRepeatedLines(text: string) {
   const lines = text.split(/\r?\n/);
@@ -388,6 +389,7 @@ export default function FeedPost({
   }, []);
 
   function burstLike() {
+    void nativeHaptic("light");
     setHeartBurst(false);
     requestAnimationFrame(() => {
       setHeartBurst(true);
@@ -734,7 +736,10 @@ export default function FeedPost({
           type="button"
           data-active={post.liked ? "true" : "false"}
           className="is-like"
-          onClick={onLike}
+          onClick={() => {
+            void nativeHaptic("light");
+            onLike();
+          }}
           aria-label={post.liked ? "Quitar Me gusta" : "Me gusta"}
         >
           <Heart
@@ -756,7 +761,10 @@ export default function FeedPost({
           className="is-repost"
           data-active={post.reposted ? "true" : "false"}
           disabled={ownPost}
-          onClick={onRepost}
+          onClick={() => {
+            void nativeHaptic("medium");
+            onRepost();
+          }}
           aria-label="Repost"
         >
           <Repeat2 size={25} />
@@ -848,3 +856,5 @@ export default function FeedPost({
 /* ALUMNI_2_9_2_PUBLIC_IMAGE_CDN:FEED_POST */
 
 /* ALUMNI_2_9_3_FEED_MEDIA_DEFER */
+
+/* ALUMNI_3_5_0_NATIVE_EXPERIENCE */
