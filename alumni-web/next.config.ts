@@ -59,6 +59,10 @@ const securityHeaders = [
 const nextConfig: NextConfig = {
   reactCompiler: true,
 
+  turbopack: {
+    root: process.cwd(),
+  },
+
   async headers() {
     return [
       {
@@ -74,3 +78,5 @@ const nextConfig: NextConfig = {
 export default nextConfig;
 
 /* ALUMNI_3_3_0A_WEB_ADS:CSP */
+
+/* ALUMNI_3_7_0_PERFORMANCE_RELIABILITY_CORE */

@@ -41,6 +41,8 @@ type EngagementState = {
   mode: "likes" | "reposts";
 } | null;
 
+const FEED_PAGE_SIZE = 30;
+
 function shouldShowFeedAd(
   postIndex: number
 ) {
@@ -79,49 +81,117 @@ function FeedContent() {
   const [selectedMedia, setSelectedMedia] =
     useState<PostMediaItem | null>(null);
   const [toast, setToast] = useState("");
+  const [hasMore, setHasMore] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
 
   const refreshTimerRef = useRef<number | null>(null);
   const feedRequestRef = useRef(0);
   const toastTimerRef = useRef<number | null>(null);
+  const feedLimitRef = useRef(FEED_PAGE_SIZE);
+  const loadMoreRef = useRef<HTMLDivElement>(null);
+  const loadedPostIdsRef =
+    useRef<Set<number>>(new Set());
+  const pendingRefreshRef = useRef(false);
 
   useEffect(() => {
-    void getPosts({ showLoader: true });
+    void refreshPosts({
+      showLoader: true,
+      limit: FEED_PAGE_SIZE,
+    });
   }, []);
 
   useEffect(() => {
+    function refreshScopedChange(payload: any) {
+      const postId = Number(
+        payload?.new?.post_id ??
+          payload?.old?.post_id
+      );
+
+      if (
+        Number.isFinite(postId) &&
+        postId > 0 &&
+        !loadedPostIdsRef.current.has(postId)
+      ) {
+        return;
+      }
+
+      schedulePostsRefresh(320);
+    }
+
+    function refreshPostChange(payload: any) {
+      if (payload?.eventType === "INSERT") {
+        schedulePostsRefresh(320);
+        return;
+      }
+
+      const postId = Number(
+        payload?.new?.id ??
+          payload?.old?.id
+      );
+
+      if (
+        Number.isFinite(postId) &&
+        postId > 0 &&
+        !loadedPostIdsRef.current.has(postId)
+      ) {
+        return;
+      }
+
+      schedulePostsRefresh(320);
+    }
+
+    function handleVisibility() {
+      if (
+        document.visibilityState === "visible" &&
+        pendingRefreshRef.current
+      ) {
+        pendingRefreshRef.current = false;
+        schedulePostsRefresh(60);
+      }
+    }
+
+    function handleOnline() {
+      pendingRefreshRef.current = false;
+      schedulePostsRefresh(80);
+    }
+
     const channel = supabase
       .channel("feed-pro-live")
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "posts" },
-        () => schedulePostsRefresh()
+        refreshPostChange
       )
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "likes" },
-        () => schedulePostsRefresh(80)
+        refreshScopedChange
       )
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "comments" },
-        () => schedulePostsRefresh(100)
+        refreshScopedChange
       )
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "post_reposts" },
-        () => schedulePostsRefresh(100)
+        refreshScopedChange
       )
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "post_media" },
-        () => schedulePostsRefresh(100)
-      )
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "post_saves" },
-        () => schedulePostsRefresh(100)
+        refreshScopedChange
       )
       .subscribe();
+
+    document.addEventListener(
+      "visibilitychange",
+      handleVisibility
+    );
+    window.addEventListener(
+      "online",
+      handleOnline
+    );
 
     return () => {
       feedRequestRef.current += 1;
@@ -133,6 +203,15 @@ function FeedContent() {
       if (toastTimerRef.current !== null) {
         window.clearTimeout(toastTimerRef.current);
       }
+
+      document.removeEventListener(
+        "visibilitychange",
+        handleVisibility
+      );
+      window.removeEventListener(
+        "online",
+        handleOnline
+      );
 
       supabase.removeChannel(channel);
     };
@@ -258,21 +337,91 @@ function FeedContent() {
     }, 2200);
   }
 
-  function schedulePostsRefresh(delay = 140) {
+  function schedulePostsRefresh(delay = 320) {
+    if (
+      typeof document !== "undefined" &&
+      document.visibilityState !== "visible"
+    ) {
+      pendingRefreshRef.current = true;
+      return;
+    }
+
+    pendingRefreshRef.current = false;
+
     if (refreshTimerRef.current !== null) {
       window.clearTimeout(refreshTimerRef.current);
     }
 
     refreshTimerRef.current = window.setTimeout(() => {
       refreshTimerRef.current = null;
-      void getPosts({ showLoader: false });
+      void refreshPosts({
+        showLoader: false,
+        limit: feedLimitRef.current,
+      });
     }, delay);
+  }
+
+  async function refreshPosts(options: {
+    showLoader?: boolean;
+    limit?: number;
+  } = {}) {
+    try {
+      const result = await getPosts(options);
+      return result !== false;
+    } catch (error) {
+      console.error(
+        "[Alumni Feed] unexpected load error:",
+        error
+      );
+
+      if (options.showLoader) {
+        setLoading(false);
+      }
+
+      showToast(
+        options.showLoader
+          ? "No se pudieron cargar las publicaciones."
+          : "No se pudo actualizar el Feed."
+      );
+
+      return false;
+    }
+  }
+
+  async function loadMorePosts() {
+    if (loadingMore || !hasMore) {
+      return;
+    }
+
+    const previousLimit =
+      feedLimitRef.current;
+    const nextLimit =
+      previousLimit +
+      FEED_PAGE_SIZE;
+
+    feedLimitRef.current =
+      nextLimit;
+    setLoadingMore(true);
+
+    const ok = await refreshPosts({
+      showLoader: false,
+      limit: nextLimit,
+    });
+
+    if (!ok) {
+      feedLimitRef.current =
+        previousLimit;
+    }
+
+    setLoadingMore(false);
   }
 
   async function getPosts({
     showLoader = false,
+    limit = feedLimitRef.current,
   }: {
     showLoader?: boolean;
+    limit?: number;
   } = {}) {
     const requestId = ++feedRequestRef.current;
 
@@ -318,13 +467,19 @@ function FeedContent() {
       setFollowingIds([]);
     }
 
+    const safeLimit = Math.max(
+      FEED_PAGE_SIZE,
+      Number(limit) || FEED_PAGE_SIZE
+    );
+
     const {
       data: basePosts,
       error: postsError,
     } = await supabase
       .from("posts")
       .select("*")
-      .order("created_at", { ascending: false });
+      .order("created_at", { ascending: false })
+      .limit(safeLimit);
 
     if (requestId !== feedRequestRef.current) return;
 
@@ -334,21 +489,62 @@ function FeedContent() {
         postsError
       );
 
-      setPosts([]);
-      setLoading(false);
+      if (showLoader) {
+        setPosts([]);
+        setLoading(false);
+      }
+
       showToast(
-        "No se pudieron cargar las publicaciones."
+        showLoader
+          ? "No se pudieron cargar las publicaciones."
+          : "No se pudo actualizar el Feed."
       );
-      return;
+
+      return false;
     }
 
-    const basePostIds = (basePosts || []).map(
+    const pagePostCount =
+      (basePosts || []).length;
+
+    const basePostRows = [
+      ...(basePosts || []),
+    ];
+
+    const requestedPostId = Number(
+      searchParams.get("post")
+    );
+
+    if (
+      Number.isFinite(requestedPostId) &&
+      requestedPostId > 0 &&
+      !basePostRows.some(
+        (post: any) =>
+          Number(post.id) ===
+          requestedPostId
+      )
+    ) {
+      const {
+        data: requestedPost,
+      } = await supabase
+        .from("posts")
+        .select("*")
+        .eq("id", requestedPostId)
+        .maybeSingle();
+
+      if (requestedPost) {
+        basePostRows.push(
+          requestedPost
+        );
+      }
+    }
+
+    const basePostIds = basePostRows.map(
       (post: any) => post.id
     );
 
     const authorIds = [
       ...new Set(
-        (basePosts || [])
+        basePostRows
           .map((post: any) => post.user_id)
           .filter(Boolean)
       ),
@@ -422,7 +618,7 @@ function FeedContent() {
       );
     }
 
-    const postsData = (basePosts || []).map(
+    const postsData = basePostRows.map(
       (post: any) => ({
         ...post,
         profiles:
@@ -439,7 +635,9 @@ function FeedContent() {
     const commentsPromise = postIds.length
       ? supabase
           .from("comments")
-          .select("*")
+          .select(
+            "id,post_id,user_id,content,created_at"
+          )
           .in("post_id", postIds)
           .order("created_at", { ascending: true })
       : Promise.resolve({ data: [] } as any);
@@ -455,7 +653,9 @@ function FeedContent() {
     const mediaPromise = postIds.length
       ? supabase
           .from("post_media")
-          .select("*")
+          .select(
+            "id,post_id,user_id,media_type,media_url,media_path,media_bucket,mime_type,sort_order,width,height,created_at"
+          )
           .in("post_id", postIds)
           .order("sort_order", { ascending: true })
       : Promise.resolve({ data: [] } as any);
@@ -729,9 +929,23 @@ function FeedContent() {
 
     setPosts(formatted);
 
+    loadedPostIdsRef.current =
+      new Set(
+        formatted.map(
+          (post: any) =>
+            Number(post.id)
+        )
+      );
+
+    setHasMore(
+      pagePostCount >= safeLimit
+    );
+
     if (showLoader) {
       setLoading(false);
     }
+
+    return true;
   }
 
   async function createPost(
@@ -955,7 +1169,6 @@ function FeedContent() {
       }
     }
 
-    schedulePostsRefresh(220);
   }
 
   async function addComment(postId: number) {
@@ -1033,7 +1246,6 @@ function FeedContent() {
       [postId]: "",
     }));
 
-    schedulePostsRefresh(260);
   }
 
   async function toggleRepost(post: any) {
@@ -1103,7 +1315,6 @@ function FeedContent() {
         : "Compartido en Alumni"
     );
 
-    schedulePostsRefresh(220);
   }
 
   async function toggleSave(post: any) {
@@ -1292,6 +1503,47 @@ function FeedContent() {
     [commentsPostId, posts]
   );
 
+  useEffect(() => {
+    if (
+      loading ||
+      loadingMore ||
+      !hasMore
+    ) {
+      return;
+    }
+
+    const target =
+      loadMoreRef.current;
+
+    if (!target) {
+      return;
+    }
+
+    const observer =
+      new IntersectionObserver(
+        (entries) => {
+          if (
+            entries[0]?.isIntersecting
+          ) {
+            void loadMorePosts();
+          }
+        },
+        {
+          rootMargin:
+            "480px 0px",
+        }
+      );
+
+    observer.observe(target);
+
+    return () =>
+      observer.disconnect();
+  }, [
+    loading,
+    loadingMore,
+    hasMore,
+  ]);
+
   return (
     <AppShell>
       <div className="alumni-feed-page alumni-feed-pro mx-auto w-full max-w-[780px]">
@@ -1335,7 +1587,7 @@ function FeedContent() {
 
         {loading ? (
           <FeedLoadingSkeleton />
-        ) : visiblePosts.length === 0 ? (
+        ) : visiblePosts.length === 0 && !hasMore ? (
           <AlumniEmptyState
             eyebrow={
               feedMode === "following"
@@ -1414,6 +1666,26 @@ function FeedContent() {
               )}
               </Fragment>
             ))}
+
+            {hasMore && (
+              <div
+                ref={loadMoreRef}
+                className="flex min-h-24 items-center justify-center px-4 py-7"
+              >
+                <button
+                  type="button"
+                  onClick={() =>
+                    void loadMorePosts()
+                  }
+                  disabled={loadingMore}
+                  className="rounded-xl border border-[var(--app-border)] bg-[var(--app-surface)] px-4 py-2.5 text-xs font-semibold text-[var(--app-text-soft)] transition hover:bg-[var(--app-surface-2)] disabled:cursor-wait disabled:opacity-60"
+                >
+                  {loadingMore
+                    ? "Cargando publicaciones..."
+                    : "Ver más publicaciones"}
+                </button>
+              </div>
+            )}
           </div>
         )}
       </div>
@@ -1512,3 +1784,5 @@ export default function FeedPage() {
 /* ALUMNI_3_5_0_NATIVE_EXPERIENCE */
 
 /* ALUMNI_3_6_0_CREATION_SOCIAL_POLISH */
+
+/* ALUMNI_3_7_0_PERFORMANCE_RELIABILITY_CORE */
