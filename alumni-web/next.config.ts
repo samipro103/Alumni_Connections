@@ -44,13 +44,13 @@ const securityHeaders = [
       "object-src 'none'",
       "frame-ancestors 'none'",
       "form-action 'self'",
-      "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
+      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://pagead2.googlesyndication.com https://fundingchoicesmessages.google.com",
       "style-src 'self' 'unsafe-inline'",
       "img-src 'self' data: blob: https:",
       "media-src 'self' blob: https:",
       "font-src 'self' data:",
       "connect-src 'self' https: wss:",
-      "frame-src 'self' https://open.spotify.com https://www.youtube.com https://www.youtube-nocookie.com",
+      "frame-src 'self' https://open.spotify.com https://www.youtube.com https://www.youtube-nocookie.com https://*.googlesyndication.com https://*.doubleclick.net https://fundingchoicesmessages.google.com",
       "upgrade-insecure-requests",
     ].join("; "),
   },
@@ -72,3 +72,5 @@ const nextConfig: NextConfig = {
 };
 
 export default nextConfig;
+
+/* ALUMNI_3_3_0A_WEB_ADS:CSP */

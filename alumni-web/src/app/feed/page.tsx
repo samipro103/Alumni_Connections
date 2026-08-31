@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  Fragment,
   Suspense,
   useEffect,
   useMemo,
@@ -18,6 +19,7 @@ import { FeedLoadingSkeleton, AlumniEmptyState } from "@/components/ui/AlumniLoa
 import PostComposer from "@/components/feed/PostComposer";
 import StoriesRail from "@/components/feed/StoriesRail";
 import FeedPost from "@/components/feed/FeedPost";
+import AdSenseSlot from "@/components/ads/AdSenseSlot";
 import FeedCommentsSheet from "@/components/feed/FeedCommentsSheet";
 import FeedEngagementModal from "@/components/feed/FeedEngagementModal";
 import { rankForYouPosts } from "@/lib/feedRanking";
@@ -35,6 +37,18 @@ type EngagementState = {
   postId: number;
   mode: "likes" | "reposts";
 } | null;
+
+function shouldShowFeedAd(
+  postIndex: number
+) {
+  const position = postIndex + 1;
+
+  if (position < 5) {
+    return false;
+  }
+
+  return (position - 5) % 7 === 0;
+}
 
 function FeedContent() {
   const searchParams = useSearchParams();
@@ -1202,6 +1216,10 @@ function FeedContent() {
           focusStoryId={searchParams.get("story")}
         />
 
+        <AdSenseSlot
+          placement="stories"
+        />
+
         <PostComposer
           content={content}
           setContent={setContent}
@@ -1257,6 +1275,7 @@ function FeedContent() {
         ) : (
           <div className="alumni-pro-feed-list">
             {visiblePosts.map((post, postIndex) => (
+              <Fragment key={post.id}>
               <div
                 key={post.id}
                 className={
@@ -1304,6 +1323,13 @@ function FeedContent() {
                   onOpenMedia={setSelectedMedia}
                 />
               </div>
+
+              {shouldShowFeedAd(postIndex) && (
+                <AdSenseSlot
+                  placement="feed"
+                />
+              )}
+              </Fragment>
             ))}
           </div>
         )}
@@ -1397,3 +1423,5 @@ export default function FeedPage() {
 /* ALUMNI_2_7_0_LOADING_STATES:FEED */
 
 /* ALUMNI_2_8_0_MEDIA_VIEWER:FEED */
+
+/* ALUMNI_3_3_0A_WEB_ADS:FEED */
