@@ -43,7 +43,7 @@ const items = [
     icon: Search,
   },
   {
-    href: "/feed#composer",
+    href: "/feed?compose=1",
     label: "Crear",
     icon: Plus,
     create: true,
@@ -399,6 +399,34 @@ export default function MobileNav() {
                   onClick={(event) => {
                     setMoreOpen(false);
 
+                    if (create) {
+                      if (
+                        pathname ===
+                        "/feed"
+                      ) {
+                        event.preventDefault();
+
+                        window.dispatchEvent(
+                          new CustomEvent(
+                            "alumni:open-composer"
+                          )
+                        );
+
+                        document
+                          .getElementById(
+                            "composer"
+                          )
+                          ?.scrollIntoView({
+                            behavior:
+                              "smooth",
+                            block:
+                              "center",
+                          });
+                      }
+
+                      return;
+                    }
+
                     if (
                       label === "Inicio" &&
                       pathname === "/feed"
@@ -509,3 +537,5 @@ export default function MobileNav() {
 /* ALUMNI_3_1_0_PROFESSIONAL_VISUAL_CORE */
 
 /* ALUMNI_3_1_1_PRODUCT_COPY_CLEANUP */
+
+/* ALUMNI_3_6_0_CREATION_SOCIAL_POLISH */

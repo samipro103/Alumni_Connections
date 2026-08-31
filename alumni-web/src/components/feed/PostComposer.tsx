@@ -23,13 +23,23 @@ import { useAlumniUX } from "@/components/ui/AlumniUXProvider";
 import ImageCropEditor from "@/components/feed/ImageCropEditor";
 import { supabase } from "@/lib/supabase";
 import { validatePostMediaFiles } from "@/lib/feedMedia";
+import { nativeHaptic } from "@/lib/nativeExperience";
+
+export type PostPublishStage =
+  | "preparing"
+  | "uploading"
+  | "publishing";
 
 interface Props {
   content: string;
   setContent: (value: string) => void;
   mediaFiles: File[];
   setMediaFiles: (files: File[]) => void;
-  createPost: () => boolean | Promise<boolean>;
+  createPost: (
+    onStage?: (
+      stage: PostPublishStage
+    ) => void
+  ) => boolean | Promise<boolean>;
 }
 
 type Preview = {
@@ -56,19 +66,357 @@ export default function PostComposer({
   const fileKeysRef = useRef<WeakMap<File, string>>(new WeakMap());
   const fileKeyCounterRef = useRef(0);
   const reorderRef = useRef<ReorderState | null>(null);
+  const draftTimerRef = useRef<number | null>(null);
   const { user } = useAuth();
-  const { notify } = useAlumniUX();
+  const { notify, confirm } = useAlumniUX();
 
   const [profile, setProfile] = useState<any>(null);
   const [expanded, setExpanded] = useState(false);
   const [publishing, setPublishing] = useState(false);
+  const [
+    publishStage,
+    setPublishStage,
+  ] =
+    useState<PostPublishStage | null>(
+      null
+    );
+  const [
+    draftSaved,
+    setDraftSaved,
+  ] = useState(false);
   const [previews, setPreviews] = useState<Preview[]>([]);
   const [cropQueue, setCropQueue] = useState<File[]>([]);
   const [draggingFile, setDraggingFile] = useState<File | null>(null);
 
+  const draftKey =
+    user?.id
+      ? `alumni:post-draft:${user.id}`
+      : "";
+
   useEffect(() => {
     mediaFilesRef.current = mediaFiles;
   }, [mediaFiles]);
+
+  useEffect(() => {
+    if (
+      !draftKey ||
+      content.trim()
+    ) {
+      return;
+    }
+
+    try {
+      const raw =
+        localStorage.getItem(
+          draftKey
+        );
+
+      if (!raw) return;
+
+      const saved =
+        JSON.parse(raw) as {
+          content?: string;
+        };
+
+      const savedContent =
+        typeof saved.content ===
+        "string"
+          ? saved.content
+          : "";
+
+      if (
+        !savedContent.trim()
+      ) {
+        return;
+      }
+
+      setContent(
+        savedContent
+      );
+      setExpanded(true);
+      setDraftSaved(true);
+
+      notify(
+        "Borrador recuperado.",
+        "info"
+      );
+    } catch {}
+  }, [draftKey]);
+
+  useEffect(() => {
+    if (!draftKey) {
+      return;
+    }
+
+    if (
+      draftTimerRef.current !==
+      null
+    ) {
+      window.clearTimeout(
+        draftTimerRef.current
+      );
+      draftTimerRef.current =
+        null;
+    }
+
+    if (!content.trim()) {
+      try {
+        localStorage.removeItem(
+          draftKey
+        );
+      } catch {}
+
+      setDraftSaved(false);
+      return;
+    }
+
+    setDraftSaved(false);
+
+    draftTimerRef.current =
+      window.setTimeout(
+        () => {
+          try {
+            localStorage.setItem(
+              draftKey,
+              JSON.stringify({
+                content,
+                updatedAt:
+                  Date.now(),
+              })
+            );
+
+            setDraftSaved(
+              true
+            );
+          } catch {}
+
+          draftTimerRef.current =
+            null;
+        },
+        350
+      );
+
+    return () => {
+      if (
+        draftTimerRef.current !==
+        null
+      ) {
+        window.clearTimeout(
+          draftTimerRef.current
+        );
+        draftTimerRef.current =
+          null;
+      }
+    };
+  }, [content, draftKey]);
+
+  useEffect(() => {
+    if (
+      !content.trim() &&
+      !mediaFiles.length
+    ) {
+      return;
+    }
+
+    function beforeUnload(
+      event: BeforeUnloadEvent
+    ) {
+      if (
+        draftKey &&
+        content.trim()
+      ) {
+        try {
+          localStorage.setItem(
+            draftKey,
+            JSON.stringify({
+              content,
+              updatedAt:
+                Date.now(),
+            })
+          );
+        } catch {}
+      }
+
+      if (
+        mediaFilesRef.current
+          .length > 0 &&
+        !publishing
+      ) {
+        event.preventDefault();
+        event.returnValue = "";
+      }
+    }
+
+    window.addEventListener(
+      "beforeunload",
+      beforeUnload
+    );
+
+    return () =>
+      window.removeEventListener(
+        "beforeunload",
+        beforeUnload
+      );
+  }, [
+    content,
+    draftKey,
+    mediaFiles.length,
+    publishing,
+  ]);
+
+  useEffect(() => {
+    if (
+      !mediaFiles.length ||
+      publishing
+    ) {
+      return;
+    }
+
+    async function protectMediaNavigation(
+      event: MouseEvent
+    ) {
+      const target =
+        event.target;
+
+      if (
+        !(target instanceof Element)
+      ) {
+        return;
+      }
+
+      const anchor =
+        target.closest<HTMLAnchorElement>(
+          "a[href]"
+        );
+
+      if (
+        !anchor ||
+        anchor.target ===
+          "_blank" ||
+        anchor.hasAttribute(
+          "download"
+        )
+      ) {
+        return;
+      }
+
+      const next =
+        new URL(
+          anchor.href,
+          window.location.href
+        );
+
+      if (
+        next.origin !==
+        window.location.origin
+      ) {
+        return;
+      }
+
+      if (
+        next.pathname ===
+          "/feed" &&
+        (
+          next.searchParams.get(
+            "compose"
+          ) === "1" ||
+          next.hash ===
+            "#composer"
+        )
+      ) {
+        return;
+      }
+
+      if (
+        next.href ===
+        window.location.href
+      ) {
+        return;
+      }
+
+      event.preventDefault();
+      event.stopPropagation();
+
+      const leave =
+        await confirm({
+          title:
+            "Salir de esta publicación",
+          description:
+            "El texto queda guardado como borrador, pero las fotos o videos seleccionados se perderán.",
+          confirmLabel:
+            "Salir",
+          cancelLabel:
+            "Seguir editando",
+          tone:
+            "danger",
+        });
+
+      if (leave) {
+        window.location.href =
+          next.href;
+      }
+    }
+
+    document.addEventListener(
+      "click",
+      protectMediaNavigation,
+      true
+    );
+
+    return () =>
+      document.removeEventListener(
+        "click",
+        protectMediaNavigation,
+        true
+      );
+  }, [
+    mediaFiles.length,
+    publishing,
+    confirm,
+  ]);
+
+  useEffect(() => {
+    function requestComposerOpen() {
+      openComposer();
+
+      window.setTimeout(
+        () => {
+          document
+            .getElementById(
+              "composer"
+            )
+            ?.scrollIntoView({
+              behavior:
+                "smooth",
+              block:
+                "center",
+            });
+        },
+        20
+      );
+    }
+
+    window.addEventListener(
+      "alumni:open-composer",
+      requestComposerOpen
+    );
+
+    if (
+      window.location.hash ===
+      "#composer"
+    ) {
+      window.setTimeout(
+        requestComposerOpen,
+        60
+      );
+    }
+
+    return () =>
+      window.removeEventListener(
+        "alumni:open-composer",
+        requestComposerOpen
+      );
+  }, [user?.id]);
 
   useEffect(() => {
     if (!user) {
@@ -281,6 +629,10 @@ export default function PostComposer({
       return;
     }
 
+    void nativeHaptic(
+      "selection"
+    );
+
     setExpanded(true);
 
     window.setTimeout(() => {
@@ -358,15 +710,48 @@ export default function PostComposer({
     setCropQueue((currentQueue) => currentQueue.slice(1));
   }
 
+  function clearDraftStorage() {
+    if (
+      draftTimerRef.current !==
+      null
+    ) {
+      window.clearTimeout(
+        draftTimerRef.current
+      );
+      draftTimerRef.current =
+        null;
+    }
+
+    if (draftKey) {
+      try {
+        localStorage.removeItem(
+          draftKey
+        );
+      } catch {}
+    }
+
+    setDraftSaved(false);
+  }
+
   async function publish() {
     if (!canPublish || publishing) return;
 
     setPublishing(true);
+    setPublishStage(
+      "preparing"
+    );
 
     try {
-      const ok = await createPost();
+      const ok =
+        await createPost(
+          setPublishStage
+        );
 
       if (ok) {
+        clearDraftStorage();
+        void nativeHaptic(
+          "success"
+        );
         setExpanded(false);
         setCropQueue([]);
         setDraggingFile(null);
@@ -375,10 +760,43 @@ export default function PostComposer({
       console.error("Post publish error:", error);
     } finally {
       setPublishing(false);
+      setPublishStage(null);
     }
   }
 
-  function cancel() {
+  async function cancel() {
+    if (publishing) {
+      return;
+    }
+
+    const hasPending =
+      Boolean(
+        content.trim() ||
+          mediaFilesRef.current
+            .length
+      );
+
+    if (hasPending) {
+      const discard =
+        await confirm({
+          title:
+            "Descartar publicación",
+          description:
+            "Se eliminará el borrador y los archivos seleccionados.",
+          confirmLabel:
+            "Descartar",
+          cancelLabel:
+            "Seguir editando",
+          tone:
+            "danger",
+        });
+
+      if (!discard) {
+        return;
+      }
+    }
+
+    clearDraftStorage();
     setContent("");
     commitMediaFiles([]);
     setCropQueue([]);
@@ -562,6 +980,9 @@ export default function PostComposer({
                 </button>
 
                 <span className="alumni-pro-composer-limit">
+                  {draftSaved
+                    ? "Borrador guardado · "
+                    : ""}
                   Hasta 10 · Arrastra para ordenar · Fotos 4:5
                 </span>
 
@@ -581,7 +1002,15 @@ export default function PostComposer({
                     disabled={!canPublish || publishing}
                   >
                     <Send size={15} />
-                    {publishing ? "Publicando..." : "Publicar"}
+                    {publishing
+                      ? publishStage ===
+                        "uploading"
+                        ? "Subiendo contenido..."
+                        : publishStage ===
+                          "publishing"
+                        ? "Publicando..."
+                        : "Preparando..."
+                      : "Publicar"}
                   </button>
                 </div>
               </div>
@@ -624,3 +1053,5 @@ export default function PostComposer({
 /* ALUMNI_2_5_0_FEED_VISUAL_COMPOSER */
 
 /* ALUMNI_2_6_0_GLOBAL_UX:POST_COMPOSER */
+
+/* ALUMNI_3_6_0_CREATION_SOCIAL_POLISH */

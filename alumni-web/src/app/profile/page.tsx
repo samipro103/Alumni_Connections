@@ -37,6 +37,7 @@ import ProfileIdentityMeta from "@/components/profile/ProfileIdentityMeta";
 import ProfileHeaderFacts from "@/components/profile/ProfileHeaderFacts";
 import ProfessionalProfileOverview from "@/components/profile/ProfessionalProfileOverview";
 import { hydratePostMedia } from "@/lib/privateMedia";
+import { shareAlumniContent } from "@/lib/nativeExperience";
 import ProfilePostOwnerMenu from "@/components/profile/ProfilePostOwnerMenu";
 import "@/components/profile/ProfilePostOwnerMenu.css";
 import "./profile-visual-2-8.css";
@@ -334,23 +335,36 @@ export default function ProfilePage() {
   async function shareProfile() {
     if (!profile?.username) return;
 
-    const url = `${window.location.origin}/u/${profile.username}`;
+    const url =
+      `${window.location.origin}/u/${profile.username}`;
 
-    try {
-      if (navigator.share) {
-        await navigator.share({
-          title: `@${profile.username} en Alumni.`,
-          url,
-        });
-      } else {
-        await navigator.clipboard.writeText(url);
-        notify(
-          "Enlace del perfil copiado.",
-          "success"
-        );
-      }
-    } catch {
-      // Compartir cancelado.
+    const result =
+      await shareAlumniContent({
+        title:
+          `@${profile.username} en Alumni.`,
+        text:
+          profile.full_name
+            ? `Mira el perfil de ${profile.full_name} en Alumni.`
+            : "Mira este perfil en Alumni.",
+        url,
+        dialogTitle:
+          "Compartir perfil",
+      });
+
+    if (
+      result === "copied"
+    ) {
+      notify(
+        "Enlace del perfil copiado.",
+        "success"
+      );
+    } else if (
+      result === "unavailable"
+    ) {
+      notify(
+        "No se pudo abrir el menú para compartir.",
+        "error"
+      );
     }
   }
 
@@ -837,3 +851,5 @@ function Detail({
 /* ALUMNI_2_8_1_PROFILE_LAYOUT_HOTFIX:PROFILE */
 
 /* ALUMNI_2_9_0_IMAGE_LAYER:PROFILE */
+
+/* ALUMNI_3_6_0_CREATION_SOCIAL_POLISH */

@@ -16,7 +16,9 @@ import { supabase } from "@/lib/supabase";
 import AppShell from "@/components/layout/AppShell";
 import AlumniMediaViewer from "@/components/ui/AlumniMediaViewer";
 import { FeedLoadingSkeleton, AlumniEmptyState } from "@/components/ui/AlumniLoading";
-import PostComposer from "@/components/feed/PostComposer";
+import PostComposer, {
+  type PostPublishStage,
+} from "@/components/feed/PostComposer";
 import StoriesRail from "@/components/feed/StoriesRail";
 import FeedPost from "@/components/feed/FeedPost";
 import AdSenseSlot from "@/components/ads/AdSenseSlot";
@@ -185,6 +187,62 @@ function FeedContent() {
       window.clearTimeout(timer);
       window.clearTimeout(clear);
     };
+  }, [loading, searchParams]);
+
+  useEffect(() => {
+    if (
+      loading ||
+      searchParams.get(
+        "compose"
+      ) !== "1"
+    ) {
+      return;
+    }
+
+    const timer =
+      window.setTimeout(
+        () => {
+          window.dispatchEvent(
+            new CustomEvent(
+              "alumni:open-composer"
+            )
+          );
+
+          document
+            .getElementById(
+              "composer"
+            )
+            ?.scrollIntoView({
+              behavior:
+                "smooth",
+              block:
+                "center",
+            });
+
+          const url =
+            new URL(
+              window.location.href
+            );
+
+          url.searchParams.delete(
+            "compose"
+          );
+
+          window.history.replaceState(
+            {},
+            "",
+            url.pathname +
+              url.search +
+              url.hash
+          );
+        },
+        120
+      );
+
+    return () =>
+      window.clearTimeout(
+        timer
+      );
   }, [loading, searchParams]);
 
   function showToast(message: string) {
@@ -676,10 +734,18 @@ function FeedContent() {
     }
   }
 
-  async function createPost(): Promise<boolean> {
+  async function createPost(
+    onStage?: (
+      stage: PostPublishStage
+    ) => void
+  ): Promise<boolean> {
     if (!content.trim() && !mediaFiles.length) {
       return false;
     }
+
+    onStage?.(
+      "preparing"
+    );
 
     const {
       data: { session },
@@ -722,12 +788,22 @@ function FeedContent() {
     }
 
     try {
+      onStage?.(
+        mediaFiles.length
+          ? "uploading"
+          : "publishing"
+      );
+
       const uploadResult = await uploadPostMediaFiles({
         files: mediaFiles,
         userId: user.id,
         postId: insertedPost.id,
         isPrivate: Boolean(privacyProfile?.is_private),
       });
+
+      onStage?.(
+        "publishing"
+      );
 
       if (uploadResult.firstImage) {
         await supabase
@@ -1434,3 +1510,5 @@ export default function FeedPage() {
 /* ALUMNI_3_3_0A_WEB_ADS:FEED */
 
 /* ALUMNI_3_5_0_NATIVE_EXPERIENCE */
+
+/* ALUMNI_3_6_0_CREATION_SOCIAL_POLISH */
