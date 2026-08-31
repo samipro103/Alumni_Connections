@@ -35,8 +35,17 @@ export default function PrivacyPage() {
           title:
             "Seguridad",
           body: [
-            "Alumni utiliza controles de sesión, RLS en Supabase, permisos por usuario, autenticación de dos factores para cuentas nuevas, validación de enlaces, restricciones de almacenamiento y controles contra abuso.",
+            "Alumni utiliza controles de sesión, RLS en Supabase, permisos por usuario, verificación de registro por correo, validación de enlaces, restricciones de almacenamiento y controles contra abuso.",
             "Ningún sistema puede garantizar riesgo cero. Si detectas actividad sospechosa, cambia tu contraseña, revisa tu autenticación y utiliza las herramientas de bloqueo y reporte.",
+          ],
+        },
+        {
+          title:
+            "Publicidad, cookies y proveedores externos",
+          body: [
+            "Alumni puede mostrar publicidad de terceros en determinadas áreas públicas o sociales de la plataforma. Para operar y medir esos anuncios, proveedores como Google AdSense pueden utilizar cookies, identificadores o tecnologías similares de acuerdo con sus propias políticas y con las opciones de consentimiento aplicables.",
+            "Cuando la normativa lo requiere, Alumni utiliza mecanismos de gestión de consentimiento para ofrecer opciones sobre el uso de datos con fines publicitarios. La disponibilidad de anuncios y su personalización pueden variar según la región, la configuración del usuario y las decisiones de consentimiento.",
+            "Los mensajes privados no se utilizan como una superficie de anuncios dentro de Alumni. La publicidad se mantiene separada de las conversaciones privadas entre usuarios.",
           ],
         },
         {

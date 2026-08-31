@@ -43,8 +43,8 @@ export default function TermsPage() {
           title:
             "Cambios y disponibilidad",
           body: [
-            "Alumni es un producto en evolución. Algunas funciones pueden cambiar, suspenderse o actualizarse por motivos de seguridad, desempeño, cumplimiento o mejora del producto.",
-            "Antes de un lanzamiento comercial amplio, estos términos deben ser revisados y adaptados por asesoría jurídica a la entidad operadora y a las jurisdicciones donde se ofrezca el servicio.",
+            "Alumni puede actualizar funciones, medidas de seguridad y características del servicio por motivos de desempeño, cumplimiento, protección de la comunidad o mejora del producto.",
+            "Estos términos también pueden actualizarse cuando cambie el servicio o sea necesario reflejar nuevas obligaciones. Cuando un cambio sea relevante para el uso de la plataforma, Alumni procurará comunicarlo de forma razonable.",
           ],
         },
       ]}

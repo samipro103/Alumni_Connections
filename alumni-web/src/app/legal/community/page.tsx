@@ -33,6 +33,14 @@ export default function CommunityPage() {
         },
         {
           title:
+            "Contenido no permitido",
+          body: [
+            "No se permite contenido que explote o sexualice a menores, promueva odio o violencia contra personas por características protegidas, facilite actividades ilegales, distribuya material sexual explícito o intente engañar a otras personas mediante fraude, malware o prácticas abusivas.",
+            "Alumni puede retirar contenido o limitar cuentas cuando una publicación, historia, mensaje público o perfil incumpla estas normas o represente un riesgo para la comunidad.",
+          ],
+        },
+        {
+          title:
             "Reportar",
           body: [
             "Desde un perfil puedes reportar spam, acoso, suplantación, contenido inapropiado, fraude, problemas de privacidad u otras conductas. Los reportes se almacenan para revisión y seguimiento.",
