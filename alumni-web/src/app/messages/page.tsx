@@ -67,6 +67,9 @@ export default function MessagesPage() {
       null
     );
 
+  const pendingInboxRefreshRef =
+    useRef(false);
+
   useEffect(() => {
     if (!loading && !user) {
       router.push("/login");
@@ -204,6 +207,18 @@ export default function MessagesPage() {
 
     const refresh = () => {
       if (
+        document.visibilityState !==
+        "visible"
+      ) {
+        pendingInboxRefreshRef.current =
+          true;
+        return;
+      }
+
+      pendingInboxRefreshRef.current =
+        false;
+
+      if (
         inboxRefreshTimerRef.current !==
         null
       ) {
@@ -222,9 +237,33 @@ export default function MessagesPage() {
               true
             );
           },
-          100
+          220
         );
     };
+
+    const handleVisibility = () => {
+      if (
+        document.visibilityState ===
+          "visible" &&
+        pendingInboxRefreshRef.current
+      ) {
+        refresh();
+      }
+    };
+
+    const handleOnline = () => {
+      refresh();
+    };
+
+    document.addEventListener(
+      "visibilitychange",
+      handleVisibility
+    );
+
+    window.addEventListener(
+      "online",
+      handleOnline
+    );
 
     const channel = supabase
       .channel(
@@ -309,6 +348,16 @@ export default function MessagesPage() {
       inboxRequestRef.current +=
         1;
 
+      document.removeEventListener(
+        "visibilitychange",
+        handleVisibility
+      );
+
+      window.removeEventListener(
+        "online",
+        handleOnline
+      );
+
       supabase.removeChannel(channel);
     };
   }, [user?.id]);
@@ -325,16 +374,12 @@ export default function MessagesPage() {
       setLoadingConversations(true);
     }
 
-    const { data: messages, error } =
-      await supabase
-        .from("messages")
-        .select("*")
-        .or(
-          `sender_id.eq.${user.id},receiver_id.eq.${user.id}`
-        )
-        .order("created_at", {
-          ascending: false,
-        });
+    const {
+      data,
+      error,
+    } = await supabase.rpc(
+      "get_my_direct_conversations"
+    );
 
     if (
       requestId !==
@@ -344,7 +389,10 @@ export default function MessagesPage() {
     }
 
     if (error) {
-      console.error(error);
+      console.error(
+        "[Alumni Messages] inbox:",
+        error
+      );
 
       if (!silent) {
         setConversations([]);
@@ -354,95 +402,44 @@ export default function MessagesPage() {
       return;
     }
 
-    const latestByUser =
-      new Map<string, any>();
-
-    const unreadByUser =
-      new Map<string, number>();
-
-    (messages || []).forEach(
-      (message: any) => {
-        const otherUserId =
-          message.sender_id === user.id
-            ? message.receiver_id
-            : message.sender_id;
-
-        if (
-          !latestByUser.has(otherUserId)
-        ) {
-          latestByUser.set(
-            otherUserId,
-            message
-          );
-        }
-
-        if (
-          message.receiver_id === user.id &&
-          !message.read_at
-        ) {
-          unreadByUser.set(
-            otherUserId,
-            (unreadByUser.get(
-              otherUserId
-            ) || 0) + 1
-          );
-        }
-      }
-    );
-
-    const ids = Array.from(
-      latestByUser.keys()
-    );
-
-    if (!ids.length) {
-      setConversations([]);
-      setLoadingConversations(false);
-      return;
-    }
-
-    const { data: profiles, error: profilesError } =
-      await supabase
-        .from("profiles")
-        .select(
-          "id, username, avatar_url, university, career"
-        )
-        .in("id", ids);
-
-    if (
-      requestId !==
-      inboxRequestRef.current
-    ) {
-      return;
-    }
-
-    if (profilesError) {
-      console.error(profilesError);
-      setLoadingConversations(false);
-      return;
-    }
-
     const merged = (
-      profiles || []
-    )
-      .map((profile: any) => ({
-        ...profile,
-        lastMessage:
-          latestByUser.get(profile.id),
+      data || []
+    ).map(
+      (row: any) => ({
+        id: row.peer_id,
+        username: row.username,
+        avatar_url:
+          row.avatar_url || null,
+        university:
+          row.university || null,
+        career:
+          row.career || null,
         unreadCount:
-          unreadByUser.get(profile.id) ||
-          0,
-      }))
-      .sort(
-        (a: any, b: any) =>
-          new Date(
-            b.lastMessage
-              ?.created_at || 0
-          ).getTime() -
-          new Date(
-            a.lastMessage
-              ?.created_at || 0
-          ).getTime()
-      ) as Conversation[];
+          Number(
+            row.unread_count || 0
+          ),
+        lastMessage: {
+          id:
+            row.last_message_id,
+          sender_id:
+            row.last_sender_id,
+          receiver_id:
+            row.last_receiver_id,
+          content:
+            row.last_content,
+          message_type:
+            row.last_message_type,
+          media_type:
+            row.last_media_type,
+          media_name:
+            row.last_media_name,
+          read_at:
+            row.last_read_at,
+          created_at:
+            row.last_created_at,
+        },
+      })
+    ) as Conversation[];
 
     if (
       requestId !==
@@ -1113,3 +1110,5 @@ export default function MessagesPage() {
 /* ALUMNI_1_3_3_VISUAL_UX_HOTFIX:INBOX */
 
 /* ALUMNI_1_3_6_CHAT_STABILITY_MEDIA_SPOTIFY:GROUP_AVATAR */
+
+/* ALUMNI_3_7_2_MESSAGING_PERFORMANCE_RELIABILITY */
