@@ -1,19 +1,27 @@
-ALUMNI 1.5.0 FIX 3
+ALUMNI 2.5 - FEED VISUAL
 
-Corrige únicamente:
-src/app/messages/[username]/page.tsx
+Incluye:
+- Reordenar fotos y videos antes de publicar (arrastrar + teclado).
+- Pinch-to-zoom con dos dedos en el editor 4:5.
+- Slider de zoom se mantiene disponible.
+- Carrusel mixto mas estable: pausa videos mientras deslizas.
+- Video solo reproduce si esta activo y realmente visible.
+- Skeleton y fade suave para fotos/videos.
+- Fotos antiguas o no 4:5 se muestran completas dentro del marco 4:5, con fondo difuminado.
+- Fotos nuevas 4:5 mantienen el encuadre exacto.
+- Videos conservan su cuadro completo dentro del marco 4:5.
+- Ajustes responsive para 430, 390 y 360 px.
 
-Error corregido:
-Block-scoped variable 'visibleHydrated' used before its declaration.
+NO TOCA:
+- Supabase
+- autenticacion
+- base de datos
+- buckets
+- Cloudflare
+- logos
 
-Causa:
-hydratedIds debe calcularse desde hydrated.
-El FIX anterior sustituyó ese uso por visibleHydrated demasiado pronto.
-
-Aplicar:
-APLICAR_ALUMNI_1.5.0_FIX3.bat
-
-Después:
-npm run build
-
-NO hagas commit hasta que el build termine completamente bien.
+USO:
+1. Extrae esta carpeta dentro de alumni-web.
+2. Ejecuta APLICAR_FEED_VISUAL_2_5.bat.
+3. Ejecuta npm run build.
+4. Si compila, usa el commit indicado por ChatGPT.
