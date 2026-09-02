@@ -12,11 +12,12 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
+    "test:security": "vitest run --config vitest.security.config.ts",
     "test:e2e": "playwright test",
     "test:e2e:headed": "playwright test --headed",
     "test:e2e:install": "playwright install chromium",
     "qa": "npm run test && npm run typecheck && npm run build",
-    "qa:full": "npm run qa && npm run test:e2e"
+    "qa:full": "npm run qa && npm run test:security && npm run test:e2e"
   },
   "dependencies": {
     "@capacitor/android": "^8.5.0",
