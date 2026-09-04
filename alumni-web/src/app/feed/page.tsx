@@ -83,9 +83,6 @@ function FeedContent() {
   const [posts, setPosts] = useState<any[]>([]);
   const [content, setContent] = useState("");
   const [mediaFiles, setMediaFiles] = useState<File[]>([]);
-  const [commentInputs, setCommentInputs] = useState<
-    Record<number, string>
-  >({});
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [currentProfile, setCurrentProfile] = useState<any>(null);
   const [followingIds, setFollowingIds] = useState<string[]>([]);
@@ -248,6 +245,7 @@ function FeedContent() {
     if (Number.isFinite(commentId) && commentId > 0) {
       setFocusedCommentId(commentId);
       setCommentsPostId(postId);
+      void loadComments(postId);
     }
 
     const timer = window.setTimeout(() => {
@@ -1558,86 +1556,134 @@ function FeedContent() {
     }
   }
 
-  async function openComments(postId: number) {
-    setCommentsPostId(postId);
-    setFocusedCommentId(null);
-
+  async function loadComments(postId: number) {
     const post = posts.find(
       (item) => item.id === postId
     );
 
     if (post?.commentsLoaded) {
-      return;
+      return true;
     }
 
+    const actionKey =
+      `comments-load:${postId}`;
+
+    if (
+      pendingPostActionsRef.current.has(
+        actionKey
+      )
+    ) {
+      return true;
+    }
+
+    pendingPostActionsRef.current.add(
+      actionKey
+    );
     setCommentsLoading(true);
 
-    const { data, error } = await supabase.rpc(
-      "alumni_post_comments_v1",
-      {
-        p_post_id: postId,
-        p_limit: 500,
-      }
-    );
+    try {
+      const { data, error } =
+        await supabase.rpc(
+          "alumni_post_comments_v1",
+          {
+            p_post_id: postId,
+            p_limit: 500,
+          }
+        );
 
-    if (!error && Array.isArray(data)) {
-      setPosts((current) =>
-        current.map((item) =>
-          item.id === postId
-            ? {
-                ...item,
-                comments: data,
-                commentsCount: data.length,
-                commentsLoaded: true,
-              }
-            : item
-        )
-      );
-    } else if (error) {
-      console.warn(
-        "[Alumni Feed] lazy comments:",
-        error
-      );
+      if (
+        !error &&
+        Array.isArray(data)
+      ) {
+        setPosts((current) =>
+          current.map((item) =>
+            item.id === postId
+              ? {
+                  ...item,
+                  comments: data,
+                  commentsCount:
+                    Math.max(
+                      Number(
+                        item.commentsCount ||
+                          0
+                      ),
+                      data.length
+                    ),
+                  commentsLoaded: true,
+                }
+              : item
+          )
+        );
+
+        return true;
+      }
+
+      if (error) {
+        console.error(
+          "[Alumni Feed] lazy comments:",
+          error
+        );
+      }
+
       showToast(
         "No se pudieron cargar todos los comentarios."
       );
+      return false;
+    } finally {
+      setCommentsLoading(false);
+      pendingPostActionsRef.current.delete(
+        actionKey
+      );
     }
-
-    setCommentsLoading(false);
   }
 
-  async function addComment(postId: number) {
+  async function openComments(postId: number) {
+    setCommentsPostId(postId);
+    setFocusedCommentId(null);
+    await loadComments(postId);
+  }
+
+  async function addComment(
+    postId: number,
+    rawValue: string
+  ): Promise<boolean> {
     if (!currentUser) {
       window.location.href = "/login";
-      return;
+      return false;
     }
 
-    const value =
-      commentInputs[postId]?.trim();
+    const value = rawValue.trim();
 
     if (!value) {
-      return;
+      return false;
     }
 
-    const actionKey = `comment:${postId}`;
+    const actionKey =
+      `comment:${postId}`;
 
     if (
-      pendingPostActionsRef.current.has(actionKey)
+      pendingPostActionsRef.current.has(
+        actionKey
+      )
     ) {
-      return;
+      return false;
     }
 
-    pendingPostActionsRef.current.add(actionKey);
+    pendingPostActionsRef.current.add(
+      actionKey
+    );
+
+    const targetPost = posts.find(
+      (item) => item.id === postId
+    );
 
     const optimisticId =
       optimisticCommentIdRef.current--;
 
-    const optimisticCreatedAt =
-      new Date().toISOString();
-
     const optimisticComment = {
       id: optimisticId,
-      created_at: optimisticCreatedAt,
+      created_at:
+        new Date().toISOString(),
       post_id: postId,
       user_id: currentUser.id,
       content: value,
@@ -1654,11 +1700,6 @@ function FeedContent() {
       },
     };
 
-    setCommentInputs((current) => ({
-      ...current,
-      [postId]: "",
-    }));
-
     setPosts((current) =>
       current.map((item) =>
         item.id === postId
@@ -1666,8 +1707,8 @@ function FeedContent() {
               ...item,
               commentsCount:
                 Number(
-                  item.commentsCount ||
-                    item.comments?.length ||
+                  item.commentsCount ??
+                    item.comments?.length ??
                     0
                 ) + 1,
               comments: [
@@ -1706,14 +1747,15 @@ function FeedContent() {
             item.id === postId
               ? {
                   ...item,
-                  commentsCount: Math.max(
-                    0,
-                    Number(
-                      item.commentsCount ||
-                        item.comments?.length ||
-                        0
-                    ) - 1
-                  ),
+                  commentsCount:
+                    Math.max(
+                      0,
+                      Number(
+                        item.commentsCount ??
+                          item.comments?.length ??
+                          0
+                      ) - 1
+                    ),
                   comments: (
                     item.comments || []
                   ).filter(
@@ -1726,19 +1768,12 @@ function FeedContent() {
           )
         );
 
-        setCommentInputs((current) => ({
-          ...current,
-          [postId]:
-            current[postId]?.trim()
-              ? current[postId]
-              : value,
-        }));
-
         showToast(
           error?.message ||
             "No se pudo comentar"
         );
-        return;
+
+        return false;
       }
 
       setPosts((current) =>
@@ -1765,25 +1800,24 @@ function FeedContent() {
         )
       );
 
-      const post = posts.find(
-        (item) => item.id === postId
-      );
-
       if (
-        post &&
-        post.user_id !== currentUser.id
+        targetPost &&
+        targetPost.user_id !==
+          currentUser.id
       ) {
         void supabase
           .from("notifications")
           .insert({
-            user_id: post.user_id,
-            actor_id: currentUser.id,
+            user_id:
+              targetPost.user_id,
+            actor_id:
+              currentUser.id,
             type: "comment",
             post_id: postId,
-            target_type: "post_comment",
-            target_id: String(
-              inserted.id
-            ),
+            target_type:
+              "post_comment",
+            target_id:
+              String(inserted.id),
           })
           .then(({ error }) => {
             if (error) {
@@ -1794,6 +1828,8 @@ function FeedContent() {
             }
           });
       }
+
+      return true;
     } finally {
       pendingPostActionsRef.current.delete(
         actionKey
@@ -2355,23 +2391,14 @@ function FeedContent() {
         <FeedCommentsSheet
           post={activeCommentsPost}
           currentUserId={currentUser?.id}
-          input={
+          onSend={(value) =>
             activeCommentsPost
-              ? commentInputs[activeCommentsPost.id] || ""
-              : ""
+              ? addComment(
+                  activeCommentsPost.id,
+                  value
+                )
+              : Promise.resolve(false)
           }
-          setInput={(value) => {
-            if (!activeCommentsPost) return;
-
-            setCommentInputs((current) => ({
-              ...current,
-              [activeCommentsPost.id]: value,
-            }));
-          }}
-          onSend={() => {
-            if (!activeCommentsPost) return;
-            void addComment(activeCommentsPost.id);
-          }}
           onClose={() => {
             setCommentsPostId(null);
             setFocusedCommentId(null);
@@ -2464,3 +2491,6 @@ export default function FeedPage() {
 /* ALUMNI_PERFORMANCE_HARDENING_FEED_CODE_SPLIT_V6 */
 
 /* ALUMNI_PERFORMANCE_HARDENING_FEED_OPTIMISTIC_ROLLBACK_V7 */
+
+/* ALUMNI_PERFORMANCE_HARDENING_FEED_DRAFT_ISOLATION_V8 */
+/* ALUMNI_PERFORMANCE_HARDENING_DEEP_LINK_COMMENTS_V8 */
