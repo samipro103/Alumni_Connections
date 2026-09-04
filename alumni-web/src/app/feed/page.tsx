@@ -1989,8 +1989,8 @@ function FeedContent() {
                 key={post.id}
                 className={
                   focusedPostId === post.id
-                    ? "alumni-pro-post-focus"
-                    : ""
+                    ? "alumni-feed-post-viewport alumni-pro-post-focus"
+                    : "alumni-feed-post-viewport"
                 }
               >
                 <FeedPost
@@ -2166,3 +2166,5 @@ export default function FeedPage() {
 /* ALUMNI_PERFORMANCE_HARDENING_FEED_V2_RPC_LAZY_COMMENTS */
 
 /* ALUMNI_PERFORMANCE_HARDENING_FEED_V3_REALTIME_LOW_FREQUENCY */
+
+/* ALUMNI_PERFORMANCE_HARDENING_FEED_RENDER_V5 */

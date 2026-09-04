@@ -333,6 +333,11 @@
   border-top: 1px solid var(--app-border);
 }
 
+.alumni-feed-post-viewport {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 720px;
+}
+
 .alumni-pro-post-focus {
   animation: alumni-pro-focus 1.8s ease;
 }
@@ -1418,3 +1423,5 @@
 }
 
 /* ALUMNI_1_4_1_PROFILE_REPOSTS_SAVED_READABILITY:FEED_CSS */
+
+/* ALUMNI_PERFORMANCE_HARDENING_FEED_CONTENT_VISIBILITY_V5 */

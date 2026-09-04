@@ -24,6 +24,7 @@ import {
   useState,
 } from "react";
 import { formatDistanceToNow } from "date-fns";
+import Link from "next/link";
 import { es } from "date-fns/locale";
 import LinkPreviewCard from "@/components/feed/LinkPreviewCard";
 import { AlumniAvatar } from "@/components/ui/AlumniImage";
@@ -597,16 +598,20 @@ export default function FeedPost({
       {showRepostLabel && (
         <div className="alumni-pro-repost-label">
           <Repeat2 size={14} />
-          <a href={`/u/${post.latestRepostProfile.username}`}>
+          <Link
+            href={`/u/${post.latestRepostProfile.username}`}
+            prefetch={false}
+          >
             @{post.latestRepostProfile.username}
-          </a>
+          </Link>
           <span>compartió</span>
         </div>
       )}
 
       <header className="alumni-pro-post-header">
-        <a
+        <Link
           href={`/u/${post.profiles?.username}`}
+          prefetch={false}
           className="alumni-pro-avatar"
         >
           <AlumniAvatar
@@ -617,13 +622,16 @@ export default function FeedPost({
             imageClassName="h-full w-full object-cover"
             priority={postIndex < 2}
           />
-        </a>
+        </Link>
 
         <div className="alumni-pro-author">
           <div>
-            <a href={`/u/${post.profiles?.username}`}>
+            <Link
+              href={`/u/${post.profiles?.username}`}
+              prefetch={false}
+            >
               @{post.profiles?.username || "alumni"}
-            </a>
+            </Link>
             <span>·</span>
             <time>
               {formatDistanceToNow(new Date(post.created_at), {
@@ -913,3 +921,5 @@ export default function FeedPost({
 /* ALUMNI_PERFORMANCE_HARDENING_FEED_V2_COUNTS */
 
 /* ALUMNI_PERFORMANCE_HARDENING_FEED_MEDIA_VIEWPORT_V4 */
+
+/* ALUMNI_PERFORMANCE_HARDENING_FEED_NAVIGATION_V5 */
