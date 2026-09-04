@@ -9,12 +9,12 @@ import {
   useState,
 } from "react";
 import { useSearchParams } from "next/navigation";
+import dynamic from "next/dynamic";
 import "./feed-pro.css";
 import "./feed-visual-2-4.css";
 import "./feed-visual-2-5.css";
 import { supabase } from "@/lib/supabase";
 import AppShell from "@/components/layout/AppShell";
-import AlumniMediaViewer from "@/components/ui/AlumniMediaViewer";
 import { FeedLoadingSkeleton, AlumniEmptyState } from "@/components/ui/AlumniLoading";
 import PostComposer, {
   type PostPublishStage,
@@ -22,8 +22,6 @@ import PostComposer, {
 import StoriesRail from "@/components/feed/StoriesRail";
 import FeedPost from "@/components/feed/FeedPost";
 import AdSenseSlot from "@/components/ads/AdSenseSlot";
-import FeedCommentsSheet from "@/components/feed/FeedCommentsSheet";
-import FeedEngagementModal from "@/components/feed/FeedEngagementModal";
 import { rankForYouPosts } from "@/lib/feedRanking";
 import { analyzeImageLocally } from "@/lib/imageModerationClient";
 import { hydratePostMedia } from "@/lib/privateMedia";
@@ -34,6 +32,30 @@ import {
   uploadPostMediaFiles,
   type PostMediaItem,
 } from "@/lib/feedMedia";
+
+const FeedCommentsSheet = dynamic(
+  () => import("@/components/feed/FeedCommentsSheet"),
+  {
+    ssr: false,
+    loading: () => null,
+  }
+);
+
+const FeedEngagementModal = dynamic(
+  () => import("@/components/feed/FeedEngagementModal"),
+  {
+    ssr: false,
+    loading: () => null,
+  }
+);
+
+const AlumniMediaViewer = dynamic(
+  () => import("@/components/ui/AlumniMediaViewer"),
+  {
+    ssr: false,
+    loading: () => null,
+  }
+);
 
 type FeedMode = "for-you" | "following";
 type EngagementState = {
@@ -2063,47 +2085,51 @@ function FeedContent() {
         )}
       </div>
 
-      <FeedCommentsSheet
-        post={activeCommentsPost}
-        currentUserId={currentUser?.id}
-        input={
-          activeCommentsPost
-            ? commentInputs[activeCommentsPost.id] || ""
-            : ""
-        }
-        setInput={(value) => {
-          if (!activeCommentsPost) return;
+      {commentsPostId !== null && (
+        <FeedCommentsSheet
+          post={activeCommentsPost}
+          currentUserId={currentUser?.id}
+          input={
+            activeCommentsPost
+              ? commentInputs[activeCommentsPost.id] || ""
+              : ""
+          }
+          setInput={(value) => {
+            if (!activeCommentsPost) return;
 
-          setCommentInputs((current) => ({
-            ...current,
-            [activeCommentsPost.id]: value,
-          }));
-        }}
-        onSend={() => {
-          if (!activeCommentsPost) return;
-          void addComment(activeCommentsPost.id);
-        }}
-        onClose={() => {
-          setCommentsPostId(null);
-          setFocusedCommentId(null);
+            setCommentInputs((current) => ({
+              ...current,
+              [activeCommentsPost.id]: value,
+            }));
+          }}
+          onSend={() => {
+            if (!activeCommentsPost) return;
+            void addComment(activeCommentsPost.id);
+          }}
+          onClose={() => {
+            setCommentsPostId(null);
+            setFocusedCommentId(null);
 
-          const url = new URL(window.location.href);
-          url.searchParams.delete("comment");
-          window.history.replaceState(
-            {},
-            "",
-            url.pathname + url.search
-          );
-        }}
-        focusedCommentId={focusedCommentId}
-        loading={commentsLoading}
-      />
+            const url = new URL(window.location.href);
+            url.searchParams.delete("comment");
+            window.history.replaceState(
+              {},
+              "",
+              url.pathname + url.search
+            );
+          }}
+          focusedCommentId={focusedCommentId}
+          loading={commentsLoading}
+        />
+      )}
 
-      <FeedEngagementModal
-        postId={engagement?.postId || null}
-        mode={engagement?.mode || "likes"}
-        onClose={() => setEngagement(null)}
-      />
+      {engagement && (
+        <FeedEngagementModal
+          postId={engagement.postId}
+          mode={engagement.mode}
+          onClose={() => setEngagement(null)}
+        />
+      )}
 
       {selectedMedia && (
         <AlumniMediaViewer
@@ -2168,3 +2194,5 @@ export default function FeedPage() {
 /* ALUMNI_PERFORMANCE_HARDENING_FEED_V3_REALTIME_LOW_FREQUENCY */
 
 /* ALUMNI_PERFORMANCE_HARDENING_FEED_RENDER_V5 */
+
+/* ALUMNI_PERFORMANCE_HARDENING_FEED_CODE_SPLIT_V6 */

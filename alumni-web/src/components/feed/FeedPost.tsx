@@ -25,12 +25,20 @@ import {
 } from "react";
 import { formatDistanceToNow } from "date-fns";
 import Link from "next/link";
+import dynamic from "next/dynamic";
 import { es } from "date-fns/locale";
-import LinkPreviewCard from "@/components/feed/LinkPreviewCard";
 import { AlumniAvatar } from "@/components/ui/AlumniImage";
 import type { PostMediaItem } from "@/lib/feedMedia";
 import { toPublicImageCdnUrl } from "@/lib/imageCdn";
 import { nativeHaptic } from "@/lib/nativeExperience";
+
+const LinkPreviewCard = dynamic(
+  () => import("@/components/feed/LinkPreviewCard"),
+  {
+    ssr: false,
+    loading: () => null,
+  }
+);
 
 function compactRepeatedLines(text: string) {
   const lines = text.split(/\r?\n/);
@@ -923,3 +931,5 @@ export default function FeedPost({
 /* ALUMNI_PERFORMANCE_HARDENING_FEED_MEDIA_VIEWPORT_V4 */
 
 /* ALUMNI_PERFORMANCE_HARDENING_FEED_NAVIGATION_V5 */
+
+/* ALUMNI_PERFORMANCE_HARDENING_FEED_PREVIEW_CODE_SPLIT_V6 */
