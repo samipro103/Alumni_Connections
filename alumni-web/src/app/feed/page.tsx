@@ -87,7 +87,7 @@ function FeedContent() {
   const refreshTimerRef = useRef<number | null>(null);
   const feedRequestRef = useRef(0);
   const toastTimerRef = useRef<number | null>(null);
-  const feedLimitRef = useRef(FEED_PAGE_SIZE);
+  const oldestPostIdRef = useRef<number | null>(null);
   const loadMoreRef = useRef<HTMLDivElement>(null);
   const loadedPostIdsRef =
     useRef<Set<number>>(new Set());
@@ -356,7 +356,10 @@ function FeedContent() {
       refreshTimerRef.current = null;
       void refreshPosts({
         showLoader: false,
-        limit: feedLimitRef.current,
+        limit: Math.max(
+          FEED_PAGE_SIZE,
+          loadedPostIdsRef.current.size
+        ),
       });
     }, delay);
   }
@@ -364,6 +367,8 @@ function FeedContent() {
   async function refreshPosts(options: {
     showLoader?: boolean;
     limit?: number;
+    append?: boolean;
+    beforePostId?: number | null;
   } = {}) {
     try {
       const result = await getPosts(options);
@@ -393,35 +398,36 @@ function FeedContent() {
       return;
     }
 
-    const previousLimit =
-      feedLimitRef.current;
-    const nextLimit =
-      previousLimit +
-      FEED_PAGE_SIZE;
+    const beforePostId =
+      oldestPostIdRef.current;
 
-    feedLimitRef.current =
-      nextLimit;
+    if (!beforePostId) {
+      setHasMore(false);
+      return;
+    }
+
     setLoadingMore(true);
 
-    const ok = await refreshPosts({
+    await refreshPosts({
       showLoader: false,
-      limit: nextLimit,
+      limit: FEED_PAGE_SIZE,
+      append: true,
+      beforePostId,
     });
-
-    if (!ok) {
-      feedLimitRef.current =
-        previousLimit;
-    }
 
     setLoadingMore(false);
   }
 
   async function getPosts({
     showLoader = false,
-    limit = feedLimitRef.current,
+    limit = FEED_PAGE_SIZE,
+    append = false,
+    beforePostId = null,
   }: {
     showLoader?: boolean;
     limit?: number;
+    append?: boolean;
+    beforePostId?: number | null;
   } = {}) {
     const requestId = ++feedRequestRef.current;
 
@@ -472,14 +478,29 @@ function FeedContent() {
       Number(limit) || FEED_PAGE_SIZE
     );
 
+    let postsQuery = supabase
+      .from("posts")
+      .select(
+        "id,user_id,content,image_url,created_at,image_path,media_bucket,edited_at"
+      )
+      .order("id", { ascending: false })
+      .limit(safeLimit);
+
+    if (
+      append &&
+      Number.isFinite(beforePostId) &&
+      Number(beforePostId) > 0
+    ) {
+      postsQuery = postsQuery.lt(
+        "id",
+        Number(beforePostId)
+      );
+    }
+
     const {
       data: basePosts,
       error: postsError,
-    } = await supabase
-      .from("posts")
-      .select("*")
-      .order("created_at", { ascending: false })
-      .limit(safeLimit);
+    } = await postsQuery;
 
     if (requestId !== feedRequestRef.current) return;
 
@@ -506,6 +527,28 @@ function FeedContent() {
     const pagePostCount =
       (basePosts || []).length;
 
+    const pagePostIds = (basePosts || [])
+      .map((post: any) => Number(post.id))
+      .filter(
+        (id: number) =>
+          Number.isFinite(id) && id > 0
+      );
+
+    if (pagePostIds.length) {
+      const pageOldestId =
+        Math.min(...pagePostIds);
+
+      oldestPostIdRef.current =
+        append && oldestPostIdRef.current
+          ? Math.min(
+              oldestPostIdRef.current,
+              pageOldestId
+            )
+          : pageOldestId;
+    } else if (!append) {
+      oldestPostIdRef.current = null;
+    }
+
     const basePostRows = [
       ...(basePosts || []),
     ];
@@ -527,7 +570,9 @@ function FeedContent() {
         data: requestedPost,
       } = await supabase
         .from("posts")
-        .select("*")
+        .select(
+          "id,user_id,content,image_url,created_at,image_path,media_bucket,edited_at"
+        )
         .eq("id", requestedPostId)
         .maybeSingle();
 
@@ -927,15 +972,49 @@ function FeedContent() {
       };
     });
 
-    setPosts(formatted);
+    if (append) {
+      const nextLoadedIds =
+        new Set(loadedPostIdsRef.current);
 
-    loadedPostIdsRef.current =
-      new Set(
-        formatted.map(
-          (post: any) =>
-            Number(post.id)
-        )
-      );
+      for (const post of formatted) {
+        nextLoadedIds.add(
+          Number(post.id)
+        );
+      }
+
+      loadedPostIdsRef.current =
+        nextLoadedIds;
+
+      setPosts((current) => {
+        const byId = new Map(
+          current.map((post: any) => [
+            Number(post.id),
+            post,
+          ])
+        );
+
+        for (const post of formatted) {
+          byId.set(
+            Number(post.id),
+            post
+          );
+        }
+
+        return Array.from(
+          byId.values()
+        );
+      });
+    } else {
+      setPosts(formatted);
+
+      loadedPostIdsRef.current =
+        new Set(
+          formatted.map(
+            (post: any) =>
+              Number(post.id)
+          )
+        );
+    }
 
     setHasMore(
       pagePostCount >= safeLimit
@@ -1786,3 +1865,5 @@ export default function FeedPage() {
 /* ALUMNI_3_6_0_CREATION_SOCIAL_POLISH */
 
 /* ALUMNI_3_7_0_PERFORMANCE_RELIABILITY_CORE */
+
+/* ALUMNI_PERFORMANCE_HARDENING_FEED_V1_CURSOR_PAGINATION */
