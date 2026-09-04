@@ -76,6 +76,8 @@ function FeedContent() {
     useState<number | null>(null);
   const [commentsPostId, setCommentsPostId] =
     useState<number | null>(null);
+  const [commentsLoading, setCommentsLoading] =
+    useState(false);
   const [engagement, setEngagement] =
     useState<EngagementState>(null);
   const [selectedMedia, setSelectedMedia] =
@@ -418,7 +420,228 @@ function FeedContent() {
     setLoadingMore(false);
   }
 
-  async function getPosts({
+  async function getPosts(options: {
+    showLoader?: boolean;
+    limit?: number;
+    append?: boolean;
+    beforePostId?: number | null;
+  } = {}) {
+    const {
+      showLoader = false,
+      limit = FEED_PAGE_SIZE,
+      append = false,
+      beforePostId = null,
+    } = options;
+
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+
+    if (!session?.user) {
+      return getPostsLegacy(options);
+    }
+
+    const safeLimit = Math.min(
+      50,
+      Math.max(
+        FEED_PAGE_SIZE,
+        Number(limit) || FEED_PAGE_SIZE
+      )
+    );
+
+    const requestId = ++feedRequestRef.current;
+
+    if (showLoader) {
+      setLoading(true);
+    }
+
+    const requestedPostId = Number(
+      searchParams.get("post")
+    );
+
+    const { data, error } = await supabase.rpc(
+      "alumni_feed_page_v2",
+      {
+        p_before_id:
+          append && beforePostId
+            ? Number(beforePostId)
+            : null,
+        p_limit: safeLimit,
+        p_focus_post_id:
+          !append &&
+          Number.isFinite(requestedPostId) &&
+          requestedPostId > 0
+            ? requestedPostId
+            : null,
+      }
+    );
+
+    if (requestId !== feedRequestRef.current) {
+      return;
+    }
+
+    if (error || !data) {
+      console.warn(
+        "[Alumni Feed] fast RPC fallback:",
+        error
+      );
+      return getPostsLegacy(options);
+    }
+
+    const payload = data as any;
+    const rawPosts = Array.isArray(payload.posts)
+      ? payload.posts
+      : [];
+
+    let legacyReady = rawPosts;
+
+    try {
+      legacyReady = await hydratePostMedia(rawPosts);
+    } catch (mediaError) {
+      console.warn(
+        "[Alumni Feed] fast legacy media:",
+        mediaError
+      );
+    }
+
+    const allMedia = legacyReady.flatMap(
+      (item: any) =>
+        Array.isArray(item.mediaItems)
+          ? item.mediaItems
+          : []
+    );
+
+    let hydratedMedia = allMedia;
+
+    try {
+      hydratedMedia = await hydratePostMediaItems(
+        allMedia
+      );
+    } catch (mediaError) {
+      console.warn(
+        "[Alumni Feed] fast media items:",
+        mediaError
+      );
+    }
+
+    const mediaByPost = new Map<number, any[]>();
+
+    for (const item of hydratedMedia) {
+      const postId = Number(item.post_id);
+      const current =
+        mediaByPost.get(postId) || [];
+      current.push(item);
+      mediaByPost.set(postId, current);
+    }
+
+    const formatted = legacyReady.map(
+      (item: any) => {
+        const mediaItems =
+          mediaByPost.get(Number(item.id)) || [];
+
+        if (
+          !mediaItems.length &&
+          item.image_url
+        ) {
+          mediaItems.push({
+            post_id: item.id,
+            user_id: item.user_id,
+            media_type: "image",
+            media_url: item.image_url,
+            media_path: item.image_path || null,
+            media_bucket:
+              item.media_bucket || "posts",
+            mime_type: null,
+            sort_order: 0,
+          });
+        }
+
+        return {
+          ...item,
+          comments:
+            Array.isArray(item.comments)
+              ? item.comments
+              : [],
+          commentsCount:
+            Number(item.commentsCount || 0),
+          mediaItems,
+        };
+      }
+    );
+
+    setCurrentUser(session.user);
+    setCurrentProfile(
+      payload.currentProfile || null
+    );
+    setFollowingIds(
+      Array.isArray(payload.followingIds)
+        ? payload.followingIds
+        : []
+    );
+
+    const nextCursor = Number(
+      payload.nextCursor
+    );
+
+    if (
+      Number.isFinite(nextCursor) &&
+      nextCursor > 0
+    ) {
+      oldestPostIdRef.current =
+        append && oldestPostIdRef.current
+          ? Math.min(
+              oldestPostIdRef.current,
+              nextCursor
+            )
+          : nextCursor;
+    } else if (!append) {
+      oldestPostIdRef.current = null;
+    }
+
+    if (append) {
+      const nextLoaded =
+        new Set(loadedPostIdsRef.current);
+
+      for (const item of formatted) {
+        nextLoaded.add(Number(item.id));
+      }
+
+      loadedPostIdsRef.current = nextLoaded;
+
+      setPosts((current) => {
+        const byId = new Map(
+          current.map((item: any) => [
+            Number(item.id),
+            item,
+          ])
+        );
+
+        for (const item of formatted) {
+          byId.set(Number(item.id), item);
+        }
+
+        return Array.from(byId.values());
+      });
+    } else {
+      loadedPostIdsRef.current =
+        new Set(
+          formatted.map((item: any) =>
+            Number(item.id)
+          )
+        );
+      setPosts(formatted);
+    }
+
+    setHasMore(Boolean(payload.hasMore));
+
+    if (showLoader) {
+      setLoading(false);
+    }
+
+    return true;
+  }
+
+  async function getPostsLegacy({
     showLoader = false,
     limit = FEED_PAGE_SIZE,
     append = false,
@@ -1250,6 +1473,54 @@ function FeedContent() {
 
   }
 
+  async function openComments(postId: number) {
+    setCommentsPostId(postId);
+    setFocusedCommentId(null);
+
+    const post = posts.find(
+      (item) => item.id === postId
+    );
+
+    if (post?.commentsLoaded) {
+      return;
+    }
+
+    setCommentsLoading(true);
+
+    const { data, error } = await supabase.rpc(
+      "alumni_post_comments_v1",
+      {
+        p_post_id: postId,
+        p_limit: 500,
+      }
+    );
+
+    if (!error && Array.isArray(data)) {
+      setPosts((current) =>
+        current.map((item) =>
+          item.id === postId
+            ? {
+                ...item,
+                comments: data,
+                commentsCount: data.length,
+                commentsLoaded: true,
+              }
+            : item
+        )
+      );
+    } else if (error) {
+      console.warn(
+        "[Alumni Feed] lazy comments:",
+        error
+      );
+      showToast(
+        "No se pudieron cargar todos los comentarios."
+      );
+    }
+
+    setCommentsLoading(false);
+  }
+
   async function addComment(postId: number) {
     if (!currentUser) {
       window.location.href = "/login";
@@ -1294,6 +1565,8 @@ function FeedContent() {
         item.id === postId
           ? {
               ...item,
+              commentsCount:
+                Number(item.commentsCount || 0) + 1,
               comments: [
                 ...(item.comments || []),
                 {
@@ -1725,8 +1998,7 @@ function FeedContent() {
                     void copyPostLink(post)
                   }
                   onOpenComments={() => {
-                    setCommentsPostId(post.id);
-                    setFocusedCommentId(null);
+                    void openComments(post.id);
                   }}
                   onOpenEngagement={(mode) =>
                     setEngagement({
@@ -1802,6 +2074,7 @@ function FeedContent() {
           );
         }}
         focusedCommentId={focusedCommentId}
+        loading={commentsLoading}
       />
 
       <FeedEngagementModal
@@ -1867,3 +2140,5 @@ export default function FeedPage() {
 /* ALUMNI_3_7_0_PERFORMANCE_RELIABILITY_CORE */
 
 /* ALUMNI_PERFORMANCE_HARDENING_FEED_V1_CURSOR_PAGINATION */
+
+/* ALUMNI_PERFORMANCE_HARDENING_FEED_V2_RPC_LAZY_COMMENTS */

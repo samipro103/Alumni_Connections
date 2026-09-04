@@ -13,6 +13,7 @@ export default function FeedCommentsSheet({
   onSend,
   onClose,
   focusedCommentId,
+  loading = false,
 }: {
   post: any | null;
   currentUserId?: string | null;
@@ -21,6 +22,7 @@ export default function FeedCommentsSheet({
   onSend: () => void;
   onClose: () => void;
   focusedCommentId?: number | null;
+  loading?: boolean;
 }) {
   const [ready, setReady] = useState(false);
 
@@ -84,7 +86,11 @@ export default function FeedCommentsSheet({
         </header>
 
         <div className="alumni-comments-list">
-          {comments.length ? (
+          {loading ? (
+            <div className="alumni-feed-modal-empty">
+              Cargando comentarios...
+            </div>
+          ) : comments.length ? (
             comments.map((comment: any) => (
               <div
                 id={`feed-comment-${comment.id}`}
@@ -170,3 +176,5 @@ export default function FeedCommentsSheet({
 }
 
 /* ALUMNI_1_4_0_COMMENTS_SHEET */
+
+/* ALUMNI_PERFORMANCE_HARDENING_FEED_V2_LAZY_COMMENTS */

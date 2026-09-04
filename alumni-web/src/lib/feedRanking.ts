@@ -97,6 +97,7 @@ function engagementScore(
     0;
 
   const comments =
+    post.commentsCount ??
     post.comments?.length ??
     0;
 
@@ -447,3 +448,5 @@ export function rankForYouPosts(
 }
 
 /* ALUMNI_1_6_0_EXPLORE_DISCOVERY:RANKING */
+
+/* ALUMNI_PERFORMANCE_HARDENING_FEED_V2_RANKING_COUNTS */

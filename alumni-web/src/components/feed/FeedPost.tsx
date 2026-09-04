@@ -780,7 +780,7 @@ export default function FeedPost({
       </div>
 
       {(post.likesCount > 0 ||
-        post.comments?.length > 0 ||
+        Number(post.commentsCount ?? post.comments?.length ?? 0) > 0 ||
         post.repostsCount > 0) && (
         <div className="alumni-pro-stats">
           {post.likesCount > 0 && (
@@ -797,13 +797,13 @@ export default function FeedPost({
 
           <span />
 
-          {post.comments?.length > 0 && (
+          {Number(post.commentsCount ?? post.comments?.length ?? 0) > 0 && (
             <button
               type="button"
               onClick={onOpenComments}
             >
-              {post.comments.length}{" "}
-              {post.comments.length === 1
+              {Number(post.commentsCount ?? post.comments?.length ?? 0)}{" "}
+              {Number(post.commentsCount ?? post.comments?.length ?? 0) === 1
                 ? "respuesta"
                 : "respuestas"}
             </button>
@@ -836,13 +836,15 @@ export default function FeedPost({
         </button>
       )}
 
-      {(post.comments?.length || 0) > 1 && (
+      {Number(post.commentsCount ?? post.comments?.length ?? 0) > 1 && (
         <button
           type="button"
           className="alumni-pro-view-comments"
           onClick={onOpenComments}
         >
-          Abrir conversación · {post.comments.length}
+          Abrir conversación · {Number(
+            post.commentsCount ?? post.comments?.length ?? 0
+          )}
         </button>
       )}
     </article>
@@ -858,3 +860,5 @@ export default function FeedPost({
 /* ALUMNI_2_9_3_FEED_MEDIA_DEFER */
 
 /* ALUMNI_3_5_0_NATIVE_EXPERIENCE */
+
+/* ALUMNI_PERFORMANCE_HARDENING_FEED_V2_COUNTS */
