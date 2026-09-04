@@ -157,14 +157,18 @@ function FeedImage({
 function FeedVideo({
   item,
   active,
+  shouldLoad,
   onOpen,
 }: {
   item: PostMediaItem;
   active: boolean;
+  shouldLoad: boolean;
   onOpen: () => void;
 }) {
   const ref = useRef<HTMLVideoElement>(null);
-  const src = item.media_url || "";
+  const src = shouldLoad
+    ? item.media_url || ""
+    : "";
   const [muted, setMuted] = useState(true);
   const [ready, setReady] = useState(!src);
   const [inView, setInView] = useState(false);
@@ -215,10 +219,14 @@ function FeedVideo({
     >
       <video
         ref={ref}
-        src={src}
+        src={src || undefined}
         playsInline
         muted={muted}
-        preload="metadata"
+        preload={
+          shouldLoad
+            ? "metadata"
+            : "none"
+        }
         className="alumni-feed-video"
         onLoadedData={() => setReady(true)}
         onCanPlay={() => setReady(true)}
@@ -291,6 +299,9 @@ export default function FeedPost({
   ] = useState<number[]>([0, 1]);
   const [carouselMoving, setCarouselMoving] = useState(false);
   const [heartBurst, setHeartBurst] = useState(false);
+  const [nearViewport, setNearViewport] =
+    useState(postIndex < 3);
+  const articleRef = useRef<HTMLElement>(null);
   const carouselRef = useRef<HTMLDivElement>(null);
   const carouselTimerRef = useRef<number | null>(null);
   const lastTapRef = useRef(0);
@@ -313,6 +324,35 @@ export default function FeedPost({
   const longCaption =
     compacted.text.length > 300 ||
     compacted.text.split("\n").length > 4;
+
+  useEffect(() => {
+    if (nearViewport) {
+      return;
+    }
+
+    const node = articleRef.current;
+
+    if (!node) {
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry?.isIntersecting) {
+          setNearViewport(true);
+          observer.disconnect();
+        }
+      },
+      {
+        rootMargin: "900px 0px 1100px 0px",
+        threshold: 0,
+      }
+    );
+
+    observer.observe(node);
+
+    return () => observer.disconnect();
+  }, [nearViewport]);
 
   useEffect(() => {
     if (!menuOpen) return;
@@ -550,6 +590,7 @@ export default function FeedPost({
 
   return (
     <article
+      ref={articleRef}
       id={`post-${post.id}`}
       className="alumni-pro-post"
     >
@@ -635,7 +676,7 @@ export default function FeedPost({
         </div>
       )}
 
-      {previewUrl && (
+      {previewUrl && nearViewport && (
         <LinkPreviewCard url={previewUrl} />
       )}
 
@@ -655,6 +696,13 @@ export default function FeedPost({
                   <FeedVideo
                     item={item}
                     active={!carouselMoving && activeIndex === index}
+                    shouldLoad={
+                      nearViewport &&
+                      (
+                        index === activeIndex ||
+                        index === activeIndex + 1
+                      )
+                    }
                     onOpen={() => onOpenMedia(item)}
                   />
                 ) : (
@@ -663,6 +711,7 @@ export default function FeedPost({
                     postIndex={postIndex}
                     mediaIndex={index}
                     shouldLoad={
+                      nearViewport &&
                       requestedImageIndexes.includes(
                         index
                       )
@@ -862,3 +911,5 @@ export default function FeedPost({
 /* ALUMNI_3_5_0_NATIVE_EXPERIENCE */
 
 /* ALUMNI_PERFORMANCE_HARDENING_FEED_V2_COUNTS */
+
+/* ALUMNI_PERFORMANCE_HARDENING_FEED_MEDIA_VIEWPORT_V4 */
