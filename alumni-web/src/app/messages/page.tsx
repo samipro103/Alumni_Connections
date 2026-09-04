@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { supabase } from "@/lib/supabase";
+import { getSignedMediaUrlMap } from "@/lib/signedMediaUrlCache";
 import AppShell from "@/components/layout/AppShell";
 import CreateMessageGroupModal from "@/components/messages/CreateMessageGroupModal";
 
@@ -68,6 +69,14 @@ export default function MessagesPage() {
     );
 
   const pendingInboxRefreshRef =
+    useRef(false);
+
+  const groupRefreshTimerRef =
+    useRef<number | null>(
+      null
+    );
+
+  const pendingGroupRefreshRef =
     useRef(false);
 
   useEffect(() => {
@@ -146,34 +155,12 @@ export default function MessagesPage() {
         .filter(Boolean);
 
     const avatarUrlByPath =
-      new Map<string,string>();
-
-    if (avatarPaths.length) {
-      const {
-        data:
-          signedRows,
-      } =
-        await supabase.storage
-          .from(
-            "group-message-media"
+      avatarPaths.length
+        ? await getSignedMediaUrlMap(
+            "group-message-media",
+            avatarPaths
           )
-          .createSignedUrls(
-            avatarPaths,
-            3600
-          );
-
-      for (const signed of signedRows || []) {
-        if (
-          signed.path &&
-          signed.signedUrl
-        ) {
-          avatarUrlByPath.set(
-            signed.path,
-            signed.signedUrl
-          );
-        }
-      }
-    }
+        : new Map<string,string>();
 
     const avatarByGroup =
       new Map<string,string>();
@@ -200,6 +187,42 @@ export default function MessagesPage() {
         })
       )
     );
+  }
+
+  function scheduleGroupsRefresh(
+    delay = 320
+  ) {
+    if (
+      document.visibilityState !==
+      "visible"
+    ) {
+      pendingGroupRefreshRef.current =
+        true;
+      return;
+    }
+
+    pendingGroupRefreshRef.current =
+      false;
+
+    if (
+      groupRefreshTimerRef.current !==
+      null
+    ) {
+      window.clearTimeout(
+        groupRefreshTimerRef.current
+      );
+    }
+
+    groupRefreshTimerRef.current =
+      window.setTimeout(
+        () => {
+          groupRefreshTimerRef.current =
+            null;
+
+          void loadGroups();
+        },
+        delay
+      );
   }
 
   useEffect(() => {
@@ -243,11 +266,22 @@ export default function MessagesPage() {
 
     const handleVisibility = () => {
       if (
-        document.visibilityState ===
-          "visible" &&
+        document.visibilityState !==
+        "visible"
+      ) {
+        return;
+      }
+
+      if (
         pendingInboxRefreshRef.current
       ) {
         refresh();
+      }
+
+      if (
+        pendingGroupRefreshRef.current
+      ) {
+        scheduleGroupsRefresh(80);
       }
     };
 
@@ -278,7 +312,7 @@ export default function MessagesPage() {
             "group_messages",
         },
         () => {
-          void loadGroups();
+          scheduleGroupsRefresh();
         }
       )
       .on(
@@ -290,7 +324,7 @@ export default function MessagesPage() {
             "message_groups",
         },
         () => {
-          void loadGroups();
+          scheduleGroupsRefresh();
         }
       )
       .on(
@@ -342,6 +376,15 @@ export default function MessagesPage() {
       ) {
         window.clearTimeout(
           inboxRefreshTimerRef.current
+        );
+      }
+
+      if (
+        groupRefreshTimerRef.current !==
+        null
+      ) {
+        window.clearTimeout(
+          groupRefreshTimerRef.current
         );
       }
 
@@ -1112,3 +1155,5 @@ export default function MessagesPage() {
 /* ALUMNI_1_3_6_CHAT_STABILITY_MEDIA_SPOTIFY:GROUP_AVATAR */
 
 /* ALUMNI_3_7_2_MESSAGING_PERFORMANCE_RELIABILITY */
+
+/* ALUMNI_PERFORMANCE_HARDENING_MESSAGING_INBOX_V9 */

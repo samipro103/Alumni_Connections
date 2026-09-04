@@ -150,6 +150,14 @@ export default function ChatPage() {
       null
     );
 
+  const lastTypingBroadcastRef =
+    useRef(0);
+
+  const pendingReactionKeysRef =
+    useRef<Set<string>>(
+      new Set()
+    );
+
   const [
     receiver,
     setReceiver,
@@ -352,8 +360,7 @@ const mediaUrlCacheRef =
       if (
         payload?.eventType ===
           "UPDATE" &&
-        row?.sender_id ===
-          user.id
+        row
       ) {
         setMessages(
           (current) =>
@@ -520,6 +527,18 @@ const mediaUrlCacheRef =
             table:
               "messages",
             filter: `sender_id=eq.${user.id}`,
+          },
+          refresh
+        )
+        .on(
+          "postgres_changes",
+          {
+            event: "UPDATE",
+            schema:
+              "public",
+            table:
+              "messages",
+            filter: `receiver_id=eq.${user.id}`,
           },
           refresh
         )
@@ -2478,9 +2497,31 @@ setMessages(
   function signalTyping(
     value: string
   ) {
-    broadcastTyping(
-      Boolean(value.trim())
-    );
+    const wantsTyping =
+      Boolean(value.trim());
+
+    const now = Date.now();
+
+    if (wantsTyping) {
+      if (
+        now -
+          lastTypingBroadcastRef.current >=
+        900
+      ) {
+        lastTypingBroadcastRef.current =
+          now;
+
+        broadcastTyping(true);
+      }
+    } else if (
+      lastTypingBroadcastRef.current !==
+      0
+    ) {
+      lastTypingBroadcastRef.current =
+        0;
+
+      broadcastTyping(false);
+    }
 
     if (
       typingTimerRef.current !==
@@ -2491,10 +2532,23 @@ setMessages(
       );
     }
 
+    if (!wantsTyping) {
+      typingTimerRef.current =
+        null;
+      return;
+    }
+
     typingTimerRef.current =
       window.setTimeout(
-        () =>
-          broadcastTyping(false),
+        () => {
+          lastTypingBroadcastRef.current =
+            0;
+
+          broadcastTyping(false);
+
+          typingTimerRef.current =
+            null;
+        },
         1200
       );
   }
@@ -2503,25 +2557,92 @@ setMessages(
     messageId: number,
     emoji: string
   ) {
-    if (!user) return;
+    if (
+      !user ||
+      messageId <= 0
+    ) {
+      return;
+    }
+
+    const actionKey =
+      `direct-reaction:${messageId}`;
+
+    if (
+      pendingReactionKeysRef.current.has(
+        actionKey
+      )
+    ) {
+      return;
+    }
 
     const message =
       messages.find(
         (item) =>
-          item.id === messageId
+          item.id ===
+          messageId
       );
 
+    if (!message) {
+      return;
+    }
+
+    const previousReactions =
+      [
+        ...(message.reactions || []),
+      ];
+
     const mine =
-      message?.reactions?.find(
+      previousReactions.find(
         (reaction: any) =>
           reaction.user_id ===
           user.id
       );
 
+    const removing =
+      mine?.emoji === emoji;
+
+    const withoutMine =
+      previousReactions.filter(
+        (reaction: any) =>
+          reaction.user_id !==
+          user.id
+      );
+
+    const nextReactions =
+      removing
+        ? withoutMine
+        : [
+            ...withoutMine,
+            {
+              message_id:
+                messageId,
+              user_id:
+                user.id,
+              emoji,
+            },
+          ];
+
+    pendingReactionKeysRef.current.add(
+      actionKey
+    );
+
+    setMessages(
+      (current) =>
+        current.map(
+          (item) =>
+            item.id ===
+            messageId
+              ? {
+                  ...item,
+                  reactions:
+                    nextReactions,
+                }
+              : item
+        )
+    );
+
     try {
-      if (
-        mine?.emoji === emoji
-      ) {
+      if (removing) {
         const { error } =
           await supabase
             .from(
@@ -2537,10 +2658,15 @@ setMessages(
               user.id
             );
 
-        if (error) throw error;
+        if (error) {
+          throw error;
+        }
       } else {
         if (mine) {
-          await supabase
+          const {
+            error:
+              deleteError,
+          } = await supabase
             .from(
               "message_reactions"
             )
@@ -2553,6 +2679,10 @@ setMessages(
               "user_id",
               user.id
             );
+
+          if (deleteError) {
+            throw deleteError;
+          }
         }
 
         const { error } =
@@ -2568,14 +2698,48 @@ setMessages(
               emoji,
             });
 
-        if (error) throw error;
-      }
+        if (error) {
+          if (mine) {
+            void supabase
+              .from(
+                "message_reactions"
+              )
+              .insert({
+                message_id:
+                  messageId,
+                user_id:
+                  user.id,
+                emoji:
+                  mine.emoji,
+              });
+          }
 
-      await loadChat(false);
+          throw error;
+        }
+      }
     } catch (error: any) {
+      setMessages(
+        (current) =>
+          current.map(
+            (item) =>
+              item.id ===
+              messageId
+                ? {
+                    ...item,
+                    reactions:
+                      previousReactions,
+                  }
+                : item
+          )
+      );
+
       alert(
         error?.message ||
           "No se pudo actualizar la reacción."
+      );
+    } finally {
+      pendingReactionKeysRef.current.delete(
+        actionKey
       );
     }
   }
@@ -3775,3 +3939,5 @@ setMessages(
 /* ALUMNI_1_5_0_MESSAGING_2_HOME_NAV:DIRECT */
 
 /* ALUMNI_1_5_0_FIX3_VISIBLE_HYDRATED_ORDER */
+
+/* ALUMNI_PERFORMANCE_HARDENING_MESSAGING_DIRECT_V9 */

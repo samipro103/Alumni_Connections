@@ -1201,12 +1201,6 @@ export default function GlobalPullToRefresh() {
     chatRefreshDisabled,
   ]);
 
-  if (
-    chatRefreshDisabled
-  ) {
-    return null;
-  }
-
   const progress =
     clamp(
       pull /
@@ -1214,8 +1208,21 @@ export default function GlobalPullToRefresh() {
     );
 
   const visible =
-    refreshing ||
-    pull > 2;
+    !chatRefreshDisabled &&
+    (
+      refreshing ||
+      pull > 2
+    );
+
+  /*
+   * El DOM inicial queda vacío tanto en SSR
+   * como en la primera hidratación del cliente.
+   * Los listeners siguen activos y la interfaz
+   * aparece solamente durante un pull real.
+   */
+  if (!visible) {
+    return null;
+  }
 
   return (
     <div
@@ -1269,3 +1276,5 @@ export default function GlobalPullToRefresh() {
 /* ALUMNI_1_3_6_1_CHAT_NO_PULL_REFRESH */
 
 /* ALUMNI_1_3_7_MESSAGING_GLOBAL_STABILITY:REFRESH_LAYER */
+
+/* ALUMNI_PERFORMANCE_HARDENING_HYDRATION_PULL_REFRESH_V8 */

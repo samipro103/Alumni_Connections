@@ -1,4 +1,4 @@
-import { supabase } from "@/lib/supabase";
+import { getSignedMediaUrlMap } from "@/lib/signedMediaUrlCache";
 
 type PostMediaRow = {
   image_url?: string | null;
@@ -11,44 +11,6 @@ type StoryMediaRow = {
   media_path?: string | null;
   media_bucket?: string | null;
 };
-
-async function signedMap(
-  bucket: string,
-  paths: string[]
-) {
-  const unique = [
-    ...new Set(
-      paths.filter(Boolean)
-    ),
-  ];
-
-  if (!unique.length) {
-    return new Map<string, string>();
-  }
-
-  const { data, error } =
-    await supabase.storage
-      .from(bucket)
-      .createSignedUrls(
-        unique,
-        60 * 60
-      );
-
-  if (error) {
-    console.error(
-      `[Alumni media] ${bucket}:`,
-      error
-    );
-    return new Map<string, string>();
-  }
-
-  return new Map(
-    (data || []).map((item) => [
-      item.path,
-      item.signedUrl || "",
-    ])
-  );
-}
 
 export async function hydratePostMedia<
   T extends PostMediaRow
@@ -67,7 +29,7 @@ export async function hydratePostMedia<
         row.image_path as string
     );
 
-  const map = await signedMap(
+  const map = await getSignedMediaUrlMap(
     "private-posts",
     paths
   );
@@ -107,7 +69,7 @@ export async function hydrateStoryMedia<
         row.media_path as string
     );
 
-  const map = await signedMap(
+  const map = await getSignedMediaUrlMap(
     "private-stories",
     paths
   );
@@ -129,3 +91,5 @@ export async function hydrateStoryMedia<
     };
   });
 }
+
+/* ALUMNI_PERFORMANCE_HARDENING_PRIVATE_MEDIA_SIGNED_CACHE_V4 */

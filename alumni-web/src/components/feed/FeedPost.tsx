@@ -24,12 +24,21 @@ import {
   useState,
 } from "react";
 import { formatDistanceToNow } from "date-fns";
+import Link from "next/link";
+import dynamic from "next/dynamic";
 import { es } from "date-fns/locale";
-import LinkPreviewCard from "@/components/feed/LinkPreviewCard";
 import { AlumniAvatar } from "@/components/ui/AlumniImage";
 import type { PostMediaItem } from "@/lib/feedMedia";
 import { toPublicImageCdnUrl } from "@/lib/imageCdn";
 import { nativeHaptic } from "@/lib/nativeExperience";
+
+const LinkPreviewCard = dynamic(
+  () => import("@/components/feed/LinkPreviewCard"),
+  {
+    ssr: false,
+    loading: () => null,
+  }
+);
 
 function compactRepeatedLines(text: string) {
   const lines = text.split(/\r?\n/);
@@ -157,14 +166,18 @@ function FeedImage({
 function FeedVideo({
   item,
   active,
+  shouldLoad,
   onOpen,
 }: {
   item: PostMediaItem;
   active: boolean;
+  shouldLoad: boolean;
   onOpen: () => void;
 }) {
   const ref = useRef<HTMLVideoElement>(null);
-  const src = item.media_url || "";
+  const src = shouldLoad
+    ? item.media_url || ""
+    : "";
   const [muted, setMuted] = useState(true);
   const [ready, setReady] = useState(!src);
   const [inView, setInView] = useState(false);
@@ -215,10 +228,14 @@ function FeedVideo({
     >
       <video
         ref={ref}
-        src={src}
+        src={src || undefined}
         playsInline
         muted={muted}
-        preload="metadata"
+        preload={
+          shouldLoad
+            ? "metadata"
+            : "none"
+        }
         className="alumni-feed-video"
         onLoadedData={() => setReady(true)}
         onCanPlay={() => setReady(true)}
@@ -291,6 +308,9 @@ export default function FeedPost({
   ] = useState<number[]>([0, 1]);
   const [carouselMoving, setCarouselMoving] = useState(false);
   const [heartBurst, setHeartBurst] = useState(false);
+  const [nearViewport, setNearViewport] =
+    useState(postIndex < 3);
+  const articleRef = useRef<HTMLElement>(null);
   const carouselRef = useRef<HTMLDivElement>(null);
   const carouselTimerRef = useRef<number | null>(null);
   const lastTapRef = useRef(0);
@@ -313,6 +333,35 @@ export default function FeedPost({
   const longCaption =
     compacted.text.length > 300 ||
     compacted.text.split("\n").length > 4;
+
+  useEffect(() => {
+    if (nearViewport) {
+      return;
+    }
+
+    const node = articleRef.current;
+
+    if (!node) {
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry?.isIntersecting) {
+          setNearViewport(true);
+          observer.disconnect();
+        }
+      },
+      {
+        rootMargin: "900px 0px 1100px 0px",
+        threshold: 0,
+      }
+    );
+
+    observer.observe(node);
+
+    return () => observer.disconnect();
+  }, [nearViewport]);
 
   useEffect(() => {
     if (!menuOpen) return;
@@ -550,22 +599,27 @@ export default function FeedPost({
 
   return (
     <article
+      ref={articleRef}
       id={`post-${post.id}`}
       className="alumni-pro-post"
     >
       {showRepostLabel && (
         <div className="alumni-pro-repost-label">
           <Repeat2 size={14} />
-          <a href={`/u/${post.latestRepostProfile.username}`}>
+          <Link
+            href={`/u/${post.latestRepostProfile.username}`}
+            prefetch={false}
+          >
             @{post.latestRepostProfile.username}
-          </a>
+          </Link>
           <span>compartió</span>
         </div>
       )}
 
       <header className="alumni-pro-post-header">
-        <a
+        <Link
           href={`/u/${post.profiles?.username}`}
+          prefetch={false}
           className="alumni-pro-avatar"
         >
           <AlumniAvatar
@@ -576,13 +630,16 @@ export default function FeedPost({
             imageClassName="h-full w-full object-cover"
             priority={postIndex < 2}
           />
-        </a>
+        </Link>
 
         <div className="alumni-pro-author">
           <div>
-            <a href={`/u/${post.profiles?.username}`}>
+            <Link
+              href={`/u/${post.profiles?.username}`}
+              prefetch={false}
+            >
               @{post.profiles?.username || "alumni"}
-            </a>
+            </Link>
             <span>·</span>
             <time>
               {formatDistanceToNow(new Date(post.created_at), {
@@ -635,7 +692,7 @@ export default function FeedPost({
         </div>
       )}
 
-      {previewUrl && (
+      {previewUrl && nearViewport && (
         <LinkPreviewCard url={previewUrl} />
       )}
 
@@ -655,6 +712,13 @@ export default function FeedPost({
                   <FeedVideo
                     item={item}
                     active={!carouselMoving && activeIndex === index}
+                    shouldLoad={
+                      nearViewport &&
+                      (
+                        index === activeIndex ||
+                        index === activeIndex + 1
+                      )
+                    }
                     onOpen={() => onOpenMedia(item)}
                   />
                 ) : (
@@ -663,6 +727,7 @@ export default function FeedPost({
                     postIndex={postIndex}
                     mediaIndex={index}
                     shouldLoad={
+                      nearViewport &&
                       requestedImageIndexes.includes(
                         index
                       )
@@ -780,7 +845,7 @@ export default function FeedPost({
       </div>
 
       {(post.likesCount > 0 ||
-        post.comments?.length > 0 ||
+        Number(post.commentsCount ?? post.comments?.length ?? 0) > 0 ||
         post.repostsCount > 0) && (
         <div className="alumni-pro-stats">
           {post.likesCount > 0 && (
@@ -797,13 +862,13 @@ export default function FeedPost({
 
           <span />
 
-          {post.comments?.length > 0 && (
+          {Number(post.commentsCount ?? post.comments?.length ?? 0) > 0 && (
             <button
               type="button"
               onClick={onOpenComments}
             >
-              {post.comments.length}{" "}
-              {post.comments.length === 1
+              {Number(post.commentsCount ?? post.comments?.length ?? 0)}{" "}
+              {Number(post.commentsCount ?? post.comments?.length ?? 0) === 1
                 ? "respuesta"
                 : "respuestas"}
             </button>
@@ -836,13 +901,15 @@ export default function FeedPost({
         </button>
       )}
 
-      {(post.comments?.length || 0) > 1 && (
+      {Number(post.commentsCount ?? post.comments?.length ?? 0) > 1 && (
         <button
           type="button"
           className="alumni-pro-view-comments"
           onClick={onOpenComments}
         >
-          Abrir conversación · {post.comments.length}
+          Abrir conversación · {Number(
+            post.commentsCount ?? post.comments?.length ?? 0
+          )}
         </button>
       )}
     </article>
@@ -858,3 +925,11 @@ export default function FeedPost({
 /* ALUMNI_2_9_3_FEED_MEDIA_DEFER */
 
 /* ALUMNI_3_5_0_NATIVE_EXPERIENCE */
+
+/* ALUMNI_PERFORMANCE_HARDENING_FEED_V2_COUNTS */
+
+/* ALUMNI_PERFORMANCE_HARDENING_FEED_MEDIA_VIEWPORT_V4 */
+
+/* ALUMNI_PERFORMANCE_HARDENING_FEED_NAVIGATION_V5 */
+
+/* ALUMNI_PERFORMANCE_HARDENING_FEED_PREVIEW_CODE_SPLIT_V6 */

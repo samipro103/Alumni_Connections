@@ -8,25 +8,59 @@ import CommentLikeButton from "@/components/social/CommentLikeButton";
 export default function FeedCommentsSheet({
   post,
   currentUserId,
-  input,
-  setInput,
   onSend,
   onClose,
   focusedCommentId,
+  loading = false,
 }: {
   post: any | null;
   currentUserId?: string | null;
-  input: string;
-  setInput: (value: string) => void;
-  onSend: () => void;
+  onSend: (value: string) => Promise<boolean>;
   onClose: () => void;
   focusedCommentId?: number | null;
+  loading?: boolean;
 }) {
   const [ready, setReady] = useState(false);
+  const [input, setInput] = useState("");
+  const [sending, setSending] = useState(false);
 
   useEffect(() => {
     setReady(true);
   }, []);
+
+  useEffect(() => {
+    setInput("");
+    setSending(false);
+  }, [post?.id]);
+
+  async function submitComment() {
+    const value = input.trim();
+
+    if (
+      !value ||
+      !currentUserId ||
+      sending
+    ) {
+      return;
+    }
+
+    setInput("");
+    setSending(true);
+
+    try {
+      const ok = await onSend(value);
+
+      if (!ok) {
+        setInput((current) =>
+          current.trim()
+            ? current
+            : value
+        );
+      }
+    } finally {
+      setSending(false);
+    }
+  }
 
   useEffect(() => {
     if (!post) return;
@@ -84,7 +118,11 @@ export default function FeedCommentsSheet({
         </header>
 
         <div className="alumni-comments-list">
-          {comments.length ? (
+          {loading ? (
+            <div className="alumni-feed-modal-empty">
+              Cargando comentarios...
+            </div>
+          ) : comments.length ? (
             comments.map((comment: any) => (
               <div
                 id={`feed-comment-${comment.id}`}
@@ -121,11 +159,13 @@ export default function FeedCommentsSheet({
                     <span>{comment.content}</span>
                   </p>
 
-                  <CommentLikeButton
-                    commentId={comment.id}
-                    commentOwnerId={comment.user_id}
-                    currentUserId={currentUserId}
-                  />
+                  {Number(comment.id) > 0 && (
+                    <CommentLikeButton
+                      commentId={comment.id}
+                      commentOwnerId={comment.user_id}
+                      currentUserId={currentUserId}
+                    />
+                  )}
                 </div>
               </div>
             ))
@@ -149,15 +189,23 @@ export default function FeedCommentsSheet({
             onChange={(event) => setInput(event.target.value)}
             onKeyDown={(event) => {
               if (event.key === "Enter") {
-                onSend();
+                event.preventDefault();
+                void submitComment();
               }
             }}
           />
 
           <button
             type="button"
-            onClick={onSend}
-            disabled={!currentUserId || !input.trim()}
+            onClick={() =>
+              void submitComment()
+            }
+            disabled={
+              !currentUserId ||
+              !input.trim() ||
+              sending
+            }
+            aria-busy={sending}
             aria-label="Enviar comentario"
           >
             <Send size={17} />
@@ -170,3 +218,7 @@ export default function FeedCommentsSheet({
 }
 
 /* ALUMNI_1_4_0_COMMENTS_SHEET */
+
+/* ALUMNI_PERFORMANCE_HARDENING_FEED_V2_LAZY_COMMENTS */
+
+/* ALUMNI_PERFORMANCE_HARDENING_COMMENT_DRAFT_LOCAL_V8 */

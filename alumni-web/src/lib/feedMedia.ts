@@ -2,6 +2,7 @@
 
 import { supabase } from "@/lib/supabase";
 import { preparePostImage } from "@/lib/postImagePipeline";
+import { getSignedMediaUrlMap } from "@/lib/signedMediaUrlCache";
 
 export type PostMediaItem = {
   id?: number;
@@ -62,30 +63,6 @@ export function validatePostMediaFiles(files: File[]) {
   }
 }
 
-async function signedMap(bucket: string, paths: string[]) {
-  const unique = [...new Set(paths.filter(Boolean))];
-
-  if (!unique.length) {
-    return new Map<string, string>();
-  }
-
-  const { data, error } = await supabase.storage
-    .from(bucket)
-    .createSignedUrls(unique, 60 * 60);
-
-  if (error) {
-    console.error(`[Alumni feed media] ${bucket}:`, error);
-    return new Map<string, string>();
-  }
-
-  return new Map(
-    (data || []).map((item) => [
-      item.path,
-      item.signedUrl || "",
-    ])
-  );
-}
-
 export async function hydratePostMediaItems<
   T extends {
     media_bucket?: string | null;
@@ -101,7 +78,10 @@ export async function hydratePostMediaItems<
     )
     .map((row) => row.media_path as string);
 
-  const map = await signedMap("private-posts", privatePaths);
+  const map = await getSignedMediaUrlMap(
+    "private-posts",
+    privatePaths
+  );
 
   return rows.map((row) => {
     if (
@@ -259,3 +239,5 @@ export async function removePostMedia(
 }
 
 /* ALUMNI_1_4_0_FEED_MEDIA */
+
+/* ALUMNI_PERFORMANCE_HARDENING_FEED_MEDIA_SIGNED_CACHE_V4 */

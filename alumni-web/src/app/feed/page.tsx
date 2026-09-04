@@ -9,12 +9,12 @@ import {
   useState,
 } from "react";
 import { useSearchParams } from "next/navigation";
+import dynamic from "next/dynamic";
 import "./feed-pro.css";
 import "./feed-visual-2-4.css";
 import "./feed-visual-2-5.css";
 import { supabase } from "@/lib/supabase";
 import AppShell from "@/components/layout/AppShell";
-import AlumniMediaViewer from "@/components/ui/AlumniMediaViewer";
 import { FeedLoadingSkeleton, AlumniEmptyState } from "@/components/ui/AlumniLoading";
 import PostComposer, {
   type PostPublishStage,
@@ -22,8 +22,6 @@ import PostComposer, {
 import StoriesRail from "@/components/feed/StoriesRail";
 import FeedPost from "@/components/feed/FeedPost";
 import AdSenseSlot from "@/components/ads/AdSenseSlot";
-import FeedCommentsSheet from "@/components/feed/FeedCommentsSheet";
-import FeedEngagementModal from "@/components/feed/FeedEngagementModal";
 import { rankForYouPosts } from "@/lib/feedRanking";
 import { analyzeImageLocally } from "@/lib/imageModerationClient";
 import { hydratePostMedia } from "@/lib/privateMedia";
@@ -34,6 +32,30 @@ import {
   uploadPostMediaFiles,
   type PostMediaItem,
 } from "@/lib/feedMedia";
+
+const FeedCommentsSheet = dynamic(
+  () => import("@/components/feed/FeedCommentsSheet"),
+  {
+    ssr: false,
+    loading: () => null,
+  }
+);
+
+const FeedEngagementModal = dynamic(
+  () => import("@/components/feed/FeedEngagementModal"),
+  {
+    ssr: false,
+    loading: () => null,
+  }
+);
+
+const AlumniMediaViewer = dynamic(
+  () => import("@/components/ui/AlumniMediaViewer"),
+  {
+    ssr: false,
+    loading: () => null,
+  }
+);
 
 type FeedMode = "for-you" | "following";
 type EngagementState = {
@@ -61,9 +83,6 @@ function FeedContent() {
   const [posts, setPosts] = useState<any[]>([]);
   const [content, setContent] = useState("");
   const [mediaFiles, setMediaFiles] = useState<File[]>([]);
-  const [commentInputs, setCommentInputs] = useState<
-    Record<number, string>
-  >({});
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [currentProfile, setCurrentProfile] = useState<any>(null);
   const [followingIds, setFollowingIds] = useState<string[]>([]);
@@ -76,6 +95,8 @@ function FeedContent() {
     useState<number | null>(null);
   const [commentsPostId, setCommentsPostId] =
     useState<number | null>(null);
+  const [commentsLoading, setCommentsLoading] =
+    useState(false);
   const [engagement, setEngagement] =
     useState<EngagementState>(null);
   const [selectedMedia, setSelectedMedia] =
@@ -83,15 +104,19 @@ function FeedContent() {
   const [toast, setToast] = useState("");
   const [hasMore, setHasMore] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
+  const [newPostsAvailable, setNewPostsAvailable] =
+    useState(false);
 
   const refreshTimerRef = useRef<number | null>(null);
   const feedRequestRef = useRef(0);
   const toastTimerRef = useRef<number | null>(null);
-  const feedLimitRef = useRef(FEED_PAGE_SIZE);
+  const oldestPostIdRef = useRef<number | null>(null);
   const loadMoreRef = useRef<HTMLDivElement>(null);
+  const pendingPostActionsRef =
+    useRef<Set<string>>(new Set());
+  const optimisticCommentIdRef = useRef(-1);
   const loadedPostIdsRef =
     useRef<Set<number>>(new Set());
-  const pendingRefreshRef = useRef(false);
 
   useEffect(() => {
     void refreshPosts({
@@ -101,32 +126,43 @@ function FeedContent() {
   }, []);
 
   useEffect(() => {
-    function refreshScopedChange(payload: any) {
-      const postId = Number(
-        payload?.new?.post_id ??
-          payload?.old?.post_id
-      );
-
+    async function checkForNewPosts() {
       if (
-        Number.isFinite(postId) &&
-        postId > 0 &&
-        !loadedPostIdsRef.current.has(postId)
+        typeof document !== "undefined" &&
+        document.visibilityState !== "visible"
       ) {
         return;
       }
 
-      schedulePostsRefresh(320);
+      const loadedIds =
+        Array.from(loadedPostIdsRef.current);
+
+      if (!loadedIds.length) {
+        return;
+      }
+
+      const newestLoadedId =
+        Math.max(...loadedIds);
+
+      const { data, error } = await supabase
+        .from("posts")
+        .select("id")
+        .order("id", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (
+        !error &&
+        data?.id &&
+        Number(data.id) > newestLoadedId
+      ) {
+        setNewPostsAvailable(true);
+      }
     }
 
-    function refreshPostChange(payload: any) {
-      if (payload?.eventType === "INSERT") {
-        schedulePostsRefresh(320);
-        return;
-      }
-
+    function handleNewPost(payload: any) {
       const postId = Number(
-        payload?.new?.id ??
-          payload?.old?.id
+        payload?.new?.id
       );
 
       if (
@@ -134,53 +170,32 @@ function FeedContent() {
         postId > 0 &&
         !loadedPostIdsRef.current.has(postId)
       ) {
-        return;
+        setNewPostsAvailable(true);
       }
-
-      schedulePostsRefresh(320);
     }
 
     function handleVisibility() {
       if (
-        document.visibilityState === "visible" &&
-        pendingRefreshRef.current
+        document.visibilityState === "visible"
       ) {
-        pendingRefreshRef.current = false;
-        schedulePostsRefresh(60);
+        void checkForNewPosts();
       }
     }
 
     function handleOnline() {
-      pendingRefreshRef.current = false;
-      schedulePostsRefresh(80);
+      void checkForNewPosts();
     }
 
     const channel = supabase
-      .channel("feed-pro-live")
+      .channel("feed-pro-new-posts")
       .on(
         "postgres_changes",
-        { event: "*", schema: "public", table: "posts" },
-        refreshPostChange
-      )
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "likes" },
-        refreshScopedChange
-      )
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "comments" },
-        refreshScopedChange
-      )
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "post_reposts" },
-        refreshScopedChange
-      )
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "post_media" },
-        refreshScopedChange
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "posts",
+        },
+        handleNewPost
       )
       .subscribe();
 
@@ -230,6 +245,7 @@ function FeedContent() {
     if (Number.isFinite(commentId) && commentId > 0) {
       setFocusedCommentId(commentId);
       setCommentsPostId(postId);
+      void loadComments(postId);
     }
 
     const timer = window.setTimeout(() => {
@@ -342,11 +358,8 @@ function FeedContent() {
       typeof document !== "undefined" &&
       document.visibilityState !== "visible"
     ) {
-      pendingRefreshRef.current = true;
       return;
     }
-
-    pendingRefreshRef.current = false;
 
     if (refreshTimerRef.current !== null) {
       window.clearTimeout(refreshTimerRef.current);
@@ -354,16 +367,41 @@ function FeedContent() {
 
     refreshTimerRef.current = window.setTimeout(() => {
       refreshTimerRef.current = null;
+
       void refreshPosts({
         showLoader: false,
-        limit: feedLimitRef.current,
+        limit: FEED_PAGE_SIZE,
+      }).then((ok) => {
+        if (ok) {
+          setNewPostsAvailable(false);
+        }
       });
     }, delay);
+  }
+
+  async function refreshNewestPosts() {
+    const ok = await refreshPosts({
+      showLoader: false,
+      limit: FEED_PAGE_SIZE,
+    });
+
+    if (!ok) {
+      return;
+    }
+
+    setNewPostsAvailable(false);
+
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
   }
 
   async function refreshPosts(options: {
     showLoader?: boolean;
     limit?: number;
+    append?: boolean;
+    beforePostId?: number | null;
   } = {}) {
     try {
       const result = await getPosts(options);
@@ -393,35 +431,257 @@ function FeedContent() {
       return;
     }
 
-    const previousLimit =
-      feedLimitRef.current;
-    const nextLimit =
-      previousLimit +
-      FEED_PAGE_SIZE;
+    const beforePostId =
+      oldestPostIdRef.current;
 
-    feedLimitRef.current =
-      nextLimit;
+    if (!beforePostId) {
+      setHasMore(false);
+      return;
+    }
+
     setLoadingMore(true);
 
-    const ok = await refreshPosts({
+    await refreshPosts({
       showLoader: false,
-      limit: nextLimit,
+      limit: FEED_PAGE_SIZE,
+      append: true,
+      beforePostId,
     });
-
-    if (!ok) {
-      feedLimitRef.current =
-        previousLimit;
-    }
 
     setLoadingMore(false);
   }
 
-  async function getPosts({
+  async function getPosts(options: {
+    showLoader?: boolean;
+    limit?: number;
+    append?: boolean;
+    beforePostId?: number | null;
+  } = {}) {
+    const {
+      showLoader = false,
+      limit = FEED_PAGE_SIZE,
+      append = false,
+      beforePostId = null,
+    } = options;
+
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+
+    if (!session?.user) {
+      return getPostsLegacy(options);
+    }
+
+    const safeLimit = Math.min(
+      50,
+      Math.max(
+        FEED_PAGE_SIZE,
+        Number(limit) || FEED_PAGE_SIZE
+      )
+    );
+
+    const requestId = ++feedRequestRef.current;
+
+    if (showLoader) {
+      setLoading(true);
+    }
+
+    const requestedPostId = Number(
+      searchParams.get("post")
+    );
+
+    const { data, error } = await supabase.rpc(
+      "alumni_feed_page_v2",
+      {
+        p_before_id:
+          append && beforePostId
+            ? Number(beforePostId)
+            : null,
+        p_limit: safeLimit,
+        p_focus_post_id:
+          !append &&
+          Number.isFinite(requestedPostId) &&
+          requestedPostId > 0
+            ? requestedPostId
+            : null,
+      }
+    );
+
+    if (requestId !== feedRequestRef.current) {
+      return;
+    }
+
+    if (error || !data) {
+      console.warn(
+        "[Alumni Feed] fast RPC fallback:",
+        error
+      );
+      return getPostsLegacy(options);
+    }
+
+    const payload = data as any;
+    const rawPosts = Array.isArray(payload.posts)
+      ? payload.posts
+      : [];
+
+    let legacyReady = rawPosts;
+
+    try {
+      legacyReady = await hydratePostMedia(rawPosts);
+    } catch (mediaError) {
+      console.warn(
+        "[Alumni Feed] fast legacy media:",
+        mediaError
+      );
+    }
+
+    const allMedia = legacyReady.flatMap(
+      (item: any) =>
+        Array.isArray(item.mediaItems)
+          ? item.mediaItems
+          : []
+    );
+
+    let hydratedMedia = allMedia;
+
+    try {
+      hydratedMedia = await hydratePostMediaItems(
+        allMedia
+      );
+    } catch (mediaError) {
+      console.warn(
+        "[Alumni Feed] fast media items:",
+        mediaError
+      );
+    }
+
+    const mediaByPost = new Map<number, any[]>();
+
+    for (const item of hydratedMedia) {
+      const postId = Number(item.post_id);
+      const current =
+        mediaByPost.get(postId) || [];
+      current.push(item);
+      mediaByPost.set(postId, current);
+    }
+
+    const formatted = legacyReady.map(
+      (item: any) => {
+        const mediaItems =
+          mediaByPost.get(Number(item.id)) || [];
+
+        if (
+          !mediaItems.length &&
+          item.image_url
+        ) {
+          mediaItems.push({
+            post_id: item.id,
+            user_id: item.user_id,
+            media_type: "image",
+            media_url: item.image_url,
+            media_path: item.image_path || null,
+            media_bucket:
+              item.media_bucket || "posts",
+            mime_type: null,
+            sort_order: 0,
+          });
+        }
+
+        return {
+          ...item,
+          comments:
+            Array.isArray(item.comments)
+              ? item.comments
+              : [],
+          commentsCount:
+            Number(item.commentsCount || 0),
+          mediaItems,
+        };
+      }
+    );
+
+    setCurrentUser(session.user);
+    setCurrentProfile(
+      payload.currentProfile || null
+    );
+    setFollowingIds(
+      Array.isArray(payload.followingIds)
+        ? payload.followingIds
+        : []
+    );
+
+    const nextCursor = Number(
+      payload.nextCursor
+    );
+
+    if (
+      Number.isFinite(nextCursor) &&
+      nextCursor > 0
+    ) {
+      oldestPostIdRef.current =
+        append && oldestPostIdRef.current
+          ? Math.min(
+              oldestPostIdRef.current,
+              nextCursor
+            )
+          : nextCursor;
+    } else if (!append) {
+      oldestPostIdRef.current = null;
+    }
+
+    if (append) {
+      const nextLoaded =
+        new Set(loadedPostIdsRef.current);
+
+      for (const item of formatted) {
+        nextLoaded.add(Number(item.id));
+      }
+
+      loadedPostIdsRef.current = nextLoaded;
+
+      setPosts((current) => {
+        const byId = new Map(
+          current.map((item: any) => [
+            Number(item.id),
+            item,
+          ])
+        );
+
+        for (const item of formatted) {
+          byId.set(Number(item.id), item);
+        }
+
+        return Array.from(byId.values());
+      });
+    } else {
+      loadedPostIdsRef.current =
+        new Set(
+          formatted.map((item: any) =>
+            Number(item.id)
+          )
+        );
+      setPosts(formatted);
+    }
+
+    setHasMore(Boolean(payload.hasMore));
+
+    if (showLoader) {
+      setLoading(false);
+    }
+
+    return true;
+  }
+
+  async function getPostsLegacy({
     showLoader = false,
-    limit = feedLimitRef.current,
+    limit = FEED_PAGE_SIZE,
+    append = false,
+    beforePostId = null,
   }: {
     showLoader?: boolean;
     limit?: number;
+    append?: boolean;
+    beforePostId?: number | null;
   } = {}) {
     const requestId = ++feedRequestRef.current;
 
@@ -472,14 +732,29 @@ function FeedContent() {
       Number(limit) || FEED_PAGE_SIZE
     );
 
+    let postsQuery = supabase
+      .from("posts")
+      .select(
+        "id,user_id,content,image_url,created_at,image_path,media_bucket,edited_at"
+      )
+      .order("id", { ascending: false })
+      .limit(safeLimit);
+
+    if (
+      append &&
+      Number.isFinite(beforePostId) &&
+      Number(beforePostId) > 0
+    ) {
+      postsQuery = postsQuery.lt(
+        "id",
+        Number(beforePostId)
+      );
+    }
+
     const {
       data: basePosts,
       error: postsError,
-    } = await supabase
-      .from("posts")
-      .select("*")
-      .order("created_at", { ascending: false })
-      .limit(safeLimit);
+    } = await postsQuery;
 
     if (requestId !== feedRequestRef.current) return;
 
@@ -506,6 +781,28 @@ function FeedContent() {
     const pagePostCount =
       (basePosts || []).length;
 
+    const pagePostIds = (basePosts || [])
+      .map((post: any) => Number(post.id))
+      .filter(
+        (id: number) =>
+          Number.isFinite(id) && id > 0
+      );
+
+    if (pagePostIds.length) {
+      const pageOldestId =
+        Math.min(...pagePostIds);
+
+      oldestPostIdRef.current =
+        append && oldestPostIdRef.current
+          ? Math.min(
+              oldestPostIdRef.current,
+              pageOldestId
+            )
+          : pageOldestId;
+    } else if (!append) {
+      oldestPostIdRef.current = null;
+    }
+
     const basePostRows = [
       ...(basePosts || []),
     ];
@@ -527,7 +824,9 @@ function FeedContent() {
         data: requestedPost,
       } = await supabase
         .from("posts")
-        .select("*")
+        .select(
+          "id,user_id,content,image_url,created_at,image_path,media_bucket,edited_at"
+        )
         .eq("id", requestedPostId)
         .maybeSingle();
 
@@ -927,15 +1226,49 @@ function FeedContent() {
       };
     });
 
-    setPosts(formatted);
+    if (append) {
+      const nextLoadedIds =
+        new Set(loadedPostIdsRef.current);
 
-    loadedPostIdsRef.current =
-      new Set(
-        formatted.map(
-          (post: any) =>
-            Number(post.id)
-        )
-      );
+      for (const post of formatted) {
+        nextLoadedIds.add(
+          Number(post.id)
+        );
+      }
+
+      loadedPostIdsRef.current =
+        nextLoadedIds;
+
+      setPosts((current) => {
+        const byId = new Map(
+          current.map((post: any) => [
+            Number(post.id),
+            post,
+          ])
+        );
+
+        for (const post of formatted) {
+          byId.set(
+            Number(post.id),
+            post
+          );
+        }
+
+        return Array.from(
+          byId.values()
+        );
+      });
+    } else {
+      setPosts(formatted);
+
+      loadedPostIdsRef.current =
+        new Set(
+          formatted.map(
+            (post: any) =>
+              Number(post.id)
+          )
+        );
+    }
 
     setHasMore(
       pagePostCount >= safeLimit
@@ -1107,7 +1440,20 @@ function FeedContent() {
       return;
     }
 
+    const actionKey = `like:${post.id}`;
+
+    if (
+      pendingPostActionsRef.current.has(actionKey)
+    ) {
+      return;
+    }
+
+    pendingPostActionsRef.current.add(actionKey);
+
     const wasLiked = Boolean(post.liked);
+    const previousLikesCount = Number(
+      post.likesCount || 0
+    );
 
     setPosts((current) =>
       current.map((item) =>
@@ -1117,7 +1463,7 @@ function FeedContent() {
               liked: !wasLiked,
               likesCount: Math.max(
                 0,
-                Number(item.likesCount || 0) +
+                previousLikesCount +
                   (wasLiked ? -1 : 1)
               ),
             }
@@ -1125,127 +1471,370 @@ function FeedContent() {
       )
     );
 
-    if (wasLiked) {
-      await supabase
-        .from("likes")
-        .delete()
-        .eq("post_id", post.id)
-        .eq("user_id", currentUser.id);
-
-      if (post.user_id !== currentUser.id) {
-        await supabase
-          .from("notifications")
-          .delete()
-          .eq("user_id", post.user_id)
-          .eq("actor_id", currentUser.id)
-          .eq("type", "like")
-          .eq("post_id", post.id);
-      }
-    } else {
-      const { error } = await supabase
-        .from("likes")
-        .insert({
-          post_id: post.id,
-          user_id: currentUser.id,
-        });
+    try {
+      const { error } = wasLiked
+        ? await supabase
+            .from("likes")
+            .delete()
+            .eq("post_id", post.id)
+            .eq("user_id", currentUser.id)
+        : await supabase
+            .from("likes")
+            .insert({
+              post_id: post.id,
+              user_id: currentUser.id,
+            });
 
       if (error) {
-        schedulePostsRefresh(20);
-        showToast(error.message);
+        console.error(
+          "[Alumni Feed] like mutation:",
+          error
+        );
+
+        setPosts((current) =>
+          current.map((item) =>
+            item.id === post.id
+              ? {
+                  ...item,
+                  liked: wasLiked,
+                  likesCount:
+                    previousLikesCount,
+                }
+              : item
+          )
+        );
+
+        showToast(
+          error.message ||
+            "No se pudo actualizar Me gusta"
+        );
         return;
       }
 
       if (post.user_id !== currentUser.id) {
-        await supabase
-          .from("notifications")
-          .insert({
-            user_id: post.user_id,
-            actor_id: currentUser.id,
-            type: "like",
-            post_id: post.id,
-            target_type: "post",
-            target_id: String(post.id),
-          });
+        if (wasLiked) {
+          void supabase
+            .from("notifications")
+            .delete()
+            .eq("user_id", post.user_id)
+            .eq("actor_id", currentUser.id)
+            .eq("type", "like")
+            .eq("post_id", post.id)
+            .then(({ error }) => {
+              if (error) {
+                console.warn(
+                  "[Alumni Feed] like notification delete:",
+                  error
+                );
+              }
+            });
+        } else {
+          void supabase
+            .from("notifications")
+            .insert({
+              user_id: post.user_id,
+              actor_id: currentUser.id,
+              type: "like",
+              post_id: post.id,
+              target_type: "post",
+              target_id: String(post.id),
+            })
+            .then(({ error }) => {
+              if (error) {
+                console.warn(
+                  "[Alumni Feed] like notification insert:",
+                  error
+                );
+              }
+            });
+        }
       }
+    } finally {
+      pendingPostActionsRef.current.delete(
+        actionKey
+      );
     }
-
   }
 
-  async function addComment(postId: number) {
+  async function loadComments(postId: number) {
+    const post = posts.find(
+      (item) => item.id === postId
+    );
+
+    if (post?.commentsLoaded) {
+      return true;
+    }
+
+    const actionKey =
+      `comments-load:${postId}`;
+
+    if (
+      pendingPostActionsRef.current.has(
+        actionKey
+      )
+    ) {
+      return true;
+    }
+
+    pendingPostActionsRef.current.add(
+      actionKey
+    );
+    setCommentsLoading(true);
+
+    try {
+      const { data, error } =
+        await supabase.rpc(
+          "alumni_post_comments_v1",
+          {
+            p_post_id: postId,
+            p_limit: 500,
+          }
+        );
+
+      if (
+        !error &&
+        Array.isArray(data)
+      ) {
+        setPosts((current) =>
+          current.map((item) =>
+            item.id === postId
+              ? {
+                  ...item,
+                  comments: data,
+                  commentsCount:
+                    Math.max(
+                      Number(
+                        item.commentsCount ||
+                          0
+                      ),
+                      data.length
+                    ),
+                  commentsLoaded: true,
+                }
+              : item
+          )
+        );
+
+        return true;
+      }
+
+      if (error) {
+        console.error(
+          "[Alumni Feed] lazy comments:",
+          error
+        );
+      }
+
+      showToast(
+        "No se pudieron cargar todos los comentarios."
+      );
+      return false;
+    } finally {
+      setCommentsLoading(false);
+      pendingPostActionsRef.current.delete(
+        actionKey
+      );
+    }
+  }
+
+  async function openComments(postId: number) {
+    setCommentsPostId(postId);
+    setFocusedCommentId(null);
+    await loadComments(postId);
+  }
+
+  async function addComment(
+    postId: number,
+    rawValue: string
+  ): Promise<boolean> {
     if (!currentUser) {
       window.location.href = "/login";
-      return;
+      return false;
     }
 
-    const value = commentInputs[postId]?.trim();
-    if (!value) return;
+    const value = rawValue.trim();
 
-    const { data: inserted, error } = await supabase
-      .from("comments")
-      .insert({
-        post_id: postId,
-        user_id: currentUser.id,
-        content: value,
-      })
-      .select("id,created_at")
-      .single();
-
-    if (error || !inserted) {
-      showToast(error?.message || "No se pudo comentar");
-      return;
+    if (!value) {
+      return false;
     }
 
-    const post = posts.find((item) => item.id === postId);
+    const actionKey =
+      `comment:${postId}`;
 
-    if (post && post.user_id !== currentUser.id) {
-      await supabase
-        .from("notifications")
-        .insert({
-          user_id: post.user_id,
-          actor_id: currentUser.id,
-          type: "comment",
-          post_id: postId,
-          target_type: "post_comment",
-          target_id: String(inserted.id),
-        });
+    if (
+      pendingPostActionsRef.current.has(
+        actionKey
+      )
+    ) {
+      return false;
     }
+
+    pendingPostActionsRef.current.add(
+      actionKey
+    );
+
+    const targetPost = posts.find(
+      (item) => item.id === postId
+    );
+
+    const optimisticId =
+      optimisticCommentIdRef.current--;
+
+    const optimisticComment = {
+      id: optimisticId,
+      created_at:
+        new Date().toISOString(),
+      post_id: postId,
+      user_id: currentUser.id,
+      content: value,
+      profile: {
+        username:
+          currentProfile?.username ||
+          "usuario",
+        full_name:
+          currentProfile?.full_name ||
+          null,
+        avatar_url:
+          currentProfile?.avatar_url ||
+          null,
+      },
+    };
 
     setPosts((current) =>
       current.map((item) =>
         item.id === postId
           ? {
               ...item,
+              commentsCount:
+                Number(
+                  item.commentsCount ??
+                    item.comments?.length ??
+                    0
+                ) + 1,
               comments: [
                 ...(item.comments || []),
-                {
-                  id: inserted.id,
-                  created_at: inserted.created_at,
-                  post_id: postId,
-                  user_id: currentUser.id,
-                  content: value,
-                  profile: {
-                    username:
-                      currentProfile?.username ||
-                      "usuario",
-                    full_name:
-                      currentProfile?.full_name ||
-                      null,
-                    avatar_url:
-                      currentProfile?.avatar_url ||
-                      null,
-                  },
-                },
+                optimisticComment,
               ],
             }
           : item
       )
     );
 
-    setCommentInputs((current) => ({
-      ...current,
-      [postId]: "",
-    }));
+    try {
+      const {
+        data: inserted,
+        error,
+      } = await supabase
+        .from("comments")
+        .insert({
+          post_id: postId,
+          user_id: currentUser.id,
+          content: value,
+        })
+        .select("id,created_at")
+        .single();
 
+      if (error || !inserted) {
+        if (error) {
+          console.error(
+            "[Alumni Feed] comment mutation:",
+            error
+          );
+        }
+
+        setPosts((current) =>
+          current.map((item) =>
+            item.id === postId
+              ? {
+                  ...item,
+                  commentsCount:
+                    Math.max(
+                      0,
+                      Number(
+                        item.commentsCount ??
+                          item.comments?.length ??
+                          0
+                      ) - 1
+                    ),
+                  comments: (
+                    item.comments || []
+                  ).filter(
+                    (comment: any) =>
+                      comment.id !==
+                      optimisticId
+                  ),
+                }
+              : item
+          )
+        );
+
+        showToast(
+          error?.message ||
+            "No se pudo comentar"
+        );
+
+        return false;
+      }
+
+      setPosts((current) =>
+        current.map((item) =>
+          item.id === postId
+            ? {
+                ...item,
+                comments: (
+                  item.comments || []
+                ).map(
+                  (comment: any) =>
+                    comment.id ===
+                    optimisticId
+                      ? {
+                          ...comment,
+                          id: inserted.id,
+                          created_at:
+                            inserted.created_at,
+                        }
+                      : comment
+                ),
+              }
+            : item
+        )
+      );
+
+      if (
+        targetPost &&
+        targetPost.user_id !==
+          currentUser.id
+      ) {
+        void supabase
+          .from("notifications")
+          .insert({
+            user_id:
+              targetPost.user_id,
+            actor_id:
+              currentUser.id,
+            type: "comment",
+            post_id: postId,
+            target_type:
+              "post_comment",
+            target_id:
+              String(inserted.id),
+          })
+          .then(({ error }) => {
+            if (error) {
+              console.warn(
+                "[Alumni Feed] comment notification:",
+                error
+              );
+            }
+          });
+      }
+
+      return true;
+    } finally {
+      pendingPostActionsRef.current.delete(
+        actionKey
+      );
+    }
   }
 
   async function toggleRepost(post: any) {
@@ -1255,11 +1844,34 @@ function FeedContent() {
     }
 
     if (post.user_id === currentUser.id) {
-      showToast("No puedes repostear tu propia publicación");
+      showToast(
+        "No puedes repostear tu propia publicación"
+      );
       return;
     }
 
-    const wasReposted = Boolean(post.reposted);
+    const actionKey = `repost:${post.id}`;
+
+    if (
+      pendingPostActionsRef.current.has(actionKey)
+    ) {
+      return;
+    }
+
+    pendingPostActionsRef.current.add(actionKey);
+
+    const wasReposted =
+      Boolean(post.reposted);
+    const previousRepostsCount =
+      Number(post.repostsCount || 0);
+    const previousLatestRepostAt =
+      post.latestRepostAt;
+    const previousLatestRepostProfile =
+      post.latestRepostProfile;
+    const previousRepostUserIds =
+      Array.isArray(post.repostUserIds)
+        ? [...post.repostUserIds]
+        : [];
 
     setPosts((current) =>
       current.map((item) =>
@@ -1269,52 +1881,87 @@ function FeedContent() {
               reposted: !wasReposted,
               repostsCount: Math.max(
                 0,
-                Number(item.repostsCount || 0) +
+                previousRepostsCount +
                   (wasReposted ? -1 : 1)
               ),
-              latestRepostAt: !wasReposted
-                ? new Date().toISOString()
-                : item.latestRepostAt,
-              latestRepostProfile: !wasReposted
-                ? currentProfile
-                : item.latestRepostProfile,
+              latestRepostAt:
+                !wasReposted
+                  ? new Date().toISOString()
+                  : item.latestRepostAt,
+              latestRepostProfile:
+                !wasReposted
+                  ? currentProfile
+                  : item.latestRepostProfile,
               repostUserIds: wasReposted
-                ? (item.repostUserIds || []).filter(
-                    (id: string) => id !== currentUser.id
+                ? previousRepostUserIds.filter(
+                    (id: string) =>
+                      id !== currentUser.id
                   )
                 : [
                     currentUser.id,
-                    ...(item.repostUserIds || []),
+                    ...previousRepostUserIds.filter(
+                      (id: string) =>
+                        id !== currentUser.id
+                    ),
                   ],
             }
           : item
       )
     );
 
-    const query = supabase.from("post_reposts");
+    try {
+      const query =
+        supabase.from("post_reposts");
 
-    const { error } = wasReposted
-      ? await query
-          .delete()
-          .eq("post_id", post.id)
-          .eq("user_id", currentUser.id)
-      : await query.insert({
-          post_id: post.id,
-          user_id: currentUser.id,
-        });
+      const { error } = wasReposted
+        ? await query
+            .delete()
+            .eq("post_id", post.id)
+            .eq("user_id", currentUser.id)
+        : await query.insert({
+            post_id: post.id,
+            user_id: currentUser.id,
+          });
 
-    if (error) {
-      schedulePostsRefresh(20);
-      showToast(error.message);
-      return;
+      if (error) {
+        console.error(
+          "[Alumni Feed] repost mutation:",
+          error
+        );
+
+        setPosts((current) =>
+          current.map((item) =>
+            item.id === post.id
+              ? {
+                  ...item,
+                  reposted: wasReposted,
+                  repostsCount:
+                    previousRepostsCount,
+                  latestRepostAt:
+                    previousLatestRepostAt,
+                  latestRepostProfile:
+                    previousLatestRepostProfile,
+                  repostUserIds:
+                    previousRepostUserIds,
+                }
+              : item
+          )
+        );
+
+        showToast(error.message);
+        return;
+      }
+
+      showToast(
+        wasReposted
+          ? "Repost eliminado"
+          : "Compartido en Alumni"
+      );
+    } finally {
+      pendingPostActionsRef.current.delete(
+        actionKey
+      );
     }
-
-    showToast(
-      wasReposted
-        ? "Repost eliminado"
-        : "Compartido en Alumni"
-    );
-
   }
 
   async function toggleSave(post: any) {
@@ -1323,7 +1970,18 @@ function FeedContent() {
       return;
     }
 
-    const wasSaved = Boolean(post.saved);
+    const actionKey = `save:${post.id}`;
+
+    if (
+      pendingPostActionsRef.current.has(actionKey)
+    ) {
+      return;
+    }
+
+    pendingPostActionsRef.current.add(actionKey);
+
+    const wasSaved =
+      Boolean(post.saved);
 
     setPosts((current) =>
       current.map((item) =>
@@ -1336,25 +1994,51 @@ function FeedContent() {
       )
     );
 
-    const table = supabase.from("post_saves");
+    try {
+      const table =
+        supabase.from("post_saves");
 
-    const { error } = wasSaved
-      ? await table
-          .delete()
-          .eq("post_id", post.id)
-          .eq("user_id", currentUser.id)
-      : await table.insert({
-          post_id: post.id,
-          user_id: currentUser.id,
-        });
+      const { error } = wasSaved
+        ? await table
+            .delete()
+            .eq("post_id", post.id)
+            .eq("user_id", currentUser.id)
+        : await table.insert({
+            post_id: post.id,
+            user_id: currentUser.id,
+          });
 
-    if (error) {
-      schedulePostsRefresh(20);
-      showToast(error.message);
-      return;
+      if (error) {
+        console.error(
+          "[Alumni Feed] save mutation:",
+          error
+        );
+
+        setPosts((current) =>
+          current.map((item) =>
+            item.id === post.id
+              ? {
+                  ...item,
+                  saved: wasSaved,
+                }
+              : item
+          )
+        );
+
+        showToast(error.message);
+        return;
+      }
+
+      showToast(
+        wasSaved
+          ? "Quitado de Guardadas"
+          : "Publicación guardada"
+      );
+    } finally {
+      pendingPostActionsRef.current.delete(
+        actionKey
+      );
     }
-
-    showToast(wasSaved ? "Quitado de Guardadas" : "Publicación guardada");
   }
 
   function sharePostToStory(post: any) {
@@ -1585,6 +2269,20 @@ function FeedContent() {
           ))}
         </nav>
 
+        {newPostsAvailable && (
+          <div className="flex justify-center px-4 py-2">
+            <button
+              type="button"
+              onClick={() =>
+                void refreshNewestPosts()
+              }
+              className="rounded-full border border-[var(--app-border)] bg-[var(--app-surface)] px-4 py-2 text-xs font-semibold text-[var(--app-text)] shadow-sm transition hover:bg-[var(--app-surface-2)]"
+            >
+              Nuevas publicaciones
+            </button>
+          </div>
+        )}
+
         {loading ? (
           <FeedLoadingSkeleton />
         ) : visiblePosts.length === 0 && !hasMore ? (
@@ -1615,8 +2313,8 @@ function FeedContent() {
                 key={post.id}
                 className={
                   focusedPostId === post.id
-                    ? "alumni-pro-post-focus"
-                    : ""
+                    ? "alumni-feed-post-viewport alumni-pro-post-focus"
+                    : "alumni-feed-post-viewport"
                 }
               >
                 <FeedPost
@@ -1646,8 +2344,7 @@ function FeedContent() {
                     void copyPostLink(post)
                   }
                   onOpenComments={() => {
-                    setCommentsPostId(post.id);
-                    setFocusedCommentId(null);
+                    void openComments(post.id);
                   }}
                   onOpenEngagement={(mode) =>
                     setEngagement({
@@ -1690,46 +2387,42 @@ function FeedContent() {
         )}
       </div>
 
-      <FeedCommentsSheet
-        post={activeCommentsPost}
-        currentUserId={currentUser?.id}
-        input={
-          activeCommentsPost
-            ? commentInputs[activeCommentsPost.id] || ""
-            : ""
-        }
-        setInput={(value) => {
-          if (!activeCommentsPost) return;
+      {commentsPostId !== null && (
+        <FeedCommentsSheet
+          post={activeCommentsPost}
+          currentUserId={currentUser?.id}
+          onSend={(value) =>
+            activeCommentsPost
+              ? addComment(
+                  activeCommentsPost.id,
+                  value
+                )
+              : Promise.resolve(false)
+          }
+          onClose={() => {
+            setCommentsPostId(null);
+            setFocusedCommentId(null);
 
-          setCommentInputs((current) => ({
-            ...current,
-            [activeCommentsPost.id]: value,
-          }));
-        }}
-        onSend={() => {
-          if (!activeCommentsPost) return;
-          void addComment(activeCommentsPost.id);
-        }}
-        onClose={() => {
-          setCommentsPostId(null);
-          setFocusedCommentId(null);
+            const url = new URL(window.location.href);
+            url.searchParams.delete("comment");
+            window.history.replaceState(
+              {},
+              "",
+              url.pathname + url.search
+            );
+          }}
+          focusedCommentId={focusedCommentId}
+          loading={commentsLoading}
+        />
+      )}
 
-          const url = new URL(window.location.href);
-          url.searchParams.delete("comment");
-          window.history.replaceState(
-            {},
-            "",
-            url.pathname + url.search
-          );
-        }}
-        focusedCommentId={focusedCommentId}
-      />
-
-      <FeedEngagementModal
-        postId={engagement?.postId || null}
-        mode={engagement?.mode || "likes"}
-        onClose={() => setEngagement(null)}
-      />
+      {engagement && (
+        <FeedEngagementModal
+          postId={engagement.postId}
+          mode={engagement.mode}
+          onClose={() => setEngagement(null)}
+        />
+      )}
 
       {selectedMedia && (
         <AlumniMediaViewer
@@ -1786,3 +2479,18 @@ export default function FeedPage() {
 /* ALUMNI_3_6_0_CREATION_SOCIAL_POLISH */
 
 /* ALUMNI_3_7_0_PERFORMANCE_RELIABILITY_CORE */
+
+/* ALUMNI_PERFORMANCE_HARDENING_FEED_V1_CURSOR_PAGINATION */
+
+/* ALUMNI_PERFORMANCE_HARDENING_FEED_V2_RPC_LAZY_COMMENTS */
+
+/* ALUMNI_PERFORMANCE_HARDENING_FEED_V3_REALTIME_LOW_FREQUENCY */
+
+/* ALUMNI_PERFORMANCE_HARDENING_FEED_RENDER_V5 */
+
+/* ALUMNI_PERFORMANCE_HARDENING_FEED_CODE_SPLIT_V6 */
+
+/* ALUMNI_PERFORMANCE_HARDENING_FEED_OPTIMISTIC_ROLLBACK_V7 */
+
+/* ALUMNI_PERFORMANCE_HARDENING_FEED_DRAFT_ISOLATION_V8 */
+/* ALUMNI_PERFORMANCE_HARDENING_DEEP_LINK_COMMENTS_V8 */
