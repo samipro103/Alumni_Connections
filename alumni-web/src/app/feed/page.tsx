@@ -115,6 +115,9 @@ function FeedContent() {
   const toastTimerRef = useRef<number | null>(null);
   const oldestPostIdRef = useRef<number | null>(null);
   const loadMoreRef = useRef<HTMLDivElement>(null);
+  const pendingPostActionsRef =
+    useRef<Set<string>>(new Set());
+  const optimisticCommentIdRef = useRef(-1);
   const loadedPostIdsRef =
     useRef<Set<number>>(new Set());
 
@@ -1439,7 +1442,20 @@ function FeedContent() {
       return;
     }
 
+    const actionKey = `like:${post.id}`;
+
+    if (
+      pendingPostActionsRef.current.has(actionKey)
+    ) {
+      return;
+    }
+
+    pendingPostActionsRef.current.add(actionKey);
+
     const wasLiked = Boolean(post.liked);
+    const previousLikesCount = Number(
+      post.likesCount || 0
+    );
 
     setPosts((current) =>
       current.map((item) =>
@@ -1449,7 +1465,7 @@ function FeedContent() {
               liked: !wasLiked,
               likesCount: Math.max(
                 0,
-                Number(item.likesCount || 0) +
+                previousLikesCount +
                   (wasLiked ? -1 : 1)
               ),
             }
@@ -1457,50 +1473,89 @@ function FeedContent() {
       )
     );
 
-    if (wasLiked) {
-      await supabase
-        .from("likes")
-        .delete()
-        .eq("post_id", post.id)
-        .eq("user_id", currentUser.id);
-
-      if (post.user_id !== currentUser.id) {
-        await supabase
-          .from("notifications")
-          .delete()
-          .eq("user_id", post.user_id)
-          .eq("actor_id", currentUser.id)
-          .eq("type", "like")
-          .eq("post_id", post.id);
-      }
-    } else {
-      const { error } = await supabase
-        .from("likes")
-        .insert({
-          post_id: post.id,
-          user_id: currentUser.id,
-        });
+    try {
+      const { error } = wasLiked
+        ? await supabase
+            .from("likes")
+            .delete()
+            .eq("post_id", post.id)
+            .eq("user_id", currentUser.id)
+        : await supabase
+            .from("likes")
+            .insert({
+              post_id: post.id,
+              user_id: currentUser.id,
+            });
 
       if (error) {
-        schedulePostsRefresh(20);
-        showToast(error.message);
+        console.error(
+          "[Alumni Feed] like mutation:",
+          error
+        );
+
+        setPosts((current) =>
+          current.map((item) =>
+            item.id === post.id
+              ? {
+                  ...item,
+                  liked: wasLiked,
+                  likesCount:
+                    previousLikesCount,
+                }
+              : item
+          )
+        );
+
+        showToast(
+          error.message ||
+            "No se pudo actualizar Me gusta"
+        );
         return;
       }
 
       if (post.user_id !== currentUser.id) {
-        await supabase
-          .from("notifications")
-          .insert({
-            user_id: post.user_id,
-            actor_id: currentUser.id,
-            type: "like",
-            post_id: post.id,
-            target_type: "post",
-            target_id: String(post.id),
-          });
+        if (wasLiked) {
+          void supabase
+            .from("notifications")
+            .delete()
+            .eq("user_id", post.user_id)
+            .eq("actor_id", currentUser.id)
+            .eq("type", "like")
+            .eq("post_id", post.id)
+            .then(({ error }) => {
+              if (error) {
+                console.warn(
+                  "[Alumni Feed] like notification delete:",
+                  error
+                );
+              }
+            });
+        } else {
+          void supabase
+            .from("notifications")
+            .insert({
+              user_id: post.user_id,
+              actor_id: currentUser.id,
+              type: "like",
+              post_id: post.id,
+              target_type: "post",
+              target_id: String(post.id),
+            })
+            .then(({ error }) => {
+              if (error) {
+                console.warn(
+                  "[Alumni Feed] like notification insert:",
+                  error
+                );
+              }
+            });
+        }
       }
+    } finally {
+      pendingPostActionsRef.current.delete(
+        actionKey
+      );
     }
-
   }
 
   async function openComments(postId: number) {
@@ -1557,38 +1612,52 @@ function FeedContent() {
       return;
     }
 
-    const value = commentInputs[postId]?.trim();
-    if (!value) return;
+    const value =
+      commentInputs[postId]?.trim();
 
-    const { data: inserted, error } = await supabase
-      .from("comments")
-      .insert({
-        post_id: postId,
-        user_id: currentUser.id,
-        content: value,
-      })
-      .select("id,created_at")
-      .single();
-
-    if (error || !inserted) {
-      showToast(error?.message || "No se pudo comentar");
+    if (!value) {
       return;
     }
 
-    const post = posts.find((item) => item.id === postId);
+    const actionKey = `comment:${postId}`;
 
-    if (post && post.user_id !== currentUser.id) {
-      await supabase
-        .from("notifications")
-        .insert({
-          user_id: post.user_id,
-          actor_id: currentUser.id,
-          type: "comment",
-          post_id: postId,
-          target_type: "post_comment",
-          target_id: String(inserted.id),
-        });
+    if (
+      pendingPostActionsRef.current.has(actionKey)
+    ) {
+      return;
     }
+
+    pendingPostActionsRef.current.add(actionKey);
+
+    const optimisticId =
+      optimisticCommentIdRef.current--;
+
+    const optimisticCreatedAt =
+      new Date().toISOString();
+
+    const optimisticComment = {
+      id: optimisticId,
+      created_at: optimisticCreatedAt,
+      post_id: postId,
+      user_id: currentUser.id,
+      content: value,
+      profile: {
+        username:
+          currentProfile?.username ||
+          "usuario",
+        full_name:
+          currentProfile?.full_name ||
+          null,
+        avatar_url:
+          currentProfile?.avatar_url ||
+          null,
+      },
+    };
+
+    setCommentInputs((current) => ({
+      ...current,
+      [postId]: "",
+    }));
 
     setPosts((current) =>
       current.map((item) =>
@@ -1596,38 +1665,140 @@ function FeedContent() {
           ? {
               ...item,
               commentsCount:
-                Number(item.commentsCount || 0) + 1,
+                Number(
+                  item.commentsCount ||
+                    item.comments?.length ||
+                    0
+                ) + 1,
               comments: [
                 ...(item.comments || []),
-                {
-                  id: inserted.id,
-                  created_at: inserted.created_at,
-                  post_id: postId,
-                  user_id: currentUser.id,
-                  content: value,
-                  profile: {
-                    username:
-                      currentProfile?.username ||
-                      "usuario",
-                    full_name:
-                      currentProfile?.full_name ||
-                      null,
-                    avatar_url:
-                      currentProfile?.avatar_url ||
-                      null,
-                  },
-                },
+                optimisticComment,
               ],
             }
           : item
       )
     );
 
-    setCommentInputs((current) => ({
-      ...current,
-      [postId]: "",
-    }));
+    try {
+      const {
+        data: inserted,
+        error,
+      } = await supabase
+        .from("comments")
+        .insert({
+          post_id: postId,
+          user_id: currentUser.id,
+          content: value,
+        })
+        .select("id,created_at")
+        .single();
 
+      if (error || !inserted) {
+        if (error) {
+          console.error(
+            "[Alumni Feed] comment mutation:",
+            error
+          );
+        }
+
+        setPosts((current) =>
+          current.map((item) =>
+            item.id === postId
+              ? {
+                  ...item,
+                  commentsCount: Math.max(
+                    0,
+                    Number(
+                      item.commentsCount ||
+                        item.comments?.length ||
+                        0
+                    ) - 1
+                  ),
+                  comments: (
+                    item.comments || []
+                  ).filter(
+                    (comment: any) =>
+                      comment.id !==
+                      optimisticId
+                  ),
+                }
+              : item
+          )
+        );
+
+        setCommentInputs((current) => ({
+          ...current,
+          [postId]:
+            current[postId]?.trim()
+              ? current[postId]
+              : value,
+        }));
+
+        showToast(
+          error?.message ||
+            "No se pudo comentar"
+        );
+        return;
+      }
+
+      setPosts((current) =>
+        current.map((item) =>
+          item.id === postId
+            ? {
+                ...item,
+                comments: (
+                  item.comments || []
+                ).map(
+                  (comment: any) =>
+                    comment.id ===
+                    optimisticId
+                      ? {
+                          ...comment,
+                          id: inserted.id,
+                          created_at:
+                            inserted.created_at,
+                        }
+                      : comment
+                ),
+              }
+            : item
+        )
+      );
+
+      const post = posts.find(
+        (item) => item.id === postId
+      );
+
+      if (
+        post &&
+        post.user_id !== currentUser.id
+      ) {
+        void supabase
+          .from("notifications")
+          .insert({
+            user_id: post.user_id,
+            actor_id: currentUser.id,
+            type: "comment",
+            post_id: postId,
+            target_type: "post_comment",
+            target_id: String(
+              inserted.id
+            ),
+          })
+          .then(({ error }) => {
+            if (error) {
+              console.warn(
+                "[Alumni Feed] comment notification:",
+                error
+              );
+            }
+          });
+      }
+    } finally {
+      pendingPostActionsRef.current.delete(
+        actionKey
+      );
+    }
   }
 
   async function toggleRepost(post: any) {
@@ -1637,11 +1808,34 @@ function FeedContent() {
     }
 
     if (post.user_id === currentUser.id) {
-      showToast("No puedes repostear tu propia publicación");
+      showToast(
+        "No puedes repostear tu propia publicación"
+      );
       return;
     }
 
-    const wasReposted = Boolean(post.reposted);
+    const actionKey = `repost:${post.id}`;
+
+    if (
+      pendingPostActionsRef.current.has(actionKey)
+    ) {
+      return;
+    }
+
+    pendingPostActionsRef.current.add(actionKey);
+
+    const wasReposted =
+      Boolean(post.reposted);
+    const previousRepostsCount =
+      Number(post.repostsCount || 0);
+    const previousLatestRepostAt =
+      post.latestRepostAt;
+    const previousLatestRepostProfile =
+      post.latestRepostProfile;
+    const previousRepostUserIds =
+      Array.isArray(post.repostUserIds)
+        ? [...post.repostUserIds]
+        : [];
 
     setPosts((current) =>
       current.map((item) =>
@@ -1651,52 +1845,87 @@ function FeedContent() {
               reposted: !wasReposted,
               repostsCount: Math.max(
                 0,
-                Number(item.repostsCount || 0) +
+                previousRepostsCount +
                   (wasReposted ? -1 : 1)
               ),
-              latestRepostAt: !wasReposted
-                ? new Date().toISOString()
-                : item.latestRepostAt,
-              latestRepostProfile: !wasReposted
-                ? currentProfile
-                : item.latestRepostProfile,
+              latestRepostAt:
+                !wasReposted
+                  ? new Date().toISOString()
+                  : item.latestRepostAt,
+              latestRepostProfile:
+                !wasReposted
+                  ? currentProfile
+                  : item.latestRepostProfile,
               repostUserIds: wasReposted
-                ? (item.repostUserIds || []).filter(
-                    (id: string) => id !== currentUser.id
+                ? previousRepostUserIds.filter(
+                    (id: string) =>
+                      id !== currentUser.id
                   )
                 : [
                     currentUser.id,
-                    ...(item.repostUserIds || []),
+                    ...previousRepostUserIds.filter(
+                      (id: string) =>
+                        id !== currentUser.id
+                    ),
                   ],
             }
           : item
       )
     );
 
-    const query = supabase.from("post_reposts");
+    try {
+      const query =
+        supabase.from("post_reposts");
 
-    const { error } = wasReposted
-      ? await query
-          .delete()
-          .eq("post_id", post.id)
-          .eq("user_id", currentUser.id)
-      : await query.insert({
-          post_id: post.id,
-          user_id: currentUser.id,
-        });
+      const { error } = wasReposted
+        ? await query
+            .delete()
+            .eq("post_id", post.id)
+            .eq("user_id", currentUser.id)
+        : await query.insert({
+            post_id: post.id,
+            user_id: currentUser.id,
+          });
 
-    if (error) {
-      schedulePostsRefresh(20);
-      showToast(error.message);
-      return;
+      if (error) {
+        console.error(
+          "[Alumni Feed] repost mutation:",
+          error
+        );
+
+        setPosts((current) =>
+          current.map((item) =>
+            item.id === post.id
+              ? {
+                  ...item,
+                  reposted: wasReposted,
+                  repostsCount:
+                    previousRepostsCount,
+                  latestRepostAt:
+                    previousLatestRepostAt,
+                  latestRepostProfile:
+                    previousLatestRepostProfile,
+                  repostUserIds:
+                    previousRepostUserIds,
+                }
+              : item
+          )
+        );
+
+        showToast(error.message);
+        return;
+      }
+
+      showToast(
+        wasReposted
+          ? "Repost eliminado"
+          : "Compartido en Alumni"
+      );
+    } finally {
+      pendingPostActionsRef.current.delete(
+        actionKey
+      );
     }
-
-    showToast(
-      wasReposted
-        ? "Repost eliminado"
-        : "Compartido en Alumni"
-    );
-
   }
 
   async function toggleSave(post: any) {
@@ -1705,7 +1934,18 @@ function FeedContent() {
       return;
     }
 
-    const wasSaved = Boolean(post.saved);
+    const actionKey = `save:${post.id}`;
+
+    if (
+      pendingPostActionsRef.current.has(actionKey)
+    ) {
+      return;
+    }
+
+    pendingPostActionsRef.current.add(actionKey);
+
+    const wasSaved =
+      Boolean(post.saved);
 
     setPosts((current) =>
       current.map((item) =>
@@ -1718,25 +1958,51 @@ function FeedContent() {
       )
     );
 
-    const table = supabase.from("post_saves");
+    try {
+      const table =
+        supabase.from("post_saves");
 
-    const { error } = wasSaved
-      ? await table
-          .delete()
-          .eq("post_id", post.id)
-          .eq("user_id", currentUser.id)
-      : await table.insert({
-          post_id: post.id,
-          user_id: currentUser.id,
-        });
+      const { error } = wasSaved
+        ? await table
+            .delete()
+            .eq("post_id", post.id)
+            .eq("user_id", currentUser.id)
+        : await table.insert({
+            post_id: post.id,
+            user_id: currentUser.id,
+          });
 
-    if (error) {
-      schedulePostsRefresh(20);
-      showToast(error.message);
-      return;
+      if (error) {
+        console.error(
+          "[Alumni Feed] save mutation:",
+          error
+        );
+
+        setPosts((current) =>
+          current.map((item) =>
+            item.id === post.id
+              ? {
+                  ...item,
+                  saved: wasSaved,
+                }
+              : item
+          )
+        );
+
+        showToast(error.message);
+        return;
+      }
+
+      showToast(
+        wasSaved
+          ? "Quitado de Guardadas"
+          : "Publicación guardada"
+      );
+    } finally {
+      pendingPostActionsRef.current.delete(
+        actionKey
+      );
     }
-
-    showToast(wasSaved ? "Quitado de Guardadas" : "Publicación guardada");
   }
 
   function sharePostToStory(post: any) {
@@ -2196,3 +2462,5 @@ export default function FeedPage() {
 /* ALUMNI_PERFORMANCE_HARDENING_FEED_RENDER_V5 */
 
 /* ALUMNI_PERFORMANCE_HARDENING_FEED_CODE_SPLIT_V6 */
+
+/* ALUMNI_PERFORMANCE_HARDENING_FEED_OPTIMISTIC_ROLLBACK_V7 */
