@@ -173,6 +173,17 @@ export default function GroupChatPage() {
   const stickToBottomRef =
     useRef(true);
 
+  const membersRef =
+    useRef<Member[]>([]);
+
+  const lastTypingBroadcastRef =
+    useRef(0);
+
+  const pendingReactionKeysRef =
+    useRef<Set<string>>(
+      new Set()
+    );
+
   const suppressOwnInsertUntilRef =
     useRef(0);
   const channelRef =
@@ -234,31 +245,139 @@ export default function GroupChatPage() {
               payload?.new ||
               payload?.old;
 
-            if (
-              payload?.eventType ===
-                "INSERT" &&
-              row?.sender_id ===
-                user.id &&
-              Date.now() <
-                suppressOwnInsertUntilRef.current
-            ) {
+            if (!row?.id) {
               return;
             }
 
             if (
               payload?.eventType ===
-                "INSERT" &&
-              row?.sender_id !==
-                user.id &&
-              !stickToBottomRef.current
+                "INSERT"
             ) {
-              setNewBelowCount(
-                (count) =>
-                  count + 1
+              if (
+                row.sender_id ===
+                  user.id &&
+                Date.now() <
+                  suppressOwnInsertUntilRef.current
+              ) {
+                return;
+              }
+
+              const member =
+                membersRef.current.find(
+                  (item) =>
+                    item.user_id ===
+                    row.sender_id
+                );
+
+              setMessages(
+                (current) => {
+                  if (
+                    current.some(
+                      (message) =>
+                        message.id ===
+                        row.id
+                    )
+                  ) {
+                    return current;
+                  }
+
+                  return [
+                    ...current,
+                    {
+                      ...row,
+                      sender_profile:
+                        member
+                          ? {
+                              id:
+                                member.user_id,
+                              username:
+                                member.username,
+                              avatar_url:
+                                member.avatar_url,
+                            }
+                          : null,
+                      reactions: [],
+                    },
+                  ];
+                }
               );
+
+              if (
+                row.sender_id !==
+                user.id
+              ) {
+                void supabase.rpc(
+                  "mark_message_group_read",
+                  {
+                    p_group_id:
+                      groupId,
+                  }
+                );
+              }
+
+              if (
+                stickToBottomRef.current
+              ) {
+                setNewBelowCount(0);
+
+                window.requestAnimationFrame(
+                  () =>
+                    scrollBottom(
+                      "smooth"
+                    )
+                );
+              } else if (
+                row.sender_id !==
+                user.id
+              ) {
+                setNewBelowCount(
+                  (count) =>
+                    count + 1
+                );
+              }
+
+              return;
             }
 
-            scheduleRefresh();
+            if (
+              payload?.eventType ===
+                "UPDATE"
+            ) {
+              setMessages(
+                (current) =>
+                  current.map(
+                    (message) =>
+                      message.id ===
+                      row.id
+                        ? {
+                            ...message,
+                            ...row,
+                            sender_profile:
+                              message.sender_profile,
+                            reactions:
+                              message.reactions ||
+                              [],
+                          }
+                        : message
+                  )
+              );
+
+              return;
+            }
+
+            if (
+              payload?.eventType ===
+                "DELETE"
+            ) {
+              setMessages(
+                (current) =>
+                  current.filter(
+                    (message) =>
+                      message.id !==
+                      row.id
+                  )
+              );
+            }
           }
         )
         .on(
@@ -272,8 +391,40 @@ export default function GroupChatPage() {
             filter:
               `group_id=eq.${groupId}`,
           },
-          () =>
-            scheduleRefresh()
+          (payload: any) => {
+            const row =
+              payload?.new;
+
+            if (!row?.user_id) {
+              return;
+            }
+
+            setMembers(
+              (current) => {
+                const next =
+                  current.map(
+                    (member) =>
+                      member.user_id ===
+                      row.user_id
+                        ? {
+                            ...member,
+                            role:
+                              row.role ??
+                              member.role,
+                            last_read_at:
+                              row.last_read_at ??
+                              member.last_read_at,
+                          }
+                        : member
+                  );
+
+                membersRef.current =
+                  next;
+
+                return next;
+              }
+            );
+          }
         )
         .on(
           "broadcast",
@@ -860,6 +1011,9 @@ export default function GroupChatPage() {
     setGroupAvatarUrl(
       nextGroupAvatarUrl
     );
+
+    membersRef.current =
+      nextMembers;
 
     setMembers(
       nextMembers
@@ -1921,29 +2075,93 @@ export default function GroupChatPage() {
     messageId: number,
     emoji: string
   ) {
-    if (!user) return;
+    if (
+      !user ||
+      messageId <= 0
+    ) {
+      return;
+    }
 
-    const current =
-      messages
-        .find(
-          (message) =>
-            message.id ===
+    const actionKey =
+      `group-reaction:${messageId}`;
+
+    if (
+      pendingReactionKeysRef.current.has(
+        actionKey
+      )
+    ) {
+      return;
+    }
+
+    const message =
+      messages.find(
+        (item) =>
+          item.id ===
+          messageId
+      );
+
+    if (!message) {
+      return;
+    }
+
+    const previousReactions =
+      [
+        ...(message.reactions || []),
+      ];
+
+    const mine =
+      previousReactions.find(
+        (reaction: any) =>
+          reaction.user_id ===
+          user.id
+      );
+
+    const removing =
+      mine?.emoji === emoji;
+
+    const withoutMine =
+      previousReactions.filter(
+        (reaction: any) =>
+          reaction.user_id !==
+          user.id
+      );
+
+    const nextReactions =
+      removing
+        ? withoutMine
+        : [
+            ...withoutMine,
+            {
+              message_id:
+                messageId,
+              user_id:
+                user.id,
+              emoji,
+            },
+          ];
+
+    pendingReactionKeysRef.current.add(
+      actionKey
+    );
+
+    setMessages(
+      (current) =>
+        current.map(
+          (item) =>
+            item.id ===
             messageId
+              ? {
+                  ...item,
+                  reactions:
+                    nextReactions,
+                }
+              : item
         )
-        ?.reactions?.find(
-          (reaction: any) =>
-            reaction.user_id ===
-            user.id
-        );
+    );
 
     try {
-      if (
-        current?.emoji ===
-        emoji
-      ) {
-        const {
-          error,
-        } =
+      if (removing) {
+        const { error } =
           await supabase
             .from(
               "group_message_reactions"
@@ -1962,8 +2180,11 @@ export default function GroupChatPage() {
           throw error;
         }
       } else {
-        if (current) {
-          await supabase
+        if (mine) {
+          const {
+            error:
+              deleteError,
+          } = await supabase
             .from(
               "group_message_reactions"
             )
@@ -1976,11 +2197,13 @@ export default function GroupChatPage() {
               "user_id",
               user.id
             );
+
+          if (deleteError) {
+            throw deleteError;
+          }
         }
 
-        const {
-          error,
-        } =
+        const { error } =
           await supabase
             .from(
               "group_message_reactions"
@@ -1994,17 +2217,47 @@ export default function GroupChatPage() {
             });
 
         if (error) {
+          if (mine) {
+            void supabase
+              .from(
+                "group_message_reactions"
+              )
+              .insert({
+                message_id:
+                  messageId,
+                user_id:
+                  user.id,
+                emoji:
+                  mine.emoji,
+              });
+          }
+
           throw error;
         }
       }
+    } catch (error: any) {
+      setMessages(
+        (current) =>
+          current.map(
+            (item) =>
+              item.id ===
+              messageId
+                ? {
+                    ...item,
+                    reactions:
+                      previousReactions,
+                  }
+                : item
+          )
+      );
 
-      await load(false);
-    } catch (
-      error: any
-    ) {
       alert(
         error?.message ||
           "No se pudo reaccionar."
+      );
+    } finally {
+      pendingReactionKeysRef.current.delete(
+        actionKey
       );
     }
   }
@@ -2058,11 +2311,33 @@ export default function GroupChatPage() {
   function signalTyping(
     value: string
   ) {
-    broadcastTyping(
+    const wantsTyping =
       Boolean(
         value.trim()
-      )
-    );
+      );
+
+    const now = Date.now();
+
+    if (wantsTyping) {
+      if (
+        now -
+          lastTypingBroadcastRef.current >=
+        900
+      ) {
+        lastTypingBroadcastRef.current =
+          now;
+
+        broadcastTyping(true);
+      }
+    } else if (
+      lastTypingBroadcastRef.current !==
+      0
+    ) {
+      lastTypingBroadcastRef.current =
+        0;
+
+      broadcastTyping(false);
+    }
 
     if (
       typingTimerRef.current !==
@@ -2073,12 +2348,23 @@ export default function GroupChatPage() {
       );
     }
 
+    if (!wantsTyping) {
+      typingTimerRef.current =
+        null;
+      return;
+    }
+
     typingTimerRef.current =
       window.setTimeout(
-        () =>
-          broadcastTyping(
-            false
-          ),
+        () => {
+          lastTypingBroadcastRef.current =
+            0;
+
+          broadcastTyping(false);
+
+          typingTimerRef.current =
+            null;
+        },
         1200
       );
   }
@@ -2771,3 +3057,5 @@ export default function GroupChatPage() {
 /* ALUMNI_1_3_7_MESSAGING_GLOBAL_STABILITY:GROUP_CHAT */
 
 /* ALUMNI_1_5_0_MESSAGING_2_HOME_NAV:GROUP */
+
+/* ALUMNI_PERFORMANCE_HARDENING_MESSAGING_GROUP_V9 */
