@@ -85,6 +85,8 @@ function FeedContent() {
   const [toast, setToast] = useState("");
   const [hasMore, setHasMore] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
+  const [newPostsAvailable, setNewPostsAvailable] =
+    useState(false);
 
   const refreshTimerRef = useRef<number | null>(null);
   const feedRequestRef = useRef(0);
@@ -93,7 +95,6 @@ function FeedContent() {
   const loadMoreRef = useRef<HTMLDivElement>(null);
   const loadedPostIdsRef =
     useRef<Set<number>>(new Set());
-  const pendingRefreshRef = useRef(false);
 
   useEffect(() => {
     void refreshPosts({
@@ -103,32 +104,43 @@ function FeedContent() {
   }, []);
 
   useEffect(() => {
-    function refreshScopedChange(payload: any) {
-      const postId = Number(
-        payload?.new?.post_id ??
-          payload?.old?.post_id
-      );
-
+    async function checkForNewPosts() {
       if (
-        Number.isFinite(postId) &&
-        postId > 0 &&
-        !loadedPostIdsRef.current.has(postId)
+        typeof document !== "undefined" &&
+        document.visibilityState !== "visible"
       ) {
         return;
       }
 
-      schedulePostsRefresh(320);
+      const loadedIds =
+        Array.from(loadedPostIdsRef.current);
+
+      if (!loadedIds.length) {
+        return;
+      }
+
+      const newestLoadedId =
+        Math.max(...loadedIds);
+
+      const { data, error } = await supabase
+        .from("posts")
+        .select("id")
+        .order("id", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (
+        !error &&
+        data?.id &&
+        Number(data.id) > newestLoadedId
+      ) {
+        setNewPostsAvailable(true);
+      }
     }
 
-    function refreshPostChange(payload: any) {
-      if (payload?.eventType === "INSERT") {
-        schedulePostsRefresh(320);
-        return;
-      }
-
+    function handleNewPost(payload: any) {
       const postId = Number(
-        payload?.new?.id ??
-          payload?.old?.id
+        payload?.new?.id
       );
 
       if (
@@ -136,53 +148,32 @@ function FeedContent() {
         postId > 0 &&
         !loadedPostIdsRef.current.has(postId)
       ) {
-        return;
+        setNewPostsAvailable(true);
       }
-
-      schedulePostsRefresh(320);
     }
 
     function handleVisibility() {
       if (
-        document.visibilityState === "visible" &&
-        pendingRefreshRef.current
+        document.visibilityState === "visible"
       ) {
-        pendingRefreshRef.current = false;
-        schedulePostsRefresh(60);
+        void checkForNewPosts();
       }
     }
 
     function handleOnline() {
-      pendingRefreshRef.current = false;
-      schedulePostsRefresh(80);
+      void checkForNewPosts();
     }
 
     const channel = supabase
-      .channel("feed-pro-live")
+      .channel("feed-pro-new-posts")
       .on(
         "postgres_changes",
-        { event: "*", schema: "public", table: "posts" },
-        refreshPostChange
-      )
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "likes" },
-        refreshScopedChange
-      )
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "comments" },
-        refreshScopedChange
-      )
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "post_reposts" },
-        refreshScopedChange
-      )
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "post_media" },
-        refreshScopedChange
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "posts",
+        },
+        handleNewPost
       )
       .subscribe();
 
@@ -344,11 +335,8 @@ function FeedContent() {
       typeof document !== "undefined" &&
       document.visibilityState !== "visible"
     ) {
-      pendingRefreshRef.current = true;
       return;
     }
-
-    pendingRefreshRef.current = false;
 
     if (refreshTimerRef.current !== null) {
       window.clearTimeout(refreshTimerRef.current);
@@ -356,14 +344,34 @@ function FeedContent() {
 
     refreshTimerRef.current = window.setTimeout(() => {
       refreshTimerRef.current = null;
+
       void refreshPosts({
         showLoader: false,
-        limit: Math.max(
-          FEED_PAGE_SIZE,
-          loadedPostIdsRef.current.size
-        ),
+        limit: FEED_PAGE_SIZE,
+      }).then((ok) => {
+        if (ok) {
+          setNewPostsAvailable(false);
+        }
       });
     }, delay);
+  }
+
+  async function refreshNewestPosts() {
+    const ok = await refreshPosts({
+      showLoader: false,
+      limit: FEED_PAGE_SIZE,
+    });
+
+    if (!ok) {
+      return;
+    }
+
+    setNewPostsAvailable(false);
+
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
   }
 
   async function refreshPosts(options: {
@@ -1937,6 +1945,20 @@ function FeedContent() {
           ))}
         </nav>
 
+        {newPostsAvailable && (
+          <div className="flex justify-center px-4 py-2">
+            <button
+              type="button"
+              onClick={() =>
+                void refreshNewestPosts()
+              }
+              className="rounded-full border border-[var(--app-border)] bg-[var(--app-surface)] px-4 py-2 text-xs font-semibold text-[var(--app-text)] shadow-sm transition hover:bg-[var(--app-surface-2)]"
+            >
+              Nuevas publicaciones
+            </button>
+          </div>
+        )}
+
         {loading ? (
           <FeedLoadingSkeleton />
         ) : visiblePosts.length === 0 && !hasMore ? (
@@ -2142,3 +2164,5 @@ export default function FeedPage() {
 /* ALUMNI_PERFORMANCE_HARDENING_FEED_V1_CURSOR_PAGINATION */
 
 /* ALUMNI_PERFORMANCE_HARDENING_FEED_V2_RPC_LAZY_COMMENTS */
+
+/* ALUMNI_PERFORMANCE_HARDENING_FEED_V3_REALTIME_LOW_FREQUENCY */
