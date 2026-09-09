@@ -3360,9 +3360,9 @@ export default function StoryComposer({
 
               <button
                 type="button"
-                onClick={() => collageInputRef.current?.click()}
+                onClick={() => mediaInputRef.current?.click()}
                 className="flex h-[62px] w-[52px] shrink-0 items-center justify-center rounded-[12px] border border-white/22 bg-black/30 text-[30px] font-light leading-none text-white backdrop-blur-xl transition active:scale-95"
-                aria-label="Crear collage"
+                aria-label="Agregar foto o video"
               >
                 +
               </button>

@@ -949,6 +949,7 @@ if (
     <div
       data-theme-lock="dark"
       data-story-design="c-1-1"
+      data-story-fix="ALUMNI_STORIES_1_3_1_FIX_PLUS_NO_OWNER_SHADOW"
       className={`alumni-story-viewer fixed inset-0 z-[2147483000] flex h-[100dvh] w-screen items-center justify-center overflow-hidden bg-black ${holding ? "is-holding" : ""}`}
     >
       <div className="alumni-story-stage-c relative flex h-[100dvh] w-screen max-w-none items-center justify-center overflow-hidden bg-black sm:h-[100dvh] sm:w-screen sm:max-w-none sm:rounded-none sm:border-0 sm:shadow-none">
@@ -995,10 +996,10 @@ if (
           </div>
 
           <div className="min-w-0 flex-1">
-            <p className="truncate text-sm font-black text-white">
+            <p className="truncate text-sm font-black text-white [text-shadow:none] [filter:none]">
               @{group.username}
             </p>
-            <p className="text-[10px] text-white/45">
+            <p className="text-[10px] text-white/45 [text-shadow:none] [filter:none]">
               {createdLabel}
             </p>
           </div>
@@ -1083,17 +1084,6 @@ if (
             key={story.id}
             className="alumni-story-photo-no-crop absolute inset-0 overflow-hidden bg-black"
           >
-            <img
-              src={story.media_url}
-              alt=""
-              aria-hidden="true"
-              style={{
-                filter:
-                  mediaFilterCss,
-              }}
-              className="absolute inset-0 h-full w-full scale-110 object-cover opacity-60 blur-3xl"
-            />
-            <div className="absolute inset-0 bg-black/15" />
             <img
               src={story.media_url}
               alt={`Historia de @${group.username}`}
