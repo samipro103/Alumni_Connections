@@ -426,3 +426,116 @@
     transition: none !important;
   }
 }
+
+/* ALUMNI_STORIES_1_1_1_COMPACT_VIEWER_START */
+
+/*
+  Stories 1.1.1 — visor compacto
+  Objetivo: que en desktop se vea como la referencia C:
+  una pieza 9:16 contenida, centrada y con aire alrededor.
+  Mobile conserva experiencia inmersiva.
+*/
+@media (min-width: 700px) {
+  .alumni-story-viewer[data-story-design="c-1-1"] {
+    padding: 32px !important;
+    background:
+      radial-gradient(circle at 18% 18%, rgba(109,93,252,.15), transparent 30%),
+      radial-gradient(circle at 82% 72%, rgba(32,190,155,.10), transparent 28%),
+      linear-gradient(145deg, #0a0b10 0%, #10121a 55%, #07080b 100%) !important;
+  }
+
+  .alumni-story-viewer[data-story-design="c-1-1"] .alumni-story-stage-c {
+    width: auto !important;
+    height: min(760px, calc(100dvh - 64px)) !important;
+    aspect-ratio: 9 / 16 !important;
+    max-width: none !important;
+    flex: 0 0 auto !important;
+    border-radius: 30px !important;
+    border: 1px solid rgba(255,255,255,.11) !important;
+    box-shadow:
+      0 34px 95px rgba(0,0,0,.52),
+      0 0 0 1px rgba(255,255,255,.02) inset !important;
+  }
+
+  .alumni-story-viewer[data-story-design="c-1-1"] .alumni-story-c-card {
+    width: calc(100% - 32px) !important;
+    max-width: 390px !important;
+    bottom: 104px !important;
+    padding: 16px !important;
+    border-radius: 24px !important;
+  }
+
+  .alumni-story-viewer[data-story-design="c-1-1"] .alumni-story-c-title {
+    font-size: clamp(18px, 2vw, 22px) !important;
+  }
+
+  .alumni-story-viewer[data-story-design="c-1-1"] .alumni-story-c-copy {
+    font-size: 11px !important;
+  }
+
+  .alumni-story-viewer[data-story-design="c-1-1"] .alumni-story-c-quick-grid {
+    gap: 6px !important;
+    margin-top: 12px !important;
+  }
+
+  .alumni-story-viewer[data-story-design="c-1-1"] .alumni-story-c-quick {
+    min-height: 48px !important;
+    border-radius: 14px !important;
+  }
+
+  .alumni-story-viewer[data-story-design="c-1-1"] .alumni-story-reply-shell {
+    left: 14px !important;
+    right: 14px !important;
+    bottom: 12px !important;
+  }
+
+  .alumni-story-viewer[data-story-design="c-1-1"] .alumni-story-reply-editor {
+    min-height: 46px !important;
+    border-radius: 16px !important;
+  }
+
+  .alumni-story-viewer[data-story-design="c-1-1"] .alumni-story-reaction {
+    width: 46px !important;
+    height: 46px !important;
+    flex-basis: 46px !important;
+    border-radius: 16px !important;
+  }
+
+  .alumni-story-viewer[data-story-design="c-1-1"] .alumni-story-chrome-top:nth-of-type(2) {
+    left: 14px !important;
+    right: 14px !important;
+    border-radius: 17px !important;
+  }
+
+  .alumni-story-viewer[data-story-design="c-1-1"] button[aria-label="Anterior"] {
+    left: -58px !important;
+  }
+
+  .alumni-story-viewer[data-story-design="c-1-1"] button[aria-label="Siguiente"] {
+    right: -58px !important;
+  }
+}
+
+/* Laptops de poca altura: el visor se reduce todavía más sin perder 9:16. */
+@media (min-width: 700px) and (max-height: 820px) {
+  .alumni-story-viewer[data-story-design="c-1-1"] .alumni-story-stage-c {
+    height: calc(100dvh - 52px) !important;
+  }
+
+  .alumni-story-viewer[data-story-design="c-1-1"] .alumni-story-c-card {
+    bottom: 92px !important;
+    padding: 14px !important;
+  }
+}
+
+/* Mobile: mantener pantalla completa. */
+@media (max-width: 699px) {
+  .alumni-story-viewer[data-story-design="c-1-1"] .alumni-story-stage-c {
+    width: 100% !important;
+    height: 100dvh !important;
+    max-width: 560px !important;
+    aspect-ratio: auto !important;
+  }
+}
+
+/* ALUMNI_STORIES_1_1_1_COMPACT_VIEWER_END */
