@@ -948,9 +948,10 @@ if (
   return createPortal(
     <div
       data-theme-lock="dark"
+      data-story-design="c-1-1"
       className={`alumni-story-viewer fixed inset-0 z-[110] flex items-center justify-center overflow-hidden bg-black ${holding ? "is-holding" : ""}`}
     >
-      <div className="relative flex h-[100dvh] w-full max-w-[560px] items-center justify-center overflow-hidden bg-[#050506] sm:h-[calc(100dvh-24px)] sm:rounded-[30px] sm:border sm:border-white/[0.08] sm:shadow-[0_30px_100px_rgba(0,0,0,.5)]">
+      <div className="alumni-story-stage-c relative flex h-[100dvh] w-full max-w-[560px] items-center justify-center overflow-hidden bg-[#050506] sm:h-[calc(100dvh-24px)] sm:rounded-[30px] sm:border sm:border-white/[0.08] sm:shadow-[0_30px_100px_rgba(0,0,0,.5)]">
         <div className="alumni-story-chrome alumni-story-chrome-top absolute left-3 right-3 top-[max(10px,env(safe-area-inset-top))] z-40 px-1">
           <div className="flex gap-1">
             {group.stories.map(
@@ -1294,8 +1295,89 @@ if (
             </div>
           )}
 
+        {/* ALUMNI_STORIES_1_1_C_INTERACTIVE_CARD */}
+        <section
+          className={`alumni-story-c-card ${ownStory ? "is-owner" : "is-viewer"}`}
+          onClick={(event) => event.stopPropagation()}
+          aria-label={ownStory ? "Resumen de tu historia" : "Conversación sobre la historia"}
+        >
+          <div className="alumni-story-c-kicker">
+            <span className="alumni-story-c-kicker-dot" aria-hidden="true" />
+            {ownStory ? "TU HISTORIA" : "PUNTO DE CONVERSACIÓN"}
+          </div>
+
+          <h3 className="alumni-story-c-title">
+            {ownStory
+              ? "Así está conectando tu historia"
+              : story.story_kind === "achievement"
+                ? "¿Qué le dirías para celebrar este logro?"
+                : story.story_kind === "opportunity"
+                  ? "¿Te interesa esta oportunidad?"
+                  : "¿Qué te dejó esta historia?"}
+          </h3>
+
+          {!ownStory && (
+            <p className="alumni-story-c-copy">
+              {story.caption ||
+                story.headline ||
+                "Convierte una reacción rápida en una conversación real."}
+            </p>
+          )}
+
+          {ownStory ? (
+            <div className="alumni-story-c-owner-stats">
+              <div className="alumni-story-c-owner-stat">
+                <strong>{viewCount ?? 0}</strong>
+                <span>visualizaciones</span>
+              </div>
+              <div className="alumni-story-c-owner-stat">
+                <strong>{likeCount}</strong>
+                <span>{story.story_kind === "achievement" ? "felicitaciones" : "reacciones"}</span>
+              </div>
+            </div>
+          ) : (
+            <>
+              <div className="alumni-story-c-quick-grid" aria-label="Respuestas rápidas">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setReply("👏 ¡Qué buena historia!");
+                    setReplyFocused(true);
+                  }}
+                  className="alumni-story-c-quick"
+                >
+                  <span aria-hidden="true">👏</span>
+                  <span>Inspirador</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setReply("💡 Me sirve mucho. ¡Gracias por compartir!");
+                    setReplyFocused(true);
+                  }}
+                  className="alumni-story-c-quick"
+                >
+                  <span aria-hidden="true">💡</span>
+                  <span>Me sirve</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setReply("🤝 Me gustaría conversar sobre esto.");
+                    setReplyFocused(true);
+                  }}
+                  className="alumni-story-c-quick"
+                >
+                  <span aria-hidden="true">🤝</span>
+                  <span>Conversemos</span>
+                </button>
+              </div>
+              <p className="alumni-story-c-hint">Toca una opción y personaliza tu respuesta abajo.</p>
+            </>
+          )}
+        </section>
         {ownStory ? (
-          <div className="alumni-story-chrome alumni-story-chrome-bottom absolute bottom-5 left-5 z-40 flex items-center gap-2">
+          <div className="alumni-story-owner-legacy-stats alumni-story-chrome alumni-story-chrome-bottom absolute bottom-5 left-5 z-40 flex items-center gap-2">
             {viewCount !== null && (
               <div className="flex items-center gap-2 rounded-full bg-black/40 px-3 py-2 text-[11px] font-bold text-white/70 backdrop-blur-xl">
                 <Eye size={14} />

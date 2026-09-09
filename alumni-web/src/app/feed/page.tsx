@@ -15,6 +15,7 @@ import "./feed-visual-2-4.css";
 import "./feed-visual-2-5.css";
 import "./feed-visual-3-1.css";
 import "./stories-visual-1-0.css";
+import "./stories-visual-1-1.css";
 import { supabase } from "@/lib/supabase";
 import AppShell from "@/components/layout/AppShell";
 import { FeedLoadingSkeleton, AlumniEmptyState } from "@/components/ui/AlumniLoading";

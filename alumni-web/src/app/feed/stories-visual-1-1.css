@@ -1,0 +1,428 @@
+/* =========================================================
+   ALUMNI STORIES 1.1 — PROPUESTA C / INTERACTIVE PREMIUM
+   Capa visual posterior a stories-visual-1-0.css
+   ========================================================= */
+
+.alumni-story-viewer[data-story-design="c-1-1"] {
+  --story-c-ink: #11131a;
+  --story-c-muted: #6b7280;
+  --story-c-paper: rgba(255, 255, 255, 0.965);
+  --story-c-line: rgba(15, 23, 42, 0.09);
+  --story-c-accent: #6d5dfc;
+  --story-c-accent-soft: rgba(109, 93, 252, 0.12);
+  background:
+    radial-gradient(circle at 16% 18%, rgba(112, 88, 255, 0.18), transparent 34%),
+    radial-gradient(circle at 82% 72%, rgba(35, 197, 160, 0.12), transparent 31%),
+    linear-gradient(145deg, #090a0f 0%, #10121a 52%, #07080b 100%);
+  padding: 0;
+}
+
+.alumni-story-viewer[data-story-design="c-1-1"] .alumni-story-stage-c {
+  isolation: isolate;
+  background: #090a0d;
+}
+
+/* Diferenciarse de un visor tipo Instagram: frame editorial, no simple pantalla negra. */
+@media (min-width: 640px) {
+  .alumni-story-viewer[data-story-design="c-1-1"] {
+    padding: 18px;
+  }
+
+  .alumni-story-viewer[data-story-design="c-1-1"] .alumni-story-stage-c {
+    max-width: 600px;
+    border-radius: 38px;
+    border: 1px solid rgba(255,255,255,.11);
+    box-shadow:
+      0 45px 120px rgba(0,0,0,.58),
+      0 0 0 1px rgba(255,255,255,.025) inset;
+  }
+}
+
+/* Media: más cinematográfica y algo más tranquila para dejar respirar la tarjeta C. */
+.alumni-story-viewer[data-story-design="c-1-1"] .alumni-story-photo-no-crop::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  background:
+    linear-gradient(to bottom, rgba(3,5,9,.22) 0%, transparent 26%, transparent 48%, rgba(4,5,8,.12) 63%, rgba(4,5,8,.72) 100%);
+}
+
+/* Barra de progreso tipo producto premium: fina, contenida, no pegada al borde. */
+.alumni-story-viewer[data-story-design="c-1-1"] .alumni-story-chrome-top:first-child {
+  left: 18px !important;
+  right: 18px !important;
+  top: max(14px, env(safe-area-inset-top)) !important;
+  padding: 0 !important;
+}
+
+.alumni-story-viewer[data-story-design="c-1-1"] .alumni-story-chrome-top:first-child > div {
+  gap: 5px !important;
+}
+
+.alumni-story-viewer[data-story-design="c-1-1"] .alumni-story-chrome-top:first-child > div > div {
+  height: 3px !important;
+  background: rgba(255,255,255,.17) !important;
+}
+
+/* Header flotante. */
+.alumni-story-viewer[data-story-design="c-1-1"] .alumni-story-chrome-top:nth-of-type(2) {
+  top: max(32px, calc(env(safe-area-inset-top) + 20px)) !important;
+  left: 18px !important;
+  right: 18px !important;
+  padding: 7px 7px 7px 8px;
+  border: 1px solid rgba(255,255,255,.09);
+  border-radius: 20px;
+  background: rgba(6,8,12,.40);
+  box-shadow: 0 12px 34px rgba(0,0,0,.18);
+  backdrop-filter: blur(18px) saturate(125%);
+}
+
+/* =========================================================
+   TARJETA CENTRAL — ESENCIA DE LA PROPUESTA C
+   ========================================================= */
+.alumni-story-viewer[data-story-design="c-1-1"] .alumni-story-c-card {
+  position: absolute;
+  left: 50%;
+  bottom: 128px;
+  z-index: 38;
+  width: min(calc(100% - 34px), 448px);
+  transform: translateX(-50%);
+  color: var(--story-c-ink);
+  background: var(--story-c-paper);
+  border: 1px solid rgba(255,255,255,.75);
+  border-radius: 28px;
+  padding: 18px;
+  box-shadow:
+    0 22px 60px rgba(0,0,0,.30),
+    0 2px 0 rgba(255,255,255,.75) inset;
+  backdrop-filter: blur(24px) saturate(130%);
+  animation: alumniStoryCCardIn .34s cubic-bezier(.22,.9,.28,1) both;
+}
+
+.alumni-story-viewer[data-story-design="c-1-1"] .alumni-story-c-card::before {
+  content: "";
+  position: absolute;
+  left: 24px;
+  right: 24px;
+  top: -1px;
+  height: 2px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, transparent, rgba(109,93,252,.78), rgba(34,197,160,.62), transparent);
+}
+
+.alumni-story-viewer[data-story-design="c-1-1"] .alumni-story-c-kicker {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 9px;
+  line-height: 1;
+  font-weight: 900;
+  letter-spacing: .16em;
+  color: #6f7180;
+}
+
+.alumni-story-viewer[data-story-design="c-1-1"] .alumni-story-c-kicker-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: var(--story-c-accent);
+  box-shadow: 0 0 0 5px var(--story-c-accent-soft);
+}
+
+.alumni-story-viewer[data-story-design="c-1-1"] .alumni-story-c-title {
+  margin: 13px 0 0;
+  max-width: 96%;
+  color: #101219;
+  font-size: clamp(19px, 5vw, 25px);
+  line-height: 1.08;
+  letter-spacing: -.035em;
+  font-weight: 900;
+}
+
+.alumni-story-viewer[data-story-design="c-1-1"] .alumni-story-c-copy {
+  margin: 9px 0 0;
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  color: #686b75;
+  font-size: 11.5px;
+  line-height: 1.5;
+}
+
+.alumni-story-viewer[data-story-design="c-1-1"] .alumni-story-c-quick-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0,1fr));
+  gap: 7px;
+  margin-top: 15px;
+}
+
+.alumni-story-viewer[data-story-design="c-1-1"] .alumni-story-c-quick {
+  min-width: 0;
+  min-height: 54px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 8px 5px;
+  color: #343742;
+  background: #f4f5f8;
+  border: 1px solid #e8e9ee;
+  border-radius: 17px;
+  font-size: 10px;
+  font-weight: 850;
+  transition: transform .16s ease, background .16s ease, border-color .16s ease, box-shadow .16s ease;
+}
+
+.alumni-story-viewer[data-story-design="c-1-1"] .alumni-story-c-quick > span:first-child {
+  font-size: 18px;
+  line-height: 1;
+}
+
+.alumni-story-viewer[data-story-design="c-1-1"] .alumni-story-c-quick:hover {
+  transform: translateY(-1px);
+  background: #fff;
+  border-color: rgba(109,93,252,.28);
+  box-shadow: 0 7px 18px rgba(33,36,48,.08);
+}
+
+.alumni-story-viewer[data-story-design="c-1-1"] .alumni-story-c-quick:active {
+  transform: scale(.98);
+}
+
+.alumni-story-viewer[data-story-design="c-1-1"] .alumni-story-c-hint {
+  margin: 10px 2px 0;
+  color: #9598a1;
+  font-size: 9.5px;
+  line-height: 1.4;
+}
+
+/* Dueño: mismo lenguaje, stats claros y elegantes. */
+.alumni-story-viewer[data-story-design="c-1-1"] .alumni-story-c-owner-stats {
+  display: grid;
+  grid-template-columns: repeat(2,minmax(0,1fr));
+  gap: 8px;
+  margin-top: 15px;
+}
+
+.alumni-story-viewer[data-story-design="c-1-1"] .alumni-story-c-owner-stat {
+  padding: 12px 13px;
+  border: 1px solid #e9eaf0;
+  border-radius: 18px;
+  background: #f6f7f9;
+}
+
+.alumni-story-viewer[data-story-design="c-1-1"] .alumni-story-c-owner-stat strong {
+  display: block;
+  color: #14161c;
+  font-size: 22px;
+  line-height: 1;
+  font-weight: 950;
+  letter-spacing: -.04em;
+}
+
+.alumni-story-viewer[data-story-design="c-1-1"] .alumni-story-c-owner-stat span {
+  display: block;
+  margin-top: 5px;
+  color: #7a7d87;
+  font-size: 9px;
+  font-weight: 750;
+}
+
+.alumni-story-viewer[data-story-design="c-1-1"] .alumni-story-owner-legacy-stats {
+  display: none !important;
+}
+
+/* Reply bar: deja de parecer un input de otra red y pasa a ser una barra de acción ALUMNI. */
+.alumni-story-viewer[data-story-design="c-1-1"] .alumni-story-reply-shell {
+  position: absolute !important;
+  left: 17px !important;
+  right: 17px !important;
+  bottom: max(14px, env(safe-area-inset-bottom)) !important;
+  z-index: 42 !important;
+}
+
+.alumni-story-viewer[data-story-design="c-1-1"] .alumni-story-reply-stage {
+  padding: 0 !important;
+}
+
+.alumni-story-viewer[data-story-design="c-1-1"] .alumni-story-reply-context {
+  display: none !important;
+}
+
+.alumni-story-viewer[data-story-design="c-1-1"] .alumni-story-reply-row {
+  display: flex;
+  gap: 9px;
+  align-items: center;
+}
+
+.alumni-story-viewer[data-story-design="c-1-1"] .alumni-story-reply-editor {
+  min-height: 52px;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 6px 5px 15px !important;
+  border: 1px solid rgba(255,255,255,.14) !important;
+  border-radius: 19px !important;
+  background: rgba(14,16,22,.76) !important;
+  box-shadow: 0 14px 34px rgba(0,0,0,.22);
+  backdrop-filter: blur(20px) saturate(125%);
+}
+
+.alumni-story-viewer[data-story-design="c-1-1"] .alumni-story-reply-editor.is-focused {
+  border-color: rgba(167,154,255,.62) !important;
+  box-shadow: 0 0 0 3px rgba(109,93,252,.15), 0 14px 34px rgba(0,0,0,.24) !important;
+}
+
+.alumni-story-viewer[data-story-design="c-1-1"] .alumni-story-reply-input {
+  min-width: 0;
+  flex: 1;
+  color: #fff !important;
+  background: transparent !important;
+  font-size: 12px !important;
+}
+
+.alumni-story-viewer[data-story-design="c-1-1"] .alumni-story-reply-input::placeholder {
+  color: rgba(255,255,255,.48) !important;
+}
+
+.alumni-story-viewer[data-story-design="c-1-1"] .alumni-story-reply-send {
+  min-width: 70px;
+  height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  padding: 0 12px;
+  border-radius: 14px !important;
+  color: #11131a !important;
+  background: #fff !important;
+  font-size: 10px !important;
+  font-weight: 900 !important;
+}
+
+.alumni-story-viewer[data-story-design="c-1-1"] .alumni-story-reply-send:disabled {
+  opacity: .42;
+}
+
+.alumni-story-viewer[data-story-design="c-1-1"] .alumni-story-reaction {
+  width: 52px !important;
+  height: 52px !important;
+  flex: 0 0 52px;
+  border: 1px solid rgba(255,255,255,.14) !important;
+  border-radius: 19px !important;
+  color: #fff !important;
+  background: rgba(14,16,22,.76) !important;
+  backdrop-filter: blur(20px);
+}
+
+.alumni-story-viewer[data-story-design="c-1-1"] .alumni-story-reaction.is-active {
+  color: #ff6b86 !important;
+  border-color: rgba(255,107,134,.35) !important;
+  background: rgba(80,22,38,.72) !important;
+}
+
+.alumni-story-viewer[data-story-design="c-1-1"] .alumni-story-like-count {
+  display: none !important;
+}
+
+/* Navegación desktop: mínima y limpia. */
+@media (min-width: 640px) {
+  .alumni-story-viewer[data-story-design="c-1-1"] button[aria-label="Anterior"],
+  .alumni-story-viewer[data-story-design="c-1-1"] button[aria-label="Siguiente"] {
+    width: 42px !important;
+    height: 42px !important;
+    border: 1px solid rgba(255,255,255,.10);
+    background: rgba(8,10,14,.40) !important;
+  }
+}
+
+/* Las acciones de oportunidad no deben chocar con la tarjeta. */
+.alumni-story-viewer[data-story-design="c-1-1"] .alumni-story-chrome-bottom.absolute.bottom-\[82px\] {
+  bottom: 300px !important;
+}
+
+/* Mobile: la tarjeta sigue siendo protagonista, pero no tapa toda la foto. */
+@media (max-width: 639px) {
+  .alumni-story-viewer[data-story-design="c-1-1"] .alumni-story-c-card {
+    bottom: calc(82px + env(safe-area-inset-bottom));
+    width: calc(100% - 24px);
+    border-radius: 24px;
+    padding: 15px;
+  }
+
+  .alumni-story-viewer[data-story-design="c-1-1"] .alumni-story-c-title {
+    margin-top: 11px;
+    font-size: 19px;
+  }
+
+  .alumni-story-viewer[data-story-design="c-1-1"] .alumni-story-c-copy {
+    margin-top: 7px;
+    font-size: 10.5px;
+  }
+
+  .alumni-story-viewer[data-story-design="c-1-1"] .alumni-story-c-quick-grid {
+    margin-top: 12px;
+    gap: 6px;
+  }
+
+  .alumni-story-viewer[data-story-design="c-1-1"] .alumni-story-c-quick {
+    min-height: 49px;
+    border-radius: 15px;
+    font-size: 9px;
+  }
+
+  .alumni-story-viewer[data-story-design="c-1-1"] .alumni-story-c-quick > span:first-child {
+    font-size: 16px;
+  }
+
+  .alumni-story-viewer[data-story-design="c-1-1"] .alumni-story-c-hint {
+    display: none;
+  }
+
+  /* Cuando el usuario toca una respuesta rápida, damos prioridad total al input. */
+  .alumni-story-viewer[data-story-design="c-1-1"]:has(.alumni-story-reply-editor.is-focused) .alumni-story-c-card {
+    opacity: .18;
+    transform: translateX(-50%) translateY(10px) scale(.96);
+    pointer-events: none;
+  }
+
+  .alumni-story-viewer[data-story-design="c-1-1"] .alumni-story-reply-shell {
+    left: 10px !important;
+    right: 10px !important;
+    bottom: max(8px, env(safe-area-inset-bottom)) !important;
+  }
+
+  .alumni-story-viewer[data-story-design="c-1-1"] .alumni-story-reply-send span {
+    display: none;
+  }
+
+  .alumni-story-viewer[data-story-design="c-1-1"] .alumni-story-reply-send {
+    min-width: 40px;
+    width: 40px;
+    padding: 0;
+  }
+}
+
+@keyframes alumniStoryCCardIn {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(20px) scale(.965);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0) scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .alumni-story-viewer[data-story-design="c-1-1"] .alumni-story-c-card,
+  .alumni-story-viewer[data-story-design="c-1-1"] .alumni-story-c-quick {
+    animation: none !important;
+    transition: none !important;
+  }
+}
