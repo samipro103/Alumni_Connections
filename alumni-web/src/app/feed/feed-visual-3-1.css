@@ -1121,3 +1121,259 @@ button:focus-visible {
 
 /* ALUMNI_FEED_1_3_PREMIUM_DETAILS */
 
+/* =========================================================
+   ALUMNI FEED 1.4 — PULIDO MÓVIL FINAL
+   iPhone / Android / APK / safe areas / teclado / scroll.
+   ========================================================= */
+
+/* Evita destellos azules/grises de tap en WebView/Safari. */
+.alumni-feed-page button,
+.alumni-feed-page a {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* En móvil el Feed debe sentirse natural al deslizar. */
+.alumni-feed-page,
+.alumni-feed-page .alumni-pro-feed-list {
+  overscroll-behavior-x: none;
+}
+
+/* ---------------------------------------------------------
+   Menos repetición de la foto de perfil
+   --------------------------------------------------------- */
+
+/* Escritorio: el avatar del compositor queda más discreto. */
+.alumni-feed-page
+.alumni-pro-composer[data-expanded="false"]
+.alumni-pro-composer-avatar {
+  width: 36px;
+  height: 36px;
+  flex-basis: 36px;
+}
+
+/* Cuando el compositor se abre, sí mostramos identidad. */
+.alumni-feed-page
+.alumni-pro-composer[data-expanded="true"]
+.alumni-pro-composer-avatar {
+  width: 38px;
+  height: 38px;
+  flex-basis: 38px;
+}
+
+/* ---------------------------------------------------------
+   Comentarios / modales más nativos en móvil
+   --------------------------------------------------------- */
+
+@media (max-width: 767px) {
+  /* La historia conserva tu identidad y el post conserva autor.
+     El composer cerrado ya no repite tu cara por tercera vez. */
+  .alumni-feed-page
+  .alumni-pro-composer[data-expanded="false"]
+  .alumni-pro-composer-avatar {
+    display: none;
+  }
+
+  .alumni-feed-page
+  .alumni-pro-composer[data-expanded="false"]
+  .alumni-pro-composer-row {
+    gap: 8px;
+  }
+
+  .alumni-feed-page
+  .alumni-pro-composer[data-expanded="false"]
+  .alumni-pro-composer-open {
+    min-height: 42px;
+    flex: 1 1 auto;
+    font-size: 13px;
+  }
+
+  .alumni-feed-page
+  .alumni-pro-composer[data-expanded="false"]
+  .alumni-pro-composer-media-shortcut {
+    width: 38px;
+    height: 38px;
+    flex-basis: 38px;
+  }
+
+  /* Evita zoom automático del teclado en iPhone. */
+  .alumni-feed-page
+  .alumni-pro-composer[data-expanded="true"]
+  .alumni-pro-composer-main textarea,
+  .alumni-comments-composer input {
+    font-size: 16px !important;
+  }
+
+  .alumni-feed-page .alumni-pro-avatar {
+    width: 40px;
+    height: 40px;
+    flex-basis: 40px;
+  }
+
+  .alumni-feed-page .alumni-pro-post-header {
+    gap: 10px;
+  }
+
+  /* Stories un poco más compactas verticalmente. */
+  .alumni-feed-page .alumni-stories-section {
+    padding-top: 13px;
+    padding-bottom: 12px;
+  }
+
+  .alumni-feed-page .alumni-stories-rail {
+    gap: 11px;
+  }
+
+  /* Acciones con área táctil cómoda sin agrandar iconos. */
+  .alumni-feed-page .alumni-pro-actions > button {
+    width: 42px !important;
+    min-width: 42px !important;
+    max-width: 42px !important;
+    height: 42px !important;
+    flex-basis: 42px !important;
+  }
+
+  .alumni-feed-page .alumni-pro-actions > button svg {
+    width: 21px !important;
+    height: 21px !important;
+  }
+
+  /* Comentarios y personas se sienten como bottom sheet móvil. */
+  .alumni-comments-backdrop,
+  .alumni-feed-modal-backdrop {
+    align-items: flex-end;
+    padding: 0;
+  }
+
+  .alumni-comments-sheet,
+  .alumni-feed-people-modal {
+    width: 100%;
+    max-height: calc(
+      100dvh - max(12px, env(safe-area-inset-top))
+    );
+    border-right: 0;
+    border-bottom: 0;
+    border-left: 0;
+    border-radius: 20px 20px 0 0;
+  }
+
+  .alumni-comments-header,
+  .alumni-feed-people-modal > header {
+    padding-top: 13px;
+    padding-right: 14px;
+    padding-left: 14px;
+  }
+
+  .alumni-comments-list,
+  .alumni-feed-people-list {
+    overscroll-behavior-y: contain;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .alumni-comments-composer {
+    padding-right: 12px;
+    padding-bottom: calc(
+      10px + max(0px, env(safe-area-inset-bottom))
+    );
+    padding-left: 12px;
+  }
+
+  .alumni-comments-composer input {
+    height: 44px;
+    border-radius: 15px;
+  }
+
+  .alumni-comments-composer > button {
+    width: 44px;
+    height: 44px;
+    flex-basis: 44px;
+    border-radius: 15px;
+  }
+
+  /* Mantiene el último contenido separado de la barra inferior. */
+  .alumni-feed-page .alumni-pro-feed-list {
+    padding-bottom: 4px;
+  }
+}
+
+/* AppShell usa px-6 desde 640px; compensamos esos 24px
+   para conservar el verdadero edge-to-edge hasta tablet. */
+@media (min-width: 640px) and (max-width: 767px) {
+  .alumni-feed-page {
+    width: calc(100% + 48px) !important;
+    margin-right: -24px !important;
+    margin-left: -24px !important;
+  }
+
+  .alumni-feed-page .alumni-stories-section,
+  .alumni-feed-page .alumni-pro-feed-tabs,
+  .alumni-feed-page .alumni-feed-post-viewport {
+    padding-right: 20px;
+    padding-left: 20px;
+  }
+
+  .alumni-feed-page .alumni-pro-composer {
+    padding-right: 20px !important;
+    padding-left: 20px !important;
+  }
+}
+
+@media (max-width: 390px) {
+  .alumni-feed-page .alumni-stories-section {
+    padding-top: 12px;
+    padding-bottom: 11px;
+  }
+
+  .alumni-feed-page .alumni-story-compact-item {
+    width: 60px;
+    flex-basis: 60px;
+  }
+
+  .alumni-feed-page .alumni-story-compact-button,
+  .alumni-feed-page .alumni-story-compact-ring {
+    width: 56px;
+    height: 56px;
+  }
+
+  .alumni-feed-page .alumni-story-compact-avatar {
+    width: 46px;
+    height: 46px;
+  }
+
+  .alumni-feed-page .alumni-pro-actions {
+    gap: 0;
+  }
+
+  .alumni-feed-page .alumni-pro-actions > button {
+    width: 40px !important;
+    min-width: 40px !important;
+    max-width: 40px !important;
+    height: 40px !important;
+    flex-basis: 40px !important;
+  }
+}
+
+/* Teclado abierto / viewport muy bajo: evita que el sheet
+   quede escondido detrás del teclado móvil. */
+@media (max-height: 520px) and (max-width: 767px) {
+  .alumni-comments-sheet,
+  .alumni-feed-people-modal {
+    max-height: 100dvh;
+    border-radius: 14px 14px 0 0;
+  }
+
+  .alumni-comments-header,
+  .alumni-feed-people-modal > header {
+    padding-top: 9px;
+    padding-bottom: 9px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .alumni-comments-sheet,
+  .alumni-feed-people-modal {
+    animation: none !important;
+  }
+}
+
+/* ALUMNI_FEED_1_4_MOBILE_FINAL */
+
