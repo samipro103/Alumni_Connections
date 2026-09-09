@@ -980,8 +980,19 @@ if (
           </div>
         </div>
 
-        <div className="alumni-story-chrome alumni-story-chrome-top absolute left-4 right-4 top-[max(28px,calc(env(safe-area-inset-top)+18px))] z-40 flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-full bg-white/10 text-xs font-black text-white ring-1 ring-white/15">
+        {/* ALUMNI_STORIES_1_3_2_OPTION_C_REAL_FIX: cabecera de propietario sin sombreado */}
+        <div
+          className="alumni-story-chrome alumni-story-owner-clean absolute left-4 right-4 top-[max(28px,calc(env(safe-area-inset-top)+18px))] z-40 flex items-center gap-3"
+          style={{
+            background: "transparent",
+            backgroundImage: "none",
+            boxShadow: "none",
+            filter: "none",
+            backdropFilter: "none",
+            WebkitBackdropFilter: "none",
+          }}
+        >
+          <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-full bg-transparent text-xs font-black text-white ring-0">
             {group.avatar_url ? (
               <img
                 src={group.avatar_url}
@@ -996,10 +1007,10 @@ if (
           </div>
 
           <div className="min-w-0 flex-1">
-            <p className="truncate text-sm font-black text-white [text-shadow:none] [filter:none]">
+            <p className="truncate text-sm font-black text-white [text-shadow:none] [filter:none] [background:none] [box-shadow:none]">
               @{group.username}
             </p>
-            <p className="text-[10px] text-white/45 [text-shadow:none] [filter:none]">
+            <p className="text-[10px] text-white/60 [text-shadow:none] [filter:none] [background:none] [box-shadow:none]">
               {createdLabel}
             </p>
           </div>
@@ -1013,7 +1024,7 @@ if (
                   (value) => !value
                 )
               }
-              className="flex h-10 w-10 items-center justify-center rounded-full bg-black/35 text-white/70 backdrop-blur-xl"
+              className="flex h-10 w-10 items-center justify-center rounded-full bg-transparent text-white/90 shadow-none [backdrop-filter:none]"
               aria-label={
                 videoMuted
                   ? "Activar audio"
@@ -1035,7 +1046,7 @@ if (
                 deleteCurrentStory
               }
               disabled={deleting}
-              className="flex h-10 w-10 items-center justify-center rounded-full bg-black/35 text-white/65 backdrop-blur-xl transition hover:text-red-300"
+              className="flex h-10 w-10 items-center justify-center rounded-full bg-transparent text-white/85 shadow-none [backdrop-filter:none] transition hover:text-red-300"
               aria-label="Eliminar historia"
             >
               {deleting ? (
@@ -1052,7 +1063,7 @@ if (
           <button
             type="button"
             onClick={onClose}
-            className="flex h-10 w-10 items-center justify-center rounded-full bg-black/35 text-white/80 backdrop-blur-xl"
+            className="flex h-10 w-10 items-center justify-center rounded-full bg-transparent text-white/95 shadow-none [backdrop-filter:none]"
             aria-label="Cerrar historia"
           >
             <X size={19} />

@@ -1369,9 +1369,11 @@ export default function StoryComposer({
       null
     );
 
+  // ALUMNI_STORIES_1_3_2_OPTION_C_REAL_FIX
+  // Crear historia abre directamente en el editor Minimal Full Screen (Opción C).
   const [kind, setKind] =
     useState<StoryKind | null>(
-      null
+      "standard"
     );
 
   const [file, setFile] =
@@ -1936,7 +1938,8 @@ export default function StoryComposer({
   }, [kind]);
 
   function resetAll() {
-    setKind(null);
+    // Al volver a abrir el compositor entramos directo a Opción C.
+    setKind("standard");
     setFile(null);
     setPreviewUrl("");
     setPublishing(false);
@@ -2815,9 +2818,7 @@ export default function StoryComposer({
             </button>
           )}
 
-          <div className="pointer-events-none absolute inset-x-0 top-0 z-40 h-28 bg-gradient-to-b from-black/35 via-black/5 to-transparent" />
-
-          <div className="pointer-events-none absolute inset-x-0 bottom-0 z-40 h-40 bg-gradient-to-t from-black/40 via-black/8 to-transparent" />
+          {/* ALUMNI_STORIES_1_3_2_OPTION_C_REAL_FIX: lienzo limpio, sin bandas de sombreado artificiales */}
 
           <StoryFreeOverlay
             overlay={
@@ -2849,7 +2850,7 @@ export default function StoryComposer({
 
           {/* ALUMNI_STORIES_1_3_0_OPTION_C_COMPOSER */}
           <div className="pointer-events-none absolute inset-x-0 top-[max(14px,env(safe-area-inset-top))] z-[85] flex h-11 items-center justify-center">
-            <div className="pointer-events-auto select-none text-[17px] font-black tracking-[-0.045em] text-white [text-shadow:0_2px_16px_rgba(0,0,0,.45)]">
+            <div className="pointer-events-auto select-none text-[17px] font-black tracking-[-0.045em] text-white [text-shadow:none]">
               Alumni<span className="text-[#7b87ff]">.</span>
             </div>
           </div>

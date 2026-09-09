@@ -583,38 +583,58 @@ export default function StoriesRail({
         aria-label="Historias de Alumni"
       >
         <div className="alumni-stories-rail">
+          {/* ALUMNI_STORIES_1_3_2_OPTION_C_REAL_FIX: el + es una acción independiente */}
           <div className="alumni-story-compact-item">
-            <button
-              type="button"
-              onClick={handleOwnStoryClick}
-              className="alumni-story-compact-button"
-              aria-label={
-                ownGroupIndex >= 0
-                  ? "Ver tu historia"
-                  : "Crear historia"
-              }
-            >
-              <span
-                className={
+            <div className="relative">
+              <button
+                type="button"
+                onClick={handleOwnStoryClick}
+                className="alumni-story-compact-button"
+                aria-label={
                   ownGroupIndex >= 0
-                    ? "alumni-story-compact-ring alumni-story-compact-ring-unseen"
-                    : "alumni-story-compact-ring alumni-story-compact-ring-empty"
+                    ? "Ver tu historia"
+                    : "Crear historia"
                 }
               >
-                <span className="alumni-story-compact-avatar">
-                  {me?.avatar_url ? (
-                    <img src={me.avatar_url} alt="" loading="eager" />
-                  ) : (
-                    <span>
-                      {me?.username?.charAt(0)?.toUpperCase() || "A"}
-                    </span>
-                  )}
+                <span
+                  className={
+                    ownGroupIndex >= 0
+                      ? "alumni-story-compact-ring alumni-story-compact-ring-unseen"
+                      : "alumni-story-compact-ring alumni-story-compact-ring-empty"
+                  }
+                >
+                  <span className="alumni-story-compact-avatar">
+                    {me?.avatar_url ? (
+                      <img src={me.avatar_url} alt="" loading="eager" />
+                    ) : (
+                      <span>
+                        {me?.username?.charAt(0)?.toUpperCase() || "A"}
+                      </span>
+                    )}
+                  </span>
                 </span>
-              </span>
-              <span className="alumni-story-compact-add" aria-hidden="true">
+              </button>
+
+              <button
+                type="button"
+                onClick={(event) => {
+                  event.stopPropagation();
+                  setComposerOpen(true);
+                }}
+                className="alumni-story-compact-add"
+                style={{
+                  position: "absolute",
+                  right: "-2px",
+                  bottom: "-2px",
+                  zIndex: 30,
+                }}
+                aria-label="Agregar otra historia"
+                title="Agregar historia"
+              >
                 <Plus size={13} strokeWidth={2.8} />
-              </span>
-            </button>
+              </button>
+            </div>
+
             <span className="alumni-story-compact-label" title="Tu historia">
               Tu historia
             </span>

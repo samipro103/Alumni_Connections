@@ -1,0 +1,19 @@
+ALUMNI STORIES 1.3.2 — OPTION C REAL FIX
+
+CORRIGE:
+1) El botón + REAL de "Tu historia" en StoriesRail.
+2) Crear historia abre directamente en Opción C Minimal Full Screen.
+3) Quita completamente el sombreado de la cabecera del propietario en el visor.
+4) Quita fondos/blur de los botones superiores del visor.
+
+EJECUTAR DESDE:
+C:\Users\SAMI PC\Documents\Alumni_Connections\alumni-web
+
+COMANDOS:
+node .\aplicar_alumni_stories_1_3_2_option_c_real_fix.js
+npm run build
+
+SI EL BUILD SALE BIEN:
+git add .
+git commit -m "Stories 1.3.2 - Option C creator and clean owner header"
+git push origin main

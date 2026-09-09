@@ -3096,3 +3096,35 @@ html[data-theme] .alumni-original-logo-image { filter: none !important; mix-blen
 }
 
 /* ALUMNI_3_1_0_PROFESSIONAL_VISUAL_CORE */
+
+
+/* ================================================================
+   ALUMNI_STORIES_1_3_2_OPTION_C_REAL_FIX
+   Story owner header: superficie completamente limpia.
+   ================================================================ */
+.alumni-story-owner-clean,
+.alumni-story-owner-clean::before,
+.alumni-story-owner-clean::after {
+  background: transparent !important;
+  background-image: none !important;
+  box-shadow: none !important;
+  filter: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+.alumni-story-owner-clean p,
+.alumni-story-owner-clean strong,
+.alumni-story-owner-clean span {
+  text-shadow: none !important;
+  box-shadow: none !important;
+}
+
+.alumni-story-owner-clean button {
+  background: transparent !important;
+  background-image: none !important;
+  box-shadow: none !important;
+  filter: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
