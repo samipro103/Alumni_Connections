@@ -1,0 +1,22 @@
+ALUMNI 3.7.7B — SUPABASE ANON SECURITY QA
+
+Copiar el contenido directamente dentro de alumni-web.
+
+No crea, modifica ni borra datos.
+
+Prueba:
+- perfiles públicos accesibles por anon
+- posts públicos accesibles por anon
+- tablas privadas sin filas visibles para anon
+- RPC get_my_admin_access rechazado para anon
+
+Usa:
+NEXT_PUBLIC_SUPABASE_URL
+NEXT_PUBLIC_SUPABASE_ANON_KEY
+
+También permite apuntar a un entorno QA con:
+QA_SUPABASE_URL
+QA_SUPABASE_ANON_KEY
+
+Después de copiar:
+npm run test:security

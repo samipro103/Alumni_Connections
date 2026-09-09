@@ -1,0 +1,11 @@
+CHECKLIST FEED VISUAL 2.5
+
+Pruebas recomendadas despues del build:
+1. Pantalla 360 px: 1 foto vertical, horizontal y cuadrada.
+2. Pantalla 390 px: 5 fotos y reordenarlas.
+3. Pantalla 430 px: foto + video y deslizar rapido.
+4. Subir 10 medios y comprobar scroll horizontal del compositor.
+5. En el crop: arrastrar, slider y pinch con dos dedos.
+6. Abrir una publicacion antigua horizontal/cuadrada: debe verse completa, sin corte agresivo.
+7. Video: debe pausarse durante el swipe y reproducirse solo cuando queda activo y visible.
+8. Modo claro y oscuro.

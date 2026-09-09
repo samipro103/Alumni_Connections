@@ -1,0 +1,47 @@
+ALUMNI 3.7.8G - PACED REALTIME
+================================
+
+Corrige 3.7.8F:
+3.7.8F esperaba cada INSERT y por eso 20 EPS objetivo
+terminaron siendo aproximadamente 5.5 EPS reales.
+
+3.7.8G:
+- mantiene una cadencia fija
+- permite INSERT concurrentes controlados
+- informa EPS objetivo y EPS realmente alcanzado
+- mantiene el limite de conexiones del staging Free
+- producción sigue bloqueada
+
+REEMPLAZAR
+Copia alumni-realtime-loadtest.mjs dentro de:
+alumni-web\loadtest\
+y reemplaza el archivo anterior.
+
+VALIDAR
+node --check loadtest/alumni-realtime-loadtest.mjs
+
+PRUEBA CORRECTA
+node loadtest/alumni-realtime-loadtest.mjs --connections=150 --ramp=15 --duration=30 --eps=20 --settle=5 --maxInflight=40
+
+NO subir a 190 ni aumentar EPS todavía.
+Comparte toda la salida.
+
+VALIDACION DEL PROYECTO
+npm run test
+npm run typecheck
+npm run build
+
+COMMIT/PUSH
+Si alumni-realtime-loadtest.mjs YA fue agregado/commiteado:
+git commit -am "3.7.8 - Pace Realtime load-test event generation"
+git push
+
+Si TODAVIA aparece como archivo nuevo/untracked:
+git add loadtest/alumni-realtime-loadtest.mjs
+git commit -m "3.7.8 - Add paced Realtime load-test harness"
+git push
+
+NO uses git add .
+
+COSTO ADICIONAL
+$0/mes

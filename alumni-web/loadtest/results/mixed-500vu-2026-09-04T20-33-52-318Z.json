@@ -1,0 +1,114 @@
+{
+  "target": "https://phhrtimyvzjwurhzmbxn.supabase.co",
+  "virtualUsers": 500,
+  "startedUsers": 500,
+  "rampSeconds": 20,
+  "steadyDurationSeconds": 30,
+  "actualDurationSeconds": 51.14,
+  "totalRequests": 19967,
+  "completedLoops": 19967,
+  "failedRequests": 0,
+  "errorRatePct": 0,
+  "requestsPerSecond": 390.42,
+  "latencyMs": {
+    "p50": 183.11,
+    "p95": 540.76,
+    "p99": 976.79,
+    "max": 1667.8
+  },
+  "https": {
+    "maxSockets": 200,
+    "peakPendingRequests": 174
+  },
+  "scenarios": {
+    "read_direct": {
+      "count": 3170,
+      "failed": 0,
+      "errorRatePct": 0,
+      "p50Ms": 178.28,
+      "p95Ms": 532,
+      "p99Ms": 953.74,
+      "statuses": {
+        "200": 3170
+      }
+    },
+    "write_like": {
+      "count": 2777,
+      "failed": 0,
+      "errorRatePct": 0,
+      "p50Ms": 176.29,
+      "p95Ms": 526.28,
+      "p99Ms": 958.62,
+      "statuses": {
+        "201": 2777
+      }
+    },
+    "write_comment": {
+      "count": 1765,
+      "failed": 0,
+      "errorRatePct": 0,
+      "p50Ms": 177.53,
+      "p95Ms": 533.35,
+      "p99Ms": 984.02,
+      "statuses": {
+        "201": 1765
+      }
+    },
+    "read_feed": {
+      "count": 6489,
+      "failed": 0,
+      "errorRatePct": 0,
+      "p50Ms": 188.67,
+      "p95Ms": 553.12,
+      "p99Ms": 1009.98,
+      "statuses": {
+        "200": 6489
+      }
+    },
+    "read_group": {
+      "count": 2394,
+      "failed": 0,
+      "errorRatePct": 0,
+      "p50Ms": 191.16,
+      "p95Ms": 555.38,
+      "p99Ms": 1007.72,
+      "statuses": {
+        "200": 2394
+      }
+    },
+    "write_post": {
+      "count": 814,
+      "failed": 0,
+      "errorRatePct": 0,
+      "p50Ms": 178.69,
+      "p95Ms": 515.88,
+      "p99Ms": 925.99,
+      "statuses": {
+        "201": 814
+      }
+    },
+    "write_direct_message": {
+      "count": 1550,
+      "failed": 0,
+      "errorRatePct": 0,
+      "p50Ms": 178.35,
+      "p95Ms": 554.02,
+      "p99Ms": 957.48,
+      "statuses": {
+        "201": 1550
+      }
+    },
+    "write_group_message": {
+      "count": 1008,
+      "failed": 0,
+      "errorRatePct": 0,
+      "p50Ms": 181.05,
+      "p95Ms": 523.25,
+      "p99Ms": 991.76,
+      "statuses": {
+        "201": 1008
+      }
+    }
+  },
+  "errorSamples": []
+}

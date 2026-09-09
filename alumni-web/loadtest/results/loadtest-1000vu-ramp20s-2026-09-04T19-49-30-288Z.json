@@ -1,0 +1,187 @@
+{
+  "target": "https://phhrtimyvzjwurhzmbxn.supabase.co",
+  "virtualUsers": 1000,
+  "startedUsers": 1000,
+  "rampSeconds": 20,
+  "steadyDurationSeconds": 20,
+  "actualDurationSeconds": 50.5,
+  "thinkTimeMs": {
+    "min": 250,
+    "max": 700
+  },
+  "requestTimeoutMs": 15000,
+  "totalRequests": 12734,
+  "completedIterations": 3912,
+  "failedRequests": 1349,
+  "errorRatePct": 10.594,
+  "requestsPerSecond": 252.17,
+  "latencyMs": {
+    "p50": 973.63,
+    "p95": 15002.39,
+    "p99": 15010.43,
+    "max": 15018.4
+  },
+  "scenarios": {
+    "feed": {
+      "count": 4578,
+      "failed": 525,
+      "errorRatePct": 11.468,
+      "p50Ms": 1077.57,
+      "p95Ms": 15002.28,
+      "p99Ms": 15010.15,
+      "statuses": {
+        "200": 4053,
+        "TypeError": 217,
+        "TimeoutError": 308
+      }
+    },
+    "direct_chat": {
+      "count": 4244,
+      "failed": 421,
+      "errorRatePct": 9.92,
+      "p50Ms": 924.47,
+      "p95Ms": 15001.62,
+      "p99Ms": 15009.8,
+      "statuses": {
+        "200": 3823,
+        "TypeError": 142,
+        "TimeoutError": 279
+      }
+    },
+    "group_chat": {
+      "count": 3912,
+      "failed": 403,
+      "errorRatePct": 10.302,
+      "p50Ms": 928.57,
+      "p95Ms": 15003.19,
+      "p99Ms": 15011.17,
+      "statuses": {
+        "200": 3509,
+        "TypeError": 89,
+        "TimeoutError": 314
+      }
+    }
+  },
+  "errorSamples": [
+    {
+      "scenario": "feed",
+      "status": "TypeError",
+      "latencyMs": 10221.57,
+      "message": "Connect Timeout Error (attempted addresses: 104.18.38.10:443, 172.64.149.246:443, timeout: 10000ms)"
+    },
+    {
+      "scenario": "feed",
+      "status": "TypeError",
+      "latencyMs": 10223.64,
+      "message": "Connect Timeout Error (attempted addresses: 104.18.38.10:443, 172.64.149.246:443, timeout: 10000ms)"
+    },
+    {
+      "scenario": "feed",
+      "status": "TypeError",
+      "latencyMs": 10090.83,
+      "message": "Connect Timeout Error (attempted addresses: 104.18.38.10:443, 172.64.149.246:443, timeout: 10000ms)"
+    },
+    {
+      "scenario": "feed",
+      "status": "TypeError",
+      "latencyMs": 10092.98,
+      "message": "Connect Timeout Error (attempted addresses: 104.18.38.10:443, 172.64.149.246:443, timeout: 10000ms)"
+    },
+    {
+      "scenario": "feed",
+      "status": "TypeError",
+      "latencyMs": 10100.16,
+      "message": "Connect Timeout Error (attempted addresses: 104.18.38.10:443, 172.64.149.246:443, timeout: 10000ms)"
+    },
+    {
+      "scenario": "group_chat",
+      "status": "TypeError",
+      "latencyMs": 10101.52,
+      "message": "Connect Timeout Error (attempted addresses: 104.18.38.10:443, 172.64.149.246:443, timeout: 10000ms)"
+    },
+    {
+      "scenario": "feed",
+      "status": "TypeError",
+      "latencyMs": 10134.17,
+      "message": "Connect Timeout Error (attempted addresses: 104.18.38.10:443, 172.64.149.246:443, timeout: 10000ms)"
+    },
+    {
+      "scenario": "feed",
+      "status": "TypeError",
+      "latencyMs": 10135.09,
+      "message": "Connect Timeout Error (attempted addresses: 104.18.38.10:443, 172.64.149.246:443, timeout: 10000ms)"
+    },
+    {
+      "scenario": "feed",
+      "status": "TypeError",
+      "latencyMs": 10177.05,
+      "message": "Connect Timeout Error (attempted addresses: 104.18.38.10:443, 172.64.149.246:443, timeout: 10000ms)"
+    },
+    {
+      "scenario": "feed",
+      "status": "TypeError",
+      "latencyMs": 10191.48,
+      "message": "Connect Timeout Error (attempted addresses: 104.18.38.10:443, 172.64.149.246:443, timeout: 10000ms)"
+    },
+    {
+      "scenario": "feed",
+      "status": "TypeError",
+      "latencyMs": 10192.53,
+      "message": "Connect Timeout Error (attempted addresses: 104.18.38.10:443, 172.64.149.246:443, timeout: 10000ms)"
+    },
+    {
+      "scenario": "feed",
+      "status": "TypeError",
+      "latencyMs": 10193.77,
+      "message": "Connect Timeout Error (attempted addresses: 104.18.38.10:443, 172.64.149.246:443, timeout: 10000ms)"
+    },
+    {
+      "scenario": "feed",
+      "status": "TypeError",
+      "latencyMs": 10214.4,
+      "message": "Connect Timeout Error (attempted addresses: 104.18.38.10:443, 172.64.149.246:443, timeout: 10000ms)"
+    },
+    {
+      "scenario": "feed",
+      "status": "TypeError",
+      "latencyMs": 10215.21,
+      "message": "Connect Timeout Error (attempted addresses: 104.18.38.10:443, 172.64.149.246:443, timeout: 10000ms)"
+    },
+    {
+      "scenario": "feed",
+      "status": "TypeError",
+      "latencyMs": 10224.17,
+      "message": "Connect Timeout Error (attempted addresses: 104.18.38.10:443, 172.64.149.246:443, timeout: 10000ms)"
+    },
+    {
+      "scenario": "feed",
+      "status": "TypeError",
+      "latencyMs": 10226.02,
+      "message": "Connect Timeout Error (attempted addresses: 104.18.38.10:443, 172.64.149.246:443, timeout: 10000ms)"
+    },
+    {
+      "scenario": "feed",
+      "status": "TypeError",
+      "latencyMs": 10232.67,
+      "message": "Connect Timeout Error (attempted addresses: 104.18.38.10:443, 172.64.149.246:443, timeout: 10000ms)"
+    },
+    {
+      "scenario": "feed",
+      "status": "TypeError",
+      "latencyMs": 10254.5,
+      "message": "Connect Timeout Error (attempted addresses: 104.18.38.10:443, 172.64.149.246:443, timeout: 10000ms)"
+    },
+    {
+      "scenario": "feed",
+      "status": "TypeError",
+      "latencyMs": 10255.52,
+      "message": "Connect Timeout Error (attempted addresses: 104.18.38.10:443, 172.64.149.246:443, timeout: 10000ms)"
+    },
+    {
+      "scenario": "feed",
+      "status": "TypeError",
+      "latencyMs": 10257.52,
+      "message": "Connect Timeout Error (attempted addresses: 104.18.38.10:443, 172.64.149.246:443, timeout: 10000ms)"
+    }
+  ]
+}

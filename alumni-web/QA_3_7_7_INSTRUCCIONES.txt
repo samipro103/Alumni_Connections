@@ -1,0 +1,27 @@
+ALUMNI 3.7.7 — AUTOMATED QA (BASE SEGURA)
+
+Este paquete se copia directamente dentro de la carpeta alumni-web.
+
+Incluye:
+- Vitest para pruebas unitarias.
+- Playwright para smoke tests E2E en escritorio y móvil.
+- Pruebas unitarias del ranking del feed y del CDN de imágenes.
+- Pruebas E2E no destructivas para landing, login, registro y protección admin.
+- Scripts npm: test, test:coverage, test:e2e, qa y qa:full.
+- Ignora reportes generados por Playwright.
+
+No crea usuarios, publicaciones, mensajes ni modifica datos de Supabase.
+
+Después de copiar:
+1) npm install
+2) npm run test
+3) npm run typecheck
+4) npm run build
+5) npm run test:e2e:install
+6) npm run test:e2e
+
+Para probar contra un deployment existente sin levantar Next localmente:
+PowerShell:
+$env:PLAYWRIGHT_BASE_URL="https://tu-dominio"
+npm run test:e2e
+Remove-Item Env:PLAYWRIGHT_BASE_URL

@@ -1,0 +1,47 @@
+ALUMNI STORIES 1.2.1 — VISOR FULLSCREEN + VISUALIZACIONES LIMPIAS
+====================================================================
+
+ESTE PARCHE TOCA SOLO EL VISOR DE STORIES
+------------------------------------------
+Archivo modificado:
+  src/components/stories/StoryViewer.tsx
+
+CAMBIOS
+-------
+1. El visor ocupa TODO el viewport: 100vw x 100dvh.
+2. El StoryViewer queda por encima de la navegación de la app.
+   El MobileNav actual usa z-index 2147482000; este visor usa 2147483000,
+   por lo que el navbar queda totalmente cubierto mientras la historia está abierta.
+3. Se elimina el contenedor desktop tipo modal/tarjeta de 560px:
+   - sin borde;
+   - sin rounded card;
+   - sin box-shadow grande.
+4. Los gradientes superior/inferior quedan más suaves y solo sirven para
+   que avatar, nombre y controles sigan siendo legibles.
+5. En TU historia se muestra abajo a la izquierda:
+      [ojo]  número
+             visualizaciones
+   sin píldora negra, sin caja pesada y con una sombra de texto mínima
+   únicamente para legibilidad encima de fotos claras.
+6. Se retira la tarjeta grande “Así está conectando tu historia /
+   Punto de conversación” para que la historia vuelva a ser protagonista.
+7. En historias ajenas se conserva el reply composer y las reacciones.
+8. No se toca StoryComposer, plantillas, subida, base de datos ni RLS.
+
+APLICAR
+-------
+Desde la carpeta alumni-web:
+
+  node APLICAR_STORIES_1_2_1_VISOR_FULLSCREEN.js
+
+PRUEBAS
+-------
+  npm run test
+  npm run typecheck
+  npm run build
+
+SI TODO PASA
+------------
+  git add src/components/stories/StoryViewer.tsx
+  git commit -m "Stories 1.2.1 - fullscreen viewer and clean views"
+  git push

@@ -1,0 +1,60 @@
+{
+  "target": "https://phhrtimyvzjwurhzmbxn.supabase.co",
+  "virtualUsers": 250,
+  "startedUsers": 250,
+  "rampSeconds": 5,
+  "steadyDurationSeconds": 20,
+  "actualDurationSeconds": 25.49,
+  "thinkTimeMs": {
+    "min": 250,
+    "max": 700
+  },
+  "requestTimeoutMs": 15000,
+  "totalRequests": 7780,
+  "completedIterations": 2528,
+  "failedRequests": 0,
+  "errorRatePct": 0,
+  "requestsPerSecond": 305.18,
+  "latencyMs": {
+    "p50": 497.75,
+    "p95": 1092.54,
+    "p99": 2418.84,
+    "max": 4051.62
+  },
+  "scenarios": {
+    "feed": {
+      "count": 2671,
+      "failed": 0,
+      "errorRatePct": 0,
+      "p50Ms": 511.82,
+      "p95Ms": 1966.21,
+      "p99Ms": 3192.25,
+      "statuses": {
+        "200": 2671
+      }
+    },
+    "direct_chat": {
+      "count": 2581,
+      "failed": 0,
+      "errorRatePct": 0,
+      "p50Ms": 486.22,
+      "p95Ms": 929.82,
+      "p99Ms": 1659.47,
+      "statuses": {
+        "200": 2581
+      }
+    },
+    "group_chat": {
+      "count": 2528,
+      "failed": 0,
+      "errorRatePct": 0,
+      "p50Ms": 498.08,
+      "p95Ms": 840.49,
+      "p99Ms": 1479.47,
+      "statuses": {
+        "200": 2528
+      }
+    }
+  },
+  "errorSamples": []
+}

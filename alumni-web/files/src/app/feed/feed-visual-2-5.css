@@ -1,0 +1,268 @@
+/*
+ * ALUMNI 2.5.0 — FEED VISUAL POLISH
+ * Reordenar, pinch-to-zoom, carga suave y compatibilidad con medios antiguos.
+ */
+
+/* ---------------------------------------------------------
+   Composer: orden de medios
+   --------------------------------------------------------- */
+.alumni-feed-page .alumni-feed-reorder-row {
+  overscroll-behavior-x: contain;
+}
+
+.alumni-feed-page .alumni-feed-visual-preview {
+  transition:
+    transform .18s ease,
+    opacity .18s ease,
+    box-shadow .18s ease;
+}
+
+.alumni-feed-page .alumni-feed-visual-preview[data-dragging="true"] {
+  z-index: 8;
+  opacity: .68;
+  transform: scale(.965);
+  box-shadow: 0 0 0 2px var(--app-accent);
+}
+
+.alumni-feed-page .alumni-feed-preview-reorder {
+  position: absolute;
+  top: 7px;
+  left: 7px;
+  z-index: 5;
+  display: inline-flex;
+  width: 29px;
+  height: 29px;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: rgba(5, 7, 11, .72);
+  color: #fff;
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+  backdrop-filter: blur(10px);
+}
+
+.alumni-feed-page .alumni-feed-preview-reorder:active {
+  cursor: grabbing;
+}
+
+.alumni-feed-page .alumni-feed-preview-reorder:focus-visible {
+  outline: 2px solid var(--app-accent);
+  outline-offset: 2px;
+}
+
+.alumni-feed-page .alumni-feed-preview-reorder:disabled {
+  cursor: not-allowed;
+  opacity: .5;
+}
+
+/* ---------------------------------------------------------
+   Feed: carga suave / skeleton
+   --------------------------------------------------------- */
+.alumni-feed-page .alumni-feed-media-loadable {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  background: #05070b;
+}
+
+.alumni-feed-page .alumni-feed-media-loadable::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  background:
+    linear-gradient(
+      105deg,
+      rgba(255, 255, 255, .025) 20%,
+      rgba(255, 255, 255, .095) 42%,
+      rgba(255, 255, 255, .025) 64%
+    ),
+    #0b0e14;
+  background-size: 220% 100%;
+  opacity: 1;
+  pointer-events: none;
+  animation: alumni-feed-media-shimmer 1.15s linear infinite;
+  transition: opacity .24s ease;
+}
+
+.alumni-feed-page .alumni-feed-media-loadable[data-loaded="true"]::after {
+  opacity: 0;
+  visibility: hidden;
+  animation: none;
+}
+
+@keyframes alumni-feed-media-shimmer {
+  from {
+    background-position: 120% 0;
+  }
+  to {
+    background-position: -120% 0;
+  }
+}
+
+.alumni-feed-page .alumni-feed-image-main,
+.alumni-feed-page .alumni-feed-video {
+  position: relative;
+  z-index: 2;
+  opacity: 0;
+  transition: opacity .26s ease;
+}
+
+.alumni-feed-page [data-loaded="true"] > .alumni-feed-image-main,
+.alumni-feed-page .alumni-feed-video-wrap[data-loaded="true"] > .alumni-feed-video {
+  opacity: 1;
+}
+
+/* ---------------------------------------------------------
+   Publicaciones nuevas y antiguas
+   --------------------------------------------------------- */
+.alumni-feed-page .alumni-pro-image-button {
+  position: relative;
+  height: 100%;
+}
+
+.alumni-feed-page .alumni-pro-image-button[data-fit="cover"] .alumni-feed-image-main {
+  object-fit: cover !important;
+}
+
+.alumni-feed-page .alumni-pro-image-button[data-fit="contain"] .alumni-feed-image-main {
+  object-fit: contain !important;
+}
+
+.alumni-feed-page .alumni-feed-image-backdrop {
+  position: absolute !important;
+  inset: -8% !important;
+  z-index: 1;
+  width: 116% !important;
+  height: 116% !important;
+  max-width: none !important;
+  max-height: none !important;
+  object-fit: cover !important;
+  filter: blur(24px) brightness(.48) saturate(.9);
+  transform: scale(1.08);
+  opacity: .72;
+  pointer-events: none;
+}
+
+/* El video conserva todo su cuadro dentro de la caja 4:5. */
+.alumni-feed-page .alumni-feed-video {
+  height: 100%;
+  min-height: 0;
+  object-fit: contain !important;
+  background: #05070b;
+}
+
+.alumni-feed-page .alumni-feed-video-wrap {
+  height: 100%;
+}
+
+.alumni-feed-page .alumni-feed-video-mute {
+  z-index: 8;
+}
+
+/* ---------------------------------------------------------
+   Carrusel mixto
+   --------------------------------------------------------- */
+.alumni-feed-page .alumni-pro-carousel {
+  overscroll-behavior-x: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+.alumni-feed-page .alumni-pro-media-slide {
+  contain: layout paint;
+}
+
+.alumni-feed-page .alumni-pro-carousel-dots button {
+  transition: width .18s ease, opacity .18s ease;
+}
+
+/* ---------------------------------------------------------
+   Crop editor: gesto tactil
+   --------------------------------------------------------- */
+.alumni-feed-crop-stage {
+  touch-action: none;
+}
+
+.alumni-feed-crop-hint {
+  max-width: calc(100% - 24px);
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ---------------------------------------------------------
+   Mobile audit: 430 / 390 / 360
+   --------------------------------------------------------- */
+@media (max-width: 430px) {
+  .alumni-feed-page .alumni-feed-visual-preview,
+  .alumni-feed-page .alumni-feed-visual-add-more {
+    flex-basis: 100px;
+    width: 100px;
+    height: 125px;
+  }
+
+  .alumni-feed-page .alumni-pro-composer-previews {
+    gap: 7px;
+  }
+}
+
+@media (max-width: 390px) {
+  .alumni-feed-page .alumni-feed-visual-preview,
+  .alumni-feed-page .alumni-feed-visual-add-more {
+    flex-basis: 94px;
+    width: 94px;
+    height: 118px;
+  }
+
+  .alumni-feed-page .alumni-feed-preview-reorder,
+  .alumni-feed-page .alumni-feed-preview-remove {
+    width: 28px;
+    height: 28px;
+  }
+}
+
+@media (max-width: 360px) {
+  .alumni-feed-page .alumni-feed-visual-preview,
+  .alumni-feed-page .alumni-feed-visual-add-more {
+    flex-basis: 88px;
+    width: 88px;
+    height: 110px;
+    border-radius: 13px;
+  }
+
+  .alumni-feed-page .alumni-pro-composer-previews {
+    gap: 6px;
+  }
+
+  .alumni-feed-page .alumni-feed-preview-reorder {
+    top: 6px;
+    left: 6px;
+  }
+
+  .alumni-feed-page .alumni-feed-visual-preview > .alumni-feed-preview-remove {
+    top: 6px;
+    right: 6px;
+  }
+
+  .alumni-feed-crop-hint {
+    font-size: 9px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .alumni-feed-page .alumni-feed-media-loadable::after {
+    animation: none;
+  }
+
+  .alumni-feed-page .alumni-feed-image-main,
+  .alumni-feed-page .alumni-feed-video,
+  .alumni-feed-page .alumni-feed-visual-preview,
+  .alumni-feed-page .alumni-pro-carousel-dots button {
+    transition: none;
+  }
+}
+
+/* ALUMNI_2_5_0_FEED_VISUAL */

@@ -1,0 +1,85 @@
+{
+  "target": "https://phhrtimyvzjwurhzmbxn.supabase.co",
+  "virtualUsers": 1000,
+  "startedUsers": 1000,
+  "rampSeconds": 20,
+  "steadyDurationSeconds": 20,
+  "actualDurationSeconds": 42.53,
+  "thinkTimeMs": {
+    "min": 250,
+    "max": 700
+  },
+  "requestTimeoutMs": 30000,
+  "https": {
+    "maxSockets": 100,
+    "keepAlive": true,
+    "freshSocketAssignments": 14681,
+    "reusedSocketAssignments": 204,
+    "peakPendingRequests": 899
+  },
+  "totalRequests": 14885,
+  "completedIterations": 4637,
+  "failedRequests": 0,
+  "errorRatePct": 0,
+  "requestsPerSecond": 349.96,
+  "latencyMs": {
+    "p50": 2026.78,
+    "p95": 3551.93,
+    "p99": 3710.81,
+    "max": 3932.59
+  },
+  "socketQueueMs": {
+    "p50": 1751.28,
+    "p95": 3289.31,
+    "p99": 3380.76,
+    "max": 3451.82
+  },
+  "afterSocketMs": {
+    "p50": 254.01,
+    "p95": 408.42,
+    "p99": 986.56,
+    "max": 2186.23
+  },
+  "scenarios": {
+    "feed": {
+      "count": 5282,
+      "failed": 0,
+      "errorRatePct": 0,
+      "p50Ms": 1893.51,
+      "p95Ms": 3540.12,
+      "p99Ms": 3716.81,
+      "socketQueueP95Ms": 3260.96,
+      "afterSocketP95Ms": 427.24,
+      "statuses": {
+        "200": 5282
+      }
+    },
+    "direct_chat": {
+      "count": 4966,
+      "failed": 0,
+      "errorRatePct": 0,
+      "p50Ms": 2024.02,
+      "p95Ms": 3550.19,
+      "p99Ms": 3686.2,
+      "socketQueueP95Ms": 3299.16,
+      "afterSocketP95Ms": 390.24,
+      "statuses": {
+        "200": 4966
+      }
+    },
+    "group_chat": {
+      "count": 4637,
+      "failed": 0,
+      "errorRatePct": 0,
+      "p50Ms": 2368.55,
+      "p95Ms": 3568.68,
+      "p99Ms": 3721.37,
+      "socketQueueP95Ms": 3292.6,
+      "afterSocketP95Ms": 399.25,
+      "statuses": {
+        "200": 4637
+      }
+    }
+  },
+  "errorSamples": []
+}

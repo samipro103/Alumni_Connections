@@ -1,0 +1,129 @@
+{
+  "target": "https://phhrtimyvzjwurhzmbxn.supabase.co",
+  "virtualUsers": 2000,
+  "startedUsers": 2000,
+  "rampSeconds": 60,
+  "steadyDurationSeconds": 30,
+  "actualDurationSeconds": 95.19,
+  "totalRequests": 38046,
+  "completedLoops": 38046,
+  "failedRequests": 2,
+  "errorRatePct": 0.005,
+  "requestsPerSecond": 399.7,
+  "latencyMs": {
+    "p50": 2642.9,
+    "p95": 4673.54,
+    "p99": 5671.04,
+    "max": 14937.26
+  },
+  "https": {
+    "maxSockets": 400,
+    "peakPendingRequests": 1497
+  },
+  "scenarios": {
+    "write_like": {
+      "count": 5419,
+      "failed": 0,
+      "errorRatePct": 0,
+      "p50Ms": 2615.2,
+      "p95Ms": 4656.6,
+      "p99Ms": 5617.96,
+      "statuses": {
+        "201": 5419
+      }
+    },
+    "read_direct": {
+      "count": 6131,
+      "failed": 1,
+      "errorRatePct": 0.016,
+      "p50Ms": 2643.95,
+      "p95Ms": 4627.56,
+      "p99Ms": 5610.99,
+      "statuses": {
+        "200": 6130,
+        "Error": 1
+      }
+    },
+    "read_feed": {
+      "count": 12082,
+      "failed": 0,
+      "errorRatePct": 0,
+      "p50Ms": 2685.84,
+      "p95Ms": 4679.65,
+      "p99Ms": 5755.06,
+      "statuses": {
+        "200": 12082
+      }
+    },
+    "read_group": {
+      "count": 4462,
+      "failed": 1,
+      "errorRatePct": 0.022,
+      "p50Ms": 2639.88,
+      "p95Ms": 4833.19,
+      "p99Ms": 5693.59,
+      "statuses": {
+        "200": 4461,
+        "Error": 1
+      }
+    },
+    "write_direct_message": {
+      "count": 3133,
+      "failed": 0,
+      "errorRatePct": 0,
+      "p50Ms": 2643.22,
+      "p95Ms": 4620.2,
+      "p99Ms": 5660.47,
+      "statuses": {
+        "201": 3133
+      }
+    },
+    "write_group_message": {
+      "count": 1874,
+      "failed": 0,
+      "errorRatePct": 0,
+      "p50Ms": 2527.13,
+      "p95Ms": 4688.56,
+      "p99Ms": 5698.34,
+      "statuses": {
+        "201": 1874
+      }
+    },
+    "write_comment": {
+      "count": 3383,
+      "failed": 0,
+      "errorRatePct": 0,
+      "p50Ms": 2588.93,
+      "p95Ms": 4597.31,
+      "p99Ms": 5629.68,
+      "statuses": {
+        "201": 3383
+      }
+    },
+    "write_post": {
+      "count": 1562,
+      "failed": 0,
+      "errorRatePct": 0,
+      "p50Ms": 2674.27,
+      "p95Ms": 4726.11,
+      "p99Ms": 5681.18,
+      "statuses": {
+        "201": 1562
+      }
+    }
+  },
+  "errorSamples": [
+    {
+      "scenario": "read_group",
+      "status": "Error",
+      "latencyMs": 12645.74,
+      "message": "read ECONNRESET"
+    },
+    {
+      "scenario": "read_direct",
+      "status": "Error",
+      "latencyMs": 12710.64,
+      "message": "read ECONNRESET"
+    }
+  ]
+}

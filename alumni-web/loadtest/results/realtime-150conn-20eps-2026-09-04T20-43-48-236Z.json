@@ -1,0 +1,23 @@
+{
+  "target": "https://phhrtimyvzjwurhzmbxn.supabase.co",
+  "requestedConnections": 150,
+  "subscribedConnections": 150,
+  "connectElapsedMs": 16785.53,
+  "rampSeconds": 15,
+  "durationSeconds": 30,
+  "eventsPerSecondTarget": 20,
+  "eventsAttempted": 166,
+  "eventsInserted": 166,
+  "eventsReceived": 166,
+  "missingEvents": 0,
+  "deliveryPct": 100,
+  "reconnectSignals": 0,
+  "latencyMs": {
+    "p50": 464.13,
+    "p95": 721.83,
+    "p99": 751.27,
+    "max": 1025.99
+  },
+  "subscriptionErrors": [],
+  "sendErrors": []
+}

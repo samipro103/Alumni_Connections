@@ -1,0 +1,20 @@
+ALUMNI - CATALOGO CENTROS SUPERATE
+
+14 centros incluidos en el ZIP recibido:
+
+1. Centro ¡Supérate! ADOC
+2. Centro ¡Supérate! Fundación Alberto Motta
+3. Centro ¡Supérate! Fundación Banco General
+4. Centro ¡Supérate! Dollarcity
+5. Centro ¡Supérate! Fundación Emanuel González-Revilla
+6. Centro ¡Supérate! Fundación Frech
+7. Centro ¡Supérate! Grupo Q
+8. Centro ¡Supérate! Hilasal
+9. Centro ¡Supérate! JUPÁ
+10. Centro ¡Supérate! Mobiliare
+11. Centro ¡Supérate! Fundación Poma
+12. Centro ¡Supérate! Fundación Provivienda
+13. Centro ¡Supérate! Fundación Sagrera Palomo
+14. Centro ¡Supérate! Soyapango
+
+Merlet ya existe en la aplicacion y NO se elimina. No venia logo de Merlet en el ZIP recibido.

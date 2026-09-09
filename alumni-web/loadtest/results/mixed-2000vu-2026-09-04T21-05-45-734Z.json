@@ -1,0 +1,290 @@
+{
+  "target": "https://phhrtimyvzjwurhzmbxn.supabase.co",
+  "virtualUsers": 2000,
+  "startedUsers": 2000,
+  "rampSeconds": 60,
+  "steadyDurationSeconds": 30,
+  "actualDurationSeconds": 120,
+  "totalRequests": 30937,
+  "completedLoops": 30937,
+  "failedRequests": 500,
+  "errorRatePct": 1.616,
+  "requestsPerSecond": 257.8,
+  "latencyMs": {
+    "p50": 1976.3,
+    "p95": 11181.36,
+    "p99": 24530.56,
+    "max": 30015.71
+  },
+  "https": {
+    "maxSockets": 800,
+    "peakPendingRequests": 1126
+  },
+  "scenarios": {
+    "write_comment": {
+      "count": 2776,
+      "failed": 38,
+      "errorRatePct": 1.369,
+      "p50Ms": 2019.78,
+      "p95Ms": 11162.12,
+      "p99Ms": 24345.57,
+      "statuses": {
+        "201": 2738,
+        "Error": 13,
+        "AggregateError": 6,
+        "TimeoutError": 19
+      }
+    },
+    "read_direct": {
+      "count": 4885,
+      "failed": 86,
+      "errorRatePct": 1.76,
+      "p50Ms": 2229.92,
+      "p95Ms": 11598.77,
+      "p99Ms": 24811.76,
+      "statuses": {
+        "200": 4799,
+        "Error": 34,
+        "AggregateError": 12,
+        "TimeoutError": 40
+      }
+    },
+    "read_feed": {
+      "count": 10030,
+      "failed": 162,
+      "errorRatePct": 1.615,
+      "p50Ms": 1962.4,
+      "p95Ms": 11058.61,
+      "p99Ms": 24818.85,
+      "statuses": {
+        "200": 9868,
+        "Error": 56,
+        "AggregateError": 27,
+        "TimeoutError": 79
+      }
+    },
+    "read_group": {
+      "count": 3712,
+      "failed": 78,
+      "errorRatePct": 2.101,
+      "p50Ms": 2018.09,
+      "p95Ms": 11847.32,
+      "p99Ms": 26066.64,
+      "statuses": {
+        "200": 3634,
+        "555": 1,
+        "Error": 39,
+        "AggregateError": 9,
+        "TimeoutError": 29
+      }
+    },
+    "write_direct_message": {
+      "count": 2506,
+      "failed": 35,
+      "errorRatePct": 1.397,
+      "p50Ms": 1757.08,
+      "p95Ms": 11070.03,
+      "p99Ms": 22868.94,
+      "statuses": {
+        "201": 2471,
+        "Error": 10,
+        "AggregateError": 13,
+        "TimeoutError": 12
+      }
+    },
+    "write_like": {
+      "count": 4229,
+      "failed": 70,
+      "errorRatePct": 1.655,
+      "p50Ms": 1895.67,
+      "p95Ms": 11028.97,
+      "p99Ms": 25941.62,
+      "statuses": {
+        "201": 4159,
+        "Error": 25,
+        "AggregateError": 8,
+        "TimeoutError": 37
+      }
+    },
+    "write_group_message": {
+      "count": 1570,
+      "failed": 19,
+      "errorRatePct": 1.21,
+      "p50Ms": 2035.86,
+      "p95Ms": 10664.7,
+      "p99Ms": 21292.21,
+      "statuses": {
+        "201": 1551,
+        "Error": 7,
+        "AggregateError": 4,
+        "TimeoutError": 8
+      }
+    },
+    "write_post": {
+      "count": 1229,
+      "failed": 12,
+      "errorRatePct": 0.976,
+      "p50Ms": 1858.83,
+      "p95Ms": 10591.4,
+      "p99Ms": 22017.83,
+      "statuses": {
+        "201": 1217,
+        "AggregateError": 1,
+        "TimeoutError": 6,
+        "Error": 5
+      }
+    }
+  },
+  "errorSamples": [
+    {
+      "scenario": "write_comment",
+      "status": "Error",
+      "latencyMs": 13343.25,
+      "message": "read ECONNRESET"
+    },
+    {
+      "scenario": "write_like",
+      "status": "Error",
+      "latencyMs": 13363.51,
+      "message": "read ECONNRESET"
+    },
+    {
+      "scenario": "write_group_message",
+      "status": "Error",
+      "latencyMs": 13338.29,
+      "message": "read ECONNRESET"
+    },
+    {
+      "scenario": "read_feed",
+      "status": "Error",
+      "latencyMs": 13364.51,
+      "message": "read ECONNRESET"
+    },
+    {
+      "scenario": "write_direct_message",
+      "status": "Error",
+      "latencyMs": 13365.11,
+      "message": "read ECONNRESET"
+    },
+    {
+      "scenario": "read_direct",
+      "status": "Error",
+      "latencyMs": 13358.71,
+      "message": "read ECONNRESET"
+    },
+    {
+      "scenario": "read_group",
+      "status": "Error",
+      "latencyMs": 13410.14,
+      "message": "read ECONNRESET"
+    },
+    {
+      "scenario": "read_feed",
+      "status": "Error",
+      "latencyMs": 13413.54,
+      "message": "read ECONNRESET"
+    },
+    {
+      "scenario": "read_direct",
+      "status": "Error",
+      "latencyMs": 13409.47,
+      "message": "read ECONNRESET"
+    },
+    {
+      "scenario": "read_group",
+      "status": "Error",
+      "latencyMs": 13411.55,
+      "message": "read ECONNRESET"
+    },
+    {
+      "scenario": "write_group_message",
+      "status": "Error",
+      "latencyMs": 13412.44,
+      "message": "read ECONNRESET"
+    },
+    {
+      "scenario": "read_group",
+      "status": "Error",
+      "latencyMs": 13504.82,
+      "message": "read ECONNRESET"
+    },
+    {
+      "scenario": "read_group",
+      "status": "Error",
+      "latencyMs": 13486.01,
+      "message": "read ECONNRESET"
+    },
+    {
+      "scenario": "write_like",
+      "status": "Error",
+      "latencyMs": 13503.89,
+      "message": "read ECONNRESET"
+    },
+    {
+      "scenario": "write_like",
+      "status": "Error",
+      "latencyMs": 13580.46,
+      "message": "read ECONNRESET"
+    },
+    {
+      "scenario": "write_like",
+      "status": "Error",
+      "latencyMs": 12896.98,
+      "message": "read ECONNRESET"
+    },
+    {
+      "scenario": "read_group",
+      "status": "Error",
+      "latencyMs": 12898.91,
+      "message": "read ECONNRESET"
+    },
+    {
+      "scenario": "read_feed",
+      "status": "Error",
+      "latencyMs": 12899.71,
+      "message": "read ECONNRESET"
+    },
+    {
+      "scenario": "read_feed",
+      "status": "Error",
+      "latencyMs": 12895.73,
+      "message": "read ECONNRESET"
+    },
+    {
+      "scenario": "write_comment",
+      "status": "Error",
+      "latencyMs": 12914.81,
+      "message": "read ECONNRESET"
+    },
+    {
+      "scenario": "read_feed",
+      "status": "Error",
+      "latencyMs": 12926.22,
+      "message": "read ECONNRESET"
+    },
+    {
+      "scenario": "read_feed",
+      "status": "Error",
+      "latencyMs": 12957.17,
+      "message": "read ECONNRESET"
+    },
+    {
+      "scenario": "write_group_message",
+      "status": "Error",
+      "latencyMs": 12704.81,
+      "message": "read ECONNRESET"
+    },
+    {
+      "scenario": "read_feed",
+      "status": "AggregateError",
+      "latencyMs": 21282.09,
+      "message": "AggregateError"
+    },
+    {
+      "scenario": "read_feed",
+      "status": "Error",
+      "latencyMs": 12755.78,
+      "message": "read ECONNRESET"
+    }
+  ]
+}

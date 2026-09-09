@@ -1,0 +1,300 @@
+/*
+ * ALUMNI 2.6.0 — GLOBAL UX
+ * Toasts, confirmaciones y comportamiento móvil tipo app.
+ */
+
+/* ---------------------------------------------------------
+   Toasts globales — Sonner
+   --------------------------------------------------------- */
+[data-sonner-toaster] {
+  z-index: 3200 !important;
+  width: min(94vw, 430px) !important;
+}
+
+[data-sonner-toast] {
+  min-height: 54px !important;
+  border: 1px solid var(--app-border) !important;
+  border-radius: 16px !important;
+  background:
+    color-mix(
+      in srgb,
+      var(--app-surface) 96%,
+      transparent
+    ) !important;
+  color: var(--app-text) !important;
+  box-shadow:
+    0 18px 54px rgba(0, 0, 0, .22) !important;
+  backdrop-filter: blur(20px) !important;
+}
+
+[data-sonner-toast] [data-title] {
+  color: var(--app-text) !important;
+  font-size: 13px !important;
+  font-weight: 820 !important;
+  letter-spacing: -.01em !important;
+}
+
+[data-sonner-toast] [data-description] {
+  color: var(--app-muted) !important;
+  font-size: 11px !important;
+  line-height: 1.45 !important;
+}
+
+[data-sonner-toast] [data-icon] {
+  color: var(--app-accent) !important;
+}
+
+[data-sonner-toast][data-type="error"] [data-icon] {
+  color: #ef4444 !important;
+}
+
+[data-sonner-toast][data-type="warning"] [data-icon] {
+  color: #f59e0b !important;
+}
+
+[data-sonner-toast][data-type="success"] [data-icon] {
+  color: #22c55e !important;
+}
+
+/* ---------------------------------------------------------
+   Diálogo global
+   --------------------------------------------------------- */
+.alumni-ux-dialog-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 3000;
+  display: grid;
+  place-items: center;
+  padding:
+    max(18px, env(safe-area-inset-top))
+    18px
+    max(18px, env(safe-area-inset-bottom));
+  background: rgba(2, 4, 8, .72);
+  backdrop-filter: blur(14px);
+}
+
+.alumni-ux-dialog {
+  width: min(100%, 430px);
+  overflow: hidden;
+  border: 1px solid var(--app-border);
+  border-radius: 24px;
+  background: var(--app-surface);
+  color: var(--app-text);
+  box-shadow:
+    0 28px 88px rgba(0, 0, 0, .34);
+  animation:
+    alumni-ux-dialog-in .18s ease-out both;
+}
+
+@keyframes alumni-ux-dialog-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(.985);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.alumni-ux-dialog-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 18px 0;
+}
+
+.alumni-ux-dialog-icon,
+.alumni-ux-dialog-close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.alumni-ux-dialog-icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 14px;
+  background: var(--app-accent-soft);
+  color: var(--app-accent);
+}
+
+.alumni-ux-dialog[data-tone="danger"]
+.alumni-ux-dialog-icon {
+  background: rgba(239, 68, 68, .10);
+  color: #ef4444;
+}
+
+.alumni-ux-dialog-close {
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: var(--app-soft);
+  color: var(--app-muted);
+}
+
+.alumni-ux-dialog-copy {
+  padding: 16px 20px 4px;
+}
+
+.alumni-ux-dialog-copy h2 {
+  margin: 0;
+  color: var(--app-text);
+  font-size: 20px;
+  font-weight: 900;
+  line-height: 1.15;
+  letter-spacing: -.035em;
+}
+
+.alumni-ux-dialog-copy p {
+  margin: 9px 0 0;
+  color: var(--app-muted);
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.alumni-ux-dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 9px;
+  padding: 18px 20px 20px;
+}
+
+.alumni-ux-dialog-actions button {
+  min-height: 44px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: 13px;
+  font-size: 12px;
+  font-weight: 840;
+}
+
+.alumni-ux-dialog-actions .is-secondary {
+  background: var(--app-soft);
+  color: var(--app-text-soft);
+}
+
+.alumni-ux-dialog-actions .is-primary {
+  background: var(--app-accent-fill);
+  color: var(--app-on-accent);
+}
+
+.alumni-ux-dialog-actions .is-danger {
+  background: #dc2626;
+  color: #fff;
+}
+
+.alumni-ux-dialog button:focus-visible {
+  outline: 2px solid var(--app-accent);
+  outline-offset: 2px;
+}
+
+/* ---------------------------------------------------------
+   Mobile = comportamiento tipo app
+   --------------------------------------------------------- */
+@media (max-width: 900px) and (pointer: coarse) {
+  html,
+  body,
+  #alumni-root-content {
+    /*
+     * Mantiene desplazamiento X/Y pero elimina el pinch zoom
+     * propio del navegador.
+     */
+    touch-action: pan-x pan-y;
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
+
+  button,
+  a,
+  input,
+  textarea,
+  select,
+  summary,
+  [role="button"] {
+    /*
+     * Evita el double-tap zoom accidental en controles.
+     */
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  input,
+  textarea,
+  select {
+    /*
+     * iOS hace auto-zoom al enfocar inputs menores de 16px.
+     */
+    font-size: 16px !important;
+  }
+
+  /*
+   * El crop editor conserva su gesto propio.
+   */
+  .alumni-feed-crop-stage {
+    touch-action: none !important;
+  }
+}
+
+@media (max-width: 640px) {
+  [data-sonner-toaster] {
+    top:
+      max(
+        10px,
+        env(safe-area-inset-top)
+      ) !important;
+    width: calc(100vw - 20px) !important;
+  }
+
+  [data-sonner-toast] {
+    border-radius: 15px !important;
+  }
+
+  .alumni-ux-dialog-overlay {
+    align-items: end;
+    padding: 0;
+  }
+
+  .alumni-ux-dialog {
+    width: 100%;
+    border-right: 0;
+    border-bottom: 0;
+    border-left: 0;
+    border-radius: 24px 24px 0 0;
+    padding-bottom:
+      max(0px, env(safe-area-inset-bottom));
+    animation:
+      alumni-ux-sheet-in .20s ease-out both;
+  }
+
+  @keyframes alumni-ux-sheet-in {
+    from {
+      opacity: .75;
+      transform: translateY(22px);
+    }
+
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .alumni-ux-dialog-actions {
+    padding-bottom: 16px;
+  }
+
+  .alumni-ux-dialog-actions button {
+    flex: 1 1 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .alumni-ux-dialog {
+    animation: none;
+  }
+}
+
+/* ALUMNI_2_6_0_GLOBAL_UX */

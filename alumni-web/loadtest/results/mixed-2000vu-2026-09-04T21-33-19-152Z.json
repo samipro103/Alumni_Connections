@@ -1,0 +1,285 @@
+{
+  "target": "https://phhrtimyvzjwurhzmbxn.supabase.co",
+  "virtualUsers": 2000,
+  "startedUsers": 2000,
+  "rampSeconds": 60,
+  "steadyDurationSeconds": 30,
+  "actualDurationSeconds": 110.83,
+  "totalRequests": 13203,
+  "completedLoops": 13203,
+  "failedRequests": 1348,
+  "errorRatePct": 10.21,
+  "requestsPerSecond": 119.13,
+  "latencyMs": {
+    "p50": 6081.12,
+    "p95": 30004.64,
+    "p99": 30012.44,
+    "max": 30015.58
+  },
+  "https": {
+    "maxSockets": 400,
+    "peakPendingRequests": 1600
+  },
+  "scenarios": {
+    "write_direct_message": {
+      "count": 1063,
+      "failed": 103,
+      "errorRatePct": 9.69,
+      "p50Ms": 5521.11,
+      "p95Ms": 30004.36,
+      "p99Ms": 30012.79,
+      "statuses": {
+        "201": 960,
+        "TimeoutError": 102,
+        "Error": 1
+      }
+    },
+    "write_comment": {
+      "count": 1196,
+      "failed": 138,
+      "errorRatePct": 11.538,
+      "p50Ms": 6795.66,
+      "p95Ms": 30005.17,
+      "p99Ms": 30012.43,
+      "statuses": {
+        "201": 1058,
+        "TimeoutError": 136,
+        "Error": 2
+      }
+    },
+    "write_like": {
+      "count": 1741,
+      "failed": 201,
+      "errorRatePct": 11.545,
+      "p50Ms": 5675.81,
+      "p95Ms": 30004.99,
+      "p99Ms": 30011.88,
+      "statuses": {
+        "201": 1540,
+        "504": 4,
+        "TimeoutError": 193,
+        "Error": 4
+      }
+    },
+    "read_direct": {
+      "count": 2196,
+      "failed": 229,
+      "errorRatePct": 10.428,
+      "p50Ms": 6609.45,
+      "p95Ms": 30005.83,
+      "p99Ms": 30012.63,
+      "statuses": {
+        "200": 1967,
+        "504": 3,
+        "TimeoutError": 223,
+        "Error": 3
+      }
+    },
+    "read_feed": {
+      "count": 4294,
+      "failed": 422,
+      "errorRatePct": 9.828,
+      "p50Ms": 5987.62,
+      "p95Ms": 30004.1,
+      "p99Ms": 30012.2,
+      "statuses": {
+        "200": 3872,
+        "504": 4,
+        "TimeoutError": 411,
+        "Error": 7
+      }
+    },
+    "write_post": {
+      "count": 510,
+      "failed": 56,
+      "errorRatePct": 10.98,
+      "p50Ms": 6607.72,
+      "p95Ms": 30007.59,
+      "p99Ms": 30013.71,
+      "statuses": {
+        "201": 454,
+        "TimeoutError": 55,
+        "Error": 1
+      }
+    },
+    "read_group": {
+      "count": 1571,
+      "failed": 140,
+      "errorRatePct": 8.912,
+      "p50Ms": 5588.35,
+      "p95Ms": 30003.23,
+      "p99Ms": 30012.44,
+      "statuses": {
+        "200": 1431,
+        "504": 1,
+        "TimeoutError": 135,
+        "Error": 4
+      }
+    },
+    "write_group_message": {
+      "count": 632,
+      "failed": 59,
+      "errorRatePct": 9.335,
+      "p50Ms": 5133.3,
+      "p95Ms": 30003.13,
+      "p99Ms": 30011.63,
+      "statuses": {
+        "201": 573,
+        "TimeoutError": 58,
+        "Error": 1
+      }
+    }
+  },
+  "errorSamples": [
+    {
+      "scenario": "read_group",
+      "status": "TimeoutError",
+      "latencyMs": 30007,
+      "message": "Request timeout 30000ms"
+    },
+    {
+      "scenario": "read_feed",
+      "status": "TimeoutError",
+      "latencyMs": 30014.21,
+      "message": "Request timeout 30000ms"
+    },
+    {
+      "scenario": "read_feed",
+      "status": "TimeoutError",
+      "latencyMs": 30015.31,
+      "message": "Request timeout 30000ms"
+    },
+    {
+      "scenario": "read_direct",
+      "status": "TimeoutError",
+      "latencyMs": 30006.35,
+      "message": "Request timeout 30000ms"
+    },
+    {
+      "scenario": "read_feed",
+      "status": "TimeoutError",
+      "latencyMs": 30014.66,
+      "message": "Request timeout 30000ms"
+    },
+    {
+      "scenario": "read_direct",
+      "status": "TimeoutError",
+      "latencyMs": 30005.7,
+      "message": "Request timeout 30000ms"
+    },
+    {
+      "scenario": "read_feed",
+      "status": "TimeoutError",
+      "latencyMs": 30014.64,
+      "message": "Request timeout 30000ms"
+    },
+    {
+      "scenario": "read_feed",
+      "status": "TimeoutError",
+      "latencyMs": 30008.77,
+      "message": "Request timeout 30000ms"
+    },
+    {
+      "scenario": "read_feed",
+      "status": "TimeoutError",
+      "latencyMs": 30013.01,
+      "message": "Request timeout 30000ms"
+    },
+    {
+      "scenario": "read_feed",
+      "status": "TimeoutError",
+      "latencyMs": 30001.57,
+      "message": "Request timeout 30000ms"
+    },
+    {
+      "scenario": "write_post",
+      "status": "TimeoutError",
+      "latencyMs": 30013.97,
+      "message": "Request timeout 30000ms"
+    },
+    {
+      "scenario": "read_feed",
+      "status": "TimeoutError",
+      "latencyMs": 30001.55,
+      "message": "Request timeout 30000ms"
+    },
+    {
+      "scenario": "read_feed",
+      "status": "TimeoutError",
+      "latencyMs": 30009.27,
+      "message": "Request timeout 30000ms"
+    },
+    {
+      "scenario": "read_direct",
+      "status": "TimeoutError",
+      "latencyMs": 30004.18,
+      "message": "Request timeout 30000ms"
+    },
+    {
+      "scenario": "read_feed",
+      "status": "TimeoutError",
+      "latencyMs": 30006.56,
+      "message": "Request timeout 30000ms"
+    },
+    {
+      "scenario": "read_feed",
+      "status": "TimeoutError",
+      "latencyMs": 30000.01,
+      "message": "Request timeout 30000ms"
+    },
+    {
+      "scenario": "write_like",
+      "status": "TimeoutError",
+      "latencyMs": 30005.18,
+      "message": "Request timeout 30000ms"
+    },
+    {
+      "scenario": "read_group",
+      "status": "TimeoutError",
+      "latencyMs": 30008.8,
+      "message": "Request timeout 30000ms"
+    },
+    {
+      "scenario": "read_group",
+      "status": "504",
+      "latencyMs": 25527.36,
+      "message": "{\"code\":\"PGRST003\",\"details\":null,\"hint\":null,\"message\":\"Timed out acquiring connection from connection pool.\"}"
+    },
+    {
+      "scenario": "write_like",
+      "status": "504",
+      "latencyMs": 25114.03,
+      "message": "{\"code\":\"PGRST003\",\"details\":null,\"hint\":null,\"message\":\"Timed out acquiring connection from connection pool.\"}"
+    },
+    {
+      "scenario": "read_direct",
+      "status": "504",
+      "latencyMs": 25920.43,
+      "message": "{\"code\":\"PGRST003\",\"details\":null,\"hint\":null,\"message\":\"Timed out acquiring connection from connection pool.\"}"
+    },
+    {
+      "scenario": "write_like",
+      "status": "504",
+      "latencyMs": 24974.78,
+      "message": "{\"code\":\"PGRST003\",\"details\":null,\"hint\":null,\"message\":\"Timed out acquiring connection from connection pool.\"}"
+    },
+    {
+      "scenario": "write_like",
+      "status": "504",
+      "latencyMs": 25226.77,
+      "message": "{\"code\":\"PGRST003\",\"details\":null,\"hint\":null,\"message\":\"Timed out acquiring connection from connection pool.\"}"
+    },
+    {
+      "scenario": "read_direct",
+      "status": "504",
+      "latencyMs": 24594.3,
+      "message": "{\"code\":\"PGRST003\",\"details\":null,\"hint\":null,\"message\":\"Timed out acquiring connection from connection pool.\"}"
+    },
+    {
+      "scenario": "read_direct",
+      "status": "504",
+      "latencyMs": 25285.02,
+      "message": "{\"code\":\"PGRST003\",\"details\":null,\"hint\":null,\"message\":\"Timed out acquiring connection from connection pool.\"}"
+    }
+  ]
+}

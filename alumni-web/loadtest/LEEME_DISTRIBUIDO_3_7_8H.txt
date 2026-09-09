@@ -1,0 +1,69 @@
+ALUMNI 3.7.8H - PRUEBA DISTRIBUIDA 2 PCs
+==========================================
+
+OBJETIVO
+PC 1 = 2000 usuarios virtuales distintos
+PC 2 = 2000 usuarios virtuales distintos
+TOTAL = 4000 usuarios activos simulados
+
+IMPORTANTE
+Ambas PCs deben usar la misma rama/codigo.
+El offset evita que las dos PCs simulen los mismos usuarios.
+
+PC 1
+generator=pc1
+offset=0
+usuarios sinteticos 1-2000
+
+PC 2
+generator=pc2
+offset=2000
+usuarios sinteticos 2001-4000
+
+APLICAR EN LAS DOS PCs
+1) Extrae este ZIP en alumni-web
+2) Ejecuta:
+node APLICAR_LOAD_TEST_DISTRIBUIDO_3_7_8H.js
+node --check loadtest/alumni-loadtest.mjs
+
+PRUEBA - PC 1
+node loadtest/alumni-loadtest.mjs --generator=pc1 --offset=0 --vus=2000 --ramp=60 --duration=30 --sockets=400 --timeout=30000
+
+PRUEBA - PC 2
+node loadtest/alumni-loadtest.mjs --generator=pc2 --offset=2000 --vus=2000 --ramp=60 --duration=30 --sockets=400 --timeout=30000
+
+ARRANQUE
+Pon ambos comandos listos.
+Enter en PC 1 y, dentro de 1-2 segundos, Enter en PC 2.
+No hace falta sincronizacion perfecta.
+
+NO HAGAS 800 SOCKETS.
+400 por PC es intencional: 800 en una sola PC ya mostró inestabilidad local.
+
+INTERPRETACION
+Esta prueba busca generar 4000 usuarios desde dos redes/generadores.
+Aun así, cada PC individual puede convertirse en cuello local.
+Por eso se analizarán:
+- resultados de PC 1
+- resultados de PC 2
+- estado de Supabase durante/después
+- errores y latencias
+
+DESPUES DE LA PRUEBA
+Comparte AMBAS salidas completas.
+
+VALIDACION DEL CODIGO
+node --check loadtest/alumni-loadtest.mjs
+npm run test
+npm run typecheck
+npm run build
+
+COMMIT/PUSH
+El runner ya existe y es tracked:
+git commit -am "3.7.8 - Add distributed load-test sharding"
+git push
+
+NO uses git add .
+
+COSTO ADICIONAL
+$0/mes

@@ -1,0 +1,36 @@
+ALUMNI - UNIVERSIDADES CON LOGO VALIDADO
+
+- universidad-autonoma-santa-ana.png
+- universidad-centroamericana-jose-simeon-canas.png
+- universidad-cristiana-asambleas-de-dios.png
+- universidad-don-bosco.png
+- universidad-dr-andres-bello.png
+- universidad-dr-jose-matias-delgado.png
+- universidad-evangelica-el-salvador.png
+- universidad-francisco-gavidia.png
+- universidad-gerardo-barrios.png
+- universidad-luterana-salvadorena.png
+- universidad-panamericana.png
+- universidad-pedagogica-el-salvador.png
+- universidad-politecnica-el-salvador.png
+- universidad-salvadorena-alberto-masferrer.png
+- universidad-tecnologica-el-salvador.png
+- universidad-tecnica-latinoamericana.png
+- universidad-el-salvador.png
+- universidad-oriente.png
+- universidad-sonsonate.png
+
+REGLA DE MARCA
+- Los logos conservan sus colores originales.
+- Alumni NO aplica grayscale, invert ni color del tema a las marcas.
+- Se usa un fondo neutro blanco detrás de logos reales para conservar contraste en cualquier tema.
+
+NO SE USARON resultados dudosos o incorrectos del rastreo.
+Pendientes por falta de un logo válido en el ZIP proporcionado:
+- Universidad Albert Einstein
+- Universidad Católica de El Salvador
+- Universidad Modular Abierta
+- Universidad Monseñor Óscar Arnulfo Romero
+- Universidad Nueva San Salvador
+
+Además, Mónica Herrera, ESEN e ITCA-FEPADE ya existen en la aplicación pero no venían en este ZIP; se mantienen con su recurso actual hasta recibir sus logos oficiales.

@@ -1,0 +1,9 @@
+diff --git a/alumni-web/src/components/stories/StoryViewer.tsx b/alumni-web/src/components/stories/StoryViewer.tsx
+--- a/alumni-web/src/components/stories/StoryViewer.tsx
++++ b/alumni-web/src/components/stories/StoryViewer.tsx
+@@
+-        <div className="alumni-story-chrome alumni-story-chrome-top absolute inset-x-0 top-0 z-20 h-32 bg-gradient-to-b from-black/55 via-black/15 to-transparent" />
+-        <div className="alumni-story-chrome alumni-story-chrome-bottom absolute inset-x-0 bottom-0 z-20 h-52 bg-gradient-to-t from-black/58 via-black/14 to-transparent" />
+-
+         {story.media_type ===
+         "video" ? (

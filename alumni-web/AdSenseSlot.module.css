@@ -1,0 +1,66 @@
+.slot {
+  width: 100%;
+  min-width: 0;
+  overflow: hidden;
+  border-block: 1px solid var(--app-border);
+  background: color-mix(in srgb, var(--app-surface) 98%, transparent);
+}
+
+.label {
+  padding: 8px 12px 4px;
+  color: var(--app-muted-2);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.ad {
+  width: 100%;
+  min-width: 0;
+}
+
+.preview {
+  display: flex;
+  min-height: 110px;
+  align-items: center;
+  justify-content: center;
+  padding: 18px;
+  color: var(--app-muted-2);
+  font-size: 11px;
+  font-weight: 650;
+  text-align: center;
+  background:
+    linear-gradient(
+      135deg,
+      transparent,
+      color-mix(in srgb, var(--app-soft) 70%, transparent)
+    );
+}
+
+.stories {
+  margin: 8px 0 14px;
+  border-radius: 14px;
+}
+
+.feed {
+  margin: 14px 0;
+  border-radius: 14px;
+}
+
+.slot:has(.ad[data-ad-status="unfilled"]) {
+  display: none;
+}
+
+@media (max-width: 767px) {
+  .stories,
+  .feed {
+    border-radius: 0;
+  }
+
+  .label {
+    padding-inline: 14px;
+  }
+}
+
+/* ALUMNI_3_3_0_WEB_ADS:STYLE */

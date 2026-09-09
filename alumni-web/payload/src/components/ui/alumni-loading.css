@@ -1,0 +1,426 @@
+/*
+ * ALUMNI 2.7.0 — LOADING / EMPTY / 404
+ * Skeletons editoriales sin tarjetas innecesarias.
+ */
+
+.alumni-skeleton-block {
+  position: relative;
+  display: block;
+  overflow: hidden;
+  max-width: 100%;
+  border-radius: 7px;
+  background: var(--app-soft-strong);
+}
+
+.alumni-skeleton-block::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(
+      105deg,
+      transparent 15%,
+      color-mix(
+        in srgb,
+        var(--app-text) 8%,
+        transparent
+      ) 42%,
+      transparent 68%
+    );
+  transform: translateX(-110%);
+  animation:
+    alumni-loading-shimmer
+    1.35s
+    linear
+    infinite;
+}
+
+.alumni-skeleton-block.is-round {
+  border-radius: 999px;
+}
+
+@keyframes alumni-loading-shimmer {
+  to {
+    transform: translateX(110%);
+  }
+}
+
+/* ---------------------------------------------------------
+   Route loading
+   --------------------------------------------------------- */
+.alumni-route-loading {
+  min-height: 100dvh;
+  padding:
+    max(24px, env(safe-area-inset-top))
+    max(18px, calc((100vw - 760px) / 2))
+    max(32px, env(safe-area-inset-bottom));
+  background: var(--app-bg);
+  color: var(--app-text);
+}
+
+.alumni-route-loading-brand {
+  margin-bottom: 42px;
+  font-size: 20px;
+  font-weight: 950;
+  letter-spacing: -.05em;
+}
+
+.alumni-route-loading-body {
+  width: 100%;
+  max-width: 720px;
+  margin: 0 auto;
+}
+
+.alumni-route-loading-heading {
+  display: grid;
+  gap: 12px;
+  margin-bottom: 28px;
+}
+
+/* ---------------------------------------------------------
+   Generic list
+   --------------------------------------------------------- */
+.alumni-list-skeleton {
+  width: 100%;
+}
+
+.alumni-list-skeleton-row {
+  display: flex;
+  min-height: 76px;
+  align-items: center;
+  gap: 13px;
+  border-bottom: 1px solid var(--app-border);
+}
+
+.alumni-list-skeleton-copy {
+  display: grid;
+  min-width: 0;
+  flex: 1 1 auto;
+  gap: 9px;
+}
+
+/* ---------------------------------------------------------
+   Feed
+   --------------------------------------------------------- */
+.alumni-feed-skeleton-post {
+  padding: 18px 0 20px;
+  border-bottom: 1px solid var(--app-border);
+}
+
+.alumni-feed-skeleton-author {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+}
+
+.alumni-feed-skeleton-author > div {
+  display: grid;
+  gap: 7px;
+}
+
+.alumni-feed-skeleton-copy {
+  display: grid;
+  gap: 8px;
+  margin: 15px 0 14px;
+}
+
+.alumni-feed-skeleton-media {
+  width: calc(100% + 32px);
+  aspect-ratio: 4 / 5;
+  margin-left: -16px;
+  border-radius: 0;
+}
+
+.alumni-feed-skeleton-actions {
+  display: flex;
+  gap: 22px;
+  padding-top: 14px;
+}
+
+/* ---------------------------------------------------------
+   Profile
+   --------------------------------------------------------- */
+.alumni-profile-skeleton {
+  width: 100%;
+  max-width: 980px;
+  margin: 0 auto;
+}
+
+.alumni-profile-skeleton-banner {
+  width: 100%;
+  height: 240px;
+  border-radius: 24px;
+}
+
+.alumni-profile-skeleton-main {
+  padding: 22px 28px 28px;
+}
+
+.alumni-profile-skeleton-identity {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+
+.alumni-profile-skeleton-name {
+  display: grid;
+  gap: 10px;
+}
+
+.alumni-profile-skeleton-facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 9px;
+  margin-top: 22px;
+}
+
+.alumni-profile-skeleton-bio {
+  display: grid;
+  gap: 9px;
+  margin-top: 22px;
+}
+
+.alumni-profile-skeleton-tabs {
+  display: flex;
+  gap: 28px;
+  padding: 17px 4px;
+  border-bottom: 1px solid var(--app-border);
+}
+
+/* ---------------------------------------------------------
+   Notifications
+   --------------------------------------------------------- */
+.alumni-notification-skeleton-row {
+  display: flex;
+  min-height: 82px;
+  align-items: center;
+  gap: 12px;
+  border-bottom: 1px solid var(--app-border);
+}
+
+.alumni-notification-skeleton-copy {
+  display: grid;
+  min-width: 0;
+  flex: 1 1 auto;
+  gap: 8px;
+}
+
+.alumni-notification-skeleton-preview {
+  width: 48px;
+  height: 48px;
+  flex: 0 0 48px;
+  border-radius: 10px;
+}
+
+/* ---------------------------------------------------------
+   Explore
+   --------------------------------------------------------- */
+.alumni-explore-search-skeleton {
+  display: grid;
+  gap: 24px;
+}
+
+.alumni-explore-card-skeleton-grid {
+  display: grid;
+  grid-template-columns:
+    repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.alumni-explore-card-skeleton {
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+}
+
+.alumni-explore-card-skeleton-media {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  border-radius: 16px;
+}
+
+.alumni-explore-card-skeleton-meta {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.alumni-explore-card-skeleton-meta > div {
+  display: grid;
+  gap: 6px;
+}
+
+/* ---------------------------------------------------------
+   Empty states
+   --------------------------------------------------------- */
+.alumni-global-empty {
+  max-width: 560px;
+  margin: 44px auto;
+  padding: 20px 4px;
+  text-align: center;
+}
+
+.alumni-global-empty > span {
+  display: block;
+  margin-bottom: 8px;
+  color: var(--app-accent);
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: .13em;
+  text-transform: uppercase;
+}
+
+.alumni-global-empty h2 {
+  margin: 0;
+  color: var(--app-text);
+  font-size: clamp(20px, 4vw, 27px);
+  font-weight: 920;
+  line-height: 1.12;
+  letter-spacing: -.035em;
+}
+
+.alumni-global-empty p {
+  max-width: 470px;
+  margin: 10px auto 0;
+  color: var(--app-muted);
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.alumni-global-empty a {
+  display: inline-flex;
+  min-height: 42px;
+  align-items: center;
+  justify-content: center;
+  margin-top: 18px;
+  padding: 0 15px;
+  border-radius: 12px;
+  background: var(--app-accent-fill);
+  color: var(--app-on-accent);
+  font-size: 12px;
+  font-weight: 850;
+}
+
+/* ---------------------------------------------------------
+   404
+   --------------------------------------------------------- */
+.alumni-not-found-page {
+  min-height: 100dvh;
+  display: grid;
+  align-items: center;
+  padding:
+    max(30px, env(safe-area-inset-top))
+    20px
+    max(30px, env(safe-area-inset-bottom));
+  background: var(--app-bg);
+  color: var(--app-text);
+}
+
+.alumni-not-found-inner {
+  width: min(100%, 700px);
+  margin: 0 auto;
+}
+
+.alumni-not-found-code {
+  display: block;
+  margin-bottom: 14px;
+  color: var(--app-accent);
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+}
+
+.alumni-not-found-page h1 {
+  max-width: 620px;
+  margin: 0;
+  color: var(--app-text);
+  font-size: clamp(40px, 9vw, 76px);
+  font-weight: 950;
+  line-height: .98;
+  letter-spacing: -.065em;
+}
+
+.alumni-not-found-page p {
+  max-width: 520px;
+  margin: 18px 0 0;
+  color: var(--app-muted);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.alumni-not-found-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 9px;
+  margin-top: 25px;
+}
+
+.alumni-not-found-actions a {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  justify-content: center;
+  padding: 0 16px;
+  border-radius: 13px;
+  font-size: 12px;
+  font-weight: 850;
+}
+
+.alumni-not-found-actions a:first-child {
+  background: var(--app-accent-fill);
+  color: var(--app-on-accent);
+}
+
+.alumni-not-found-actions a:last-child {
+  background: var(--app-soft);
+  color: var(--app-text-soft);
+}
+
+/* ---------------------------------------------------------
+   Mobile
+   --------------------------------------------------------- */
+@media (max-width: 640px) {
+  .alumni-profile-skeleton-banner {
+    height: 190px;
+    border-radius: 18px;
+  }
+
+  .alumni-profile-skeleton-main {
+    padding: 18px 4px 24px;
+  }
+
+  .alumni-profile-skeleton-identity {
+    align-items: flex-end;
+  }
+
+  .alumni-profile-skeleton-facts {
+    gap: 7px;
+  }
+
+  .alumni-explore-card-skeleton-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .alumni-feed-skeleton-media {
+    width: calc(100% + 24px);
+    margin-left: -12px;
+  }
+
+  .alumni-not-found-actions {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .alumni-not-found-actions a {
+    width: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .alumni-skeleton-block::after {
+    animation: none;
+  }
+}
+
+/* ALUMNI_2_7_0_LOADING_CSS */

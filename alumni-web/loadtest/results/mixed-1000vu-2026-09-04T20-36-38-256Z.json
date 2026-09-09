@@ -1,0 +1,114 @@
+{
+  "target": "https://phhrtimyvzjwurhzmbxn.supabase.co",
+  "virtualUsers": 1000,
+  "startedUsers": 1000,
+  "rampSeconds": 30,
+  "steadyDurationSeconds": 30,
+  "actualDurationSeconds": 61.13,
+  "totalRequests": 28854,
+  "completedLoops": 28854,
+  "failedRequests": 0,
+  "errorRatePct": 0,
+  "requestsPerSecond": 472,
+  "latencyMs": {
+    "p50": 932.12,
+    "p95": 1288.48,
+    "p99": 1492.87,
+    "max": 1990.9
+  },
+  "https": {
+    "maxSockets": 200,
+    "peakPendingRequests": 560
+  },
+  "scenarios": {
+    "write_group_message": {
+      "count": 1465,
+      "failed": 0,
+      "errorRatePct": 0,
+      "p50Ms": 922.29,
+      "p95Ms": 1278.16,
+      "p99Ms": 1482.7,
+      "statuses": {
+        "201": 1465
+      }
+    },
+    "write_like": {
+      "count": 4099,
+      "failed": 0,
+      "errorRatePct": 0,
+      "p50Ms": 921.09,
+      "p95Ms": 1267.51,
+      "p99Ms": 1492.95,
+      "statuses": {
+        "201": 4099
+      }
+    },
+    "read_direct": {
+      "count": 4586,
+      "failed": 0,
+      "errorRatePct": 0,
+      "p50Ms": 928.21,
+      "p95Ms": 1272.7,
+      "p99Ms": 1484.88,
+      "statuses": {
+        "200": 4586
+      }
+    },
+    "read_feed": {
+      "count": 9261,
+      "failed": 0,
+      "errorRatePct": 0,
+      "p50Ms": 938.42,
+      "p95Ms": 1304.31,
+      "p99Ms": 1505.91,
+      "statuses": {
+        "200": 9261
+      }
+    },
+    "read_group": {
+      "count": 3467,
+      "failed": 0,
+      "errorRatePct": 0,
+      "p50Ms": 936.55,
+      "p95Ms": 1291.09,
+      "p99Ms": 1489.33,
+      "statuses": {
+        "200": 3467
+      }
+    },
+    "write_direct_message": {
+      "count": 2283,
+      "failed": 0,
+      "errorRatePct": 0,
+      "p50Ms": 931.14,
+      "p95Ms": 1283.85,
+      "p99Ms": 1514.64,
+      "statuses": {
+        "201": 2283
+      }
+    },
+    "write_post": {
+      "count": 1086,
+      "failed": 0,
+      "errorRatePct": 0,
+      "p50Ms": 929.95,
+      "p95Ms": 1315.07,
+      "p99Ms": 1499.71,
+      "statuses": {
+        "201": 1086
+      }
+    },
+    "write_comment": {
+      "count": 2607,
+      "failed": 0,
+      "errorRatePct": 0,
+      "p50Ms": 932.18,
+      "p95Ms": 1272.88,
+      "p99Ms": 1483.52,
+      "statuses": {
+        "201": 2607
+      }
+    }
+  },
+  "errorSamples": []
+}

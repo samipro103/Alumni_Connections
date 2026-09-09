@@ -1,0 +1,42 @@
+ALUMNI 3.7.8F - REALTIME LOAD TEST
+===================================
+
+Esta prueba mide SOLO Realtime/WebSocket:
+- clientes conectados simultaneamente
+- mensajes insertados
+- eventos recibidos en vivo
+- porcentaje de entrega
+- latencia p50/p95/p99
+- errores/reconexiones
+
+NO toca producción.
+NO prueba fotos/videos/Storage todavía.
+
+COPIAR ARCHIVO
+Extrae alumni-realtime-loadtest.mjs dentro de:
+alumni-web\loadtest\
+
+VALIDAR
+node --check loadtest/alumni-realtime-loadtest.mjs
+
+PRIMERA PRUEBA
+node loadtest/alumni-realtime-loadtest.mjs --connections=150 --ramp=15 --duration=30 --eps=20 --settle=5
+
+NO subir todavía a 190 aunque salga bien.
+Comparte la salida completa.
+
+PRUEBAS DEL PROYECTO
+npm run test
+npm run typecheck
+npm run build
+
+COMMIT/PUSH
+Como alumni-realtime-loadtest.mjs es un archivo NUEVO:
+git add loadtest/alumni-realtime-loadtest.mjs
+git commit -m "3.7.8 - Add isolated Realtime load-test harness"
+git push
+
+NO uses git add .
+
+COSTO ADICIONAL
+$0/mes

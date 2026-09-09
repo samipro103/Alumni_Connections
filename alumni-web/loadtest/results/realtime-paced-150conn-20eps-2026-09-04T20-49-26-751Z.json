@@ -1,0 +1,34 @@
+{
+  "target": "https://phhrtimyvzjwurhzmbxn.supabase.co",
+  "requestedConnections": 150,
+  "subscribedConnections": 150,
+  "connectElapsedMs": 16576.45,
+  "rampSeconds": 15,
+  "durationSeconds": 30,
+  "targetEventsPerSecond": 20,
+  "targetEvents": 600,
+  "eventsAttempted": 600,
+  "eventsInserted": 600,
+  "eventsReceived": 301,
+  "missingEvents": 299,
+  "deliveryPct": 50.167,
+  "actualRates": {
+    "attemptedPerSecond": 20.03,
+    "insertedPerSecond": 19.91,
+    "dispatchElapsedSeconds": 29.96,
+    "writeCompletionElapsedSeconds": 30.13
+  },
+  "concurrency": {
+    "maxInflightWrites": 40,
+    "peakInflightWrites": 13
+  },
+  "reconnectSignals": 0,
+  "latencyMs": {
+    "p50": 384.72,
+    "p95": 758.66,
+    "p99": 833.37,
+    "max": 1142.39
+  },
+  "subscriptionErrors": [],
+  "sendErrors": []
+}
