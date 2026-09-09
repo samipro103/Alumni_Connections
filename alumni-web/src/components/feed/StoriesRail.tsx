@@ -576,202 +576,102 @@ export default function StoriesRail({
 
   if (!user) return null;
 
-  const ownPreviewStory =
-    ownGroupIndex >= 0
-      ? groups[ownGroupIndex]?.stories[
-          Math.max(
-            (groups[ownGroupIndex]?.stories.length || 1) - 1,
-            0
-          )
-        ]
-      : null;
-
   return (
     <>
-      <section className="alumni-stories-section mb-5">
-        <div className="scrollbar-thin flex gap-3 overflow-x-auto px-1 pb-5 pt-1">
-          <div className="relative h-[132px] w-[92px] shrink-0">
+      <section
+        className="alumni-stories-section"
+        aria-label="Historias de Alumni"
+      >
+        <div className="alumni-stories-rail">
+          <div className="alumni-story-compact-item">
             <button
               type="button"
               onClick={handleOwnStoryClick}
-              className="alumni-story-tile group relative h-full w-full overflow-hidden rounded-[20px] text-left"
+              className="alumni-story-compact-button"
               aria-label={
                 ownGroupIndex >= 0
                   ? "Ver tu historia"
                   : "Crear historia"
               }
             >
-              <div className="absolute inset-0 bg-[var(--app-surface-2)]">
-                {ownPreviewStory?.media_type === "image" ? (
-                  <img
-                    src={ownPreviewStory.media_url}
-                    alt=""
-                    className="h-full w-full object-cover transition duration-300 group-active:scale-[1.02]"
-                    loading="eager"
-                  />
-                ) : ownPreviewStory?.media_type === "video" ? (
-                  <video
-                    src={ownPreviewStory.media_url}
-                    muted
-                    playsInline
-                    preload="metadata"
-                    className="h-full w-full object-cover"
-                  />
-                ) : me?.avatar_url ? (
-                  <img
-                    src={me.avatar_url}
-                    alt=""
-                    className="h-full w-full scale-110 object-cover opacity-55 blur-[1px]"
-                  />
-                ) : (
-                  <div className="flex h-full w-full items-center justify-center text-2xl font-black text-[var(--app-muted)]">
-                    {me?.username?.charAt(0)?.toUpperCase() || "T"}
-                  </div>
-                )}
-              </div>
-
-              <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/10 to-black/5" />
-
-              <div className="absolute left-2.5 top-2.5 flex h-8 w-8 items-center justify-center overflow-hidden rounded-full border-2 border-white/70 bg-black/20 text-[10px] font-black text-white shadow-lg">
-                {me?.avatar_url ? (
-                  <img
-                    src={me.avatar_url}
-                    alt="Tu historia"
-                    className="h-full w-full object-cover"
-                  />
-                ) : (
-                  me?.username?.charAt(0)?.toUpperCase() || "T"
-                )}
-              </div>
-
-              <div className="absolute inset-x-2.5 bottom-2.5">
-                {ownPreviewStory?.story_kind === "achievement" && (
-                  <span className="mb-1 inline-flex rounded-full border border-indigo-200/20 bg-indigo-500/40 px-2 py-0.5 text-[7px] font-black uppercase tracking-wide text-white backdrop-blur-xl">
-                    Logro
-                  </span>
-                )}
-                {ownPreviewStory?.story_kind === "opportunity" && (
-                  <span className="mb-1 inline-flex rounded-full border border-emerald-200/20 bg-emerald-500/40 px-2 py-0.5 text-[7px] font-black uppercase tracking-wide text-white backdrop-blur-xl">
-                    Oportunidad
-                  </span>
-                )}
-                <p className="truncate text-[11px] font-black text-white">
-                  Tu historia
-                </p>
-                <p className="mt-0.5 truncate pr-5 text-[9px] text-white/55">
-                  {ownGroupIndex >= 0 ? "Ver ahora" : "Crear"}
-                </p>
-              </div>
+              <span
+                className={
+                  ownGroupIndex >= 0
+                    ? "alumni-story-compact-ring alumni-story-compact-ring-unseen"
+                    : "alumni-story-compact-ring alumni-story-compact-ring-empty"
+                }
+              >
+                <span className="alumni-story-compact-avatar">
+                  {me?.avatar_url ? (
+                    <img src={me.avatar_url} alt="" loading="eager" />
+                  ) : (
+                    <span>
+                      {me?.username?.charAt(0)?.toUpperCase() || "A"}
+                    </span>
+                  )}
+                </span>
+              </span>
+              <span className="alumni-story-compact-add" aria-hidden="true">
+                <Plus size={13} strokeWidth={2.8} />
+              </span>
             </button>
-
-            <button
-              type="button"
-              onClick={() => setComposerOpen(true)}
-              className="absolute -bottom-1.5 right-1 z-20 flex h-8 w-8 items-center justify-center rounded-full border-[3px] border-[var(--app-bg)] bg-[var(--app-accent-2)] text-white shadow-[0_8px_22px_rgba(0,0,0,.38)] transition active:scale-95"
-              aria-label="Agregar nueva historia"
-              title="Agregar historia"
-            >
-              <Plus size={16} strokeWidth={2.7} />
-            </button>
+            <span className="alumni-story-compact-label" title="Tu historia">
+              Tu historia
+            </span>
           </div>
 
           {!loading &&
             groups.map((group, index) => {
-              if (group.user_id === user.id) {
-                return null;
-              }
-
-              const allViewed = group.stories.every(
-                (story) => story.viewed
-              );
-              const previewStory =
-                group.stories[group.stories.length - 1];
+              if (group.user_id === user.id) return null;
+              const allViewed = group.stories.every((story) => story.viewed);
 
               return (
-                <button
-                  key={group.user_id}
-                  type="button"
-                  onClick={() => openGroup(index)}
-                  className={`alumni-story-tile group relative h-[132px] w-[92px] shrink-0 overflow-hidden rounded-[20px] text-left ${
-                    allViewed
-                      ? "alumni-story-viewed"
-                      : "alumni-story-unseen"
-                  }`}
-                >
-                  <div className="absolute inset-0 bg-[var(--app-surface-2)]">
-                    {previewStory?.media_type === "image" ? (
-                      <img
-                        src={previewStory.media_url}
-                        alt=""
-                        className="h-full w-full object-cover transition duration-300 group-active:scale-[1.02]"
-                        loading="lazy"
-                      />
-                    ) : previewStory?.media_type === "video" ? (
-                      <video
-                        src={previewStory.media_url}
-                        muted
-                        playsInline
-                        preload="metadata"
-                        className="h-full w-full object-cover"
-                      />
-                    ) : group.avatar_url ? (
-                      <img
-                        src={group.avatar_url}
-                        alt=""
-                        className="h-full w-full scale-110 object-cover opacity-55 blur-[1px]"
-                        loading="lazy"
-                      />
-                    ) : (
-                      <div className="flex h-full w-full items-center justify-center text-2xl font-black text-[var(--app-muted)]">
-                        {group.username?.charAt(0)?.toUpperCase() || "U"}
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/10 to-black/5" />
-
-                  <div
-                    className={`absolute left-2.5 top-2.5 flex h-8 w-8 items-center justify-center overflow-hidden rounded-full border-2 bg-black/20 text-[10px] font-black text-white shadow-lg ${
-                      allViewed
-                        ? "border-white/35"
-                        : "border-white/90"
-                    }`}
+                <div key={group.user_id} className="alumni-story-compact-item">
+                  <button
+                    type="button"
+                    onClick={() => openGroup(index)}
+                    className="alumni-story-compact-button"
+                    aria-label={`Ver historia de ${group.username}`}
                   >
-                    {group.avatar_url ? (
-                      <img
-                        src={group.avatar_url}
-                        alt={group.username}
-                        className="h-full w-full object-cover"
-                        loading="lazy"
-                      />
-                    ) : (
-                      group.username?.charAt(0)?.toUpperCase() || "U"
-                    )}
-                  </div>
-
-                  <div className="absolute inset-x-2.5 bottom-2.5">
-                    {previewStory?.story_kind === "achievement" && (
-                      <span className="mb-1 inline-flex rounded-full border border-indigo-200/20 bg-indigo-500/40 px-2 py-0.5 text-[7px] font-black uppercase tracking-wide text-white backdrop-blur-xl">
-                        Logro
+                    <span
+                      className={
+                        allViewed
+                          ? "alumni-story-compact-ring alumni-story-compact-ring-viewed"
+                          : "alumni-story-compact-ring alumni-story-compact-ring-unseen"
+                      }
+                    >
+                      <span className="alumni-story-compact-avatar">
+                        {group.avatar_url ? (
+                          <img src={group.avatar_url} alt="" loading="lazy" />
+                        ) : (
+                          <span>
+                            {group.username?.charAt(0)?.toUpperCase() || "U"}
+                          </span>
+                        )}
                       </span>
-                    )}
-                    {previewStory?.story_kind === "opportunity" && (
-                      <span className="mb-1 inline-flex rounded-full border border-emerald-200/20 bg-emerald-500/40 px-2 py-0.5 text-[7px] font-black uppercase tracking-wide text-white backdrop-blur-xl">
-                        Oportunidad
-                      </span>
-                    )}
-                    <p className="truncate text-[11px] font-black text-white">
-                      @{group.username}
-                    </p>
-                    <p className="mt-0.5 truncate text-[9px] text-white/55">
-                      {group.stories.length > 1
-                        ? `${group.stories.length} historias`
-                        : "Nueva historia"}
-                    </p>
-                  </div>
-                </button>
+                    </span>
+                  </button>
+                  <span
+                    className="alumni-story-compact-label"
+                    title={`@${group.username}`}
+                  >
+                    {group.username}
+                  </span>
+                </div>
               );
             })}
+
+          {loading &&
+            Array.from({ length: 5 }).map((_, index) => (
+              <div
+                key={`story-loading-${index}`}
+                className="alumni-story-compact-item"
+                aria-hidden="true"
+              >
+                <span className="alumni-story-compact-skeleton" />
+                <span className="alumni-story-compact-label-skeleton" />
+              </div>
+            ))}
         </div>
       </section>
 
@@ -816,3 +716,5 @@ export default function StoriesRail({
 }
 
 /* ALUMNI_1_2_0_TRUST_BLOCK:STORIES_PRIVATE_MEDIA */
+
+/* ALUMNI_FEED_1_1_COMPACT_STORIES */

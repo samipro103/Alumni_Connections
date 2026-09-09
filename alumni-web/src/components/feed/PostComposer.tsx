@@ -809,6 +809,7 @@ export default function PostComposer({
       <section
         id="composer"
         className="alumni-pro-composer"
+        data-expanded={expanded ? "true" : "false"}
         data-pull-refresh-lock={
           expanded && (canPublish || cropQueue.length) ? "true" : undefined
         }
@@ -1055,3 +1056,5 @@ export default function PostComposer({
 /* ALUMNI_2_6_0_GLOBAL_UX:POST_COMPOSER */
 
 /* ALUMNI_3_6_0_CREATION_SOCIAL_POLISH */
+
+/* ALUMNI_FEED_1_1_COMPOSER_STRUCTURE */
