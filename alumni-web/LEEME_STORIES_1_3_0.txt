@@ -1,0 +1,11 @@
+ALUMNI Stories 1.3.0 - Opción C Creator
+
+1. Copia aplicar_alumni_stories_1_3_0_opcion_c.js dentro de alumni-web
+2. Ejecuta:
+   node .\aplicar_alumni_stories_1_3_0_opcion_c.js
+3. Ejecuta:
+   npm run build
+4. Si el build termina bien:
+   git add .
+   git commit -m "Stories 1.3.0 - Option C creator"
+   git push origin main

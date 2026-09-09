@@ -1541,6 +1541,12 @@ export default function StoryComposer({
     setStoryFilterOpen,
   ] = useState(false);
 
+  // ALUMNI_STORIES_1_3_0_OPTION_C_COMPOSER
+  const [
+    storyReviewOpen,
+    setStoryReviewOpen,
+  ] = useState(false);
+
   const [
     collageFiles,
     setCollageFiles,
@@ -1978,6 +1984,9 @@ export default function StoryComposer({
       "original"
     );
     setStoryFilterOpen(
+      false
+    );
+    setStoryReviewOpen(
       false
     );
     setCollageFiles([]);
@@ -2532,6 +2541,7 @@ export default function StoryComposer({
         throw insertError;
       }
 
+      setStoryReviewOpen(false);
       await onPublished();
     } catch (error: any) {
       if (path) {
@@ -2671,7 +2681,7 @@ export default function StoryComposer({
         className="fixed inset-0 z-[2147483000] overflow-hidden bg-[#05070b] text-white"
         data-pull-refresh-lock="true"
       >
-        <div className="relative mx-auto h-[100dvh] w-full max-w-[560px] overflow-hidden bg-black shadow-[0_0_90px_rgba(0,0,0,.55)]">
+        <div className="relative mx-auto h-[100dvh] w-full max-w-[520px] overflow-hidden bg-black">
           {collagePreviewUrls.length >=
           2 ? (
             <div
@@ -2805,9 +2815,9 @@ export default function StoryComposer({
             </button>
           )}
 
-          <div className="pointer-events-none absolute inset-x-0 top-0 z-40 h-40 bg-gradient-to-b from-black/70 via-black/20 to-transparent" />
+          <div className="pointer-events-none absolute inset-x-0 top-0 z-40 h-28 bg-gradient-to-b from-black/35 via-black/5 to-transparent" />
 
-          <div className="pointer-events-none absolute inset-x-0 bottom-0 z-40 h-48 bg-gradient-to-t from-black/72 via-black/24 to-transparent" />
+          <div className="pointer-events-none absolute inset-x-0 bottom-0 z-40 h-40 bg-gradient-to-t from-black/40 via-black/8 to-transparent" />
 
           <StoryFreeOverlay
             overlay={
@@ -2837,173 +2847,110 @@ export default function StoryComposer({
             }
           />
 
-          <div className="absolute left-[max(14px,env(safe-area-inset-left))] top-[max(14px,env(safe-area-inset-top))] z-[80] flex items-center gap-2">
-            <button
-              type="button"
-              onClick={() => {
-                setStoryTextEditing(
-                  false
-                );
-                setStoryStyleOpen(
-                  false
-                );
-                setStoryFilterOpen(
-                  false
-                );
-                setKind(null);
-              }}
-              className="flex h-10 w-10 items-center justify-center rounded-full border border-white/[0.12] bg-black/28 text-white/90 shadow-[0_10px_30px_rgba(0,0,0,.28)] backdrop-blur-2xl transition active:scale-95"
-              aria-label="Volver"
-            >
-              <ArrowLeft
-                size={18}
-              />
-            </button>
-
-            <button
-              type="button"
-              onClick={onClose}
-              className="flex h-10 w-10 items-center justify-center rounded-full border border-white/[0.12] bg-black/28 text-white/65 shadow-[0_10px_30px_rgba(0,0,0,.28)] backdrop-blur-2xl transition active:scale-95"
-              aria-label="Cerrar"
-            >
-              <X
-                size={17}
-              />
-            </button>
+          {/* ALUMNI_STORIES_1_3_0_OPTION_C_COMPOSER */}
+          <div className="pointer-events-none absolute inset-x-0 top-[max(14px,env(safe-area-inset-top))] z-[85] flex h-11 items-center justify-center">
+            <div className="pointer-events-auto select-none text-[17px] font-black tracking-[-0.045em] text-white [text-shadow:0_2px_16px_rgba(0,0,0,.45)]">
+              Alumni<span className="text-[#7b87ff]">.</span>
+            </div>
           </div>
 
+          <button
+            type="button"
+            onClick={onClose}
+            className="absolute left-[max(16px,env(safe-area-inset-left))] top-[max(14px,env(safe-area-inset-top))] z-[90] flex h-11 w-11 items-center justify-center rounded-full bg-black/18 text-white/95 backdrop-blur-md transition active:scale-95"
+            aria-label="Cerrar"
+          >
+            <X size={25} strokeWidth={1.8} />
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              setStoryTextEditing(false);
+              setStoryStyleOpen(false);
+              setStoryFilterOpen(false);
+              setKind(null);
+            }}
+            className="absolute right-[max(16px,env(safe-area-inset-right))] top-[max(14px,env(safe-area-inset-top))] z-[90] flex h-11 w-11 flex-col items-center justify-center gap-[3px] rounded-full bg-black/18 text-white/90 backdrop-blur-md transition active:scale-95"
+            aria-label="Cambiar tipo de historia"
+          >
+            <span className="h-[3px] w-[3px] rounded-full bg-current" />
+            <span className="h-[3px] w-[3px] rounded-full bg-current" />
+            <span className="h-[3px] w-[3px] rounded-full bg-current" />
+          </button>
+
           {hasMedia && (
-            <div className="absolute right-[max(14px,env(safe-area-inset-right))] top-[max(14px,env(safe-area-inset-top))] z-[80] flex flex-col gap-2">
+            <div className="absolute right-[max(16px,env(safe-area-inset-right))] top-[38%] z-[88] flex -translate-y-1/2 flex-col gap-3">
               <button
                 type="button"
                 onClick={() => {
-                  setStoryTextEditing(
-                    true
-                  );
-                  setStoryStyleOpen(
-                    false
-                  );
-                  setStoryFilterOpen(
-                    false
-                  );
+                  setStoryTextEditing(true);
+                  setStoryStyleOpen(false);
+                  setStoryFilterOpen(false);
                 }}
-                className={`flex h-11 w-11 items-center justify-center rounded-full border backdrop-blur-2xl transition active:scale-95 ${
+                className={`flex h-12 w-12 items-center justify-center rounded-[17px] border text-[18px] font-semibold tracking-[-0.06em] backdrop-blur-xl transition active:scale-95 ${
                   storyTextEditing
-                    ? "border-[#aeb6ff]/50 bg-[#6d7cff]/25 text-white"
-                    : "border-white/[0.12] bg-black/28 text-white/90"
+                    ? "border-[#aeb6ff]/45 bg-[#6d7cff]/28 text-white"
+                    : "border-white/[0.12] bg-black/30 text-white"
                 }`}
                 aria-label="Texto"
               >
-                <Type
-                  size={19}
-                />
+                Aa
               </button>
 
               <button
                 type="button"
                 onClick={() => {
-                  setStoryText(
-                    (current) =>
-                      current
-                        ? current.endsWith(
-                            " "
-                          )
-                          ? current +
-                            "@"
-                          : current +
-                            " @"
-                        : "@"
+                  setStoryText((current) =>
+                    current
+                      ? current.endsWith(" ")
+                        ? current + "@"
+                        : current + " @"
+                      : "@"
                   );
-
-                  setStoryTextEditing(
-                    true
-                  );
-
-                  setStoryStyleOpen(
-                    false
-                  );
-
-                  setStoryFilterOpen(
-                    false
-                  );
+                  setStoryTextEditing(true);
+                  setStoryStyleOpen(false);
+                  setStoryFilterOpen(false);
                 }}
-                className="flex h-11 w-11 items-center justify-center rounded-full border border-white/[0.12] bg-black/28 text-white/85 backdrop-blur-2xl transition active:scale-95"
-                aria-label="Mención"
+                className="flex h-12 w-12 items-center justify-center rounded-[17px] border border-white/[0.12] bg-black/30 text-[22px] font-medium text-white backdrop-blur-xl transition active:scale-95"
+                aria-label="Mencionar persona"
               >
-                <UserRoundPlus
-                  size={18}
-                />
+                @
               </button>
 
               <button
                 type="button"
                 onClick={() => {
-                  setStoryStyleOpen(
-                    (value) =>
-                      !value
-                  );
-
-                  setStoryTextEditing(
-                    false
-                  );
-
-                  setStoryFilterOpen(
-                    false
-                  );
+                  setStoryStyleOpen((value) => !value);
+                  setStoryTextEditing(false);
+                  setStoryFilterOpen(false);
                 }}
-                className={`flex h-11 w-11 items-center justify-center rounded-full border backdrop-blur-2xl transition active:scale-95 ${
+                className={`flex h-12 w-12 items-center justify-center rounded-[17px] border backdrop-blur-xl transition active:scale-95 ${
                   storyStyleOpen
-                    ? "border-[#aeb6ff]/50 bg-[#6d7cff]/25 text-white"
-                    : "border-white/[0.12] bg-black/28 text-white/85"
+                    ? "border-[#aeb6ff]/45 bg-[#6d7cff]/28 text-white"
+                    : "border-white/[0.12] bg-black/30 text-white"
                 }`}
-                aria-label="Color y fondo del texto"
+                aria-label="Estilo"
               >
-                <Palette
-                  size={18}
-                />
+                <Palette size={20} />
               </button>
 
               <button
                 type="button"
                 onClick={() => {
-                  setStoryFilterOpen(
-                    (value) =>
-                      !value
-                  );
-
-                  setStoryTextEditing(
-                    false
-                  );
-
-                  setStoryStyleOpen(
-                    false
-                  );
+                  setStoryFilterOpen((value) => !value);
+                  setStoryTextEditing(false);
+                  setStoryStyleOpen(false);
                 }}
-                className={`flex h-11 w-11 items-center justify-center rounded-full border backdrop-blur-2xl transition active:scale-95 ${
+                className={`flex h-12 w-12 items-center justify-center rounded-[17px] border backdrop-blur-xl transition active:scale-95 ${
                   storyFilterOpen
-                    ? "border-[#aeb6ff]/50 bg-[#6d7cff]/25 text-white"
-                    : "border-white/[0.12] bg-black/28 text-white/85"
+                    ? "border-[#aeb6ff]/45 bg-[#6d7cff]/28 text-white"
+                    : "border-white/[0.12] bg-black/30 text-white"
                 }`}
                 aria-label="Filtros"
               >
-                <SlidersHorizontal
-                  size={18}
-                />
+                <SlidersHorizontal size={20} />
               </button>
-
-              <button
-                type="button"
-                onClick={() =>
-                  collageInputRef.current?.click()
-                }
-                className="flex h-11 w-11 items-center justify-center rounded-full border border-white/[0.12] bg-black/28 text-white/85 backdrop-blur-2xl transition active:scale-95"
-                aria-label="Crear collage"
-              >
-                <Images
-                  size={18}
-                />
-              </button>
-
             </div>
           )}
 
@@ -3376,37 +3323,64 @@ export default function StoryComposer({
           )}
 
           {hasMedia && (
-            <button
-              type="button"
-              onClick={
-                publishStory
-              }
-              disabled={
-                publishing
-              }
-              className="group absolute bottom-[max(16px,env(safe-area-inset-bottom))] right-[max(14px,env(safe-area-inset-right))] z-[100] flex h-12 items-center gap-3 rounded-full border border-[#aeb6ff]/20 bg-[#6d7cff] pl-3 pr-5 text-[10px] font-black uppercase tracking-[0.08em] text-white shadow-[0_18px_50px_rgba(72,82,205,.38)] transition active:scale-[0.97] disabled:opacity-60"
-            >
-              {publishing ? (
-                <>
-                  <Loader2
-                    size={16}
-                    className="animate-spin"
+            <div className="absolute bottom-[max(18px,env(safe-area-inset-bottom))] left-[max(16px,env(safe-area-inset-left))] right-[max(16px,env(safe-area-inset-right))] z-[100] flex items-end gap-3">
+              <button
+                type="button"
+                onClick={() => mediaInputRef.current?.click()}
+                className="relative h-[62px] w-[52px] shrink-0 overflow-hidden rounded-[12px] border-2 border-white/90 bg-black/35 shadow-[0_10px_30px_rgba(0,0,0,.30)]"
+                aria-label="Cambiar foto o video"
+              >
+                {previewUrl ? (
+                  file?.type.startsWith("video/") ? (
+                    <video
+                      src={previewUrl}
+                      muted
+                      playsInline
+                      className="h-full w-full object-cover"
+                    />
+                  ) : (
+                    <img
+                      src={previewUrl}
+                      alt=""
+                      className="h-full w-full object-cover"
+                    />
+                  )
+                ) : collagePreviewUrls[0] ? (
+                  <img
+                    src={collagePreviewUrls[0]}
+                    alt=""
+                    className="h-full w-full object-cover"
                   />
-                  Subiendo
-                </>
-              ) : (
-                <>
-                  <span className="relative flex h-8 w-8 items-center justify-center rounded-full bg-white/[0.11] text-[14px] font-black tracking-[-0.08em]">
-                    A
-                    <span className="ml-[1px] text-[#c9ceff]">
-                      .
-                    </span>
-                    <span className="absolute inset-[-3px] rounded-full border border-white/[0.08] opacity-0 transition group-active:opacity-100" />
+                ) : (
+                  <span className="flex h-full w-full items-center justify-center text-white/60">
+                    <ImagePlus size={18} />
                   </span>
-                  Publicar
-                </>
-              )}
-            </button>
+                )}
+              </button>
+
+              <button
+                type="button"
+                onClick={() => collageInputRef.current?.click()}
+                className="flex h-[62px] w-[52px] shrink-0 items-center justify-center rounded-[12px] border border-white/22 bg-black/30 text-[30px] font-light leading-none text-white backdrop-blur-xl transition active:scale-95"
+                aria-label="Crear collage"
+              >
+                +
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setStoryTextEditing(false);
+                  setStoryStyleOpen(false);
+                  setStoryFilterOpen(false);
+                  setStoryReviewOpen(true);
+                }}
+                className="ml-auto flex h-[54px] min-w-[142px] items-center justify-center gap-3 rounded-[18px] bg-white px-5 text-[14px] font-black text-[#090b10] shadow-[0_16px_40px_rgba(0,0,0,.28)] transition active:scale-[0.98]"
+              >
+                Siguiente
+                <span className="text-[22px] font-medium leading-none">→</span>
+              </button>
+            </div>
           )}
 
           {sharedPost && (
@@ -3436,6 +3410,77 @@ export default function StoryComposer({
             >
               Quitar collage
             </button>
+          )}
+
+          {storyReviewOpen && (
+            <div
+              className="absolute inset-0 z-[140] flex items-end bg-black/48 backdrop-blur-[2px]"
+              onClick={() => setStoryReviewOpen(false)}
+            >
+              <div
+                className="w-full rounded-t-[30px] border-t border-white/[0.10] bg-[#0b0e14]/98 px-5 pb-[max(22px,env(safe-area-inset-bottom))] pt-4 shadow-[0_-24px_80px_rgba(0,0,0,.46)]"
+                onClick={(event) => event.stopPropagation()}
+              >
+                <div className="mx-auto mb-5 h-1 w-10 rounded-full bg-white/18" />
+
+                <div className="flex items-start gap-3">
+                  <div className="min-w-0 flex-1">
+                    <p className="text-[18px] font-black tracking-[-0.03em] text-white">
+                      Publicar historia
+                    </p>
+                    <p className="mt-1 text-[11px] leading-5 text-white/40">
+                      Agrega un mensaje opcional o publícala directamente.
+                    </p>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => setStoryReviewOpen(false)}
+                    className="flex h-9 w-9 items-center justify-center rounded-full bg-white/[0.06] text-white/65"
+                    aria-label="Volver al editor"
+                  >
+                    <X size={16} />
+                  </button>
+                </div>
+
+                <textarea
+                  value={caption}
+                  onChange={(event) => setCaption(event.target.value.slice(0, 280))}
+                  placeholder="Escribe un mensaje (opcional)"
+                  rows={3}
+                  className="mt-5 w-full resize-none rounded-[20px] border border-white/[0.08] bg-white/[0.04] px-4 py-3 text-[13px] leading-5 text-white outline-none placeholder:text-white/25 focus:border-[#8792ff]/35"
+                />
+
+                <div className="mt-4 flex items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setStoryReviewOpen(false)}
+                    className="h-12 rounded-[16px] border border-white/[0.09] px-5 text-[12px] font-black text-white/65"
+                  >
+                    Volver
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={publishStory}
+                    disabled={publishing}
+                    className="ml-auto flex h-12 min-w-[170px] items-center justify-center gap-2 rounded-[16px] bg-[#6d7cff] px-5 text-[12px] font-black text-white shadow-[0_16px_38px_rgba(80,91,220,.32)] transition active:scale-[0.98] disabled:opacity-60"
+                  >
+                    {publishing ? (
+                      <>
+                        <Loader2 size={15} className="animate-spin" />
+                        Publicando...
+                      </>
+                    ) : (
+                      <>
+                        <Send size={15} />
+                        Publicar historia
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
+            </div>
           )}
 
           <HiddenInput
