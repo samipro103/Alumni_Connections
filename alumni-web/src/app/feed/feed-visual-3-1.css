@@ -362,3 +362,365 @@
 }
 
 /* ALUMNI_FEED_1_1_PROFESSIONAL_MINIMAL */
+
+/* =========================================================
+   ALUMNI FEED 1.2 — PUBLICACIONES
+   Profesional / limpio / editorial
+   ========================================================= */
+
+/* Separación y respiración del post */
+.alumni-feed-page .alumni-pro-post {
+  padding-top: 20px;
+  padding-bottom: 22px;
+}
+
+.alumni-feed-page .alumni-pro-post-header {
+  gap: 11px;
+  align-items: flex-start;
+}
+
+.alumni-feed-page .alumni-pro-avatar {
+  width: 42px;
+  height: 42px;
+  flex: 0 0 42px;
+  border: 1px solid var(--app-border);
+  background: var(--app-surface-2);
+  box-shadow: none !important;
+}
+
+.alumni-feed-page .alumni-pro-author {
+  padding-top: 1px;
+}
+
+.alumni-feed-page .alumni-pro-author > div {
+  gap: 5px;
+  min-height: 20px;
+}
+
+.alumni-feed-page .alumni-pro-author a {
+  font-size: 13.5px;
+  font-weight: 760;
+  letter-spacing: -.012em;
+}
+
+.alumni-feed-page .alumni-pro-author > div > span,
+.alumni-feed-page .alumni-pro-author time {
+  color: var(--app-muted-2);
+  font-size: 11.5px;
+  font-weight: 520;
+}
+
+.alumni-feed-page .alumni-pro-author > p {
+  margin-top: 1px;
+  color: var(--app-muted-2);
+  font-size: 11.5px;
+  font-weight: 520;
+  line-height: 1.35;
+}
+
+.alumni-feed-page .alumni-pro-repost-label {
+  margin: 0 0 9px 53px;
+  color: var(--app-muted-2);
+  font-size: 11px;
+  font-weight: 650;
+}
+
+/* Menú más discreto */
+.alumni-feed-page .alumni-pro-menu-trigger {
+  width: 34px;
+  height: 34px;
+  color: var(--app-muted-2);
+}
+
+.alumni-feed-page .alumni-pro-menu-trigger svg {
+  width: 19px;
+  height: 19px;
+}
+
+.alumni-feed-page .alumni-pro-menu-trigger:hover {
+  background: var(--app-soft);
+  color: var(--app-text-soft);
+}
+
+/* Texto: lectura tranquila y menos peso visual */
+.alumni-feed-page .alumni-pro-caption-wrap {
+  margin-top: 11px;
+  margin-bottom: 11px;
+}
+
+.alumni-feed-page .alumni-pro-caption {
+  color: var(--app-text-soft);
+  font-size: 14.5px;
+  font-weight: 430;
+  line-height: 1.58;
+  letter-spacing: -.006em;
+}
+
+.alumni-feed-page .alumni-pro-caption-more {
+  margin-top: 4px;
+  color: var(--app-muted);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.alumni-feed-page .alumni-pro-repeated-links {
+  color: var(--app-muted-3);
+  font-size: 11px;
+}
+
+/* Vista previa de enlace */
+.alumni-feed-page .alumni-link-preview {
+  margin-top: 12px;
+  margin-bottom: 12px;
+  border-color: var(--app-border);
+  border-radius: 15px;
+  background: var(--app-bg);
+  box-shadow: none;
+}
+
+.alumni-feed-page .alumni-link-preview:hover {
+  background: var(--app-surface-2);
+}
+
+.alumni-feed-page .alumni-link-preview-copy {
+  padding: 11px 13px 13px;
+}
+
+.alumni-feed-page .alumni-link-preview-domain {
+  color: var(--app-muted-2);
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.alumni-feed-page .alumni-link-preview-copy strong {
+  font-size: 13.5px;
+  font-weight: 720;
+}
+
+.alumni-feed-page .alumni-link-preview-copy p {
+  color: var(--app-muted);
+  font-size: 12px;
+}
+
+/* Media: protagonista, pero refinada.
+   Deja de sentirse como bloque negro pegado al borde. */
+.alumni-feed-page .alumni-pro-media-shell {
+  margin: 13px 0 2px !important;
+  overflow: hidden;
+  border: 1px solid var(--app-border);
+  border-radius: 16px;
+  background: #05070b;
+  box-shadow: none;
+}
+
+.alumni-feed-page .alumni-pro-carousel,
+.alumni-feed-page .alumni-pro-media-slide,
+.alumni-feed-page .alumni-pro-image-button,
+.alumni-feed-page .alumni-feed-video-wrap {
+  border-radius: inherit;
+}
+
+.alumni-feed-page .alumni-pro-image-button img,
+.alumni-feed-page .alumni-feed-video {
+  max-height: 720px;
+}
+
+.alumni-feed-page .alumni-pro-media-menu {
+  top: 9px;
+  right: 9px;
+}
+
+.alumni-feed-page .alumni-pro-media-menu .alumni-pro-menu-trigger,
+.alumni-feed-page .alumni-feed-video-mute,
+.alumni-feed-page .alumni-pro-carousel-count,
+.alumni-feed-page .alumni-pro-carousel-arrow {
+  background: rgba(5, 7, 11, .58);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+/* Acciones: iconos pequeños, blancos, consistentes.
+   El área táctil sigue siendo amplia. */
+.alumni-feed-page .alumni-pro-actions {
+  min-height: 46px;
+  gap: 2px;
+  margin-top: 5px;
+  padding-top: 2px;
+}
+
+.alumni-feed-page .alumni-pro-actions > button {
+  width: 40px !important;
+  min-width: 40px !important;
+  max-width: 40px !important;
+  height: 40px !important;
+  flex-basis: 40px !important;
+  color: var(--app-muted);
+}
+
+.alumni-feed-page .alumni-pro-actions > button svg {
+  width: 21px !important;
+  height: 21px !important;
+  stroke-width: 1.9;
+}
+
+.alumni-feed-page .alumni-pro-actions > button.is-repost svg {
+  width: 22px !important;
+  height: 22px !important;
+}
+
+.alumni-feed-page .alumni-pro-actions > button:hover {
+  background: var(--app-soft) !important;
+}
+
+.alumni-feed-page
+.alumni-pro-actions
+> button.is-like[data-active="true"] {
+  color: #ee536b !important;
+}
+
+.alumni-feed-page
+.alumni-pro-actions
+> button.is-repost[data-active="true"] {
+  color: #24a873 !important;
+}
+
+/* Métricas: una sola línea y bajo contraste */
+.alumni-feed-page .alumni-pro-stats {
+  min-height: 19px;
+  gap: 10px;
+  color: var(--app-muted-2);
+  font-size: 11.5px;
+  line-height: 1.35;
+}
+
+.alumni-feed-page .alumni-pro-stats button {
+  font-weight: 520;
+}
+
+.alumni-feed-page .alumni-pro-stats strong {
+  color: var(--app-text-soft);
+  font-weight: 720;
+}
+
+/* Conversación previa */
+.alumni-feed-page .alumni-pro-comment-preview {
+  gap: 6px;
+  margin-top: 8px;
+  line-height: 1.4;
+}
+
+.alumni-feed-page .alumni-pro-comment-preview strong {
+  color: var(--app-text-soft);
+  font-size: 11.5px;
+  font-weight: 720;
+}
+
+.alumni-feed-page .alumni-pro-comment-preview span {
+  color: var(--app-muted);
+  font-size: 11.5px;
+}
+
+.alumni-feed-page .alumni-pro-view-comments {
+  margin-top: 5px;
+  color: var(--app-muted-2);
+  font-size: 11.5px;
+  font-weight: 560;
+}
+
+/* Popover sobrio */
+.alumni-feed-page .alumni-pro-menu-popover {
+  width: 218px;
+  border-radius: 14px;
+  background: color-mix(
+    in srgb,
+    var(--app-surface) 98%,
+    transparent
+  );
+  box-shadow: 0 14px 38px rgba(0, 0, 0, .18);
+}
+
+.alumni-feed-page .alumni-pro-menu-popover > button {
+  min-height: 43px;
+  gap: 10px;
+  padding-inline: 13px;
+  font-size: 12px;
+  font-weight: 650;
+}
+
+/* Desktop: flechas aparecen solo donde realmente ayudan */
+@media (hover: hover) and (pointer: fine) {
+  .alumni-feed-page .alumni-pro-carousel-arrow {
+    opacity: .88;
+  }
+
+  .alumni-feed-page .alumni-pro-carousel-arrow:hover {
+    opacity: 1;
+  }
+}
+
+/* Móvil: lectura y tacto primero */
+@media (max-width: 767px) {
+  .alumni-feed-page .alumni-pro-post {
+    padding-top: 18px;
+    padding-bottom: 20px;
+  }
+
+  .alumni-feed-page .alumni-pro-caption {
+    font-size: 14px;
+    line-height: 1.56;
+  }
+
+  .alumni-feed-page .alumni-pro-media-shell {
+    margin-top: 12px !important;
+    border-radius: 14px;
+  }
+
+  .alumni-feed-page .alumni-pro-carousel-arrow {
+    display: none;
+  }
+
+  .alumni-feed-page .alumni-pro-actions {
+    min-height: 44px;
+    margin-top: 4px;
+  }
+}
+
+@media (max-width: 390px) {
+  .alumni-feed-page .alumni-pro-avatar {
+    width: 40px;
+    height: 40px;
+    flex-basis: 40px;
+  }
+
+  .alumni-feed-page .alumni-pro-author a {
+    font-size: 13px;
+  }
+
+  .alumni-feed-page .alumni-pro-author > div > span,
+  .alumni-feed-page .alumni-pro-author time,
+  .alumni-feed-page .alumni-pro-author > p {
+    font-size: 11px;
+  }
+
+  .alumni-feed-page .alumni-pro-caption {
+    font-size: 13.75px;
+  }
+
+  .alumni-feed-page .alumni-pro-actions > button {
+    width: 38px !important;
+    min-width: 38px !important;
+    max-width: 38px !important;
+    height: 38px !important;
+    flex-basis: 38px !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .alumni-feed-page .alumni-pro-actions > button,
+  .alumni-feed-page .alumni-pro-menu-trigger {
+    transition: none !important;
+  }
+}
+
+/* ALUMNI_FEED_1_2_POST_POLISH */
+
