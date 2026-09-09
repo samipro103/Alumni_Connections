@@ -949,9 +949,9 @@ if (
     <div
       data-theme-lock="dark"
       data-story-design="c-1-1"
-      className={`alumni-story-viewer fixed inset-0 z-[110] flex items-center justify-center overflow-hidden bg-black ${holding ? "is-holding" : ""}`}
+      className={`alumni-story-viewer fixed inset-0 z-[2147483000] flex h-[100dvh] w-screen items-center justify-center overflow-hidden bg-black ${holding ? "is-holding" : ""}`}
     >
-      <div className="alumni-story-stage-c relative flex h-[100dvh] w-full max-w-[560px] items-center justify-center overflow-hidden bg-[#050506] sm:h-[calc(100dvh-24px)] sm:rounded-[30px] sm:border sm:border-white/[0.08] sm:shadow-[0_30px_100px_rgba(0,0,0,.5)]">
+      <div className="alumni-story-stage-c relative flex h-[100dvh] w-screen max-w-none items-center justify-center overflow-hidden bg-black sm:h-[100dvh] sm:w-screen sm:max-w-none sm:rounded-none sm:border-0 sm:shadow-none">
         <div className="alumni-story-chrome alumni-story-chrome-top absolute left-3 right-3 top-[max(10px,env(safe-area-inset-top))] z-40 px-1">
           <div className="flex gap-1">
             {group.stories.map(
@@ -1058,8 +1058,8 @@ if (
           </button>
         </div>
 
-        <div className="alumni-story-chrome alumni-story-chrome-top absolute inset-x-0 top-0 z-20 h-36 bg-gradient-to-b from-black/70 to-transparent" />
-        <div className="alumni-story-chrome alumni-story-chrome-bottom absolute inset-x-0 bottom-0 z-20 h-64 bg-gradient-to-t from-black/85 via-black/30 to-transparent" />
+        <div className="alumni-story-chrome alumni-story-chrome-top absolute inset-x-0 top-0 z-20 h-32 bg-gradient-to-b from-black/55 via-black/15 to-transparent" />
+        <div className="alumni-story-chrome alumni-story-chrome-bottom absolute inset-x-0 bottom-0 z-20 h-52 bg-gradient-to-t from-black/58 via-black/14 to-transparent" />
 
         {story.media_type ===
         "video" ? (
@@ -1295,107 +1295,25 @@ if (
             </div>
           )}
 
-        {/* ALUMNI_STORIES_1_1_C_INTERACTIVE_CARD */}
-        <section
-          className={`alumni-story-c-card ${ownStory ? "is-owner" : "is-viewer"}`}
-          onClick={(event) => event.stopPropagation()}
-          aria-label={ownStory ? "Resumen de tu historia" : "Conversación sobre la historia"}
-        >
-          <div className="alumni-story-c-kicker">
-            <span className="alumni-story-c-kicker-dot" aria-hidden="true" />
-            {ownStory ? "TU HISTORIA" : "PUNTO DE CONVERSACIÓN"}
-          </div>
-
-          <h3 className="alumni-story-c-title">
-            {ownStory
-              ? "Así está conectando tu historia"
-              : story.story_kind === "achievement"
-                ? "¿Qué le dirías para celebrar este logro?"
-                : story.story_kind === "opportunity"
-                  ? "¿Te interesa esta oportunidad?"
-                  : "¿Qué te dejó esta historia?"}
-          </h3>
-
-          {!ownStory && (
-            <p className="alumni-story-c-copy">
-              {story.caption ||
-                story.headline ||
-                "Convierte una reacción rápida en una conversación real."}
-            </p>
-          )}
-
-          {ownStory ? (
-            <div className="alumni-story-c-owner-stats">
-              <div className="alumni-story-c-owner-stat">
-                <strong>{viewCount ?? 0}</strong>
-                <span>visualizaciones</span>
-              </div>
-              <div className="alumni-story-c-owner-stat">
-                <strong>{likeCount}</strong>
-                <span>{story.story_kind === "achievement" ? "felicitaciones" : "reacciones"}</span>
-              </div>
-            </div>
-          ) : (
-            <>
-              <div className="alumni-story-c-quick-grid" aria-label="Respuestas rápidas">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setReply("👏 ¡Qué buena historia!");
-                    setReplyFocused(true);
-                  }}
-                  className="alumni-story-c-quick"
-                >
-                  <span aria-hidden="true">👏</span>
-                  <span>Inspirador</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setReply("💡 Me sirve mucho. ¡Gracias por compartir!");
-                    setReplyFocused(true);
-                  }}
-                  className="alumni-story-c-quick"
-                >
-                  <span aria-hidden="true">💡</span>
-                  <span>Me sirve</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setReply("🤝 Me gustaría conversar sobre esto.");
-                    setReplyFocused(true);
-                  }}
-                  className="alumni-story-c-quick"
-                >
-                  <span aria-hidden="true">🤝</span>
-                  <span>Conversemos</span>
-                </button>
-              </div>
-              <p className="alumni-story-c-hint">Toca una opción y personaliza tu respuesta abajo.</p>
-            </>
-          )}
-        </section>
+        {/* ALUMNI_STORIES_1_2_1_FULLSCREEN_CLEAN_VIEWER */}
         {ownStory ? (
-          <div className="alumni-story-owner-legacy-stats alumni-story-chrome alumni-story-chrome-bottom absolute bottom-5 left-5 z-40 flex items-center gap-2">
+          <div
+            className="alumni-story-chrome alumni-story-chrome-bottom absolute bottom-[max(18px,env(safe-area-inset-bottom))] left-5 z-40"
+            onClick={(event) => event.stopPropagation()}
+          >
             {viewCount !== null && (
-              <div className="flex items-center gap-2 rounded-full bg-black/40 px-3 py-2 text-[11px] font-bold text-white/70 backdrop-blur-xl">
-                <Eye size={14} />
-                {viewCount}
+              <div className="flex items-center gap-2.5 text-white [text-shadow:0_1px_6px_rgba(0,0,0,.45)]">
+                <Eye size={17} strokeWidth={2} />
+                <div className="leading-none">
+                  <div className="text-sm font-black tracking-[-0.02em]">
+                    {viewCount}
+                  </div>
+                  <div className="mt-1 text-[10px] font-semibold text-white/72">
+                    visualizaciones
+                  </div>
+                </div>
               </div>
             )}
-
-            <div className="flex items-center gap-2 rounded-full bg-black/40 px-3 py-2 text-[11px] font-bold text-white/70 backdrop-blur-xl">
-              <Heart
-                size={14}
-                fill={
-                  likeCount > 0
-                    ? "currentColor"
-                    : "none"
-                }
-              />
-              {likeCount}
-            </div>
           </div>
         ) : (
           <div
