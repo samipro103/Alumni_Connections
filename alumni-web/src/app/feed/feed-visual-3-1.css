@@ -724,3 +724,400 @@
 
 /* ALUMNI_FEED_1_2_POST_POLISH */
 
+/* =========================================================
+   ALUMNI FEED 1.3 — DETALLES PREMIUM
+   Microinteracciones, estados, loaders y refinamiento.
+   ========================================================= */
+
+/* ---------------------------------------------------------
+   Focus / nueva publicación
+   --------------------------------------------------------- */
+
+.alumni-feed-page .alumni-pro-post-focus {
+  animation: alumni-feed-focus-soft 1.45s ease both;
+}
+
+@keyframes alumni-feed-focus-soft {
+  0% {
+    background: color-mix(
+      in srgb,
+      var(--app-accent) 8%,
+      transparent
+    );
+  }
+  55% {
+    background: color-mix(
+      in srgb,
+      var(--app-accent) 4%,
+      transparent
+    );
+  }
+  100% {
+    background: transparent;
+  }
+}
+
+/* El botón "Nuevas publicaciones" mantiene el markup actual,
+   pero pierde apariencia de botón genérico. */
+.alumni-feed-page
+> .flex.justify-center.px-4.py-2 {
+  padding-top: 10px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--app-border);
+  background: var(--app-surface);
+}
+
+.alumni-feed-page
+> .flex.justify-center.px-4.py-2
+> button {
+  min-height: 34px;
+  padding: 0 14px !important;
+  border: 1px solid var(--app-border) !important;
+  border-radius: 999px !important;
+  background: var(--app-surface) !important;
+  color: var(--app-text-soft) !important;
+  font-size: 11.5px !important;
+  font-weight: 680 !important;
+  box-shadow: none !important;
+  transition:
+    background .16s ease,
+    border-color .16s ease,
+    color .16s ease,
+    transform .12s ease;
+}
+
+.alumni-feed-page
+> .flex.justify-center.px-4.py-2
+> button:hover {
+  border-color: color-mix(
+    in srgb,
+    var(--app-accent) 26%,
+    var(--app-border)
+  ) !important;
+  background: var(--app-accent-soft) !important;
+  color: var(--app-text) !important;
+}
+
+.alumni-feed-page
+> .flex.justify-center.px-4.py-2
+> button:active {
+  transform: scale(.975);
+}
+
+/* ---------------------------------------------------------
+   Skeletons
+   --------------------------------------------------------- */
+
+.alumni-feed-page .alumni-feed-skeleton {
+  background: var(--app-surface);
+}
+
+.alumni-feed-page .alumni-feed-skeleton-post {
+  padding: 20px 16px 22px;
+  border-bottom: 1px solid var(--app-border);
+  background: var(--app-surface);
+}
+
+.alumni-feed-page .alumni-feed-skeleton-post:last-child {
+  border-bottom: 0;
+}
+
+.alumni-feed-page .alumni-feed-skeleton-author {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+}
+
+.alumni-feed-page .alumni-feed-skeleton-author > div {
+  display: grid;
+  gap: 7px;
+}
+
+.alumni-feed-page .alumni-feed-skeleton-copy {
+  display: grid;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.alumni-feed-page .alumni-feed-skeleton-media {
+  display: block;
+  width: 100%;
+  height: min(54vw, 360px);
+  min-height: 220px;
+  margin-top: 14px;
+  border-radius: 15px;
+}
+
+.alumni-feed-page .alumni-feed-skeleton-actions {
+  display: flex;
+  gap: 16px;
+  margin-top: 13px;
+}
+
+.alumni-feed-page .alumni-skeleton-block {
+  position: relative;
+  overflow: hidden;
+  background: var(--app-soft);
+}
+
+.alumni-feed-page .alumni-skeleton-block::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  transform: translateX(-110%);
+  background:
+    linear-gradient(
+      100deg,
+      transparent 18%,
+      color-mix(
+        in srgb,
+        var(--app-surface) 66%,
+        transparent
+      ) 48%,
+      transparent 78%
+    );
+  animation: alumni-feed-skeleton-sheen 1.45s ease-in-out infinite;
+}
+
+@keyframes alumni-feed-skeleton-sheen {
+  100% {
+    transform: translateX(110%);
+  }
+}
+
+/* ---------------------------------------------------------
+   Estados vacíos dentro del Feed
+   --------------------------------------------------------- */
+
+.alumni-feed-page .alumni-global-empty {
+  display: flex;
+  min-height: 310px;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 44px 28px 52px;
+  text-align: center;
+  background: var(--app-surface);
+}
+
+.alumni-feed-page .alumni-global-empty > span {
+  color: var(--app-accent);
+  font-size: 10px;
+  font-weight: 760;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.alumni-feed-page .alumni-global-empty h2 {
+  max-width: 420px;
+  margin-top: 9px;
+  color: var(--app-text);
+  font-size: clamp(19px, 3vw, 24px);
+  font-weight: 760;
+  line-height: 1.2;
+  letter-spacing: -.025em;
+}
+
+.alumni-feed-page .alumni-global-empty p {
+  max-width: 430px;
+  margin-top: 9px;
+  color: var(--app-muted);
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.alumni-feed-page .alumni-global-empty a {
+  display: inline-flex;
+  min-height: 38px;
+  align-items: center;
+  justify-content: center;
+  margin-top: 18px;
+  padding: 0 15px;
+  border: 1px solid var(--app-border);
+  border-radius: 999px;
+  background: var(--app-surface);
+  color: var(--app-text-soft);
+  font-size: 11.5px;
+  font-weight: 690;
+  transition:
+    border-color .16s ease,
+    background .16s ease,
+    color .16s ease,
+    transform .12s ease;
+}
+
+.alumni-feed-page .alumni-global-empty a:hover {
+  border-color: color-mix(
+    in srgb,
+    var(--app-accent) 28%,
+    var(--app-border)
+  );
+  background: var(--app-accent-soft);
+  color: var(--app-text);
+}
+
+.alumni-feed-page .alumni-global-empty a:active {
+  transform: scale(.975);
+}
+
+/* ---------------------------------------------------------
+   Botón "Ver más publicaciones"
+   --------------------------------------------------------- */
+
+.alumni-feed-page
+.alumni-pro-feed-list
+> div:last-child
+> button {
+  min-height: 38px;
+  padding: 0 15px !important;
+  border: 1px solid var(--app-border) !important;
+  border-radius: 999px !important;
+  background: transparent !important;
+  color: var(--app-muted) !important;
+  font-size: 11.5px !important;
+  font-weight: 650 !important;
+  box-shadow: none !important;
+}
+
+.alumni-feed-page
+.alumni-pro-feed-list
+> div:last-child
+> button:hover:not(:disabled) {
+  background: var(--app-soft) !important;
+  color: var(--app-text-soft) !important;
+}
+
+/* ---------------------------------------------------------
+   Microinteracciones del post
+   --------------------------------------------------------- */
+
+.alumni-feed-page .alumni-pro-avatar,
+.alumni-feed-page .alumni-pro-author a,
+.alumni-feed-page .alumni-pro-caption-more,
+.alumni-feed-page .alumni-pro-stats button,
+.alumni-feed-page .alumni-pro-comment-preview,
+.alumni-feed-page .alumni-pro-view-comments {
+  transition:
+    color .15s ease,
+    opacity .15s ease,
+    transform .12s ease;
+}
+
+.alumni-feed-page .alumni-pro-avatar:active {
+  transform: scale(.965);
+}
+
+.alumni-feed-page .alumni-pro-author a:hover {
+  color: var(--app-accent);
+}
+
+.alumni-feed-page .alumni-pro-caption-more:hover,
+.alumni-feed-page .alumni-pro-stats button:hover,
+.alumni-feed-page .alumni-pro-view-comments:hover {
+  color: var(--app-text-soft);
+}
+
+.alumni-feed-page .alumni-pro-comment-preview:hover span {
+  color: var(--app-text-soft);
+}
+
+/* Hover de media solo en dispositivos con mouse */
+@media (hover: hover) and (pointer: fine) {
+  .alumni-feed-page .alumni-pro-media-shell {
+    transition: border-color .18s ease;
+  }
+
+  .alumni-feed-page .alumni-pro-media-shell:hover {
+    border-color: color-mix(
+      in srgb,
+      var(--app-text) 16%,
+      var(--app-border)
+    );
+  }
+}
+
+/* ---------------------------------------------------------
+   Focus accesible
+   --------------------------------------------------------- */
+
+.alumni-feed-page button:focus-visible,
+.alumni-feed-page a:focus-visible {
+  outline: 2px solid color-mix(
+    in srgb,
+    var(--app-accent) 82%,
+    white
+  );
+  outline-offset: 2px;
+}
+
+/* Menús, botones overlay y controles de media no deben
+   mostrar un cuadrado feo dentro de la fotografía. */
+.alumni-feed-page
+.alumni-pro-media-shell
+button:focus-visible {
+  outline-color: rgba(255, 255, 255, .92);
+}
+
+/* ---------------------------------------------------------
+   Móvil
+   --------------------------------------------------------- */
+
+@media (max-width: 767px) {
+  .alumni-feed-page .alumni-feed-skeleton-post {
+    padding-right: 14px;
+    padding-left: 14px;
+  }
+
+  .alumni-feed-page .alumni-feed-skeleton-media {
+    height: 68vw;
+    min-height: 210px;
+    border-radius: 14px;
+  }
+
+  .alumni-feed-page .alumni-global-empty {
+    min-height: 280px;
+    padding: 38px 22px 46px;
+  }
+
+  .alumni-feed-page .alumni-global-empty h2 {
+    font-size: 20px;
+  }
+}
+
+@media (max-width: 390px) {
+  .alumni-feed-page .alumni-feed-skeleton-media {
+    min-height: 195px;
+  }
+
+  .alumni-feed-page .alumni-global-empty {
+    padding-inline: 18px;
+  }
+
+  .alumni-feed-page .alumni-global-empty p {
+    font-size: 12.5px;
+  }
+}
+
+/* ---------------------------------------------------------
+   Movimiento reducido
+   --------------------------------------------------------- */
+
+@media (prefers-reduced-motion: reduce) {
+  .alumni-feed-page .alumni-pro-post-focus,
+  .alumni-feed-page .alumni-skeleton-block::after {
+    animation: none !important;
+  }
+
+  .alumni-feed-page .alumni-pro-avatar,
+  .alumni-feed-page .alumni-pro-author a,
+  .alumni-feed-page .alumni-pro-caption-more,
+  .alumni-feed-page .alumni-pro-stats button,
+  .alumni-feed-page .alumni-pro-comment-preview,
+  .alumni-feed-page .alumni-pro-view-comments,
+  .alumni-feed-page .alumni-global-empty a {
+    transition: none !important;
+  }
+}
+
+/* ALUMNI_FEED_1_3_PREMIUM_DETAILS */
+
