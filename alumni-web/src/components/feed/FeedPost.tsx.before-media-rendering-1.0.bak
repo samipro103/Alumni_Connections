@@ -29,12 +29,6 @@ import dynamic from "next/dynamic";
 import { es } from "date-fns/locale";
 import { AlumniAvatar } from "@/components/ui/AlumniImage";
 import type { PostMediaItem } from "@/lib/feedMedia";
-import {
-  classifyPostMediaFrame,
-  resolvePostMediaFrame,
-  shouldPostMediaCover,
-  type PostMediaFrame,
-} from "@/lib/postMediaPresentation";
 import { toPublicImageCdnUrl } from "@/lib/imageCdn";
 import { nativeHaptic } from "@/lib/nativeExperience";
 
@@ -92,7 +86,6 @@ function isFourFive(item: PostMediaItem) {
 
 function FeedImage({
   item,
-  frame,
   postIndex,
   mediaIndex,
   shouldLoad,
@@ -100,7 +93,6 @@ function FeedImage({
   onPointerUp,
 }: {
   item: PostMediaItem;
-  frame: PostMediaFrame;
   postIndex: number;
   mediaIndex: number;
   shouldLoad: boolean;
@@ -113,11 +105,7 @@ function FeedImage({
           item.media_url || ""
         )
       : "";
-  const contain =
-    !shouldPostMediaCover(
-      item,
-      frame
-    );
+  const contain = !isFourFive(item);
   const [loaded, setLoaded] =
     useState(!shouldLoad || !src);
 
@@ -170,58 +158,7 @@ function FeedImage({
               : "auto"
           }
           draggable={false}
-          onLoad={(event) => {
-            setLoaded(true);
-
-            if (
-              mediaIndex !== 0 ||
-              (
-                Number(item.width || 0) > 0 &&
-                Number(item.height || 0) > 0
-              )
-            ) {
-              return;
-            }
-
-            const image =
-              event.currentTarget;
-
-            const discoveredFrame =
-              classifyPostMediaFrame(
-                image.naturalWidth,
-                image.naturalHeight
-              );
-
-            const shell =
-              image.closest(
-                ".alumni-pro-media-shell"
-              );
-
-            shell?.setAttribute(
-              "data-media-frame",
-              discoveredFrame
-            );
-
-            const button =
-              image.closest(
-                ".alumni-pro-image-button"
-              );
-
-            button?.setAttribute(
-              "data-fit",
-              shouldPostMediaCover(
-                {
-                  width:
-                    image.naturalWidth,
-                  height:
-                    image.naturalHeight,
-                },
-                discoveredFrame
-              )
-                ? "cover"
-                : "contain"
-            );
-          }}
+          onLoad={() => setLoaded(true)}
           onError={() => setLoaded(true)}
         />
       )}
@@ -303,41 +240,6 @@ function FeedVideo({
             : "none"
         }
         className="alumni-feed-video"
-        data-alumni-video-ratio="auto"
-        onLoadedMetadata={(event) => {
-          const video =
-            event.currentTarget;
-
-          const slide =
-            video.closest(
-              ".alumni-pro-media-slide"
-            );
-
-          const isFirstSlide =
-            slide?.parentElement
-              ?.firstElementChild ===
-            slide;
-
-          if (!isFirstSlide) {
-            return;
-          }
-
-          const discoveredFrame =
-            classifyPostMediaFrame(
-              video.videoWidth,
-              video.videoHeight
-            );
-
-          const shell =
-            video.closest(
-              ".alumni-pro-media-shell"
-            );
-
-          shell?.setAttribute(
-            "data-media-frame",
-            discoveredFrame
-          );
-        }}
         onLoadedData={() => setReady(true)}
         onCanPlay={() => setReady(true)}
         onError={() => setReady(true)}
@@ -420,13 +322,6 @@ export default function FeedPost({
   const ownPost = post.user_id === currentUserId;
 
   const media: PostMediaItem[] = post.mediaItems || [];
-
-  /*
-   * El primer medio fija el marco de TODO el carrusel.
-   * Así las diapositivas no cambian de alto.
-   */
-  const mediaFrame =
-    resolvePostMediaFrame(media);
 
   const compacted = useMemo(
     () => compactRepeatedLines(post.content || ""),
@@ -829,10 +724,7 @@ export default function FeedPost({
       )}
 
       {media.length > 0 && (
-        <div
-          className="alumni-pro-media-shell"
-          data-media-frame={mediaFrame}
-        >
+        <div className="alumni-pro-media-shell">
           <div
             ref={carouselRef}
             className="alumni-pro-carousel"
@@ -859,7 +751,6 @@ export default function FeedPost({
                 ) : (
                   <FeedImage
                     item={item}
-                    frame={mediaFrame}
                     postIndex={postIndex}
                     mediaIndex={index}
                     shouldLoad={
@@ -1071,5 +962,3 @@ export default function FeedPost({
 /* ALUMNI_PERFORMANCE_HARDENING_FEED_PREVIEW_CODE_SPLIT_V6 */
 
 /* ALUMNI_1_7_0_STORIES_HIDDEN_COMMENTS_GEIST */
-
-/* ALUMNI_MEDIA_RENDERING_1_0_INSTAGRAM_LEVEL */

@@ -37,15 +37,9 @@ import ProfessionalProfileOverview from "@/components/profile/ProfessionalProfil
 import CommentLikeButton from "@/components/social/CommentLikeButton";
 import UserSafetyActions from "@/components/trust/UserSafetyActions";
 import { hydratePostMedia } from "@/lib/privateMedia";
-import { toPublicImageCdnUrl } from "@/lib/imageCdn";
-import {
-  classifyPostMediaFrame,
-  shouldPostMediaCover,
-} from "@/lib/postMediaPresentation";
 import ProfilePostOwnerMenu from "@/components/profile/ProfilePostOwnerMenu";
 import "@/components/profile/ProfilePostOwnerMenu.css";
 import "./profile-option-3-exact.css";
-import "../../media-rendering-1-0.css";
 
 type ProfileTab = "posts" | "secondary" | "activity";
 
@@ -922,62 +916,10 @@ export default function UserProfilePage() {
                           )}
 
                           {post.image_url && (
-                            <div
-                              className="alumni-profile-v3-media"
-                              data-alumni-media-frame="public-profile"
-                              data-media-frame="square"
-                              data-fit="contain"
-                            >
+                            <div className="alumni-profile-v3-media">
                               <img
-                                src={toPublicImageCdnUrl(
-                                  post.image_url
-                                )}
-                                alt=""
-                                aria-hidden="true"
-                                className="alumni-adaptive-media-backdrop"
-                              />
-
-                              <img
-                                src={toPublicImageCdnUrl(
-                                  post.image_url
-                                )}
+                                src={post.image_url}
                                 alt="Publicación"
-                                className="alumni-adaptive-media-main"
-                                onLoad={(event) => {
-                                  const image =
-                                    event.currentTarget;
-
-                                  const discovered =
-                                    classifyPostMediaFrame(
-                                      image.naturalWidth,
-                                      image.naturalHeight
-                                    );
-
-                                  const frame =
-                                    image.closest(
-                                      "[data-alumni-media-frame]"
-                                    );
-
-                                  frame?.setAttribute(
-                                    "data-media-frame",
-                                    discovered
-                                  );
-
-                                  frame?.setAttribute(
-                                    "data-fit",
-                                    shouldPostMediaCover(
-                                      {
-                                        width:
-                                          image.naturalWidth,
-                                        height:
-                                          image.naturalHeight,
-                                      },
-                                      discovered
-                                    )
-                                      ? "cover"
-                                      : "contain"
-                                  );
-                                }}
                               />
                             </div>
                           )}
@@ -1313,5 +1255,3 @@ function Detail({
 /* ALUMNI_2_3_0_SOCIAL_PASSPORT:PUBLIC_PROFILE */
 
 /* ALUMNI_2_3_2_RECOVERY_PROFILE_PASSPORT_NAV:PUBLIC_PROFILE */
-
-/* ALUMNI_MEDIA_RENDERING_1_0_INSTAGRAM_LEVEL */

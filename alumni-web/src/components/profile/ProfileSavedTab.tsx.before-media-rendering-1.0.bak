@@ -13,11 +13,6 @@ import {
   type PostMediaItem,
 } from "@/lib/feedMedia";
 import { hydratePostMedia } from "@/lib/privateMedia";
-import {
-  classifyPostMediaFrame,
-  resolvePostMediaFrame,
-  shouldPostMediaCover,
-} from "@/lib/postMediaPresentation";
 
 export default function ProfileSavedTab({
   userId,
@@ -206,17 +201,6 @@ export default function ProfileSavedTab({
             (post.mediaItems || []) as PostMediaItem[];
           const first = media[0] || null;
 
-          const mediaFrame =
-            resolvePostMediaFrame(media);
-
-          const mediaCover =
-            first
-              ? shouldPostMediaCover(
-                  first,
-                  mediaFrame
-                )
-              : false;
-
           const text = String(post.content || "").trim();
           const short =
             text.length > 420
@@ -282,14 +266,7 @@ export default function ProfileSavedTab({
               {first && (
                 <a
                   href={`/feed?post=${post.id}`}
-                  data-alumni-media-frame="saved"
-                  data-media-frame={mediaFrame}
-                  data-fit={
-                    mediaCover
-                      ? "cover"
-                      : "contain"
-                  }
-                  className="alumni-saved-media-frame relative mt-3 block overflow-hidden bg-[#05070b]"
+                  className="relative mt-3 block overflow-hidden bg-[#05070b]"
                 >
                   {first.media_type === "video" ? (
                     <video
@@ -297,67 +274,15 @@ export default function ProfileSavedTab({
                       muted
                       playsInline
                       preload="metadata"
-                      className="alumni-adaptive-media-main"
+                      className="max-h-[500px] w-full object-contain"
                     />
                   ) : (
-                    <>
-                      <img
-                        src={first.media_url || ""}
-                        alt=""
-                        aria-hidden="true"
-                        loading="lazy"
-                        className="alumni-adaptive-media-backdrop"
-                      />
-
-                      <img
-                        src={first.media_url || ""}
-                        alt=""
-                        loading="lazy"
-                        className="alumni-adaptive-media-main"
-                        onLoad={(event) => {
-                          if (
-                            Number(first.width || 0) > 0 &&
-                            Number(first.height || 0) > 0
-                          ) {
-                            return;
-                          }
-
-                          const image =
-                            event.currentTarget;
-
-                          const discovered =
-                            classifyPostMediaFrame(
-                              image.naturalWidth,
-                              image.naturalHeight
-                            );
-
-                          const frame =
-                            image.closest(
-                              "[data-alumni-media-frame]"
-                            );
-
-                          frame?.setAttribute(
-                            "data-media-frame",
-                            discovered
-                          );
-
-                          frame?.setAttribute(
-                            "data-fit",
-                            shouldPostMediaCover(
-                              {
-                                width:
-                                  image.naturalWidth,
-                                height:
-                                  image.naturalHeight,
-                              },
-                              discovered
-                            )
-                              ? "cover"
-                              : "contain"
-                          );
-                        }}
-                      />
-                    </>
+                    <img
+                      src={first.media_url || ""}
+                      alt=""
+                      loading="lazy"
+                      className="max-h-[500px] w-full object-contain"
+                    />
                   )}
 
                   {media.length > 1 && (
@@ -396,5 +321,3 @@ export default function ProfileSavedTab({
 }
 
 /* ALUMNI_1_4_2_PROFILE_SAVED_TAB */
-
-/* ALUMNI_MEDIA_RENDERING_1_0_INSTAGRAM_LEVEL */

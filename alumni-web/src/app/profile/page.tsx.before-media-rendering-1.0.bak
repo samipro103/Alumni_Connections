@@ -40,15 +40,9 @@ import ProfileSocialLinks from "@/components/profile/ProfileSocialLinks";
 import SpotifyLogo from "@/components/music/SpotifyLogo";
 import ProfileSavedTab from "@/components/profile/ProfileSavedTab";
 import { hydratePostMedia } from "@/lib/privateMedia";
-import {
-  classifyPostMediaFrame,
-  shouldPostMediaCover,
-} from "@/lib/postMediaPresentation";
 import { shareAlumniContent } from "@/lib/nativeExperience";
-import { toPublicImageCdnUrl } from "@/lib/imageCdn";
 import ProfilePostOwnerMenu from "@/components/profile/ProfilePostOwnerMenu";
 import "@/components/profile/ProfilePostOwnerMenu.css";
-import "../media-rendering-1-0.css";
 import "./profile-option-3-launch.css";
 
 
@@ -792,12 +786,7 @@ export default function ProfilePage() {
                       )}
 
                       {post.image_url && (
-                        <div
-                          className="alumni-profile-launch-media"
-                          data-alumni-media-frame="profile"
-                          data-media-frame="square"
-                          data-fit="contain"
-                        >
+                        <div className="alumni-profile-launch-media">
                           <button
                             type="button"
                             onClick={() =>
@@ -808,55 +797,8 @@ export default function ProfilePage() {
                             aria-label="Abrir fotografía"
                           >
                             <img
-                              src={toPublicImageCdnUrl(
-                                post.image_url
-                              )}
-                              alt=""
-                              aria-hidden="true"
-                              className="alumni-adaptive-media-backdrop"
-                            />
-
-                            <img
-                              src={toPublicImageCdnUrl(
-                                post.image_url
-                              )}
+                              src={post.image_url}
                               alt="Publicación"
-                              className="alumni-adaptive-media-main"
-                              onLoad={(event) => {
-                                const image =
-                                  event.currentTarget;
-
-                                const discovered =
-                                  classifyPostMediaFrame(
-                                    image.naturalWidth,
-                                    image.naturalHeight
-                                  );
-
-                                const frame =
-                                  image.closest(
-                                    "[data-alumni-media-frame]"
-                                  );
-
-                                frame?.setAttribute(
-                                  "data-media-frame",
-                                  discovered
-                                );
-
-                                frame?.setAttribute(
-                                  "data-fit",
-                                  shouldPostMediaCover(
-                                    {
-                                      width:
-                                        image.naturalWidth,
-                                      height:
-                                        image.naturalHeight,
-                                    },
-                                    discovered
-                                  )
-                                    ? "cover"
-                                    : "contain"
-                                );
-                              }}
                             />
                           </button>
                         </div>
@@ -1154,5 +1096,3 @@ function Detail({
 /* ALUMNI_PROFILE_1_1_1B_BUILD_HOTFIX */
 
 /* ALUMNI_PROFILE_1_2_0B_LAUNCH_MATCH_OPTION_3 */
-
-/* ALUMNI_MEDIA_RENDERING_1_0_INSTAGRAM_LEVEL */

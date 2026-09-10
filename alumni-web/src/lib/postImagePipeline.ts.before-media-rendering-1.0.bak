@@ -12,12 +12,12 @@ export type PreparedPostImage = {
 const MAX_INPUT_BYTES =
   45 * 1024 * 1024;
 
-const MAX_LONG_EDGE = 2560;
+const MAX_LONG_EDGE = 3200;
 
 const PASSTHROUGH_BYTES =
-  3 * 1024 * 1024;
+  10 * 1024 * 1024;
 
-const OUTPUT_QUALITY = 0.90;
+const OUTPUT_QUALITY = 0.96;
 
 const PASSTHROUGH_TYPES =
   new Set([
@@ -221,7 +221,7 @@ async function encodeFinal(
     await canvasToBlob(
       canvas,
       "image/jpeg",
-      0.92
+      0.97
     );
 
   if (!jpeg) {
@@ -413,5 +413,3 @@ export async function preparePostImage(
     decoded.close?.();
   }
 }
-
-/* ALUMNI_MEDIA_RENDERING_1_0_INSTAGRAM_LEVEL */
