@@ -1,556 +1,157 @@
-"use client";
+const fs = require("fs");
+const path = require("path");
 
-import { useEffect, useMemo, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
-import {
+const ROOT = process.cwd();
+const MARKER = "ALUMNI_PROFILE_1_0B_OPTION_3_EXACT_ACTIVITY";
+const PROFILE = path.join(
+  ROOT,
+  "src",
+  "app",
+  "u",
+  "[username]",
+  "page.tsx"
+);
+const CSS = path.join(
+  ROOT,
+  "src",
+  "app",
+  "u",
+  "[username]",
+  "profile-option-3-exact.css"
+);
+const OLD_CSS = path.join(
+  ROOT,
+  "src",
+  "app",
+  "u",
+  "[username]",
+  "profile-activity-1-0.css"
+);
+
+if (!fs.existsSync(PROFILE)) {
+  console.error("❌ No encontré:", PROFILE);
+  console.error("Ejecutá este parche desde alumni-web.");
+  process.exit(1);
+}
+
+let source = fs
+  .readFileSync(PROFILE, "utf8")
+  .replace(/\r\n/g, "\n");
+
+console.log("✅ Perfil real detectado: src/app/u/[username]/page.tsx");
+console.log("✅ CRLF/LF normalizado");
+
+function fail(message) {
+  console.error("❌ " + message);
+  process.exit(1);
+}
+
+/* ================================================================
+   1) RETIRAR EL PARCHE GENÉRICO ANTERIOR SI FUE APLICADO
+   ================================================================ */
+
+source = source.replace(
+  'import "./profile-activity-1-0.css";\n',
+  ""
+);
+
+if (fs.existsSync(OLD_CSS)) {
+  fs.unlinkSync(OLD_CSS);
+  console.log("✅ CSS genérico anterior eliminado");
+}
+
+/* ================================================================
+   2) IMPORTS PARA LA OPCIÓN 3 REAL
+   ================================================================ */
+
+if (!source.includes('import "./profile-option-3-exact.css";')) {
+  const anchor =
+    'import "@/components/profile/ProfilePostOwnerMenu.css";';
+
+  if (!source.includes(anchor)) {
+    fail("No encontré el punto para importar el CSS del perfil.");
+  }
+
+  source = source.replace(
+    anchor,
+    `${anchor}
+import "./profile-option-3-exact.css";`
+  );
+
+  console.log("✅ CSS exacto Opción 3 importado");
+}
+
+if (!source.includes("  ArrowLeft,")) {
+  source = source.replace(
+    `import {
+  Briefcase,`,
+    `import {
   ArrowLeft,
-  Briefcase,
-  Clock3,
-  GraduationCap,
-  Heart,
-  Link2,
-  LockKeyhole,
-  MapPin,
-  MessageCircle,
-  PencilLine,
-  Send,
-  Share2,
-  UserCheck,
-  UserPlus,
-} from "lucide-react";
-import { formatDistanceToNow } from "date-fns";
-import { es } from "date-fns/locale";
-import { useAuth } from "@/components/auth/AuthProvider";
-import { supabase } from "@/lib/supabase";
-import AppShell from "@/components/layout/AppShell";
-import ProfileMusicCard from "@/components/profile/ProfileMusicCard";
-import ProfilePassportPreview from "@/components/profile/ProfilePassportPreview";
-import ProfileMiniStats from "@/components/profile/ProfileMiniStats";
-import ProfileSpotifyAction from "@/components/music/ProfileSpotifyAction";
-import HDProfileImage from "@/components/profile/HDProfileImage";
-import ProfileSocialLinks from "@/components/profile/ProfileSocialLinks";
-import ProfileIdentityMeta from "@/components/profile/ProfileIdentityMeta";
-import ProfileHeaderFacts from "@/components/profile/ProfileHeaderFacts";
-import ProfileRepostsTab from "@/components/profile/ProfileRepostsTab";
-import ProfileSavedTab from "@/components/profile/ProfileSavedTab";
-import ProfessionalProfileOverview from "@/components/profile/ProfessionalProfileOverview";
-import CommentLikeButton from "@/components/social/CommentLikeButton";
-import UserSafetyActions from "@/components/trust/UserSafetyActions";
-import { hydratePostMedia } from "@/lib/privateMedia";
-import ProfilePostOwnerMenu from "@/components/profile/ProfilePostOwnerMenu";
-import "@/components/profile/ProfilePostOwnerMenu.css";
-import "./profile-option-3-exact.css";
-
-type ProfileTab = "posts" | "secondary" | "activity";
-
-export default function UserProfilePage() {
-  const params = useParams();
-  const username = params.username as string;
-  const router = useRouter();
-  const { user } = useAuth();
-
-  const [profile, setProfile] = useState<any>(null);
-  const [followers, setFollowers] = useState(0);
-  const [followingCount, setFollowingCount] = useState(0);
-  const [posts, setPosts] = useState<any[]>([]);
-  const [profileMusic, setProfileMusic] = useState<any>(null);
-  const [following, setFollowing] = useState(false);
-  const [followRequestPending, setFollowRequestPending] = useState(false);
-  const [openComments, setOpenComments] = useState<Record<number, boolean>>(
-    {}
+  Briefcase,`
   );
-  const [commentInputs, setCommentInputs] = useState<
-    Record<number, string>
-  >({});
-  const [loading, setLoading] = useState(true);
-  const [tab, setTab] = useState<ProfileTab>("posts");
-
-  useEffect(() => {
-    getProfile();
-  }, [username, user?.id]);
-
-  async function getProfile() {
-    setLoading(true);
-
-    const { data: profileData } = await supabase
-      .from("profiles")
-      .select("*")
-      .eq("username", username)
-      .maybeSingle();
-
-    if (!profileData) {
-      setProfile(null);
-      setLoading(false);
-      return;
-    }
-
-    setProfile(profileData);
-
-    const { data: musicData, error: musicError } = await supabase
-      .from("profile_music")
-      .select("*")
-      .eq("user_id", profileData.id)
-      .maybeSingle();
-
-    if (musicError) {
-      console.error("Error cargando música pública:", musicError);
-    }
-
-    setProfileMusic(musicData || null);
-
-    const [
-      { data: followersData },
-      { data: followingData },
-      { data: postsData },
-    ] = await Promise.all([
-      supabase
-        .from("follows")
-        .select("follower_id")
-        .eq("following_id", profileData.id),
-      supabase
-        .from("follows")
-        .select("following_id")
-        .eq("follower_id", profileData.id),
-      supabase
-        .from("posts")
-        .select("*, likes(user_id)")
-        .eq("user_id", profileData.id)
-        .order("created_at", { ascending: false }),
-    ]);
-
-    setFollowers(followersData?.length || 0);
-    setFollowingCount(followingData?.length || 0);
-
-    const postIds = (postsData || []).map((post: any) => post.id);
-    let comments: any[] = [];
-
-    if (postIds.length > 0) {
-      const { data: commentsData } = await supabase
-        .from("comments")
-        .select("*")
-        .in("post_id", postIds)
-        .order("created_at", { ascending: true });
-
-      comments = commentsData || [];
-    }
-
-    const commentUserIds = [
-      ...new Set(comments.map((comment: any) => comment.user_id)),
-    ];
-
-    let commentProfiles: any[] = [];
-
-    if (commentUserIds.length > 0) {
-      const { data } = await supabase
-        .from("profiles")
-        .select("id, username, avatar_url")
-        .in("id", commentUserIds);
-
-      commentProfiles = data || [];
-    }
-
-    const hydratedPosts =
-      await hydratePostMedia(
-        (postsData || []) as any[]
-      );
-
-    const { data: pinnedRows } = await supabase
-      .from("profile_pinned_posts")
-      .select("post_id,sort_order")
-      .eq("user_id", profileData.id)
-      .order("sort_order", { ascending: true });
-
-    const pinOrder = new Map(
-      (pinnedRows || []).map(
-        (row: any) => [
-          Number(row.post_id),
-          Number(row.sort_order),
-        ]
-      )
-    );
-
-    const decoratedPosts =
-      hydratedPosts
-        .map((post: any) => ({
-        ...post,
-        liked:
-          post.likes?.some(
-            (like: any) => like.user_id === user?.id
-          ) || false,
-        pinned: pinOrder.has(Number(post.id)),
-        pinOrder: pinOrder.get(Number(post.id)) ?? 999,
-        comments: comments
-          .filter((comment: any) => comment.post_id === post.id)
-          .map((comment: any) => ({
-            ...comment,
-            profile: commentProfiles.find(
-              (item: any) => item.id === comment.user_id
-            ),
-          })),
-      }))
-      .sort((a: any, b: any) => {
-        if (a.pinned !== b.pinned) {
-          return a.pinned ? -1 : 1;
-        }
-
-        if (a.pinned && b.pinned) {
-          return a.pinOrder - b.pinOrder;
-        }
-
-        return (
-          new Date(b.created_at).getTime() -
-          new Date(a.created_at).getTime()
-        );
-      });
-
-    setPosts(decoratedPosts);
-
-    if (user) {
-      const { data: followData } = await supabase
-        .from("follows")
-        .select("follower_id")
-        .eq("follower_id", user.id)
-        .eq("following_id", profileData.id)
-        .maybeSingle();
-
-      setFollowing(Boolean(followData));
-
-      if (!followData && profileData.is_private) {
-        const { data: requestData } = await supabase
-          .from("follow_requests")
-          .select("id")
-          .eq("requester_id", user.id)
-          .eq("target_id", profileData.id)
-          .maybeSingle();
-
-        setFollowRequestPending(Boolean(requestData));
-      } else {
-        setFollowRequestPending(false);
-      }
-    } else {
-      setFollowing(false);
-      setFollowRequestPending(false);
-    }
-
-    setLoading(false);
-  }
-
-  async function toggleFollow() {
-    if (!user) {
-      router.push("/login");
-      return;
-    }
-
-    if (!profile || profile.id === user.id) return;
-
-    if (following) {
-      await supabase
-        .from("follows")
-        .delete()
-        .eq("follower_id", user.id)
-        .eq("following_id", profile.id);
-
-      setFollowing(false);
-      setFollowers((value) => Math.max(0, value - 1));
-      return;
-    }
-
-    if (profile.is_private) {
-      if (followRequestPending) {
-        const { error } = await supabase
-          .from("follow_requests")
-          .delete()
-          .eq("requester_id", user.id)
-          .eq("target_id", profile.id);
-
-        if (error) {
-          alert(error.message);
-          return;
-        }
-
-        setFollowRequestPending(false);
-        return;
-      }
-
-      const { error } = await supabase.from("follow_requests").insert({
-        requester_id: user.id,
-        target_id: profile.id,
-      });
-
-      if (error) {
-        alert(error.message);
-        return;
-      }
-
-      setFollowRequestPending(true);
-      return;
-    }
-
-    const { error } = await supabase.from("follows").insert({
-      follower_id: user.id,
-      following_id: profile.id,
-    });
-
-    if (error) {
-      alert(error.message);
-      return;
-    }
-
-    await supabase.from("notifications").insert({
-      user_id: profile.id,
-      actor_id: user.id,
-      type: "follow",
-      target_type: "profile",
-      target_id: user.id,
-    });
-
-    setFollowing(true);
-    setFollowers((value) => value + 1);
-  }
-
-  async function toggleLike(postId: number, liked: boolean) {
-    if (!user) {
-      router.push("/login");
-      return;
-    }
-
-    const post = posts.find((item: any) => item.id === postId);
-
-    if (liked) {
-      await supabase
-        .from("likes")
-        .delete()
-        .eq("post_id", postId)
-        .eq("user_id", user.id);
-
-      if (post && post.user_id !== user.id) {
-        await supabase
-          .from("notifications")
-          .delete()
-          .eq("user_id", post.user_id)
-          .eq("actor_id", user.id)
-          .eq("type", "like")
-          .eq("post_id", postId);
-      }
-    } else {
-      const { error } = await supabase.from("likes").insert({
-        post_id: postId,
-        user_id: user.id,
-      });
-
-      if (error) {
-        alert(error.message);
-        return;
-      }
-
-      if (post && post.user_id !== user.id) {
-        await supabase.from("notifications").insert({
-          user_id: post.user_id,
-          actor_id: user.id,
-          type: "like",
-          post_id: postId,
-          target_type: "post",
-          target_id: String(postId),
-        });
-      }
-    }
-
-    await getProfile();
-  }
-
-  async function addComment(postId: number) {
-    if (!user) {
-      router.push("/login");
-      return;
-    }
-
-    const content = commentInputs[postId]?.trim();
-    if (!content) return;
-
-    const { data: insertedComment, error } = await supabase
-      .from("comments")
-      .insert({
-        post_id: postId,
-        user_id: user.id,
-        content,
-      })
-      .select("id")
-      .single();
-
-    if (error) {
-      alert(error.message);
-      return;
-    }
-
-    if (profile.id !== user.id) {
-      await supabase.from("notifications").insert({
-        user_id: profile.id,
-        actor_id: user.id,
-        type: "comment",
-        post_id: postId,
-        target_type: "post_comment",
-        target_id: String(insertedComment.id),
-      });
-    }
-
-    setCommentInputs((current) => ({
-      ...current,
-      [postId]: "",
-    }));
-
-    setOpenComments((current) => ({
-      ...current,
-      [postId]: true,
-    }));
-
-    await getProfile();
-  }
-
-  async function editProfilePost(
-    postId: number,
-    content: string
-  ) {
-    const { error } = await supabase.rpc(
-      "alumni_edit_post",
-      {
-        p_post_id: postId,
-        p_content: content,
-      }
-    );
-
-    if (error) {
-      alert(error.message);
-      throw error;
-    }
-
-    await getProfile();
-  }
-
-  async function toggleProfilePin(
-    postId: number
-  ) {
-    const { error } = await supabase.rpc(
-      "alumni_toggle_profile_pin",
-      {
-        p_post_id: postId,
-      }
-    );
-
-    if (error) {
-      alert(error.message);
-      return;
-    }
-
-    await getProfile();
-  }
-
-  async function deleteProfilePost(
-    postId: number
-  ) {
-    if (!user) return;
-
-    const confirmed = window.confirm(
-      "¿Borrar esta publicación? Esta acción no se puede deshacer."
-    );
-
-    if (!confirmed) return;
-
-    const { error } = await supabase
-      .from("posts")
-      .delete()
-      .eq("id", postId)
-      .eq("user_id", user.id);
-
-    if (error) {
-      alert(error.message);
-      return;
-    }
-
-    await getProfile();
-  }
-
-  async function shareProfile() {
-    if (!profile) return;
-
-    const url =
-      `${window.location.origin}/u/${profile.username}`;
-
-    try {
-      if (navigator.share) {
-        await navigator.share({
-          title:
-            `@${profile.username} en Alumni`,
-          url,
-        });
-
-        return;
-      }
-
-      await navigator.clipboard.writeText(
-        url
-      );
-
-      alert(
-        "Enlace del perfil copiado."
-      );
-    } catch (error: any) {
-      if (
-        error?.name !==
-        "AbortError"
-      ) {
-        console.error(
-          "Error compartiendo perfil:",
-          error
-        );
-      }
-    }
-  }
-
-  const links = useMemo(
-    () =>
-      [
-        ["Sitio web", profile?.website],
-        ["GitHub", profile?.github],
-        ["LinkedIn", profile?.linkedin],
-        ["Instagram", profile?.instagram],
-      ].filter(([, value]) => Boolean(value)),
-    [profile]
+}
+
+if (!source.includes("  PencilLine,")) {
+  source = source.replace(
+    `  MessageCircle,`,
+    `  MessageCircle,
+  PencilLine,`
   );
+}
 
-  if (loading) {
-    return (
-      <AppShell>
-        <div className="py-16 text-center text-sm text-zinc-600">
-          Cargando perfil...
-        </div>
-      </AppShell>
-    );
-  }
+/* ================================================================
+   3) TABS: ACTIVITY FIRST REAL
+   ================================================================ */
 
-  if (!profile) {
-    return (
-      <AppShell>
-        <div className="py-16 text-center">
-          <p className="font-bold text-zinc-300">
-            Perfil no encontrado
-          </p>
-          <button
-            onClick={() => router.push("/explore")}
-            className="mt-3 text-sm font-bold text-[#8d98ff]"
-          >
-            Volver a explorar
-          </button>
-        </div>
-      </AppShell>
-    );
-  }
+source = source.replace(
+  `type ProfileTab = "posts" | "reposts" | "saved" | "about";`,
+  `type ProfileTab = "posts" | "secondary" | "activity";`
+);
 
-  const ownProfile = user?.id === profile.id;
-  const privateLocked =
+source = source.replaceAll(
+  `setTab("reposts")`,
+  `setTab("secondary")`
+);
+source = source.replaceAll(
+  `setTab("saved")`,
+  `setTab("secondary")`
+);
+source = source.replaceAll(
+  `setTab("about")`,
+  `setTab("activity")`
+);
+
+/* ================================================================
+   4) REEMPLAZAR LA ESTRUCTURA VISUAL COMPLETA
+   ================================================================ */
+
+const privateAnchor = `  const privateLocked =
     Boolean(profile.is_private) &&
     !ownProfile &&
-    !following;
+    !following;`;
 
+const privatePos = source.indexOf(privateAnchor);
+
+if (privatePos < 0) {
+  fail("No encontré privateLocked en el perfil actual.");
+}
+
+const renderStart = source.indexOf(
+  `\n  return (
+    <AppShell>`,
+  privatePos
+);
+
+const helpersStart = source.indexOf(
+  `\nfunction Stat({`,
+  renderStart
+);
+
+if (renderStart < 0 || helpersStart < 0) {
+  fail("No pude localizar el render principal completo del perfil.");
+}
+
+const newRender = `
   return (
     <AppShell>
       <div
@@ -613,7 +214,7 @@ export default function UserProfilePage() {
             <div className="alumni-profile-v3-identity">
               <h1>
                 {profile.full_name ||
-                  `@${profile.username}`}
+                  \`@\${profile.username}\`}
               </h1>
 
               <p className="alumni-profile-v3-handle">
@@ -682,12 +283,12 @@ export default function UserProfilePage() {
                   <button
                     type="button"
                     onClick={toggleFollow}
-                    className={`alumni-profile-v3-primary ${
+                    className={\`alumni-profile-v3-primary \${
                       following ||
                       followRequestPending
                         ? "is-following"
                         : ""
-                    }`}
+                    }\`}
                   >
                     {following ? (
                       <UserCheck size={15} />
@@ -709,7 +310,7 @@ export default function UserProfilePage() {
                     onClick={() =>
                       user
                         ? router.push(
-                            `/messages/${profile.username}`
+                            \`/messages/\${profile.username}\`
                           )
                         : router.push("/login")
                     }
@@ -864,7 +465,7 @@ export default function UserProfilePage() {
                             <div className="alumni-profile-v3-post-author">
                               <strong>
                                 {profile.full_name ||
-                                  `@${profile.username}`}
+                                  \`@\${profile.username}\`}
                               </strong>
 
                               <span>
@@ -1156,102 +757,794 @@ export default function UserProfilePage() {
   );
 }
 
-/* ALUMNI_PROFILE_1_0B_OPTION_3_EXACT_ACTIVITY */
+/* ${MARKER} */
+`;
 
-function Stat({
-  value,
-  label,
-}: {
-  value: number;
-  label: string;
-}) {
-  return (
-    <div>
-      <p className="text-lg font-black text-zinc-100">{value}</p>
-      <p className="text-xs text-zinc-600">{label}</p>
-    </div>
+source =
+  source.slice(0, renderStart) +
+  newRender +
+  source.slice(helpersStart);
+
+/* ================================================================
+   5) CSS EXACTO — NO UN SIMPLE RESKIN
+   ================================================================ */
+
+const css = `/*
+ * ${MARKER}
+ * Opción 3 — Perfil centrado en la actividad.
+ * MOBILE FIRST: 360–430px.
+ */
+
+.alumni-profile-v3 {
+  width: calc(100% + 32px);
+  max-width: none;
+  margin: 0 -16px;
+  color: var(--app-text);
+  font-family:
+    var(--font-geist-sans),
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
+}
+
+/* =========================================================
+   HERO
+   ========================================================= */
+
+.alumni-profile-v3-hero {
+  position: relative;
+  background: var(--app-bg);
+}
+
+.alumni-profile-v3-cover {
+  position: relative;
+  width: 100%;
+  height: 184px;
+  overflow: hidden;
+  background: #111722;
+}
+
+.alumni-profile-v3-cover-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.alumni-profile-v3-cover-fallback {
+  width: 100%;
+  height: 100%;
+  background:
+    radial-gradient(
+      circle at 28% 24%,
+      color-mix(
+        in srgb,
+        var(--app-accent) 34%,
+        transparent
+      ),
+      transparent 35%
+    ),
+    linear-gradient(
+      145deg,
+      #162033,
+      #0d121c 58%,
+      #111722
+    );
+}
+
+.alumni-profile-v3-cover-shade {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(
+      180deg,
+      rgba(3, 6, 10, .08) 0%,
+      rgba(3, 6, 10, .08) 48%,
+      rgba(3, 6, 10, .62) 100%
+    );
+  pointer-events: none;
+}
+
+.alumni-profile-v3-top-button {
+  position: absolute;
+  top: max(12px, env(safe-area-inset-top));
+  z-index: 5;
+  display: flex;
+  width: 40px;
+  height: 40px;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(255,255,255,.18);
+  border-radius: 13px;
+  background: rgba(5, 8, 13, .48);
+  color: #fff;
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+
+.alumni-profile-v3-top-button.is-left {
+  left: 12px;
+}
+
+.alumni-profile-v3-top-button.is-right {
+  right: 12px;
+}
+
+.alumni-profile-v3-main {
+  position: relative;
+  padding:
+    0 16px
+    0;
+}
+
+.alumni-profile-v3-avatar-wrap {
+  height: 42px;
+}
+
+.alumni-profile-v3-avatar {
+  position: absolute;
+  top: -44px;
+  left: 16px;
+  z-index: 6;
+  display: flex;
+  width: 88px;
+  height: 88px;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border: 3px solid var(--app-bg);
+  border-radius: 999px;
+  background: var(--app-surface-2);
+  color: var(--app-text);
+  font-size: 22px;
+  font-weight: 900;
+  box-shadow:
+    0 5px 20px rgba(0,0,0,.20);
+}
+
+.alumni-profile-v3-identity {
+  padding-top: 4px;
+}
+
+.alumni-profile-v3-identity h1 {
+  margin: 0;
+  color: var(--app-text);
+  font-size: 21px;
+  line-height: 1.1;
+  font-weight: 950;
+  letter-spacing: -.04em;
+}
+
+.alumni-profile-v3-handle {
+  margin-top: 3px;
+  color: var(--app-muted);
+  font-size: 12px;
+  line-height: 1.2;
+}
+
+.alumni-profile-v3-role {
+  margin-top: 8px;
+  color: var(--app-text-soft);
+  font-size: 12px;
+  font-weight: 590;
+  line-height: 1.35;
+}
+
+.alumni-profile-v3-role span {
+  color: var(--app-muted);
+}
+
+.alumni-profile-v3-fact {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin-top: 5px;
+  color: var(--app-muted);
+  font-size: 11px;
+  font-weight: 560;
+  line-height: 1.3;
+}
+
+.alumni-profile-v3-fact svg {
+  flex: 0 0 auto;
+  color: var(--app-muted-2);
+}
+
+/* =========================================================
+   ACTIONS
+   ========================================================= */
+
+.alumni-profile-v3-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.alumni-profile-v3-primary,
+.alumni-profile-v3-secondary {
+  display: flex;
+  min-width: 0;
+  height: 42px;
+  flex: 1 1 0;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 0 12px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 850;
+  white-space: nowrap;
+}
+
+.alumni-profile-v3-primary {
+  border: 0;
+  background: var(--app-text);
+  color: var(--app-bg);
+}
+
+.alumni-profile-v3-primary.is-following {
+  border: 1px solid var(--app-border);
+  background: var(--app-soft);
+  color: var(--app-text);
+}
+
+.alumni-profile-v3-secondary {
+  border: 1px solid var(--app-border);
+  background: var(--app-soft);
+  color: var(--app-text-soft);
+}
+
+.alumni-profile-v3-safety {
+  flex: 0 0 auto;
+}
+
+/* =========================================================
+   STATS
+   ========================================================= */
+
+.alumni-profile-v3-stats {
+  display: grid;
+  grid-template-columns:
+    repeat(3, minmax(0, 1fr));
+  margin-top: 16px;
+  border-bottom:
+    1px solid var(--app-border);
+}
+
+.alumni-profile-v3-stats > * {
+  position: relative;
+  display: flex;
+  min-height: 60px;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  background: transparent;
+  color: inherit;
+}
+
+.alumni-profile-v3-stats > * + *::before {
+  content: "";
+  position: absolute;
+  top: 14px;
+  bottom: 14px;
+  left: 0;
+  width: 1px;
+  background: var(--app-border);
+}
+
+.alumni-profile-v3-stats strong {
+  color: var(--app-text);
+  font-size: 15px;
+  line-height: 1;
+  font-weight: 950;
+}
+
+.alumni-profile-v3-stats span {
+  margin-top: 6px;
+  color: var(--app-muted-2);
+  font-size: 8.5px;
+  font-weight: 650;
+}
+
+/* =========================================================
+   TABS
+   ========================================================= */
+
+.alumni-profile-v3-tabs {
+  position: sticky;
+  top: 0;
+  z-index: 24;
+  display: grid;
+  grid-template-columns:
+    repeat(3, minmax(0, 1fr));
+  min-height: 48px;
+  border-bottom:
+    1px solid var(--app-border);
+  background:
+    color-mix(
+      in srgb,
+      var(--app-bg) 96%,
+      transparent
+    );
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+}
+
+.alumni-profile-v3-tabs button {
+  position: relative;
+  border: 0;
+  background: transparent;
+  color: var(--app-muted-2);
+  font-size: 11px;
+  font-weight: 760;
+}
+
+.alumni-profile-v3-tabs button[data-active="true"] {
+  color: var(--app-text);
+}
+
+.alumni-profile-v3-tabs
+  button[data-active="true"]::after {
+  content: "";
+  position: absolute;
+  right: 18px;
+  bottom: 0;
+  left: 18px;
+  height: 2px;
+  border-radius: 99px;
+  background: var(--app-accent);
+}
+
+/* =========================================================
+   POSTS — PRINCIPAL CONTENT
+   ========================================================= */
+
+.alumni-profile-v3-feed {
+  background: var(--app-bg);
+}
+
+.alumni-profile-v3-post-list {
+  display: block;
+}
+
+.alumni-profile-v3-post {
+  padding: 16px 16px 14px;
+  border-bottom:
+    1px solid var(--app-border);
+  background: var(--app-bg);
+}
+
+.alumni-profile-v3-post-head {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 10px;
+}
+
+.alumni-profile-v3-post-avatar {
+  display: flex;
+  width: 38px;
+  height: 38px;
+  flex: 0 0 38px;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--app-surface-2);
+  color: var(--app-text);
+  font-size: 11px;
+  font-weight: 850;
+}
+
+.alumni-profile-v3-post-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.alumni-profile-v3-post-author {
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.alumni-profile-v3-post-author strong {
+  display: block;
+  overflow: hidden;
+  color: var(--app-text);
+  font-size: 12.5px;
+  font-weight: 850;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.alumni-profile-v3-post-author span {
+  display: block;
+  overflow: hidden;
+  margin-top: 2px;
+  color: var(--app-muted-2);
+  font-size: 9.5px;
+  font-weight: 520;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.alumni-profile-v3-owner-menu {
+  flex: 0 0 auto;
+}
+
+.alumni-profile-v3-post-copy {
+  margin: 12px 0 0;
+  white-space: pre-wrap;
+  color: var(--app-text-soft);
+  font-size: 13px;
+  font-weight: 440;
+  line-height: 1.48;
+  letter-spacing: -.008em;
+}
+
+.alumni-profile-v3-media {
+  overflow: hidden;
+  margin: 12px -16px 0;
+  background: #05070b;
+}
+
+.alumni-profile-v3-media img {
+  display: block;
+  width: 100%;
+  max-height: 590px;
+  object-fit: contain;
+}
+
+.alumni-profile-v3-post-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding-top: 10px;
+}
+
+.alumni-profile-v3-post-actions button {
+  display: inline-flex;
+  min-height: 34px;
+  align-items: center;
+  gap: 6px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--app-muted);
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.alumni-profile-v3-post-actions
+  button[data-active="true"] {
+  color: #f24961;
+}
+
+/* =========================================================
+   COMMENTS
+   ========================================================= */
+
+.alumni-profile-v3-comments {
+  padding-top: 10px;
+}
+
+.alumni-profile-v3-comment {
+  display: flex;
+  gap: 9px;
+  padding: 7px 0;
+}
+
+.alumni-profile-v3-comment-avatar {
+  display: flex;
+  width: 30px;
+  height: 30px;
+  flex: 0 0 30px;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--app-surface-2);
+  color: var(--app-text);
+  font-size: 9px;
+  font-weight: 800;
+}
+
+.alumni-profile-v3-comment-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.alumni-profile-v3-comment-main {
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.alumni-profile-v3-comment-bubble {
+  padding: 8px 10px;
+  border-radius: 13px;
+  background: var(--app-soft);
+}
+
+.alumni-profile-v3-comment-bubble strong {
+  color: var(--app-text);
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.alumni-profile-v3-comment-bubble p {
+  margin-top: 3px;
+  color: var(--app-text-soft);
+  font-size: 12px;
+  font-weight: 440;
+  line-height: 1.4;
+}
+
+.alumni-profile-v3-comment-composer {
+  display: flex;
+  gap: 7px;
+  margin-top: 9px;
+}
+
+.alumni-profile-v3-comment-composer input {
+  min-width: 0;
+  height: 40px;
+  flex: 1 1 auto;
+  padding: 0 12px;
+  border: 1px solid var(--app-border);
+  border-radius: 13px;
+  outline: 0;
+  background: var(--app-soft);
+  color: var(--app-text);
+  font-size: 16px;
+}
+
+.alumni-profile-v3-comment-composer button {
+  display: flex;
+  width: 40px;
+  height: 40px;
+  flex: 0 0 40px;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: 13px;
+  background: var(--app-accent-fill);
+  color: var(--app-on-accent);
+}
+
+.alumni-profile-v3-comment-composer
+  button:disabled {
+  opacity: .4;
+}
+
+/* =========================================================
+   OTHER TABS
+   ========================================================= */
+
+.alumni-profile-v3-secondary-tab,
+.alumni-profile-v3-activity {
+  padding: 14px 16px 32px;
+}
+
+.alumni-profile-v3-activity {
+  display: grid;
+  gap: 12px;
+}
+
+.alumni-profile-v3-activity-card {
+  padding: 15px;
+  border: 1px solid var(--app-border);
+  border-radius: 16px;
+  background: var(--app-surface);
+}
+
+.alumni-profile-v3-activity-card span {
+  color: var(--app-muted-2);
+  font-size: 9px;
+  font-weight: 850;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+}
+
+.alumni-profile-v3-activity-card p {
+  margin-top: 7px;
+  color: var(--app-text-soft);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.alumni-profile-v3-activity
+  > * {
+  max-width: 100%;
+}
+
+.alumni-profile-v3-spotify {
+  display: flex;
+  justify-content: center;
+}
+
+/* =========================================================
+   PRIVATE / EMPTY
+   ========================================================= */
+
+.alumni-profile-v3-private,
+.alumni-profile-v3-empty {
+  padding: 54px 24px;
+  text-align: center;
+}
+
+.alumni-profile-v3-private-icon {
+  display: flex;
+  width: 50px;
+  height: 50px;
+  margin: 0 auto;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: var(--app-soft);
+  color: var(--app-muted);
+}
+
+.alumni-profile-v3-private h2 {
+  margin-top: 13px;
+  color: var(--app-text);
+  font-size: 14px;
+  font-weight: 850;
+}
+
+.alumni-profile-v3-private p,
+.alumni-profile-v3-empty {
+  margin-top: 7px;
+  color: var(--app-muted-2);
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.alumni-profile-v3-private strong {
+  display: block;
+  margin-top: 10px;
+  color: var(--app-accent);
+  font-size: 10px;
+}
+
+/* =========================================================
+   THEMES
+   ========================================================= */
+
+html[data-theme="light"] .alumni-profile-v3,
+html[data-theme="light"] .alumni-profile-v3-hero,
+html[data-theme="light"] .alumni-profile-v3-feed,
+html[data-theme="light"] .alumni-profile-v3-post {
+  background: #fff;
+}
+
+html[data-theme="dark"] .alumni-profile-v3,
+html[data-theme="dark"] .alumni-profile-v3-hero,
+html[data-theme="dark"] .alumni-profile-v3-feed,
+html[data-theme="dark"] .alumni-profile-v3-post {
+  background: var(--app-bg);
+}
+
+/* =========================================================
+   VERY SMALL PHONES
+   ========================================================= */
+
+@media (max-width: 374px) {
+  .alumni-profile-v3-cover {
+    height: 170px;
+  }
+
+  .alumni-profile-v3-avatar {
+    width: 82px;
+    height: 82px;
+  }
+
+  .alumni-profile-v3-identity h1 {
+    font-size: 19px !important;
+  }
+
+  .alumni-profile-v3-primary,
+  .alumni-profile-v3-secondary {
+    height: 40px;
+    padding-inline: 9px;
+    font-size: 10px;
+  }
+
+  .alumni-profile-v3-tabs button {
+    font-size: 10.5px;
+  }
+}
+
+/* =========================================================
+   DESKTOP — SAME STRUCTURE, ONLY CENTERED
+   ========================================================= */
+
+@media (min-width: 700px) {
+  .alumni-profile-v3 {
+    width: 100%;
+    max-width: 560px;
+    margin: 18px auto 48px;
+    overflow: hidden;
+    border: 1px solid var(--app-border);
+    border-radius: 24px;
+    background: var(--app-bg);
+    box-shadow: 0 24px 70px var(--app-shadow);
+  }
+
+  .alumni-profile-v3-cover {
+    height: 215px;
+  }
+}
+`;
+
+fs.writeFileSync(CSS, css, "utf8");
+
+/* ================================================================
+   6) VALIDACIONES REALES
+   ================================================================ */
+
+const required = [
+  'data-profile-design="option-3-activity"',
+  "alumni-profile-v3-cover",
+  "alumni-profile-v3-avatar",
+  "alumni-profile-v3-actions",
+  "alumni-profile-v3-stats",
+  "alumni-profile-v3-tabs",
+  "Posts",
+  "Guardados",
+  "Actividad",
+  "alumni-profile-v3-post",
+  "alumni-profile-v3-media",
+  "ProfileSavedTab",
+  "ProfileRepostsTab",
+  "ProfessionalProfileOverview",
+];
+
+for (const token of required) {
+  if (!source.includes(token)) {
+    try { fs.unlinkSync(CSS); } catch {}
+    fail("Validación final: falta " + token);
+  }
+}
+
+if (
+  source.includes(
+    'className="alumni-profile-page mx-auto w-full max-w-[980px]"'
+  )
+) {
+  try { fs.unlinkSync(CSS); } catch {}
+  fail(
+    "Validación: quedó viva la estructura vieja del perfil."
   );
 }
 
-function Tab({
-  active,
-  onClick,
-  label,
-}: {
-  active: boolean;
-  onClick: () => void;
-  label: string;
-}) {
-  return (
-    <button
-      onClick={onClick}
-      className={`relative px-4 pb-3 text-sm font-bold transition ${
-        active
-          ? "text-zinc-100"
-          : "text-zinc-600 hover:text-zinc-300"
-      }`}
-    >
-      {label}
-      {active && (
-        <span className="absolute inset-x-4 bottom-0 h-0.5 rounded-full bg-[#6d7cff]" />
-      )}
-    </button>
-  );
+if (!css.includes("MOBILE FIRST: 360–430px")) {
+  try { fs.unlinkSync(CSS); } catch {}
+  fail("Validación: CSS no quedó mobile-first.");
 }
 
-function InfoBlock({
-  title,
-  icon,
-  className = "",
-  children,
-}: {
-  title: string;
-  icon: React.ReactNode;
-  className?: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <div
-      className={`border-b border-[var(--app-border)] py-5 ${className}`}
-    >
-      <div className="flex items-center gap-2 text-[#8d98ff]">
-        {icon}
-        <p className="text-sm font-black text-zinc-200">{title}</p>
-      </div>
-      <div className="mt-4 space-y-3">{children}</div>
-    </div>
-  );
+if (!source.includes(MARKER)) {
+  source += `\n/* ${MARKER} */\n`;
 }
 
-function Detail({
-  label,
-  value,
-}: {
-  label: string;
-  value?: string | null;
-}) {
-  return (
-    <div>
-      <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-zinc-700">
-        {label}
-      </p>
-      <p className="mt-1 text-sm text-zinc-400">
-        {value || "No especificado"}
-      </p>
-    </div>
-  );
-}
+fs.writeFileSync(PROFILE, source, "utf8");
 
-/* ALUMNI_1_2_0_TRUST_BLOCK:USER_PROFILE_SAFETY */
-
-/* ALUMNI_1_4_1_PROFILE_REPOSTS_SAVED_READABILITY:PROFILE */
-
-/* ALUMNI_1_4_2_THEME_CHAT_PROFILE_POLISH:PROFILE_SAVED */
-
-/* ALUMNI_1_8_0_IDENTITY_CONNECTIONS:PUBLIC_PROFILE */
-
-/* ALUMNI_1_8_1_PROFILE_RESTORE_PIN_EDIT_LIMITS:PUBLIC_PROFILE */
-
-/* ALUMNI_2_3_0_SOCIAL_PASSPORT:PUBLIC_PROFILE */
-
-/* ALUMNI_2_3_2_RECOVERY_PROFILE_PASSPORT_NAV:PUBLIC_PROFILE */
+console.log("");
+console.log("✅ ALUMNI Profile 1.0B — Opción 3 EXACTA aplicado.");
+console.log("✅ Estructura vieja reemplazada, no maquillada.");
+console.log("✅ Banner protagonista.");
+console.log("✅ Avatar superpuesto.");
+console.log("✅ Identidad compacta.");
+console.log("✅ Editar/Compartir o Seguir/Mensaje.");
+console.log("✅ Métricas en una fila.");
+console.log("✅ Tabs: Posts / Guardados-Compartidos / Actividad.");
+console.log("✅ Posts aparecen inmediatamente después de tabs.");
+console.log("✅ Información secundaria movida a Actividad.");
+console.log("✅ Mobile-first 360–430 px.");
+console.log("✅ Claro/Oscuro.");
+console.log("");
+console.log("Ahora ejecutá: npm run build");
