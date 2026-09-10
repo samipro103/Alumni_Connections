@@ -1,0 +1,25 @@
+ALUMNI PROFILE 1.2.0B — LAUNCH MATCH / OPCIÓN 3
+
+CORRECCIÓN
+El 1.2.0 fallaba al agregar varios iconos de lucide-react porque buscaba repetidamente el mismo anchor ya modificado en memoria.
+
+1.2.0B:
+- detecta el import completo de lucide-react con regex;
+- conserva todos los iconos actuales;
+- agrega todos los faltantes en una sola operación;
+- mantiene intacto el diseño Launch Match de la Opción 3;
+- valida TSX antes de escribir;
+- conserva logos sociales reales, Spotify y Pasaporte Alumni visibles en el encabezado.
+
+Como el 1.2.0 falló antes de guardar, NO hace falta revertir nada.
+
+EJECUTAR DESDE alumni-web:
+
+node .\aplicar_alumni_profile_1_2_0b_launch_match_opcion_3.js
+npm run build
+
+SI BUILD PASA:
+
+git add .
+git commit -m "Profile 1.2.0B - launch match option 3"
+git push origin main

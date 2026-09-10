@@ -113,7 +113,6 @@ export default function ProfileSocialLinks({
             key={
               link.key
             }
-            data-social-kind={link.key}
             href={
               link.href
             }
@@ -234,5 +233,3 @@ function InstagramIcon() {
     </svg>
   );
 }
-
-/* ALUMNI_PROFILE_1_2_0B_LAUNCH_MATCH_OPTION_3 */
