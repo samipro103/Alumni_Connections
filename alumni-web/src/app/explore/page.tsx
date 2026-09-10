@@ -4,6 +4,7 @@ import {
   Clock3,
   Hash,
   Search,
+  SlidersHorizontal,
   Sparkles,
   TrendingUp,
   UserRoundSearch,
@@ -31,7 +32,11 @@ import ExplorePersonRow from "@/components/explore/ExplorePersonRow";
 import ExploreSocialPulse from "@/components/explore/ExploreSocialPulse";
 import "./explore-pro.css";
 
-type Mode = "all" | "people" | "posts";
+type Mode =
+  | "people"
+  | "universities"
+  | "topics"
+  | "posts";
 type RecentSearch = {
   query: string;
   createdAt: string;
@@ -167,7 +172,8 @@ function ExploreContent() {
   const [query, setQuery] = useState(
     params.get("q") || ""
   );
-  const [mode, setMode] = useState<Mode>("all");
+  const [mode, setMode] = useState<Mode>("people");
+  const [filtersOpen, setFiltersOpen] = useState(true);
   const [loading, setLoading] = useState(true);
   const [searching, setSearching] = useState(false);
   const [people, setPeople] = useState<any[]>([]);
@@ -456,48 +462,77 @@ function ExploreContent() {
     );
   }, [newMembers, recommendedUnique, user?.id]);
 
+  /* ALUMNI_SEARCH_1_7_0_OPTION_4_PEOPLE_FOCUS */
   return (
     <AppShell>
-      <main className="alumni-explore-pro mx-auto w-full max-w-[1040px]">
+      <main className="alumni-explore-pro alumni-search-people-focus">
         <header className="alumni-explore-hero">
+          <h1>Buscar</h1>
 
-          <div className="alumni-explore-search">
-            <Search size={19} />
-            <input
-              value={query}
-              onChange={(event) =>
-                setQuery(event.target.value)
-              }
-              onKeyDown={(event) => {
-                if (event.key === "Enter") {
-                  void runSearch(query, true);
+          <div className="alumni-search-top-row">
+            <div className="alumni-explore-search">
+              <Search size={18} strokeWidth={2} />
+
+              <input
+                value={query}
+                onChange={(event) =>
+                  setQuery(event.target.value)
                 }
-              }}
-              placeholder="Buscar personas, carreras, universidades, temas o publicaciones"
-              aria-label="Buscar en Alumni"
-            />
-
-            {query && (
-              <button
-                type="button"
-                onClick={() => {
-                  setQuery("");
-                  setPeople([]);
-                  setPosts([]);
+                onKeyDown={(event) => {
+                  if (event.key === "Enter") {
+                    void runSearch(query, true);
+                  }
                 }}
-                aria-label="Limpiar búsqueda"
-              >
-                <X size={16} />
-              </button>
-            )}
+                placeholder={
+                  mode === "universities"
+                    ? "Buscar universidades..."
+                    : mode === "topics"
+                    ? "Buscar temas..."
+                    : mode === "posts"
+                    ? "Buscar publicaciones..."
+                    : "Buscar personas..."
+                }
+                aria-label="Buscar en Alumni"
+              />
+
+              {query && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setQuery("");
+                    setPeople([]);
+                    setPosts([]);
+                  }}
+                  aria-label="Limpiar búsqueda"
+                >
+                  <X size={15} />
+                </button>
+              )}
+            </div>
+
+            <button
+              type="button"
+              className="alumni-search-filter-button"
+              onClick={() =>
+                setFiltersOpen((value) => !value)
+              }
+              aria-label="Mostrar u ocultar filtros"
+              aria-expanded={filtersOpen}
+            >
+              <SlidersHorizontal size={18} />
+            </button>
           </div>
 
-          {activeSearch && (
-            <nav className="alumni-explore-tabs">
+          {filtersOpen && (
+            <nav
+              className="alumni-explore-tabs alumni-search-categories"
+              aria-label="Categorías de búsqueda"
+            >
               {(
                 [
-                  ["all", "Todo"],
                   ["people", "Personas"],
+                  ["universities", "Universidades"],
+                  ["topics", "Temas"],
                   ["posts", "Publicaciones"],
                 ] as const
               ).map(([id, label]) => (
@@ -514,128 +549,118 @@ function ExploreContent() {
           )}
         </header>
 
-{!activeSearch && user && recommendedUnique.length > 0 && (
-              <section className="alumni-explore-section">
-                <div className="alumni-explore-section-title">
-                  <div>
-                    <h2>Para tu red</h2>
-                  </div>
-                  <UserRoundSearch size={18} />
-                </div>
+        {!activeSearch ? (
+          <div className="alumni-search-home">
+            {loading ? (
+              <ExploreDiscoverySkeleton />
+            ) : (
+              <>
+                {(recommendedUnique.length > 0 ||
+                  newMembersUnique.length > 0) && (
+                  <section className="alumni-explore-section alumni-people-section">
+                    <div className="alumni-explore-section-title">
+                      <h2>Personas destacadas</h2>
+                    </div>
 
-                <div className="alumni-explore-person-list">
-                  {recommendedUnique.slice(0, 8).map((person) => (
-                    <ExplorePersonRow
-                      key={person.id}
-                      person={person}
-                      following={followingIds.includes(person.id)}
-                      busy={busy === person.id}
-                      reason={person.reason}
-                      onFollow={() => void follow(person)}
-                      onOpen={() =>
-                        void recordSignal(
-                          "profile",
-                          person.id,
-                          2
+                    <div className="alumni-explore-person-list">
+                      {(recommendedUnique.length
+                        ? recommendedUnique
+                        : newMembersUnique
+                      )
+                        .slice(0, 5)
+                        .map((person) => (
+                          <ExplorePersonRow
+                            key={person.id}
+                            person={person}
+                            following={followingIds.includes(person.id)}
+                            busy={busy === person.id}
+                            reason={
+                              person.reason ||
+                              person.education_program_name ||
+                              person.career ||
+                              person.education_institution_name ||
+                              person.university
+                            }
+                            onFollow={() => void follow(person)}
+                            onOpen={() =>
+                              void recordSignal(
+                                "profile",
+                                person.id,
+                                2
+                              )
+                            }
+                          />
+                        ))}
+                    </div>
+                  </section>
+                )}
+
+                {newMembersUnique.slice(
+                  recommendedUnique.length ? 0 : 5,
+                  recommendedUnique.length ? 5 : 10
+                ).length > 0 && (
+                  <section className="alumni-explore-section alumni-people-section">
+                    <div className="alumni-explore-section-title">
+                      <h2>Podrían interesarte</h2>
+                    </div>
+
+                    <div className="alumni-explore-person-list">
+                      {newMembersUnique
+                        .slice(
+                          recommendedUnique.length ? 0 : 5,
+                          recommendedUnique.length ? 5 : 10
                         )
-                      }
-                    />
-                  ))}
-                </div>
-              </section>
+                        .map((person) => (
+                          <ExplorePersonRow
+                            key={person.id}
+                            person={person}
+                            following={followingIds.includes(person.id)}
+                            busy={busy === person.id}
+                            reason={
+                              person.education_program_name ||
+                              person.career ||
+                              person.education_institution_name ||
+                              person.university ||
+                              person.city
+                            }
+                            onFollow={() => void follow(person)}
+                            onOpen={() =>
+                              void recordSignal(
+                                "profile",
+                                person.id,
+                                1.8
+                              )
+                            }
+                          />
+                        ))}
+                    </div>
+                  </section>
+                )}
+
+                {!recommendedUnique.length &&
+                  !newMembersUnique.length && (
+                    <div className="alumni-explore-empty">
+                      Empieza buscando personas de tu comunidad Alumni.
+                    </div>
+                  )}
+              </>
             )}
-
-        {!activeSearch && <ExploreSocialPulse />}
-
-        {!activeSearch && (
-          <section className="alumni-explore-section">
-                        <div className="alumni-explore-section-title">
-                          <div>
-                            <h2>Tendencias</h2>
-                          </div>
-                          <TrendingUp size={18} />
-                        </div>
-
-                        {trendingTags.length ? (
-                          <div className="alumni-explore-tags">
-                            {trendingTags.map((item: any, index) => (
-                              <a
-                                key={item.tag}
-                                href={`/explore/tag/${encodeURIComponent(item.tag)}`}
-                                onClick={() =>
-                                  void recordSignal(
-                                    "hashtag",
-                                    item.tag,
-                                    1.4
-                                  )
-                                }
-                              >
-                                <span>{index + 1}</span>
-                                <strong>#{item.tag}</strong>
-                                <small>
-                                  {item.post_count}{" "}
-                                  {Number(item.post_count) === 1
-                                    ? "publicación"
-                                    : "publicaciones"}
-                                </small>
-                              </a>
-                            ))}
-                          </div>
-                        ) : (
-                          <div className="alumni-explore-empty">
-                            Sin tendencias por ahora.
-                          </div>
-                        )}
-                      </section>
-        )}
-
-        {!activeSearch && recents.length > 0 && (
-          <section className="alumni-explore-section">
-            <div className="alumni-explore-section-title">
-              <div>
-                <h2>Búsquedas recientes</h2>
-              </div>
-              <button
-                type="button"
-                onClick={() => {
-                  localStorage.removeItem(RECENTS_KEY);
-                  setRecents([]);
-                }}
-              >
-                Limpiar
-              </button>
-            </div>
-
-            <div className="alumni-explore-recent-list">
-              {recents.map((item) => (
-                <button
-                  key={`${item.query}-${item.createdAt}`}
-                  type="button"
-                  onClick={() => {
-                    setQuery(item.query);
-                    void runSearch(item.query, true);
-                  }}
-                >
-                  <Clock3 size={14} />
-                  {item.query}
-                </button>
-              ))}
-            </div>
-          </section>
-        )}
-
-        {activeSearch ? (
+          </div>
+        ) : (
           <section className="alumni-explore-search-results">
             {searching ? (
               <ExploreSearchSkeleton />
             ) : (
               <>
-                {(mode === "all" || mode === "people") && (
-                  <section className="alumni-explore-section">
+                {(mode === "people" ||
+                  mode === "universities") && (
+                  <section className="alumni-explore-section alumni-people-section">
                     <div className="alumni-explore-section-title">
-                      <div>
-                        <h2>Personas</h2>
-                      </div>
+                      <h2>
+                        {mode === "universities"
+                          ? "Personas por universidad"
+                          : "Personas"}
+                      </h2>
                       <strong>{peopleResults.length}</strong>
                     </div>
 
@@ -647,38 +672,44 @@ function ExploreContent() {
                             person={person}
                             following={followingIds.includes(person.id)}
                             busy={busy === person.id}
+                            reason={
+                              mode === "universities"
+                                ? person.education_institution_name ||
+                                  person.university ||
+                                  person.education_program_name
+                                : person.career ||
+                                  person.education_program_name ||
+                                  person.education_institution_name ||
+                                  person.university
+                            }
                             onFollow={() => void follow(person)}
                             onOpen={() =>
                               void recordSignal(
                                 "profile",
                                 person.id,
-                                1.8
+                                2
                               )
-                            }
-                            reason={
-                              person.education_program_name ||
-                              person.career ||
-                              person.education_institution_name ||
-                              person.university ||
-                              person.city
                             }
                           />
                         ))}
                       </div>
                     ) : (
                       <div className="alumni-explore-empty">
-                        No encontramos personas con esa búsqueda.
+                        No encontramos personas para “{query}”.
                       </div>
                     )}
                   </section>
                 )}
 
-                {(mode === "all" || mode === "posts") && (
+                {(mode === "topics" ||
+                  mode === "posts") && (
                   <section className="alumni-explore-section">
                     <div className="alumni-explore-section-title">
-                      <div>
-                        <h2>Publicaciones</h2>
-                      </div>
+                      <h2>
+                        {mode === "topics"
+                          ? "Temas y publicaciones"
+                          : "Publicaciones"}
+                      </h2>
                       <strong>{posts.length}</strong>
                     </div>
 
@@ -688,31 +719,19 @@ function ExploreContent() {
                           <ExplorePostCard
                             key={post.id}
                             post={post}
-                            onOpen={() => {
+                            onOpen={() =>
                               void recordSignal(
                                 "post",
                                 String(post.id),
                                 1.5
-                              );
-
-                              for (const tag of (
-                                String(post.content || "").match(
-                                  /#[A-Za-z0-9_]{2,40}/g
-                                ) || []
-                              )) {
-                                void recordSignal(
-                                  "hashtag",
-                                  tag.slice(1).toLowerCase(),
-                                  1.2
-                                );
-                              }
-                            }}
+                              )
+                            }
                           />
                         ))}
                       </div>
                     ) : (
                       <div className="alumni-explore-empty">
-                        No encontramos publicaciones relacionadas.
+                        No encontramos resultados para “{query}”.
                       </div>
                     )}
                   </section>
@@ -720,83 +739,6 @@ function ExploreContent() {
               </>
             )}
           </section>
-        ) : (
-          <>
-
-
-
-
-            <section className="alumni-explore-section">
-              <div className="alumni-explore-section-title">
-                <div>
-                  <h2>Publicaciones destacadas</h2>
-                </div>
-                <Sparkles size={18} />
-              </div>
-
-              {loading ? (
-                <ExploreDiscoverySkeleton />
-              ) : trendingPosts.length ? (
-                <div className="alumni-explore-post-grid">
-                  {trendingPosts.slice(0, 8).map((post) => (
-                    <ExplorePostCard
-                      key={post.id}
-                      post={post}
-                      compact
-                      onOpen={() => {
-                        void recordSignal(
-                          "post",
-                          String(post.id),
-                          1.7
-                        );
-                      }}
-                    />
-                  ))}
-                </div>
-              ) : (
-                <div className="alumni-explore-empty">
-                  Sin publicaciones destacadas por ahora.
-                </div>
-              )}
-            </section>
-
-            {newMembersUnique.length > 0 && (
-              <section className="alumni-explore-section">
-                <div className="alumni-explore-section-title">
-                  <div>
-                    <h2>Nuevos en Alumni</h2>
-                  </div>
-                  <Users size={18} />
-                </div>
-
-                <div className="alumni-explore-person-list">
-                  {newMembersUnique.slice(0, 6).map((person) => (
-                    <ExplorePersonRow
-                      key={person.id}
-                      person={person}
-                      following={followingIds.includes(person.id)}
-                      busy={busy === person.id}
-                      reason={
-                        person.career ||
-                        person.education_institution_name ||
-                        person.university ||
-                        person.city ||
-                        "Nuevo en la comunidad"
-                      }
-                      onFollow={() => void follow(person)}
-                      onOpen={() =>
-                        void recordSignal(
-                          "profile",
-                          person.id,
-                          1.2
-                        )
-                      }
-                    />
-                  ))}
-                </div>
-              </section>
-            )}
-          </>
         )}
       </main>
     </AppShell>

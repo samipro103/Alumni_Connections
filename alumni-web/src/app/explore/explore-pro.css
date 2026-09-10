@@ -1,60 +1,60 @@
-/*
- * ALUMNI 1.6.0 — EXPLORE & DISCOVERY
- */
+/* ================================================================
+   ALUMNI_SEARCH_1_7_0_OPTION_4_PEOPLE_FOCUS
+   Opción 4 — Enfoque en Personas
+   Diseño base: teléfono 360–430px.
+   Desktop conserva exactamente la misma estructura, solo centrada.
+   ================================================================ */
 
-.alumni-explore-pro {
-  padding-bottom: 36px;
+.alumni-explore-pro.alumni-search-people-focus {
+  width: 100%;
+  max-width: 520px;
+  margin: 0 auto;
+  padding: 2px 0 34px;
+  color: var(--app-text);
 }
 
 .alumni-explore-hero {
-  padding: 0 0 16px;
-  border-bottom: 1px solid var(--app-border);
-}
-
-.alumni-explore-eyebrow,
-.alumni-explore-section-title span {
-  color: var(--app-muted-2);
-  font-size: 10px;
-  font-weight: 900;
-  letter-spacing: .14em;
-  text-transform: uppercase;
+  padding: 4px 0 14px;
+  border-bottom: 0;
+  background: var(--app-bg);
 }
 
 .alumni-explore-hero h1 {
-  margin-top: 5px;
+  margin: 0 0 12px;
   color: var(--app-text);
-  font-size: clamp(30px, 5vw, 46px);
+  font-size: 27px;
+  line-height: 1;
   font-weight: 950;
-  line-height: 1.03;
   letter-spacing: -.045em;
 }
 
-.alumni-explore-lead {
-  max-width: 720px;
-  margin-top: 9px;
-  color: var(--app-muted);
-  font-size: 14px;
-  line-height: 1.65;
+.alumni-search-top-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .alumni-explore-search {
   display: flex;
+  min-width: 0;
+  min-height: 46px;
+  flex: 1 1 auto;
   align-items: center;
-  gap: 10px;
-  margin-top: 0;
-  min-height: 52px;
-  padding: 0 14px;
-  border: 1px solid var(--app-border);
-  border-radius: 16px;
-  background: var(--app-surface);
+  gap: 9px;
+  padding: 0 13px;
+  border: 0;
+  border-radius: 14px;
+  background: var(--app-soft);
+  box-shadow: none;
 }
 
 .alumni-explore-search > svg {
   flex: 0 0 auto;
-  color: var(--app-muted-2);
+  color: var(--app-muted);
 }
 
 .alumni-explore-search input {
+  width: 100%;
   min-width: 0;
   flex: 1 1 auto;
   border: 0;
@@ -62,168 +62,191 @@
   background: transparent;
   color: var(--app-text);
   font-size: 15px;
+  line-height: 1;
 }
 
 .alumni-explore-search input::placeholder {
-  color: var(--app-muted-3);
+  color: var(--app-muted-2);
 }
 
-.alumni-explore-search > button {
+.alumni-explore-search > button,
+.alumni-search-filter-button {
   display: inline-flex;
-  width: 32px;
-  height: 32px;
   align-items: center;
   justify-content: center;
   border: 0;
-  border-radius: 999px;
-  background: transparent;
-  color: var(--app-muted-2);
+  color: var(--app-muted);
 }
 
-.alumni-explore-tabs {
+.alumni-explore-search > button {
+  width: 28px;
+  height: 28px;
+  flex: 0 0 28px;
+  border-radius: 999px;
+  background: transparent;
+}
+
+.alumni-search-filter-button {
+  width: 46px;
+  height: 46px;
+  flex: 0 0 46px;
+  border-radius: 14px;
+  background: var(--app-soft);
+}
+
+.alumni-search-filter-button:active {
+  transform: scale(.97);
+}
+
+.alumni-search-categories {
   display: flex;
-  gap: 22px;
-  margin-top: 14px;
-  border-bottom: 1px solid var(--app-border);
-}
-
-.alumni-explore-tabs button {
-  position: relative;
-  min-height: 40px;
+  width: 100%;
+  gap: 6px;
+  margin: 10px 0 0;
   padding: 0;
+  overflow-x: auto;
   border: 0;
-  background: transparent;
-  color: var(--app-muted-2);
-  font-size: 12px;
-  font-weight: 850;
+  scrollbar-width: none;
 }
 
-.alumni-explore-tabs button[data-active="true"] {
-  color: var(--app-text);
+.alumni-search-categories::-webkit-scrollbar {
+  display: none;
 }
 
-.alumni-explore-tabs button[data-active="true"]::after {
-  content: "";
-  position: absolute;
-  right: 0;
-  bottom: -1px;
-  left: 0;
-  height: 2px;
+.alumni-search-categories button {
+  min-height: 31px;
+  flex: 0 0 auto;
+  padding: 0 10px;
+  border: 1px solid transparent;
   border-radius: 999px;
-  background: var(--app-accent);
+  background: var(--app-soft);
+  color: var(--app-muted);
+  font-size: 10px;
+  font-weight: 780;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.alumni-search-categories button[data-active="true"] {
+  border-color: var(--app-text);
+  background: var(--app-text);
+  color: var(--app-bg);
+}
+
+.alumni-search-categories button[data-active="true"]::after {
+  display: none;
+}
+
+.alumni-search-home,
+.alumni-explore-search-results {
+  display: block;
 }
 
 .alumni-explore-section {
-  padding: 22px 0;
-  border-bottom: 1px solid var(--app-border);
+  padding: 20px 0 4px;
+  border-bottom: 0;
 }
 
-.alumni-explore-section:last-child {
-  border-bottom: 0;
+.alumni-explore-section + .alumni-explore-section {
+  margin-top: 12px;
+  padding-top: 18px;
+  border-top: 1px solid var(--app-border);
 }
 
 .alumni-explore-section-title {
   display: flex;
+  min-height: 26px;
   align-items: center;
   justify-content: space-between;
-  gap: 14px;
-  margin-bottom: 13px;
+  gap: 12px;
+  margin: 0 0 7px;
 }
 
 .alumni-explore-section-title h2 {
-  margin-top: 0;
+  margin: 0;
   color: var(--app-text);
-  font-size: 18px;
-  font-weight: 930;
+  font-size: 16px;
+  line-height: 1.15;
+  font-weight: 900;
   letter-spacing: -.025em;
 }
 
-.alumni-explore-section-title > strong,
-.alumni-explore-section-title > svg {
-  color: var(--app-muted-2);
-  font-size: 12px;
-}
-
-.alumni-explore-section-title > button {
-  border: 0;
-  background: transparent;
+.alumni-explore-section-title strong {
   color: var(--app-muted-2);
   font-size: 11px;
-  font-weight: 800;
-}
-
-.alumni-explore-recent-list {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.alumni-explore-recent-list button {
-  display: inline-flex;
-  min-height: 36px;
-  align-items: center;
-  gap: 7px;
-  padding: 0 11px;
-  border: 1px solid var(--app-border);
-  border-radius: 999px;
-  background: transparent;
-  color: var(--app-text-soft);
-  font-size: 12px;
   font-weight: 750;
 }
 
 .alumni-explore-person-list {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  column-gap: 28px;
+  display: block;
 }
 
 .alumni-explore-person {
   display: flex;
-  align-items: center;
-  gap: 12px;
   min-width: 0;
-  padding: 13px 0;
-  border-bottom: 1px solid color-mix(in srgb, var(--app-border) 72%, transparent);
-}
-
-.alumni-explore-person:nth-last-child(-n + 2) {
-  border-bottom-color: transparent;
-}
-
-.alumni-explore-tags {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 1px 24px;
-}
-
-.alumni-explore-tags a {
-  display: grid;
-  grid-template-columns: 28px minmax(0, 1fr) auto;
   align-items: center;
-  gap: 8px;
-  min-height: 48px;
-  border-bottom: 1px solid color-mix(in srgb, var(--app-border) 72%, transparent);
+  gap: 10px;
+  padding: 9px 0;
+  border: 0;
 }
 
-.alumni-explore-tags a > span {
-  color: var(--app-muted-3);
-  font-family: var(--font-geist-mono), ui-monospace, monospace;
-  font-size: 11px;
+.alumni-explore-person-link {
+  gap: 10px;
 }
 
-.alumni-explore-tags a > strong {
-  overflow: hidden;
-  color: var(--app-text-soft);
-  font-size: 13px;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+.alumni-explore-person-avatar {
+  width: 44px;
+  height: 44px;
+  flex-basis: 44px;
 }
 
-.alumni-explore-tags a > small {
+.alumni-explore-person strong {
+  color: var(--app-text) !important;
+  font-size: 13.5px !important;
+  line-height: 1.15;
+  font-weight: 850 !important;
+}
+
+.alumni-explore-person a span span {
+  max-width: 100%;
+}
+
+.alumni-explore-person a > span:last-child > span:nth-child(2) {
+  margin-top: 2px !important;
+  color: var(--app-muted-2) !important;
+  font-size: 10.5px !important;
+  line-height: 1.2;
+}
+
+.alumni-explore-person a > span:last-child > span:nth-child(3) {
+  margin-top: 2px !important;
+  color: var(--app-muted) !important;
+  font-size: 10.5px !important;
+  line-height: 1.2;
+  font-weight: 600 !important;
+}
+
+.alumni-explore-follow-button {
+  min-width: 66px;
+  height: 34px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 11px;
+  background: var(--app-accent-soft);
+  color: var(--app-accent);
+  font-size: 10.5px;
+  font-weight: 850;
+  line-height: 1;
+}
+
+.alumni-explore-follow-button:not(.is-following):hover {
+  background: color-mix(in srgb, var(--app-accent) 18%, var(--app-surface));
+}
+
+.alumni-explore-follow-button.is-following {
+  min-width: 76px;
+  background: var(--app-soft);
   color: var(--app-muted-2);
-  font-size: 10px;
-  white-space: nowrap;
 }
 
 .alumni-explore-post-list {
@@ -234,57 +257,94 @@
   border-top: 1px solid var(--app-border);
 }
 
-.alumni-explore-post-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0 28px;
-}
-
 .alumni-explore-post {
   min-width: 0;
-  padding: 16px 0 18px;
-}
-
-.alumni-explore-post-grid .alumni-explore-post {
-  border-bottom: 1px solid var(--app-border);
+  padding: 14px 0 17px;
 }
 
 .alumni-explore-empty {
-  padding: 32px 0;
+  padding: 42px 20px;
   color: var(--app-muted-2);
-  font-size: 13px;
+  font-size: 12px;
+  line-height: 1.55;
   text-align: center;
 }
 
-@media (max-width: 760px) {
-  .alumni-explore-person-list,
-  .alumni-explore-post-grid,
-  .alumni-explore-tags {
-    grid-template-columns: minmax(0, 1fr);
+/* Claro */
+html[data-theme="light"] .alumni-explore-hero {
+  background: var(--app-bg);
+}
+
+html[data-theme="light"] .alumni-explore-search,
+html[data-theme="light"] .alumni-search-filter-button,
+html[data-theme="light"] .alumni-search-categories button {
+  background: #f1f3f7;
+}
+
+html[data-theme="light"] .alumni-search-categories button[data-active="true"] {
+  background: #11151c;
+  color: #fff;
+}
+
+/* Oscuro */
+html[data-theme="dark"] .alumni-explore-search,
+html[data-theme="dark"] .alumni-search-filter-button,
+html[data-theme="dark"] .alumni-search-categories button {
+  background: var(--app-surface-2);
+}
+
+html[data-theme="dark"] .alumni-search-categories button[data-active="true"] {
+  background: #f6f7f9;
+  color: #0a0d12;
+}
+
+/* Mobile muy angosto: no desaparece nada. */
+@media (max-width: 374px) {
+  .alumni-explore-hero h1 {
+    font-size: 25px;
   }
 
-  .alumni-explore-person:nth-last-child(-n + 2) {
-    border-bottom-color: color-mix(in srgb, var(--app-border) 72%, transparent);
-  }
-
-  .alumni-explore-person:last-child {
-    border-bottom-color: transparent;
+  .alumni-search-top-row {
+    gap: 7px;
   }
 
   .alumni-explore-search {
-    min-height: 50px;
-    border-radius: 14px;
+    padding-inline: 11px;
   }
 
-  .alumni-explore-search input {
-    font-size: 16px;
+  .alumni-search-filter-button {
+    width: 44px;
+    flex-basis: 44px;
   }
 
-  .alumni-explore-section {
-    padding: 20px 0;
+  .alumni-search-categories {
+    gap: 5px;
+  }
+
+  .alumni-search-categories button {
+    padding-inline: 9px;
+    font-size: 9.5px;
+  }
+
+  .alumni-explore-person-avatar {
+    width: 42px;
+    height: 42px;
+    flex-basis: 42px;
+  }
+
+  .alumni-explore-follow-button {
+    min-width: 62px;
+    padding-inline: 10px;
   }
 }
 
-/* ALUMNI_1_6_0_EXPLORE_CSS */
+/* Desktop: mismo diseño, solo centrado y con aire. */
+@media (min-width: 700px) {
+  .alumni-explore-pro.alumni-search-people-focus {
+    max-width: 560px;
+    padding-top: 20px;
+    padding-bottom: 50px;
+  }
+}
 
-/* ALUMNI_3_1_1_PRODUCT_COPY_CLEANUP */
+/* ALUMNI_SEARCH_1_7_0_OPTION_4_PEOPLE_FOCUS */

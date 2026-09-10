@@ -2,8 +2,6 @@
 
 import {
   LockKeyhole,
-  UserPlus,
-  UserRoundCheck,
 } from "lucide-react";
 import { AlumniAvatar } from "@/components/ui/AlumniImage";
 
@@ -27,9 +25,9 @@ export default function ExplorePersonRow({
       <a
         href={`/u/${person.username}`}
         onClick={onOpen}
-        className="flex min-w-0 flex-1 items-center gap-3"
+        className="alumni-explore-person-link flex min-w-0 flex-1 items-center"
       >
-        <span className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[var(--app-soft-strong)] text-sm font-black text-[var(--app-text)]">
+        <span className="alumni-explore-person-avatar flex shrink-0 items-center justify-center overflow-hidden rounded-full bg-[var(--app-soft-strong)] text-sm font-black text-[var(--app-text)]">
           <AlumniAvatar
             src={person.avatar_url}
             name={person.username}
@@ -75,23 +73,17 @@ export default function ExplorePersonRow({
         type="button"
         disabled={busy || following}
         onClick={onFollow}
-        className={`flex h-9 shrink-0 items-center gap-1.5 rounded-full px-3 text-[11px] font-black transition ${
+        className={`alumni-explore-follow-button shrink-0 transition ${
           following
-            ? "bg-[var(--app-soft)] text-[var(--app-muted-2)]"
-            : "bg-[var(--app-accent-fill)] text-[var(--app-on-accent)]"
+            ? "is-following"
+            : ""
         } disabled:opacity-60`}
       >
-        {following ? (
-          <>
-            <UserRoundCheck size={14} />
-            Siguiendo
-          </>
-        ) : (
-          <>
-            <UserPlus size={14} />
-            {person.is_private ? "Solicitar" : "Seguir"}
-          </>
-        )}
+        {following
+          ? "Siguiendo"
+          : person.is_private
+          ? "Solicitar"
+          : "Seguir"}
       </button>
     </div>
   );
@@ -100,3 +92,5 @@ export default function ExplorePersonRow({
 /* ALUMNI_1_6_0_EXPLORE_PERSON_ROW */
 
 /* ALUMNI_2_9_0_IMAGE_LAYER:EXPLORE_PERSON */
+
+/* ALUMNI_SEARCH_1_7_0_OPTION_4_PEOPLE_FOCUS */

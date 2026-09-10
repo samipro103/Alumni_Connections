@@ -1,0 +1,44 @@
+ALUMNI BUSCAR 1.7.0 — OPCIÓN 4 / ENFOQUE EN PERSONAS
+
+Referencia elegida:
+Opción 4 del tablero de propuestas.
+
+OBJETIVO VISUAL
+- Mobile-first real.
+- Título "Buscar".
+- Buscador compacto.
+- Botón de filtro.
+- Chips:
+  Personas / Universidades / Temas / Publicaciones.
+- Personas destacadas.
+- Podrían interesarte.
+- Lista limpia de perfiles.
+- Botón "Seguir" sin icono.
+- Una sola columna.
+- Claro/Oscuro.
+- Desktop conserva la misma estructura y solo la centra.
+
+LÓGICA
+Se conserva la lógica existente de Supabase:
+- alumni_search_profiles
+- alumni_search_post_ids
+- recomendaciones
+- nuevos miembros
+- seguir/solicitar
+- señales de discovery
+
+ARCHIVOS
+- src/app/explore/page.tsx
+- src/app/explore/explore-pro.css
+- src/components/explore/ExplorePersonRow.tsx
+
+EJECUTAR DESDE alumni-web:
+
+node .\aplicar_alumni_search_1_7_0_opcion_4_people_focus.js
+npm run build
+
+Si el build sale bien:
+
+git add .
+git commit -m "Search 1.7.0 - Option 4 people focus"
+git push origin main
