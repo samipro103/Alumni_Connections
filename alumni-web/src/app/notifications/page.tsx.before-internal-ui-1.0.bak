@@ -29,7 +29,6 @@ import { supabase } from "@/lib/supabase";
 import { hydratePostMediaItems } from "@/lib/feedMedia";
 import InvitationNotificationActions from "@/components/social/InvitationNotificationActions";
 import "./notifications-pro.css";
-import "../interior-ui-1-0.css";
 
 type FilterType =
   | "all"

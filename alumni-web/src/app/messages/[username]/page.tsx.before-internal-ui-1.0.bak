@@ -44,7 +44,6 @@ import {
   SwipeToReply,
 } from "@/components/messages/MessageReplyExperience";
 import "../messages-design-1-6.css";
-import "../../interior-ui-1-0.css";
 
 const BUCKET = "message-media";
 const MAX_IMAGE =

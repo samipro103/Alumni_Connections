@@ -1,0 +1,1036 @@
+/*
+ * ALUMNI_INTERNAL_UI_1_0_DARK_LIGHT_CLEAN
+ *
+ * ALUMNI — Internal UI 1.0
+ * Mobile-first 360–430 px.
+ * Solo Dark / Light.
+ *
+ * Objetivo:
+ * - conservar los diseños elegidos;
+ * - limpiar los interiores de cada función;
+ * - unificar formularios, modales, listas y detalles;
+ * - evitar mezcla de superficies claras/oscuras;
+ * - no alterar lógica de producto.
+ */
+
+/* =========================================================
+   CORE
+   ========================================================= */
+
+:where(
+  .alumni-community-2,
+  .community-detail,
+  .alumni-events-2,
+  .event-detail,
+  .alumni-notifications-pro,
+  .alumni-inbox-clean,
+  .alumni-chat-focused,
+  .alumni-settings-classic,
+  .alumni-passport,
+  .alumni-feedback-pro,
+  .alumni-explore-pro,
+  .alumni-profile-editor
+) {
+  color: var(--app-text);
+  font-family:
+    var(--font-geist-sans),
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
+}
+
+html[data-theme="dark"]
+  :where(
+    .alumni-community-2,
+    .community-detail,
+    .alumni-events-2,
+    .event-detail,
+    .alumni-notifications-pro,
+    .alumni-inbox-clean,
+    .alumni-chat-focused,
+    .alumni-settings-classic,
+    .alumni-passport,
+    .alumni-feedback-pro,
+    .alumni-explore-pro,
+    .alumni-profile-editor
+  ) {
+  color-scheme: dark;
+}
+
+html[data-theme="light"]
+  :where(
+    .alumni-community-2,
+    .community-detail,
+    .alumni-events-2,
+    .event-detail,
+    .alumni-notifications-pro,
+    .alumni-inbox-clean,
+    .alumni-chat-focused,
+    .alumni-settings-classic,
+    .alumni-passport,
+    .alumni-feedback-pro,
+    .alumni-explore-pro,
+    .alumni-profile-editor
+  ) {
+  color-scheme: light;
+}
+
+:where(
+  .alumni-community-2,
+  .community-detail,
+  .alumni-events-2,
+  .event-detail,
+  .alumni-notifications-pro,
+  .alumni-inbox-clean,
+  .alumni-chat-focused,
+  .alumni-settings-classic,
+  .alumni-passport,
+  .alumni-feedback-pro,
+  .alumni-explore-pro,
+  .alumni-profile-editor
+)
+:where(button, input, textarea, select) {
+  font: inherit;
+}
+
+:where(
+  .alumni-community-2,
+  .community-detail,
+  .alumni-events-2,
+  .event-detail,
+  .alumni-notifications-pro,
+  .alumni-inbox-clean,
+  .alumni-chat-focused,
+  .alumni-settings-classic,
+  .alumni-passport,
+  .alumni-feedback-pro,
+  .alumni-explore-pro,
+  .alumni-profile-editor
+)
+:where(button, a, input, textarea, select):focus-visible {
+  outline:
+    2px solid
+    color-mix(
+      in srgb,
+      var(--app-accent) 70%,
+      transparent
+    );
+  outline-offset: 2px;
+}
+
+/* =========================================================
+   MAIN FUNCTION HEADERS — APP SCALE, NOT LANDING PAGE SCALE
+   ========================================================= */
+
+@media (max-width: 699px) {
+  .community2-hero h1,
+  .events2-hero h1,
+  .alumni-notifications-header h1,
+  .passport-hero h1 {
+    margin: 0 !important;
+    font-size: 28px !important;
+    line-height: 1.05 !important;
+    letter-spacing: -.04em !important;
+  }
+
+  .community-detail-title h1,
+  .event-detail-header h1 {
+    font-size: 31px !important;
+    line-height: 1.02 !important;
+    letter-spacing: -.045em !important;
+  }
+
+  .community2-hero,
+  .events2-hero,
+  .alumni-notifications-header,
+  .passport-hero {
+    min-height: 54px;
+    padding:
+      2px 0
+      15px !important;
+  }
+
+  .community2-hero,
+  .events2-hero,
+  .passport-hero {
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content:
+      space-between !important;
+    gap: 10px !important;
+  }
+
+  .community2-primary-action,
+  .events2-primary-action,
+  .passport-hero > button,
+  .passport-album header > button {
+    min-height: 40px !important;
+    padding: 0 13px !important;
+    border: 0 !important;
+    border-radius: 12px !important;
+    background:
+      var(--app-accent-fill) !important;
+    color:
+      var(--app-on-accent) !important;
+    font-size: 10.5px !important;
+    white-space: nowrap;
+  }
+}
+
+/* =========================================================
+   COMMUNITY + EVENTS — LIST / SEARCH / TABS
+   ========================================================= */
+
+.community2-search,
+.events2-search {
+  border:
+    1px solid
+    var(--app-border);
+  border-radius: 13px;
+  background:
+    var(--app-surface);
+  padding: 0 12px;
+}
+
+.community2-search input,
+.events2-search input {
+  min-height: 42px;
+}
+
+.community2-search input::placeholder,
+.events2-search input::placeholder {
+  color: var(--app-muted-3);
+}
+
+.community2-row,
+.events2-row {
+  color: inherit;
+}
+
+@media (max-width: 680px) {
+  .community2-navigation,
+  .events2-navigation {
+    gap: 9px !important;
+    padding:
+      8px 0 12px !important;
+  }
+
+  .community2-tabs,
+  .events2-tabs {
+    display: grid !important;
+    width: 100%;
+    gap: 0 !important;
+    border:
+      1px solid
+      var(--app-border);
+    border-radius: 13px;
+    background: var(--app-soft);
+    overflow: hidden;
+  }
+
+  .community2-tabs {
+    grid-template-columns:
+      repeat(2, minmax(0, 1fr));
+  }
+
+  .events2-tabs {
+    grid-template-columns:
+      repeat(3, minmax(0, 1fr));
+  }
+
+  .community2-tabs button,
+  .events2-tabs button {
+    min-height: 40px !important;
+  }
+
+  .community2-tabs
+    button[data-active="true"],
+  .events2-tabs
+    button[data-active="true"] {
+    background:
+      var(--app-surface) !important;
+  }
+
+  .community2-tabs
+    button[data-active="true"]::after,
+  .events2-tabs
+    button[data-active="true"]::after {
+    right: 16px !important;
+    left: 16px !important;
+  }
+
+  .community2-search,
+  .events2-search {
+    width: 100% !important;
+  }
+
+  .community2-row {
+    min-height: 78px !important;
+    grid-template-columns:
+      44px minmax(0, 1fr) auto !important;
+    gap: 11px !important;
+  }
+
+  .events2-row {
+    min-height: 84px !important;
+    grid-template-columns:
+      48px minmax(0, 1fr) auto !important;
+    gap: 11px !important;
+  }
+}
+
+/* =========================================================
+   COMMUNITY / EVENT CREATION EDITORS
+   ========================================================= */
+
+.community2-editor,
+.events2-editor {
+  color: var(--app-text);
+  background:
+    var(--app-bg) !important;
+}
+
+.community2-editor-header,
+.events2-editor-header,
+.community2-editor-footer,
+.events2-editor-footer {
+  border-color:
+    var(--app-border) !important;
+  background:
+    color-mix(
+      in srgb,
+      var(--app-surface) 96%,
+      transparent
+    ) !important;
+}
+
+.community2-field input,
+.community2-field textarea,
+.events2-field input,
+.events2-field textarea,
+.events2-field select {
+  border:
+    1px solid
+    var(--app-border) !important;
+  border-radius: 12px !important;
+  background:
+    var(--app-surface) !important;
+  color:
+    var(--app-text) !important;
+  padding-inline: 12px !important;
+}
+
+.community2-field textarea,
+.events2-field textarea {
+  padding-block: 11px !important;
+}
+
+.community2-field input::placeholder,
+.community2-field textarea::placeholder,
+.events2-field input::placeholder,
+.events2-field textarea::placeholder {
+  color:
+    var(--app-muted-3) !important;
+}
+
+.community2-field input:focus,
+.community2-field textarea:focus,
+.events2-field input:focus,
+.events2-field textarea:focus,
+.events2-field select:focus {
+  border-color:
+    var(--app-accent) !important;
+  box-shadow:
+    0 0 0 3px
+    var(--app-accent-soft);
+}
+
+.community2-category-list,
+.community2-access-list {
+  display: grid;
+  gap: 8px;
+  border: 0 !important;
+}
+
+.community2-category-list button,
+.community2-access-list button,
+.events2-type-grid button,
+.events2-visibility button {
+  border:
+    1px solid
+    var(--app-border) !important;
+  border-radius: 13px !important;
+  background:
+    var(--app-surface) !important;
+}
+
+.community2-category-list button,
+.community2-access-list button {
+  min-height: 58px !important;
+  padding:
+    0 12px !important;
+}
+
+.community2-category-list
+  button[data-active="true"],
+.community2-access-list
+  button[data-active="true"],
+.events2-type-grid
+  button[data-active="true"],
+.events2-visibility
+  button[data-active="true"] {
+  border-color:
+    color-mix(
+      in srgb,
+      var(--app-accent) 58%,
+      var(--app-border)
+    ) !important;
+  background:
+    var(--app-accent-soft) !important;
+}
+
+@media (max-width: 680px) {
+  .community2-editor-header,
+  .events2-editor-header {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    align-items: center !important;
+    padding:
+      max(
+        10px,
+        env(safe-area-inset-top)
+      )
+      14px 10px !important;
+  }
+
+  .community2-editor-body,
+  .events2-editor-body {
+    padding:
+      0 14px
+      calc(
+        96px +
+        env(safe-area-inset-bottom)
+      ) !important;
+  }
+
+  .community2-editor-section,
+  .events2-editor-section {
+    gap: 13px !important;
+    padding:
+      19px 0 22px !important;
+  }
+
+  .community2-editor-footer,
+  .events2-editor-footer {
+    position: fixed;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 30;
+    min-height: 70px;
+    padding:
+      10px 14px
+      max(
+        10px,
+        env(safe-area-inset-bottom)
+      ) !important;
+  }
+
+  .community2-editor-footer button,
+  .events2-editor-footer button {
+    min-height: 46px !important;
+    border-radius: 13px !important;
+  }
+}
+
+/* =========================================================
+   COMMUNITY DETAIL
+   ========================================================= */
+
+.community-detail-back,
+.event-detail-back {
+  min-height: 38px !important;
+  padding: 0 10px;
+  border:
+    1px solid
+    var(--app-border);
+  border-radius: 999px;
+  background: var(--app-soft);
+}
+
+.community-composer {
+  margin-top: 14px;
+  padding: 14px !important;
+  border:
+    1px solid
+    var(--app-border) !important;
+  border-radius: 16px;
+  background:
+    var(--app-surface);
+}
+
+.community-composer textarea {
+  min-height: 88px;
+  resize: none;
+  color: var(--app-text);
+}
+
+.community-composer textarea::placeholder {
+  color: var(--app-muted-3);
+}
+
+.community-post {
+  background: var(--app-surface);
+}
+
+@media (max-width: 699px) {
+  .community-detail,
+  .event-detail {
+    padding-top: 8px !important;
+  }
+
+  .community-detail-header {
+    align-items:
+      flex-start !important;
+    flex-direction:
+      column !important;
+    gap: 13px !important;
+    padding:
+      6px 0 18px !important;
+  }
+
+  .community-detail-join {
+    min-height: 40px;
+    padding: 0 13px;
+    border:
+      1px solid
+      var(--app-border);
+    border-radius: 12px;
+    background:
+      var(--app-surface);
+  }
+
+  .community-events-strip,
+  .community-feed {
+    padding:
+      18px 0 !important;
+  }
+
+  .community-post {
+    margin-top: 10px;
+    padding:
+      14px !important;
+    border:
+      1px solid
+      var(--app-border) !important;
+    border-radius: 16px;
+  }
+
+  .community-post + .community-post {
+    margin-top: 10px;
+  }
+}
+
+/* =========================================================
+   EVENT DETAIL / RSVP
+   ========================================================= */
+
+.event-detail-header {
+  padding:
+    6px 0 20px !important;
+}
+
+.event-rsvp-v2 {
+  margin-top: 12px;
+  padding:
+    16px !important;
+  border:
+    1px solid
+    var(--app-border) !important;
+  border-radius: 16px;
+  background:
+    var(--app-surface);
+}
+
+.event-rsvp-choice {
+  overflow: hidden;
+  border:
+    1px solid
+    var(--app-border) !important;
+  border-radius: 13px;
+}
+
+.event-rsvp-choice > button {
+  background:
+    transparent !important;
+}
+
+.event-rsvp-choice
+  > button[data-active="true"] {
+  background:
+    var(--app-accent-soft) !important;
+  color:
+    var(--app-text) !important;
+}
+
+@media (max-width: 620px) {
+  .event-rsvp-v2 {
+    gap: 14px !important;
+  }
+
+  .event-rsvp-choice {
+    width: 100% !important;
+    grid-template-columns:
+      1fr !important;
+  }
+
+  .event-rsvp-choice > button {
+    min-height: 56px !important;
+    border-right: 0 !important;
+    border-bottom:
+      1px solid
+      var(--app-border) !important;
+  }
+
+  .event-rsvp-choice
+    > button:last-child {
+    border-bottom: 0 !important;
+  }
+
+  .event-going-list {
+    gap: 0;
+  }
+}
+
+/* =========================================================
+   NOTIFICATIONS
+   ========================================================= */
+
+.alumni-notification-header-action,
+.alumni-notification-icon-button {
+  border:
+    1px solid
+    transparent;
+}
+
+.alumni-notification-header-action:hover,
+.alumni-notification-icon-button:hover {
+  border-color:
+    var(--app-border);
+}
+
+.alumni-notification-settings {
+  color: var(--app-text);
+  background:
+    var(--app-surface) !important;
+}
+
+@media (max-width: 560px) {
+  .alumni-notifications-header {
+    min-height: 54px;
+    align-items:
+      center !important;
+  }
+
+  .alumni-notification-tabs {
+    gap: 18px !important;
+  }
+
+  .alumni-notification-main {
+    min-height: 72px !important;
+  }
+
+  .alumni-notification-settings {
+    max-height:
+      min(86dvh, 720px) !important;
+  }
+}
+
+/* =========================================================
+   MESSAGES — KEEP SELECTED OPTION 1 / OPTION 2
+   Only theme/focus reinforcement.
+   ========================================================= */
+
+.alumni-inbox-clean
+  :where(input, textarea),
+.alumni-chat-focused
+  :where(input, textarea) {
+  color: var(--app-text);
+}
+
+.alumni-inbox-clean
+  :where(input, textarea)::placeholder,
+.alumni-chat-focused
+  :where(input, textarea)::placeholder {
+  color: var(--app-muted-3);
+}
+
+.alumni-chat-focused
+  .alumni-chat-focus-header,
+.alumni-chat-focused
+  .alumni-chat-focus-composer-shell {
+  border-color:
+    var(--app-border) !important;
+}
+
+/* =========================================================
+   SETTINGS — OPTION 1 PRESERVED
+   INNER DETAIL / PROFILE EDITOR CLEANUP
+   ========================================================= */
+
+.alumni-settings-classic
+  .alumni-settings-panel,
+.alumni-settings-classic
+  .alumni-profile-settings-hub {
+  color: var(--app-text);
+}
+
+.alumni-settings-classic
+  .alumni-settings-panel
+  :where(input, textarea, select),
+.alumni-profile-editor
+  :where(input, textarea, select) {
+  color: var(--app-text);
+}
+
+.alumni-settings-classic
+  .alumni-settings-panel
+  :where(input, textarea, select)::placeholder,
+.alumni-profile-editor
+  :where(input, textarea, select)::placeholder {
+  color: var(--app-muted-3);
+}
+
+.alumni-profile-editor {
+  background: var(--app-bg);
+}
+
+.alumni-profile-editor
+  .alumni-editor-section {
+  border-color:
+    var(--app-border) !important;
+}
+
+.alumni-profile-editor
+  .alumni-edit-row {
+  border-color:
+    var(--app-border) !important;
+}
+
+@media (max-width: 639px) {
+  .alumni-profile-editor-top {
+    background:
+      color-mix(
+        in srgb,
+        var(--app-bg) 96%,
+        transparent
+      ) !important;
+  }
+
+  .alumni-profile-editor-fields {
+    margin-top: 20px !important;
+  }
+
+  .alumni-profile-editor
+    .alumni-editor-section {
+    padding:
+      18px 0 !important;
+  }
+}
+
+/* =========================================================
+   PASSPORT — APP CHROME DARK/LIGHT, CONTENT MAY STAY COLORFUL
+   ========================================================= */
+
+.passport-modal,
+.passport-country,
+.passport-grid figure {
+  color: var(--app-text);
+}
+
+.passport-body
+  :where(input, textarea) {
+  border:
+    1px solid
+    var(--app-border) !important;
+  border-radius: 12px;
+  background:
+    var(--app-surface) !important;
+  color: var(--app-text);
+  padding-inline: 12px;
+}
+
+.passport-body textarea {
+  padding-block: 11px !important;
+}
+
+.passport-body
+  :where(input, textarea)::placeholder {
+  color: var(--app-muted-3);
+}
+
+.passport-body
+  :where(input, textarea):focus {
+  border-color:
+    var(--app-accent) !important;
+  box-shadow:
+    0 0 0 3px
+    var(--app-accent-soft);
+  outline: 0;
+}
+
+@media (max-width: 700px) {
+  .passport-strip {
+    display: flex !important;
+    gap: 12px !important;
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding:
+      18px 0 22px !important;
+    scroll-snap-type:
+      x proximity;
+    scrollbar-width: none;
+  }
+
+  .passport-strip::-webkit-scrollbar {
+    display: none;
+  }
+
+  .passport-country {
+    width:
+      min(74vw, 250px);
+    flex:
+      0 0
+      min(74vw, 250px);
+    scroll-snap-align: start;
+    border-radius:
+      18px !important;
+  }
+
+  .passport-cover {
+    height:
+      150px !important;
+  }
+
+  .passport-album {
+    padding:
+      20px 0 26px !important;
+  }
+
+  .passport-album > header {
+    flex-direction:
+      row !important;
+    align-items:
+      center !important;
+    gap: 10px !important;
+  }
+
+  .passport-album h2 {
+    font-size:
+      23px !important;
+  }
+
+  .passport-grid {
+    grid-template-columns:
+      repeat(
+        2,
+        minmax(0, 1fr)
+      ) !important;
+    gap: 8px !important;
+  }
+
+  .passport-grid figure {
+    border-radius:
+      14px !important;
+  }
+
+  .passport-grid figcaption {
+    padding: 9px !important;
+  }
+}
+
+@media (max-width: 355px) {
+  .passport-grid {
+    grid-template-columns:
+      1fr !important;
+  }
+}
+
+/* =========================================================
+   FEEDBACK / AYUDA — COMPLETE INTERNAL SCREEN
+   ========================================================= */
+
+.alumni-feedback-pro {
+  color: var(--app-text);
+}
+
+.alumni-feedback-pro
+  > div:first-child,
+.alumni-feedback-pro
+  > .border-b {
+  border-color:
+    var(--app-border) !important;
+}
+
+.alumni-feedback-pro h1,
+.alumni-feedback-pro h2,
+.alumni-feedback-pro
+  [class*="font-black"] {
+  color: var(--app-text);
+}
+
+.alumni-feedback-pro
+  :where(input, textarea) {
+  border:
+    1px solid
+    var(--app-border) !important;
+  background:
+    var(--app-surface) !important;
+  color:
+    var(--app-text) !important;
+  box-shadow: none;
+}
+
+.alumni-feedback-pro
+  :where(input, textarea)::placeholder {
+  color:
+    var(--app-muted-3) !important;
+}
+
+.alumni-feedback-pro
+  :where(input, textarea):focus {
+  border-color:
+    var(--app-accent) !important;
+  box-shadow:
+    0 0 0 3px
+    var(--app-accent-soft);
+}
+
+.alumni-feedback-pro
+  section > p:first-child {
+  color:
+    var(--app-text-soft);
+}
+
+.alumni-feedback-pro
+  section button {
+  border-color:
+    var(--app-border);
+}
+
+.alumni-feedback-success-icon {
+  background:
+    color-mix(
+      in srgb,
+      var(--app-success) 12%,
+      transparent
+    );
+  color:
+    var(--app-success);
+}
+
+.alumni-feedback-success {
+  padding-inline: 16px;
+}
+
+@media (max-width: 639px) {
+  .alumni-feedback-pro {
+    padding-top: 5px;
+  }
+
+  .alumni-feedback-pro
+    > button:first-child {
+    min-height: 38px;
+    margin-bottom:
+      12px !important;
+    padding: 0 10px;
+    border:
+      1px solid
+      var(--app-border);
+    border-radius: 999px;
+    background:
+      var(--app-soft);
+  }
+
+  .alumni-feedback-pro h1 {
+    font-size:
+      27px !important;
+    line-height: 1.08;
+  }
+
+  .alumni-feedback-pro
+    .border-b {
+    padding-bottom:
+      18px !important;
+  }
+
+  .alumni-feedback-pro
+    .space-y-7 {
+    margin-top:
+      20px !important;
+  }
+
+  .alumni-feedback-pro
+    :where(input, textarea) {
+    border-radius:
+      13px !important;
+  }
+
+  .alumni-feedback-pro
+    section:last-child {
+    padding-bottom:
+      max(
+        10px,
+        env(safe-area-inset-bottom)
+      );
+  }
+}
+
+/* =========================================================
+   SEARCH — PRESERVE OPTION 4, JUST THEME SAFETY
+   ========================================================= */
+
+.alumni-explore-pro
+  :where(input, textarea) {
+  color: var(--app-text);
+}
+
+.alumni-explore-pro
+  :where(input, textarea)::placeholder {
+  color: var(--app-muted-3);
+}
+
+/* =========================================================
+   DESKTOP SECONDARY
+   Same application language, simply more breathing room.
+   ========================================================= */
+
+@media (min-width: 700px) {
+  .alumni-community-2,
+  .community-detail,
+  .alumni-events-2,
+  .event-detail,
+  .alumni-notifications-pro,
+  .alumni-feedback-pro {
+    max-width: 760px !important;
+  }
+
+  .community2-hero h1,
+  .events2-hero h1,
+  .passport-hero h1 {
+    font-size:
+      38px !important;
+  }
+
+  .community-detail-title h1,
+  .event-detail-header h1 {
+    font-size:
+      42px !important;
+  }
+}
+
+/* ALUMNI_INTERNAL_UI_1_0_DARK_LIGHT_CLEAN */

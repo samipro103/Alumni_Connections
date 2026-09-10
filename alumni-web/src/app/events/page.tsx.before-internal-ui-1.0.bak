@@ -24,7 +24,6 @@ import { ListLoadingSkeleton } from "@/components/ui/AlumniLoading";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { supabase } from "@/lib/supabase";
 import "./events-2.css";
-import "../interior-ui-1-0.css";
 
 type Filter = "upcoming" | "mine" | "past";
 

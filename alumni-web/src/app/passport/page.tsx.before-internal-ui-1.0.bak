@@ -7,7 +7,6 @@ import { useAuth } from "@/components/auth/AuthProvider";
 import { supabase } from "@/lib/supabase";
 import { COUNTRIES } from "@/lib/countries";
 import "./passport.css";
-import "../interior-ui-1-0.css";
 
 const THEMES = [
   ["aurora", "Aurora", "Brillos suaves y color nocturno."],

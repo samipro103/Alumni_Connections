@@ -249,14 +249,21 @@ html[data-theme] [class~="focus-within:border-[#6d7cff]/45"]:focus-within {
   border-color: color-mix(in srgb, var(--app-accent) 48%, transparent) !important;
 }
 
-html[data-theme="light"] img {
+html[data-theme="light"] img,
+html[data-theme="chill"] img {
   color-scheme: light;
+}
+
+/* Pride: un pequeño detalle de marca sin sacrificar legibilidad. */
+html[data-theme="pride"] [class~="bg-[#6d7cff]"],
+html[data-theme="pride"] [class~="bg-[#7b87ff]"] {
+  box-shadow: 0 8px 30px rgba(255,77,109,.10);
 }
 
 /* ==================================================================
    ALUMNI VISUAL + THEME AUDIT 11.0
-   Capa global para que Dark y Light mantengan
-   contraste, superficies y estados coherentes.
+   Capa global para que Dark, Light, Chill, Pride, Midnight, Emerald
+   y Executive mantengan contraste, superficies y estados coherentes.
    ================================================================== */
 
 :root {
@@ -1723,11 +1730,16 @@ video {
   transition: opacity .18s ease, filter .18s ease, transform .18s ease;
 }
 
-html[data-theme="light"] .alumni-original-logo-image {
+html[data-theme="light"] .alumni-original-logo-image,
+html[data-theme="chill"] .alumni-original-logo-image {
   mix-blend-mode: multiply;
 }
 
-html[data-theme="dark"] .alumni-original-logo-image {
+html[data-theme="dark"] .alumni-original-logo-image,
+html[data-theme="pride"] .alumni-original-logo-image,
+html[data-theme="midnight"] .alumni-original-logo-image,
+html[data-theme="emerald"] .alumni-original-logo-image,
+html[data-theme="executive"] .alumni-original-logo-image {
   filter: grayscale(1) invert(1) contrast(1.2);
   mix-blend-mode: screen;
   opacity: .84;
@@ -2789,6 +2801,11 @@ html[data-theme="light"] .alumni-message-other {
     var(--app-border);
 }
 
+html[data-theme="pride"] .alumni-message-mine .alumni-reply-quote {
+  background:
+    rgba(255,255,255,.12);
+}
+
 /* ALUMNI_1_5_0_MESSAGING_2_HOME_NAV:GLOBALS */
 
 /* ALUMNI_BRAND_LOGOS_FULL_COLOR_V1 */
@@ -3106,5 +3123,3 @@ html[data-theme="light"] .alumni-story-composer-modal textarea::placeholder {
    Contrato oficial de tema de ALUMNI: únicamente dark / light. */
 html[data-theme="dark"] { color-scheme: dark; }
 html[data-theme="light"] { color-scheme: light; }
-
-/* ALUMNI_INTERNAL_UI_1_0_DARK_LIGHT_CLEAN */

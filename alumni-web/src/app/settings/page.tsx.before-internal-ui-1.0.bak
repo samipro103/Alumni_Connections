@@ -38,7 +38,6 @@ import ProfileEditorPro from "@/components/settings/ProfileEditorPro";
 import SpotifyPremiumMusicGate from "@/components/music/SpotifyPremiumMusicGate";
 import AccountTrustPanel from "@/components/settings/AccountTrustPanel";
 import "./settings-classic-1-0.css";
-import "../interior-ui-1-0.css";
 
 type SettingsSectionId =
   | "appearance"
@@ -1099,7 +1098,7 @@ function Panel({
   children: React.ReactNode;
 }) {
   return (
-    <div className="alumni-settings-panel rounded-[18px] border border-[var(--app-border)] bg-[var(--app-surface)] p-4 sm:p-5">
+    <div className="alumni-settings-panel rounded-[24px] border border-white/[0.07] bg-[#101318]/95 p-5 sm:p-6">
       {children}
     </div>
   );
@@ -1692,5 +1691,3 @@ function SocialField({
 /* ALUMNI_3_1_1_PRODUCT_COPY_CLEANUP */
 
 /* ALUMNI_SETTINGS_1_0_OPTION_1_CLASSIC_LIST */
-
-/* ALUMNI_INTERNAL_UI_1_0_DARK_LIGHT_CLEAN */

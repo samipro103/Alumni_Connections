@@ -72,24 +72,6 @@ function applyTheme(
       ? "light"
       : "dark";
 
-  /*
-   * Mantiene también la barra del navegador/PWA
-   * alineada con el tema visual de ALUMNI.
-   */
-  const themeColor =
-    theme === "light"
-      ? "#f4f6fa"
-      : "#090b0f";
-
-  document
-    .querySelector<HTMLMetaElement>(
-      'meta[name="theme-color"]'
-    )
-    ?.setAttribute(
-      "content",
-      themeColor
-    );
-
   void syncNativeTheme(theme);
 }
 
@@ -194,5 +176,3 @@ export function useTheme() {
 /* ALUMNI_3_5_0_NATIVE_EXPERIENCE */
 
 /* ALUMNI_STORIES_THEME_1_4_4B_CLEAN_PUBLISH_DUAL_THEME */
-
-/* ALUMNI_INTERNAL_UI_1_0_DARK_LIGHT_CLEAN */

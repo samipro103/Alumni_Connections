@@ -25,7 +25,6 @@ import { supabase } from "@/lib/supabase";
 import SocialInvitePicker from "@/components/social/SocialInvitePicker";
 import "../community-2.css";
 import "./community-detail.css";
-import "../../interior-ui-1-0.css";
 
 export default function CommunityDetailPage() {
   const params = useParams<{ slug: string }>();

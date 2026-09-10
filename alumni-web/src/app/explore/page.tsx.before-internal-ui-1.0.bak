@@ -31,7 +31,6 @@ import ExplorePostCard from "@/components/explore/ExplorePostCard";
 import ExplorePersonRow from "@/components/explore/ExplorePersonRow";
 import ExploreSocialPulse from "@/components/explore/ExploreSocialPulse";
 import "./explore-pro.css";
-import "../interior-ui-1-0.css";
 
 type Mode =
   | "people"

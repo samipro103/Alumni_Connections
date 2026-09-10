@@ -98,17 +98,13 @@ export const viewport: Viewport = {
 const themeScript = `
 (function () {
   try {
-    var allowed = ["dark","light"];
+    var allowed = ["dark","light","pride"];
     var saved = localStorage.getItem("alumni-theme") || "dark";
     var theme = allowed.indexOf(saved) >= 0 ? saved : "dark";
 
-    if (theme !== saved) {
-      localStorage.setItem("alumni-theme", theme);
-    }
-
     document.documentElement.dataset.theme = theme;
     document.documentElement.style.colorScheme =
-      theme === "light" ? "light" : "dark";
+      theme === "light" || theme === "chill" ? "light" : "dark";
   } catch (e) {}
 })();
 `;
@@ -162,5 +158,3 @@ export default function RootLayout({
 /* ALUMNI_2_9_0_IMAGE_LAYER:ROOT_LAYOUT */
 
 /* ALUMNI_2_9_5_OFFICIAL_DOMAIN */
-
-/* ALUMNI_INTERNAL_UI_1_0_DARK_LIGHT_CLEAN */

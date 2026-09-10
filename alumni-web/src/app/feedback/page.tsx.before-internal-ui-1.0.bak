@@ -14,7 +14,6 @@ import AppShell from "@/components/layout/AppShell";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { supabase } from "@/lib/supabase";
 import { APP_VERSION } from "@/lib/appVersion";
-import "../interior-ui-1-0.css";
 
 type FeedbackType =
   | "bug"
@@ -164,7 +163,7 @@ export default function FeedbackPage() {
   if (loading || !user) {
     return (
       <AppShell>
-        <div className="alumni-feedback-pro alumni-feedback-loading py-16 text-center text-sm text-[var(--app-muted-2)]">
+        <div className="py-16 text-center text-sm text-zinc-600">
           Preparando feedback...
         </div>
       </AppShell>
@@ -174,23 +173,23 @@ export default function FeedbackPage() {
   if (successId) {
     return (
       <AppShell>
-        <div className="alumni-feedback-pro alumni-feedback-success mx-auto max-w-xl py-10 text-center">
-          <div className="alumni-feedback-success-icon mx-auto flex h-16 w-16 items-center justify-center rounded-full">
+        <div className="mx-auto max-w-xl py-10 text-center">
+          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-400">
             <CheckCircle2 size={28} />
           </div>
           <h1 className="mt-5 text-2xl font-black tracking-[-0.04em]">
             Reporte enviado
           </h1>
-          <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-[var(--app-muted-2)]">
+          <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-zinc-600">
             Gracias. El equipo de Alumni ya puede revisar tu reporte, las
             capturas y el contexto técnico.
           </p>
-          <p className="mt-4 text-[11px] font-bold text-[var(--app-muted-3)]">
+          <p className="mt-4 text-[11px] font-bold text-zinc-700">
             ID {successId.slice(0, 8).toUpperCase()}
           </p>
           <button
             onClick={() => router.push("/feed")}
-            className="mt-6 rounded-xl bg-[var(--app-accent-fill)] px-5 py-3 text-xs font-black"
+            className="mt-6 rounded-xl bg-[#6d7cff] px-5 py-3 text-xs font-black"
           >
             Volver a Alumni
           </button>
@@ -201,23 +200,23 @@ export default function FeedbackPage() {
 
   return (
     <AppShell>
-      <div className="alumni-feedback-pro mx-auto w-full max-w-[720px]">
+      <div className="mx-auto w-full max-w-[820px]">
         <button
           onClick={() => router.back()}
-          className="mb-5 flex items-center gap-2 text-xs font-bold text-[var(--app-muted-2)] transition hover:text-[var(--app-text-soft)]"
+          className="mb-5 flex items-center gap-2 text-xs font-bold text-zinc-600 transition hover:text-zinc-300"
         >
           <ArrowLeft size={15} />
           Volver
         </button>
 
-        <div className="border-b border-[var(--app-border)] pb-6">
-          <p className="text-xs font-black uppercase tracking-[0.15em] text-[var(--app-accent)]">
+        <div className="border-b border-white/[0.07] pb-6">
+          <p className="text-xs font-black uppercase tracking-[0.15em] text-[#8d98ff]">
             Alumni Beta
           </p>
           <h1 className="mt-2 text-[30px] font-black tracking-[-0.04em]">
             Cuéntanos qué encontraste
           </h1>
-          <p className="mt-2 max-w-2xl text-sm leading-6 text-[var(--app-muted-2)]">
+          <p className="mt-2 max-w-2xl text-sm leading-6 text-zinc-600">
             Reporta errores, detalles visuales o ideas. Guardaremos
             automáticamente la versión, plataforma y sección desde donde
             llegaste.
@@ -226,7 +225,7 @@ export default function FeedbackPage() {
 
         <div className="mt-6 space-y-7">
           <section>
-            <p className="text-sm font-black text-[var(--app-text-soft)]">Tipo de reporte</p>
+            <p className="text-sm font-black text-zinc-200">Tipo de reporte</p>
             <div className="mt-3 flex flex-wrap gap-2">
               {[
                 ["bug", "Error"],
@@ -240,8 +239,8 @@ export default function FeedbackPage() {
                   onClick={() => setType(value as FeedbackType)}
                   className={`rounded-xl border px-3 py-2 text-xs font-black transition ${
                     type === value
-                      ? "border-[var(--app-accent)] bg-[var(--app-accent-soft)] text-[var(--app-accent)]"
-                      : "border-[var(--app-border)] text-[var(--app-muted-2)] hover:text-[var(--app-text-soft)]"
+                      ? "border-[#6d7cff]/40 bg-[#6d7cff]/10 text-[#a8b0ff]"
+                      : "border-white/[0.07] text-zinc-600 hover:text-zinc-300"
                   }`}
                 >
                   {label}
@@ -252,7 +251,7 @@ export default function FeedbackPage() {
 
           <section className="grid gap-5 sm:grid-cols-2">
             <label className="sm:col-span-2">
-              <span className="mb-2 block text-xs font-black text-[var(--app-muted)]">
+              <span className="mb-2 block text-xs font-black text-zinc-500">
                 Título corto
               </span>
               <input
@@ -260,12 +259,12 @@ export default function FeedbackPage() {
                 onChange={(e) => setTitle(e.target.value)}
                 placeholder="Ej. El botón Enviar no responde"
                 maxLength={120}
-                className="h-12 w-full rounded-2xl border border-[var(--app-border)] bg-[var(--app-soft)] px-4 text-sm outline-none transition placeholder:text-[var(--app-muted-3)] focus:border-[var(--app-accent)]"
+                className="h-12 w-full rounded-2xl border border-white/[0.08] bg-white/[0.035] px-4 text-sm outline-none transition placeholder:text-zinc-700 focus:border-[#6d7cff]/45"
               />
             </label>
 
             <label className="sm:col-span-2">
-              <span className="mb-2 block text-xs font-black text-[var(--app-muted)]">
+              <span className="mb-2 block text-xs font-black text-zinc-500">
                 ¿Qué pasó?
               </span>
               <textarea
@@ -273,12 +272,12 @@ export default function FeedbackPage() {
                 onChange={(e) => setDescription(e.target.value)}
                 placeholder="Describe lo que viste con el mayor detalle posible."
                 rows={5}
-                className="w-full resize-none rounded-2xl border border-[var(--app-border)] bg-[var(--app-soft)] p-4 text-sm leading-6 outline-none transition placeholder:text-[var(--app-muted-3)] focus:border-[var(--app-accent)]"
+                className="w-full resize-none rounded-2xl border border-white/[0.08] bg-white/[0.035] p-4 text-sm leading-6 outline-none transition placeholder:text-zinc-700 focus:border-[#6d7cff]/45"
               />
             </label>
 
             <label>
-              <span className="mb-2 block text-xs font-black text-[var(--app-muted)]">
+              <span className="mb-2 block text-xs font-black text-zinc-500">
                 ¿Qué esperabas?
               </span>
               <textarea
@@ -286,12 +285,12 @@ export default function FeedbackPage() {
                 onChange={(e) => setExpected(e.target.value)}
                 placeholder="Lo que debería haber ocurrido."
                 rows={4}
-                className="w-full resize-none rounded-2xl border border-[var(--app-border)] bg-[var(--app-soft)] p-4 text-sm leading-6 outline-none placeholder:text-[var(--app-muted-3)] focus:border-[var(--app-accent)]"
+                className="w-full resize-none rounded-2xl border border-white/[0.08] bg-white/[0.035] p-4 text-sm leading-6 outline-none placeholder:text-zinc-700 focus:border-[#6d7cff]/45"
               />
             </label>
 
             <label>
-              <span className="mb-2 block text-xs font-black text-[var(--app-muted)]">
+              <span className="mb-2 block text-xs font-black text-zinc-500">
                 Pasos para repetirlo
               </span>
               <textarea
@@ -299,13 +298,13 @@ export default function FeedbackPage() {
                 onChange={(e) => setSteps(e.target.value)}
                 placeholder={"1. Abrí...\n2. Toqué...\n3. Apareció..."}
                 rows={4}
-                className="w-full resize-none rounded-2xl border border-[var(--app-border)] bg-[var(--app-soft)] p-4 text-sm leading-6 outline-none placeholder:text-[var(--app-muted-3)] focus:border-[var(--app-accent)]"
+                className="w-full resize-none rounded-2xl border border-white/[0.08] bg-white/[0.035] p-4 text-sm leading-6 outline-none placeholder:text-zinc-700 focus:border-[#6d7cff]/45"
               />
             </label>
           </section>
 
           <section>
-            <p className="text-sm font-black text-[var(--app-text-soft)]">
+            <p className="text-sm font-black text-zinc-200">
               ¿Qué tan grave es?
             </p>
             <div className="mt-3 flex flex-wrap gap-2">
@@ -320,8 +319,8 @@ export default function FeedbackPage() {
                   onClick={() => setPriority(value as Priority)}
                   className={`rounded-xl border px-3 py-2 text-xs font-black transition ${
                     priority === value
-                      ? "border-[var(--app-accent)] bg-[var(--app-accent-soft)] text-[var(--app-accent)]"
-                      : "border-[var(--app-border)] text-[var(--app-muted-2)] hover:text-[var(--app-text-soft)]"
+                      ? "border-[#6d7cff]/40 bg-[#6d7cff]/10 text-[#a8b0ff]"
+                      : "border-white/[0.07] text-zinc-600 hover:text-zinc-300"
                   }`}
                 >
                   {label}
@@ -333,13 +332,13 @@ export default function FeedbackPage() {
           <section>
             <div className="flex items-end justify-between gap-3">
               <div>
-                <p className="text-sm font-black text-[var(--app-text-soft)]">Capturas</p>
-                <p className="mt-1 text-xs text-[var(--app-muted-3)]">
+                <p className="text-sm font-black text-zinc-200">Capturas</p>
+                <p className="mt-1 text-xs text-zinc-700">
                   Hasta {MAX_FILES} imágenes · máximo 8 MB cada una.
                 </p>
               </div>
 
-              <label className="flex cursor-pointer items-center gap-2 rounded-xl border border-[var(--app-border)] px-3 py-2 text-xs font-black text-[var(--app-muted)] transition hover:text-[var(--app-text-soft)]">
+              <label className="flex cursor-pointer items-center gap-2 rounded-xl border border-white/[0.08] px-3 py-2 text-xs font-black text-zinc-500 transition hover:text-zinc-200">
                 <ImagePlus size={15} />
                 Agregar
                 <input
@@ -357,7 +356,7 @@ export default function FeedbackPage() {
                 {previews.map((item, index) => (
                   <div
                     key={`${item.file.name}-${index}`}
-                    className="relative aspect-[4/3] overflow-hidden rounded-2xl border border-[var(--app-border)] bg-[var(--app-soft)]"
+                    className="relative aspect-[4/3] overflow-hidden rounded-2xl border border-white/[0.08] bg-white/[0.03]"
                   >
                     <img
                       src={item.url}
@@ -377,8 +376,8 @@ export default function FeedbackPage() {
             )}
           </section>
 
-          <section className="flex flex-col gap-4 border-t border-[var(--app-border)] pt-6 sm:flex-row sm:items-center sm:justify-between">
-            <div className="text-[11px] leading-5 text-[var(--app-muted-3)]">
+          <section className="flex flex-col gap-4 border-t border-white/[0.07] pt-6 sm:flex-row sm:items-center sm:justify-between">
+            <div className="text-[11px] leading-5 text-zinc-700">
               <p>Origen: {sourcePath}</p>
               <p>
                 {detectPlatform()} · Alumni {APP_VERSION}
@@ -388,7 +387,7 @@ export default function FeedbackPage() {
             <button
               onClick={submitFeedback}
               disabled={sending || !title.trim() || !description.trim()}
-              className="flex h-11 items-center justify-center gap-2 rounded-xl bg-[var(--app-accent-fill)] px-5 text-xs font-black text-white transition hover:brightness-105 disabled:cursor-not-allowed disabled:bg-[var(--app-soft-strong)] disabled:text-[var(--app-muted-3)]"
+              className="flex h-11 items-center justify-center gap-2 rounded-xl bg-[#6d7cff] px-5 text-xs font-black text-white transition hover:bg-[#7b87ff] disabled:cursor-not-allowed disabled:bg-white/[0.06] disabled:text-zinc-700"
             >
               {sending ? (
                 <Loader2 size={15} className="animate-spin" />
@@ -403,5 +402,3 @@ export default function FeedbackPage() {
     </AppShell>
   );
 }
-
-/* ALUMNI_INTERNAL_UI_1_0_DARK_LIGHT_CLEAN */

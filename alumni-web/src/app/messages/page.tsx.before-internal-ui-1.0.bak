@@ -24,7 +24,6 @@ import { getSignedMediaUrlMap } from "@/lib/signedMediaUrlCache";
 import AppShell from "@/components/layout/AppShell";
 import CreateMessageGroupModal from "@/components/messages/CreateMessageGroupModal";
 import "./messages-design-1-6.css";
-import "../interior-ui-1-0.css";
 
 type Conversation = {
   id: string;

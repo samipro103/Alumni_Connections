@@ -19,7 +19,6 @@ import { supabase } from "@/lib/supabase";
 import SocialInvitePicker from "@/components/social/SocialInvitePicker";
 import "../events-2.css";
 import "./event-detail.css";
-import "../../interior-ui-1-0.css";
 
 export default function EventDetailPage() {
   const params = useParams<{ id: string }>();

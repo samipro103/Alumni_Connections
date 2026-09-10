@@ -37,9 +37,7 @@ export default function LeftSidebar() {
             <Link
               key={href}
               href={href}
-              className={`flex items-center gap-3 rounded-xl px-3 py-3 text-[15px] font-medium transition ${active
-                  ? "bg-[var(--app-soft-strong)] text-[var(--app-text)]"
-                  : "text-[var(--app-muted)] hover:bg-[var(--app-soft)] hover:text-[var(--app-text-soft)]"}`}
+              className={`flex items-center gap-3 rounded-xl px-3 py-3 text-[15px] font-medium transition ${active ? "bg-white/[0.07] text-white" : "text-zinc-500 hover:bg-white/[0.035] hover:text-zinc-200"}`}
             >
               <Icon size={20} strokeWidth={active ? 2.3 : 1.9} />
               <span>{text}</span>
@@ -56,5 +54,3 @@ export default function LeftSidebar() {
 /* ALUMNI_2_1_COMMUNITIES_EVENTS:SIDEBAR_COPY */
 
 /* ALUMNI_3_1_1_PRODUCT_COPY_CLEANUP */
-
-/* ALUMNI_INTERNAL_UI_1_0_DARK_LIGHT_CLEAN */
