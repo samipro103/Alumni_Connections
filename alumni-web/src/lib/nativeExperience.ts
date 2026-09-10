@@ -29,7 +29,6 @@ const THEME_COLORS: Record<
 > = {
   dark: "#090b0f",
   light: "#f4f6fa",
-  pride: "#120b16",
 };
 
 export function isNativeAlumniApp() {
@@ -239,3 +238,5 @@ export async function shareAlumniContent(
 }
 
 /* ALUMNI_3_5_0_NATIVE_EXPERIENCE */
+
+/* ALUMNI_THEME_1_4_3_DARK_LIGHT_FEED_STORIES */

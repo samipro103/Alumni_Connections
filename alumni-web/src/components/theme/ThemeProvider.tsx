@@ -14,8 +14,7 @@ import {
 
 export type AlumniTheme =
   | "dark"
-  | "light"
-  | "pride";
+  | "light";
 
 export const ALUMNI_THEMES: Array<{
   id: AlumniTheme;
@@ -43,17 +42,6 @@ export const ALUMNI_THEMES: Array<{
       "#f4f6fa",
       "#ffffff",
       "#5267e8",
-    ],
-  },
-  {
-    id: "pride",
-    name: "Pride",
-    description:
-      "Oscuro elegante con acento arcoíris de alto contraste.",
-    swatches: [
-      "#120b16",
-      "#1b121f",
-      "linear-gradient(90deg,#d93663,#b65312,#8a6c00,#167b43,#2365b1,#6741d9,#9b38b5)",
     ],
   },
 ];
@@ -183,6 +171,6 @@ export function useTheme() {
   return context;
 }
 
-/* ALUMNI_1_4_2_THREE_THEMES */
+/* ALUMNI_THEME_1_4_3_DARK_LIGHT_FEED_STORIES */
 
 /* ALUMNI_3_5_0_NATIVE_EXPERIENCE */
