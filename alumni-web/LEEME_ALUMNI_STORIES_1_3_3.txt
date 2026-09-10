@@ -1,0 +1,27 @@
+ALUMNI STORIES 1.3.3 — OPTION C EXACT CREATOR
+
+Este parche modifica SOLO:
+src/components/stories/StoryComposer.tsx
+
+OBJETIVO:
+Dejar Crear historia con el diseño visual aprobado de la Opción C:
+- Fullscreen
+- X arriba izquierda
+- Alumni. centrado
+- ... arriba derecha
+- Foto/video como protagonista
+- Herramientas flotantes derecha
+- Miniatura + botón + abajo
+- Siguiente → abajo derecha
+- Paso final de publicación
+
+EJECUTAR DESDE alumni-web:
+
+node .\aplicar_alumni_stories_1_3_3_option_c_exact_creator.js
+npm run build
+
+SI EL BUILD TERMINA BIEN:
+
+git add .
+git commit -m "Stories 1.3.3 - exact Option C creator"
+git push origin main

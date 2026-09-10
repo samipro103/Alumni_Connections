@@ -1938,7 +1938,6 @@ export default function StoryComposer({
   }, [kind]);
 
   function resetAll() {
-    // Al volver a abrir el compositor entramos directo a Opción C.
     setKind("standard");
     setFile(null);
     setPreviewUrl("");
@@ -2681,10 +2680,11 @@ export default function StoryComposer({
 
     return createPortal(
       <div
-        className="fixed inset-0 z-[2147483000] overflow-hidden bg-[#05070b] text-white"
+        className="fixed inset-0 z-[2147483000] overflow-hidden bg-black text-white"
         data-pull-refresh-lock="true"
+        data-story-creator="ALUMNI_STORIES_1_3_3B_OPTION_C_EXACT_CREATOR"
       >
-        <div className="relative mx-auto h-[100dvh] w-full max-w-[520px] overflow-hidden bg-black">
+        <div className="relative mx-auto h-[100dvh] w-full max-w-[460px] overflow-hidden bg-[#07090d] sm:border-x sm:border-white/[0.05]">
           {collagePreviewUrls.length >=
           2 ? (
             <div
@@ -2757,35 +2757,18 @@ export default function StoryComposer({
                 className="absolute inset-0 h-full w-full object-cover"
               />
             ) : (
-              <>
-                <img
-                  src={previewUrl}
-                  alt=""
-                  aria-hidden="true"
-                  style={{
-                    filter:
-                      STORY_FILTER_CSS[
-                        storyFilter
-                      ],
-                  }}
-                  className="absolute inset-0 h-full w-full scale-110 object-cover opacity-55 blur-3xl"
-                />
-
-                <div className="absolute inset-0 bg-black/15" />
-
-                <img
-                  src={previewUrl}
-                  alt=""
-                  draggable={false}
-                  style={{
-                    filter:
-                      STORY_FILTER_CSS[
-                        storyFilter
-                      ],
-                  }}
-                  className="absolute inset-0 h-full w-full object-contain"
-                />
-              </>
+              <img
+                src={previewUrl}
+                alt=""
+                draggable={false}
+                style={{
+                  filter:
+                    STORY_FILTER_CSS[
+                      storyFilter
+                    ],
+                }}
+                className="absolute inset-0 h-full w-full object-cover"
+              />
             )
           ) : sharedPost ? (
             <>
@@ -2800,20 +2783,19 @@ export default function StoryComposer({
               onClick={() =>
                 mediaInputRef.current?.click()
               }
-              className="absolute inset-0 flex flex-col items-center justify-center bg-[#090c12]"
+              className="absolute inset-0 flex flex-col items-center justify-center bg-[radial-gradient(circle_at_50%_38%,rgba(93,105,255,.12),transparent_30%),linear-gradient(180deg,#0a0d14_0%,#05070b_100%)]"
+              aria-label="Seleccionar foto o video"
             >
-              <span className="flex h-16 w-16 items-center justify-center rounded-[22px] border border-white/[0.08] bg-white/[0.045] text-[#aeb6ff] shadow-[0_18px_50px_rgba(0,0,0,.35)]">
-                <ImagePlus
-                  size={26}
-                />
+              <span className="flex h-14 w-14 items-center justify-center rounded-full border border-white/[0.12] bg-white/[0.055] text-white/90 backdrop-blur-xl">
+                <ImagePlus size={23} />
               </span>
 
-              <p className="mt-4 text-sm font-black">
-                Elegir foto o video
+              <p className="mt-4 text-[13px] font-black tracking-[-0.02em] text-white/90">
+                Agregar foto o video
               </p>
 
-              <p className="mt-1 text-[10px] text-zinc-600">
-                Se conserva la calidad original
+              <p className="mt-1 text-[10px] text-white/35">
+                Toca para comenzar tu historia
               </p>
             </button>
           )}
@@ -2849,6 +2831,7 @@ export default function StoryComposer({
           />
 
           {/* ALUMNI_STORIES_1_3_0_OPTION_C_COMPOSER */}
+          {/* ALUMNI_STORIES_1_3_3B_OPTION_C_EXACT_CREATOR */}
           <div className="pointer-events-none absolute inset-x-0 top-[max(14px,env(safe-area-inset-top))] z-[85] flex h-11 items-center justify-center">
             <div className="pointer-events-auto select-none text-[17px] font-black tracking-[-0.045em] text-white [text-shadow:none]">
               Alumni<span className="text-[#7b87ff]">.</span>
@@ -2858,7 +2841,7 @@ export default function StoryComposer({
           <button
             type="button"
             onClick={onClose}
-            className="absolute left-[max(16px,env(safe-area-inset-left))] top-[max(14px,env(safe-area-inset-top))] z-[90] flex h-11 w-11 items-center justify-center rounded-full bg-black/18 text-white/95 backdrop-blur-md transition active:scale-95"
+            className="absolute left-[max(16px,env(safe-area-inset-left))] top-[max(14px,env(safe-area-inset-top))] z-[90] flex h-11 w-11 items-center justify-center rounded-full bg-transparent text-white transition active:scale-95 [filter:drop-shadow(0_1px_4px_rgba(0,0,0,.35))]"
             aria-label="Cerrar"
           >
             <X size={25} strokeWidth={1.8} />
@@ -2870,10 +2853,9 @@ export default function StoryComposer({
               setStoryTextEditing(false);
               setStoryStyleOpen(false);
               setStoryFilterOpen(false);
-              setKind(null);
             }}
-            className="absolute right-[max(16px,env(safe-area-inset-right))] top-[max(14px,env(safe-area-inset-top))] z-[90] flex h-11 w-11 flex-col items-center justify-center gap-[3px] rounded-full bg-black/18 text-white/90 backdrop-blur-md transition active:scale-95"
-            aria-label="Cambiar tipo de historia"
+            className="absolute right-[max(16px,env(safe-area-inset-right))] top-[max(14px,env(safe-area-inset-top))] z-[90] flex h-11 w-11 flex-col items-center justify-center gap-[3px] rounded-full bg-transparent text-white transition active:scale-95 [filter:drop-shadow(0_1px_4px_rgba(0,0,0,.35))]"
+            aria-label="Opciones de historia"
           >
             <span className="h-[3px] w-[3px] rounded-full bg-current" />
             <span className="h-[3px] w-[3px] rounded-full bg-current" />
@@ -3323,12 +3305,12 @@ export default function StoryComposer({
             </div>
           )}
 
-          {hasMedia && (
+          {(
             <div className="absolute bottom-[max(18px,env(safe-area-inset-bottom))] left-[max(16px,env(safe-area-inset-left))] right-[max(16px,env(safe-area-inset-right))] z-[100] flex items-end gap-3">
               <button
                 type="button"
                 onClick={() => mediaInputRef.current?.click()}
-                className="relative h-[62px] w-[52px] shrink-0 overflow-hidden rounded-[12px] border-2 border-white/90 bg-black/35 shadow-[0_10px_30px_rgba(0,0,0,.30)]"
+                className="relative h-[58px] w-[48px] shrink-0 overflow-hidden rounded-[11px] border-2 border-white/90 bg-black/45 shadow-[0_10px_30px_rgba(0,0,0,.22)]"
                 aria-label="Cambiar foto o video"
               >
                 {previewUrl ? (
@@ -3362,7 +3344,7 @@ export default function StoryComposer({
               <button
                 type="button"
                 onClick={() => mediaInputRef.current?.click()}
-                className="flex h-[62px] w-[52px] shrink-0 items-center justify-center rounded-[12px] border border-white/22 bg-black/30 text-[30px] font-light leading-none text-white backdrop-blur-xl transition active:scale-95"
+                className="flex h-[58px] w-[48px] shrink-0 items-center justify-center rounded-[11px] border border-white/18 bg-black/38 text-[28px] font-light leading-none text-white backdrop-blur-2xl transition active:scale-95"
                 aria-label="Agregar foto o video"
               >
                 +
@@ -3371,12 +3353,17 @@ export default function StoryComposer({
               <button
                 type="button"
                 onClick={() => {
+                  if (!hasMedia) {
+                    mediaInputRef.current?.click();
+                    return;
+                  }
+
                   setStoryTextEditing(false);
                   setStoryStyleOpen(false);
                   setStoryFilterOpen(false);
                   setStoryReviewOpen(true);
                 }}
-                className="ml-auto flex h-[54px] min-w-[142px] items-center justify-center gap-3 rounded-[18px] bg-white px-5 text-[14px] font-black text-[#090b10] shadow-[0_16px_40px_rgba(0,0,0,.28)] transition active:scale-[0.98]"
+                className="ml-auto flex h-[52px] min-w-[146px] items-center justify-center gap-3 rounded-[16px] bg-white px-5 text-[14px] font-black text-[#090b10] shadow-[0_12px_34px_rgba(0,0,0,.20)] transition active:scale-[0.98]"
               >
                 Siguiente
                 <span className="text-[22px] font-medium leading-none">→</span>
@@ -3415,11 +3402,11 @@ export default function StoryComposer({
 
           {storyReviewOpen && (
             <div
-              className="absolute inset-0 z-[140] flex items-end bg-black/48 backdrop-blur-[2px]"
+              className="absolute inset-0 z-[140] flex items-end bg-black/36 backdrop-blur-[1px]"
               onClick={() => setStoryReviewOpen(false)}
             >
               <div
-                className="w-full rounded-t-[30px] border-t border-white/[0.10] bg-[#0b0e14]/98 px-5 pb-[max(22px,env(safe-area-inset-bottom))] pt-4 shadow-[0_-24px_80px_rgba(0,0,0,.46)]"
+                className="w-full rounded-t-[28px] border-t border-white/[0.08] bg-[#0a0d13]/98 px-5 pb-[max(22px,env(safe-area-inset-bottom))] pt-4 shadow-[0_-18px_50px_rgba(0,0,0,.28)]"
                 onClick={(event) => event.stopPropagation()}
               >
                 <div className="mx-auto mb-5 h-1 w-10 rounded-full bg-white/18" />
