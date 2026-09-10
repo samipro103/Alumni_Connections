@@ -1,0 +1,116 @@
+ALUMNI MEDIA RENDERING 1.0 — INSTAGRAM LEVEL
+
+OBJETIVO
+Eliminar el problema actual donde:
+- una foto vertical hace el post demasiado alto;
+- una horizontal queda visualmente perdida;
+- diferentes imágenes cambian demasiado el ritmo del feed;
+- un carrusel puede sentirse inestable.
+
+REGLA VISUAL
+La foto conserva su proporción y nunca se deforma.
+
+ALUMNI la encierra automáticamente en uno de cuatro marcos:
+
+1. PORTRAIT / VERTICAL
+   Marco máximo 4:5.
+
+   Ejemplos:
+   - 9:16
+   - 3:4
+   - 4:5
+
+   Una 9:16 ya NO crece a toda su altura.
+   Se muestra completa dentro de 4:5.
+
+2. CUADRADA
+   Marco 1:1.
+
+3. HORIZONTAL
+   Marco 4:3.
+
+4. PANORÁMICA
+   Marco 16:9.
+
+COVER VS CONTAIN
+- Si la imagen casi coincide con el marco:
+  usa cover.
+- Si implicaría cortar contenido importante:
+  usa contain.
+- Cuando usa contain:
+  se agrega un backdrop suave de la misma imagen.
+
+Esto evita cortar:
+- caras;
+- texto;
+- logos;
+- artes publicitarios;
+- capturas.
+
+CARRUSELES
+La PRIMERA imagen fija el marco de todo el carrusel.
+Las siguientes no cambian la altura de la publicación.
+
+SUPERFICIES CUBIERTAS
+- Feed.
+- Perfil propio /profile.
+- Perfil público /u/[username].
+- Guardados.
+
+IMÁGENES LEGACY
+Si un post viejo no tiene width/height:
+- se detecta naturalWidth/naturalHeight al cargar;
+- se asigna automáticamente el marco correcto.
+
+SUBIDA / OPTIMIZACIÓN
+Antes:
+- long edge hasta 3200px;
+- passthrough hasta 10MB;
+- WebP quality 96%.
+
+Media Rendering 1.0:
+- long edge máximo 2560px;
+- passthrough máximo 3MB;
+- WebP 90%;
+- JPEG fallback 92%.
+
+Esto sigue siendo alta calidad para fullscreen,
+pero es mucho más razonable para teléfonos.
+
+IMPORTANTE SOBRE PROFILE 1.2.0B
+Idealmente:
+1. aplicar Profile 1.2.0B;
+2. npm run build;
+3. aplicar Media Rendering 1.0;
+4. npm run build.
+
+El CSS Media 1.0 también reconoce:
+- alumni-profile-pro-media
+- alumni-profile-launch-media
+- alumni-profile-v3-media
+
+por lo que es compatible con la transición de perfil.
+
+ARCHIVOS NUEVOS
+- src/lib/postMediaPresentation.ts
+- src/app/media-rendering-1-0.css
+
+ARCHIVOS MODIFICADOS
+- src/components/feed/FeedPost.tsx
+- src/app/feed/page.tsx
+- src/components/profile/ProfileSavedTab.tsx
+- src/app/profile/page.tsx
+- src/app/u/[username]/page.tsx
+- src/lib/postImagePipeline.ts
+
+EJECUCIÓN
+Desde alumni-web:
+
+node .\aplicar_alumni_media_rendering_1_0_instagram_level.js
+npm run build
+
+SI BUILD PASA:
+
+git add .
+git commit -m "Media Rendering 1.0 - consistent mobile post images"
+git push origin main
