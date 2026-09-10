@@ -1,0 +1,78 @@
+ALUMNI PROFILE 1.1.0 — PERFIL PROPIO / OPCIÓN 3
+
+CORRECCIÓN IMPORTANTE
+Este parche trabaja sobre:
+src/app/profile/page.tsx
+
+Es el APARTADO PERFIL REAL DE LA APP.
+
+NO modifica Ajustes.
+NO usa /settings como pantalla principal.
+NO depende del perfil público /u/[username].
+
+ESTRUCTURA
+- Portada
+- Avatar superpuesto
+- Nombre completo
+- @usuario
+- Carrera · Alumni
+- Universidad
+- Ubicación
+- Editar perfil
+- Compartir
+- Publicaciones
+- Seguidores
+- Siguiendo
+- Tabs:
+  * Posts
+  * Guardados
+  * Actividad
+- Feed de publicaciones inmediatamente debajo
+
+ACTIVIDAD
+Aquí se agrupa lo secundario para no empujar los posts:
+- Bio
+- Trayectoria profesional
+- Datos de identidad
+- Redes/enlaces
+- Música
+- Pasaporte Alumni
+
+PROFESIONAL / MOBILE-FIRST
+La base del diseño son teléfonos:
+360 / 390 / 412 / 430 px.
+
+No se usa un layout alterno que haga desaparecer controles.
+Desktop solo centra la misma interfaz.
+
+TEMAS
+- Claro
+- Oscuro
+
+LÓGICA CONSERVADA
+- Supabase
+- caché de perfil
+- publicaciones
+- likes/count
+- comentarios/count
+- fijar
+- editar publicación
+- eliminar publicación
+- media viewer
+- compartir perfil
+- guardados
+
+ARCHIVOS
+- src/app/profile/page.tsx
+- src/app/profile/profile-option-3-own.css
+
+EJECUTAR DESDE alumni-web:
+
+node .\aplicar_alumni_profile_1_1_0_perfil_real_opcion_3.js
+npm run build
+
+SI EL BUILD SALE BIEN:
+
+git add .
+git commit -m "Profile 1.1.0 - option 3 on real profile area"
+git push origin main

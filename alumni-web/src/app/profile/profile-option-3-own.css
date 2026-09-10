@@ -1,0 +1,538 @@
+/*
+ * ALUMNI_PROFILE_1_1_0_OWN_PROFILE_OPTION_3_EXACT
+ * Opción 3 exacta aplicada al APARTADO /profile.
+ * Prioridad: teléfono 360–430px.
+ */
+
+.alumni-own-profile-v3 {
+  width: calc(100% + 32px);
+  max-width: none;
+  margin: 0 -16px;
+  color: var(--app-text);
+  background: var(--app-bg);
+  font-family:
+    var(--font-geist-sans),
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
+}
+
+/* ---------- HERO ---------- */
+
+.alumni-own-profile-v3-cover {
+  position: relative;
+  height: 184px;
+  overflow: hidden;
+  background: #111722;
+}
+
+.alumni-own-profile-v3-cover-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.alumni-own-profile-v3-cover-fallback {
+  width: 100%;
+  height: 100%;
+  background:
+    radial-gradient(
+      circle at 28% 24%,
+      color-mix(
+        in srgb,
+        var(--app-accent) 34%,
+        transparent
+      ),
+      transparent 35%
+    ),
+    linear-gradient(
+      145deg,
+      #172235,
+      #0e1420 58%,
+      #111722
+    );
+}
+
+.alumni-own-profile-v3-cover-shade {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(
+      180deg,
+      rgba(2,5,9,.05),
+      rgba(2,5,9,.08) 48%,
+      rgba(2,5,9,.62)
+    );
+  pointer-events: none;
+}
+
+.alumni-own-profile-v3-top-button {
+  position: absolute;
+  top: max(12px, env(safe-area-inset-top));
+  z-index: 4;
+  display: flex;
+  width: 40px;
+  height: 40px;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(255,255,255,.18);
+  border-radius: 13px;
+  background: rgba(6,9,14,.48);
+  color: #fff;
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+
+.alumni-own-profile-v3-top-button.is-left {
+  left: 12px;
+  font-size: 20px;
+  font-weight: 500;
+}
+
+.alumni-own-profile-v3-top-button.is-right {
+  right: 12px;
+}
+
+.alumni-own-profile-v3-main {
+  position: relative;
+  padding: 0 16px;
+}
+
+.alumni-own-profile-v3-avatar-wrap {
+  height: 43px;
+}
+
+.alumni-own-profile-v3-avatar {
+  position: absolute;
+  top: -44px;
+  left: 16px;
+  z-index: 5;
+  display: flex;
+  width: 88px;
+  height: 88px;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border: 3px solid var(--app-bg);
+  border-radius: 999px;
+  background: var(--app-surface-2);
+  color: var(--app-text);
+  font-size: 22px;
+  font-weight: 900;
+  box-shadow: 0 6px 20px rgba(0,0,0,.18);
+}
+
+.alumni-own-profile-v3-identity {
+  padding-top: 4px;
+}
+
+.alumni-own-profile-v3-identity h1 {
+  margin: 0;
+  overflow: hidden;
+  color: var(--app-text);
+  font-size: 21px;
+  line-height: 1.08;
+  font-weight: 950;
+  letter-spacing: -.04em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.alumni-own-profile-v3-handle {
+  margin-top: 3px;
+  color: var(--app-muted);
+  font-size: 12px;
+}
+
+.alumni-own-profile-v3-role {
+  margin-top: 8px;
+  color: var(--app-text-soft);
+  font-size: 12px;
+  font-weight: 590;
+  line-height: 1.35;
+}
+
+.alumni-own-profile-v3-role span {
+  color: var(--app-muted);
+}
+
+.alumni-own-profile-v3-fact {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin-top: 5px;
+  color: var(--app-muted);
+  font-size: 11px;
+  line-height: 1.3;
+}
+
+.alumni-own-profile-v3-fact svg {
+  flex: 0 0 auto;
+  color: var(--app-muted-2);
+}
+
+/* ---------- ACTIONS ---------- */
+
+.alumni-own-profile-v3-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.alumni-own-profile-v3-primary,
+.alumni-own-profile-v3-secondary {
+  display: flex;
+  min-width: 0;
+  height: 42px;
+  flex: 1 1 0;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 0 12px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 850;
+  white-space: nowrap;
+}
+
+.alumni-own-profile-v3-primary {
+  background: var(--app-text);
+  color: var(--app-bg);
+}
+
+.alumni-own-profile-v3-secondary {
+  border: 1px solid var(--app-border);
+  background: var(--app-soft);
+  color: var(--app-text-soft);
+}
+
+/* ---------- STATS ---------- */
+
+.alumni-own-profile-v3-stats {
+  display: grid;
+  grid-template-columns:
+    repeat(3, minmax(0,1fr));
+  margin-top: 16px;
+  border-bottom: 1px solid var(--app-border);
+}
+
+.alumni-own-profile-v3-stats > * {
+  position: relative;
+  display: flex;
+  min-height: 60px;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  background: transparent;
+  color: inherit;
+}
+
+.alumni-own-profile-v3-stats > * + *::before {
+  content: "";
+  position: absolute;
+  top: 14px;
+  bottom: 14px;
+  left: 0;
+  width: 1px;
+  background: var(--app-border);
+}
+
+.alumni-own-profile-v3-stats strong {
+  color: var(--app-text);
+  font-size: 15px;
+  font-weight: 950;
+  line-height: 1;
+}
+
+.alumni-own-profile-v3-stats span {
+  margin-top: 6px;
+  color: var(--app-muted-2);
+  font-size: 8.5px;
+  font-weight: 650;
+}
+
+/* ---------- TABS ---------- */
+
+.alumni-own-profile-v3-tabs {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  display: grid;
+  grid-template-columns:
+    repeat(3, minmax(0,1fr));
+  min-height: 48px;
+  border-bottom: 1px solid var(--app-border);
+  background:
+    color-mix(
+      in srgb,
+      var(--app-bg) 96%,
+      transparent
+    );
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+}
+
+.alumni-own-profile-v3-tabs button {
+  position: relative;
+  border: 0;
+  background: transparent;
+  color: var(--app-muted-2);
+  font-size: 11px;
+  font-weight: 760;
+}
+
+.alumni-own-profile-v3-tabs button[data-active="true"] {
+  color: var(--app-text);
+}
+
+.alumni-own-profile-v3-tabs
+  button[data-active="true"]::after {
+  content: "";
+  position: absolute;
+  right: 18px;
+  bottom: 0;
+  left: 18px;
+  height: 2px;
+  border-radius: 99px;
+  background: var(--app-accent);
+}
+
+/* ---------- POSTS ---------- */
+
+.alumni-own-profile-v3-post {
+  padding: 15px 16px 13px;
+  border-bottom: 1px solid var(--app-border);
+  background: var(--app-bg);
+}
+
+.alumni-own-profile-v3-post-head {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 10px;
+}
+
+.alumni-own-profile-v3-post-avatar {
+  width: 38px;
+  height: 38px;
+  flex: 0 0 38px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--app-surface-2);
+}
+
+.alumni-own-profile-v3-post-author {
+  min-width: 0;
+  flex: 1;
+}
+
+.alumni-own-profile-v3-post-author strong {
+  display: block;
+  overflow: hidden;
+  color: var(--app-text);
+  font-size: 12.5px;
+  font-weight: 850;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.alumni-own-profile-v3-post-author span {
+  display: block;
+  overflow: hidden;
+  margin-top: 2px;
+  color: var(--app-muted-2);
+  font-size: 9.5px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.alumni-own-profile-v3-pinned {
+  flex: 0 0 auto;
+  padding: 4px 7px;
+  border-radius: 999px;
+  background: var(--app-accent-soft);
+  color: var(--app-accent);
+  font-size: 8px;
+  font-weight: 800;
+}
+
+.alumni-own-profile-v3-post-copy {
+  margin: 12px 0 0;
+  white-space: pre-wrap;
+  color: var(--app-text-soft);
+  font-size: 13px;
+  font-weight: 440;
+  line-height: 1.48;
+}
+
+.alumni-own-profile-v3-media {
+  overflow: hidden;
+  margin: 12px -16px 0;
+  background: #05070b;
+}
+
+.alumni-own-profile-v3-media button {
+  display: block;
+  width: 100%;
+  border: 0;
+  background: transparent;
+}
+
+.alumni-own-profile-v3-media img {
+  display: block;
+  width: 100%;
+  max-height: 590px;
+  object-fit: contain;
+}
+
+.alumni-own-profile-v3-post-foot {
+  display: flex;
+  min-height: 44px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding-top: 8px;
+}
+
+.alumni-own-profile-v3-engagement {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+
+.alumni-own-profile-v3-engagement span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--app-muted);
+  font-size: 10px;
+  font-weight: 700;
+}
+
+/* ---------- SAVED / ACTIVITY ---------- */
+
+.alumni-own-profile-v3-saved,
+.alumni-own-profile-v3-activity {
+  padding: 14px 16px 32px;
+}
+
+.alumni-own-profile-v3-activity {
+  display: grid;
+  gap: 12px;
+}
+
+.alumni-own-profile-v3-about-card,
+.alumni-own-profile-v3-activity-block {
+  min-width: 0;
+  overflow: hidden;
+  padding: 14px;
+  border: 1px solid var(--app-border);
+  border-radius: 16px;
+  background: var(--app-surface);
+}
+
+.alumni-own-profile-v3-about-card span {
+  color: var(--app-muted-2);
+  font-size: 9px;
+  font-weight: 850;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+}
+
+.alumni-own-profile-v3-about-card p {
+  margin-top: 7px;
+  color: var(--app-text-soft);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.alumni-own-profile-v3-activity
+  .alumni-profile-header-facts {
+  margin-top: 0 !important;
+  justify-content: flex-start !important;
+}
+
+.alumni-own-profile-v3-empty {
+  display: flex;
+  min-height: 220px;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 36px 24px;
+  text-align: center;
+}
+
+.alumni-own-profile-v3-empty strong {
+  color: var(--app-text);
+  font-size: 13px;
+}
+
+.alumni-own-profile-v3-empty span {
+  max-width: 280px;
+  margin-top: 7px;
+  color: var(--app-muted-2);
+  font-size: 11px;
+  line-height: 1.45;
+}
+
+/* ---------- THEMES ---------- */
+
+html[data-theme="light"] .alumni-own-profile-v3,
+html[data-theme="light"] .alumni-own-profile-v3-post {
+  background: #fff;
+}
+
+html[data-theme="dark"] .alumni-own-profile-v3,
+html[data-theme="dark"] .alumni-own-profile-v3-post {
+  background: var(--app-bg);
+}
+
+/* ---------- SMALL PHONES ---------- */
+
+@media (max-width: 374px) {
+  .alumni-own-profile-v3-cover {
+    height: 170px;
+  }
+
+  .alumni-own-profile-v3-avatar {
+    width: 82px;
+    height: 82px;
+  }
+
+  .alumni-own-profile-v3-identity h1 {
+    font-size: 19px;
+  }
+
+  .alumni-own-profile-v3-primary,
+  .alumni-own-profile-v3-secondary {
+    height: 40px;
+    padding-inline: 9px;
+    font-size: 10px;
+  }
+
+  .alumni-own-profile-v3-tabs button {
+    font-size: 10.5px;
+  }
+}
+
+/* ---------- DESKTOP SECONDARY ---------- */
+
+@media (min-width: 700px) {
+  .alumni-own-profile-v3 {
+    width: 100%;
+    max-width: 560px;
+    margin: 18px auto 48px;
+    overflow: hidden;
+    border: 1px solid var(--app-border);
+    border-radius: 24px;
+    box-shadow: 0 24px 70px var(--app-shadow);
+  }
+
+  .alumni-own-profile-v3-cover {
+    height: 215px;
+  }
+}
