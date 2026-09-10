@@ -2926,8 +2926,11 @@ export default function StoryComposer({
         className="alumni-story-creator-c fixed inset-0 z-[2147483000] overflow-hidden bg-black text-white"
         data-pull-refresh-lock="true"
         data-story-creator="ALUMNI_STORIES_1_3_3B_OPTION_C_EXACT_CREATOR"
+        data-mobile-first="true"
+        data-has-media={hasMedia ? "true" : "false"}
+        data-camera-active={mobileCameraActive ? "true" : "false"}
       >
-        <div className="alumni-story-creator-stage relative mx-auto h-[100dvh] w-full max-w-[460px] overflow-hidden bg-[#07090d] sm:border-x sm:border-white/[0.05]">
+        <div className="alumni-story-creator-stage relative mx-auto h-[100dvh] w-full overflow-hidden bg-[#07090d]">
           {collagePreviewUrls.length >=
           2 ? (
             <div
@@ -3114,6 +3117,7 @@ export default function StoryComposer({
 
           {/* ALUMNI_STORIES_1_3_0_OPTION_C_COMPOSER */}
           {/* ALUMNI_STORIES_1_3_3B_OPTION_C_EXACT_CREATOR */}
+          {/* ALUMNI_STORIES_1_4_5_MOBILE_FIRST_REPAIR */}
           <div className="pointer-events-none absolute inset-x-0 top-[max(14px,env(safe-area-inset-top))] z-[85] flex h-11 items-center justify-center">
             <div className="alumni-story-creator-brand pointer-events-auto select-none text-[17px] font-black tracking-[-0.045em] text-white [text-shadow:none]">
               Alumni<span className="text-[#7b87ff]">.</span>
@@ -3130,12 +3134,126 @@ export default function StoryComposer({
             <X size={25} strokeWidth={1.8} />
           </button>
           {hasMedia && (
-            <div className="alumni-story-creator-tools absolute right-[max(16px,env(safe-area-inset-right))] top-[38%] z-[88] flex -translate-y-1/2 flex-col gap-3">
+            <div className="alumni-story-creator-tools absolute z-[88] flex flex-col">
+              <button
+                type="button"
+                onClick={() => {
+                  setStoryTextEditing(true);
+                  setStoryStyleOpen(false);
+                  setStoryFilterOpen(false);
+                }}
+                className={`alumni-story-tool-button ${
+                  storyTextEditing ? "is-active" : ""
+                }`}
+                aria-label="Texto"
+              >
+                <span className="text-[17px] font-black tracking-[-0.06em]">
+                  Aa
+                </span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setStoryText((current) =>
+                    current
+                      ? current.endsWith(" ")
+                        ? current + "@"
+                        : current + " @"
+                      : "@"
+                  );
+                  setStoryTextEditing(true);
+                  setStoryStyleOpen(false);
+                  setStoryFilterOpen(false);
+                }}
+                className="alumni-story-tool-button"
+                aria-label="Mencionar persona"
+              >
+                <span className="text-[20px] font-semibold">@</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setStoryStyleOpen((value) => !value);
+                  setStoryTextEditing(false);
+                  setStoryFilterOpen(false);
+                }}
+                className={`alumni-story-tool-button ${
+                  storyStyleOpen ? "is-active" : ""
+                }`}
+                aria-label="Estilo"
+              >
+                <Palette size={19} />
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setStoryFilterOpen((value) => !value);
+                  setStoryTextEditing(false);
+                  setStoryStyleOpen(false);
+                }}
+                className={`alumni-story-tool-button ${
+                  storyFilterOpen ? "is-active" : ""
+                }`}
+                aria-label="Filtros"
+              >
+                <SlidersHorizontal size={19} />
+              </button>
+            </div>
+          )}
+
+          {hasMedia && (
+            <div className="alumni-story-bottom-actions absolute z-[100] flex items-center">
+              <button
+                type="button"
+                onClick={() => mediaInputRef.current?.click()}
+                className="alumni-story-media-thumb relative shrink-0 overflow-hidden"
+                aria-label="Cambiar foto o video"
+              >
+                {previewUrl ? (
+                  file?.type.startsWith("video/") ? (
+                    <video
+                      src={previewUrl}
+                      muted
+                      playsInline
+                      className="h-full w-full object-cover"
+                    />
+                  ) : (
+                    <img
+                      src={previewUrl}
+                      alt=""
+                      className="h-full w-full object-cover"
+                    />
+                  )
+                ) : collagePreviewUrls[0] ? (
+                  <img
+                    src={collagePreviewUrls[0]}
+                    alt=""
+                    className="h-full w-full object-cover"
+                  />
+                ) : (
+                  <span className="flex h-full w-full items-center justify-center">
+                    <ImagePlus size={17} />
+                  </span>
+                )}
+              </button>
+
+              <button
+                type="button"
+                onClick={() => mediaInputRef.current?.click()}
+                className="alumni-story-add-media shrink-0"
+                aria-label="Agregar foto o video"
+              >
+                +
+              </button>
+
               <button
                 type="button"
                 onClick={publishStory}
                 disabled={publishing || !hasMedia}
-                className="alumni-story-publish-direct ml-auto flex h-[52px] min-w-[146px] items-center justify-center rounded-[16px] bg-[#6d7cff] px-6 text-[14px] font-black text-white shadow-[0_12px_34px_rgba(0,0,0,.20)] transition active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-45"
+                className="alumni-story-publish-direct ml-auto"
               >
                 {publishing
                   ? "Publicando..."
