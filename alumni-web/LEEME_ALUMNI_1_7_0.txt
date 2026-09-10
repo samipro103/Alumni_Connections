@@ -1,0 +1,60 @@
+ALUMNI 1.7.0 — STORIES HIDDEN + COMMENTS GEIST
+
+DECISIÓN DE PRODUCTO
+Stories queda OCULTO SUPERFICIALMENTE por ahora.
+
+NO SE ELIMINA:
+- tablas;
+- datos;
+- StoryComposer;
+- StoryViewer;
+- lógica;
+- archivos;
+- funcionalidades internas.
+
+SE OCULTA:
+- rail superior de Stories en Feed;
+- espacio publicitario ligado al rail de Stories;
+- opción "Compartir en historia" del menú de publicaciones.
+
+Se usa un flag:
+const STORIES_UI_ENABLED = false;
+
+Esto permite recuperarlo posteriormente sin reconstruir Stories.
+
+COMENTARIOS
+Los comentarios del Feed pasan a usar explícitamente:
+var(--font-geist-sans)
+
+Es la misma familia Geist que carga RootLayout y utiliza la interfaz
+de Mensajería por herencia.
+
+Se aplica a:
+- preview del último comentario;
+- comentarios dentro de la hoja;
+- nombre del usuario;
+- texto del comentario;
+- input para comentar;
+- acciones asociadas.
+
+ARCHIVOS MODIFICADOS
+- src/app/feed/page.tsx
+- src/components/feed/FeedPost.tsx
+- src/components/feed/FeedCommentsSheet.tsx
+
+ARCHIVO NUEVO
+- src/app/feed/feed-comments-messaging-font.css
+
+EJECUTAR DESDE alumni-web:
+
+node .\aplicar_alumni_1_7_0_ocultar_stories_comentarios_geist.js
+npm run build
+
+SI EL BUILD SALE BIEN:
+
+git add .
+git commit -m "Feed 1.7.0 - hide stories and unify comment typography"
+git push origin main
+
+SIGUIENTE BLOQUE
+Configuración.

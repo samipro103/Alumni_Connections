@@ -1,0 +1,60 @@
+/*
+ * ALUMNI_1_7_0_STORIES_HIDDEN_COMMENTS_GEIST
+ *
+ * Feed comments now explicitly use the same sans family that powers
+ * Alumni messaging. Messaging inherits Geist from RootLayout.
+ */
+
+.alumni-feed-page .alumni-pro-comment-preview,
+.alumni-feed-page .alumni-pro-comment-preview strong,
+.alumni-feed-page .alumni-pro-comment-preview span,
+.alumni-feed-page .alumni-pro-view-comments,
+.alumni-comments-messaging-font,
+.alumni-comments-messaging-font button,
+.alumni-comments-messaging-font input,
+.alumni-comments-messaging-font .alumni-feed-comment,
+.alumni-comments-messaging-font .alumni-feed-comment-body,
+.alumni-comments-messaging-font .alumni-feed-comment-body p,
+.alumni-comments-messaging-font .alumni-feed-comment-body a,
+.alumni-comments-messaging-font .alumni-feed-comment-body span {
+  font-family:
+    var(--font-geist-sans),
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif !important;
+}
+
+/* Conversational rhythm similar to Messages */
+.alumni-feed-page .alumni-pro-comment-preview span,
+.alumni-comments-messaging-font .alumni-feed-comment-body > p {
+  font-weight: 450;
+  letter-spacing: -0.01em;
+}
+
+.alumni-feed-page .alumni-pro-comment-preview strong,
+.alumni-comments-messaging-font .alumni-feed-comment-body > p > a {
+  font-weight: 760;
+  letter-spacing: -0.012em;
+}
+
+.alumni-comments-messaging-font .alumni-feed-comment-body > p {
+  font-size: 14px !important;
+  line-height: 1.45 !important;
+}
+
+.alumni-comments-messaging-font .alumni-comments-composer input {
+  font-size: 16px;
+  line-height: 1.3;
+}
+
+/*
+ * Defensive visual hide.
+ * The React feature flag above is the primary mechanism.
+ * This prevents a stale/hydrated Stories rail from flashing briefly.
+ */
+.alumni-feed-page .alumni-stories-section {
+  display: none !important;
+}

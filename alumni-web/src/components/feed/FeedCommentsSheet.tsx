@@ -101,7 +101,7 @@ export default function FeedCommentsSheet({
         }
       }}
     >
-      <section className="alumni-comments-sheet">
+      <section className="alumni-comments-sheet alumni-comments-messaging-font">
         <header className="alumni-comments-header">
           <div>
             <span>Publicación</span>
@@ -222,3 +222,5 @@ export default function FeedCommentsSheet({
 /* ALUMNI_PERFORMANCE_HARDENING_FEED_V2_LAZY_COMMENTS */
 
 /* ALUMNI_PERFORMANCE_HARDENING_COMMENT_DRAFT_LOCAL_V8 */
+
+/* ALUMNI_1_7_0_STORIES_HIDDEN_COMMENTS_GEIST */

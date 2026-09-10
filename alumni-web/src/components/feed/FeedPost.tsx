@@ -40,6 +40,9 @@ const LinkPreviewCard = dynamic(
   }
 );
 
+// Stories oculto superficialmente; se conserva onStory para compatibilidad.
+const STORIES_UI_ENABLED = false;
+
 function compactRepeatedLines(text: string) {
   const lines = text.split(/\r?\n/);
   const seenUrls = new Set<string>();
@@ -555,16 +558,40 @@ export default function FeedPost({
               Copiar enlace
             </button>
 
-            <button
-              type="button"
-              onClick={() => {
-                setMenuOpen(false);
-                onStory();
-              }}
-            >
-              <Sparkles size={17} />
-              Compartir en historia
-            </button>
+            {STORIES_UI_ENABLED && (
+
+
+              <button
+
+
+                            type="button"
+
+
+                            onClick={() => {
+
+
+                              setMenuOpen(false);
+
+
+                              onStory();
+
+
+                            }}
+
+
+                          >
+
+
+                            <Sparkles size={17} />
+
+
+                            Compartir en historia
+
+
+                          </button>
+
+
+            )}
 
             {ownPost ? (
               <button
@@ -933,3 +960,5 @@ export default function FeedPost({
 /* ALUMNI_PERFORMANCE_HARDENING_FEED_NAVIGATION_V5 */
 
 /* ALUMNI_PERFORMANCE_HARDENING_FEED_PREVIEW_CODE_SPLIT_V6 */
+
+/* ALUMNI_1_7_0_STORIES_HIDDEN_COMMENTS_GEIST */

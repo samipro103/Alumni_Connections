@@ -14,6 +14,7 @@ import "./feed-pro.css";
 import "./feed-visual-2-4.css";
 import "./feed-visual-2-5.css";
 import "./feed-visual-3-1.css";
+import "./feed-comments-messaging-font.css";
 import "./stories-visual-1-0.css";
 import "./stories-visual-1-1.css";
 import { supabase } from "@/lib/supabase";
@@ -67,6 +68,13 @@ type EngagementState = {
 } | null;
 
 const FEED_PAGE_SIZE = 30;
+
+/*
+ * Stories queda oculto superficialmente por decisión de producto.
+ * No se elimina lógica, tablas ni componentes.
+ * Para reactivarlo más adelante basta cambiar este flag a true.
+ */
+const STORIES_UI_ENABLED = false;
 
 function shouldShowFeedAd(
   postIndex: number
@@ -2234,13 +2242,27 @@ function FeedContent() {
   return (
     <AppShell>
       <div className="alumni-feed-page alumni-feed-pro mx-auto w-full max-w-[780px]">
-        <StoriesRail
-          focusStoryId={searchParams.get("story")}
-        />
+        {STORIES_UI_ENABLED && (
 
-        <AdSenseSlot
-          placement="stories"
-        />
+          <>
+
+            <StoriesRail
+
+              focusStoryId={searchParams.get("story")}
+
+            />
+
+        
+
+            <AdSenseSlot
+
+              placement="stories"
+
+            />
+
+          </>
+
+        )}
 
         <PostComposer
           content={content}
@@ -2501,3 +2523,5 @@ export default function FeedPage() {
 /* ALUMNI_FEED_1_1_PROFESSIONAL_MINIMAL */
 
 /* ALUMNI_STORIES_1_0_IMPORT */
+
+/* ALUMNI_1_7_0_STORIES_HIDDEN_COMMENTS_GEIST */
