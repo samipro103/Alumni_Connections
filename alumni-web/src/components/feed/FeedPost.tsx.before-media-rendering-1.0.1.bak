@@ -137,6 +137,18 @@ function FeedImage({
       aria-label="Abrir fotografía"
       aria-busy={!loaded}
     >
+      {contain && src && (
+        <img
+          className="alumni-feed-image-backdrop"
+          src={src}
+          alt=""
+          aria-hidden="true"
+          loading="lazy"
+          decoding="async"
+          draggable={false}
+        />
+      )}
+
       {src && (
         <img
           className="alumni-feed-image-main"
@@ -1061,5 +1073,3 @@ export default function FeedPost({
 /* ALUMNI_1_7_0_STORIES_HIDDEN_COMMENTS_GEIST */
 
 /* ALUMNI_MEDIA_RENDERING_1_0_INSTAGRAM_LEVEL */
-
-/* ALUMNI_MEDIA_RENDERING_1_0_1_FEED_CLEAN_EDGES */
