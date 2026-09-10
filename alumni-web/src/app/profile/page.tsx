@@ -42,6 +42,7 @@ import { shareAlumniContent } from "@/lib/nativeExperience";
 import ProfilePostOwnerMenu from "@/components/profile/ProfilePostOwnerMenu";
 import "@/components/profile/ProfilePostOwnerMenu.css";
 import "./profile-visual-2-8.css";
+import "./profile-professional-exact-1-1-1.css";
 import "./profile-option-3-own.css";
 
 
@@ -471,351 +472,285 @@ export default function ProfilePage() {
 
   if (!profile) {
     return (
-      <AppShell>
-        <AlumniEmptyState
-          eyebrow="Perfil"
-          title="No pudimos mostrar tu perfil."
-          description="Vuelve a intentarlo o revisa la configuración de tu cuenta."
-          actionHref="/settings?section=profile"
-          actionLabel="Abrir configuración"
-        />
-      </AppShell>
-    );
-  }
-
-  return (
     <AppShell>
-      <div
-        className="alumni-own-profile-v3"
-        data-profile-design="option-3-activity-own"
-      >
-        {/* PORTADA */}
-        <section className="alumni-own-profile-v3-hero">
-          <div className="alumni-own-profile-v3-cover">
-            {profile.banner_url ? (
-              <HDProfileImage
-                src={profile.banner_url}
-                alt="Portada"
-                variant="banner"
-                className="alumni-own-profile-v3-cover-image"
-              />
-            ) : (
-              <div className="alumni-own-profile-v3-cover-fallback" />
-            )}
+      <div className="alumni-profile-pro" data-profile-design="option-3-pro-exact">
+        <section className="alumni-profile-pro-shell">
+          <section className="alumni-profile-pro-hero">
+            <div className="alumni-profile-pro-cover">
+              {profile.banner_url ? (
+                <HDProfileImage
+                  src={profile.banner_url}
+                  alt="Portada"
+                  variant="banner"
+                  className="alumni-profile-pro-cover-image"
+                />
+              ) : (
+                <div className="alumni-profile-pro-cover-fallback" />
+              )}
 
-            <div className="alumni-own-profile-v3-cover-shade" />
+              <div className="alumni-profile-pro-cover-overlay" />
+
+              <button
+                type="button"
+                onClick={() => router.back()}
+                className="alumni-profile-pro-top alumni-profile-pro-top-left"
+                aria-label="Volver"
+              >
+                ←
+              </button>
+
+              <Link
+                href="/settings"
+                className="alumni-profile-pro-top alumni-profile-pro-top-right"
+                aria-label="Configuración"
+                title="Configuración"
+              >
+                <Settings size={18} />
+              </Link>
+            </div>
+
+            <div className="alumni-profile-pro-main">
+              <div className="alumni-profile-pro-avatar-slot">
+                <div className="alumni-profile-pro-avatar">
+                  {profile.avatar_url ? (
+                    <HDProfileImage
+                      src={profile.avatar_url}
+                      alt="Avatar"
+                      variant="avatar"
+                      className="h-full w-full object-cover"
+                    />
+                  ) : (
+                    profile.username?.charAt(0)?.toUpperCase() || "U"
+                  )}
+                </div>
+              </div>
+
+              <div className="alumni-profile-pro-identity">
+                <h1>{profile.full_name || "Mi perfil"}</h1>
+                <p className="alumni-profile-pro-handle">@{profile.username}</p>
+
+                {(profile.career || profile.education_program_name) && (
+                  <p className="alumni-profile-pro-line">
+                    <Briefcase size={14} />
+                    <span>{profile.career || profile.education_program_name}</span>
+                  </p>
+                )}
+
+                {(profile.university || profile.education_institution_name) && (
+                  <p className="alumni-profile-pro-line">
+                    <GraduationCap size={14} />
+                    <span>{profile.university || profile.education_institution_name}</span>
+                  </p>
+                )}
+
+                {(profile.city || profile.country) && (
+                  <p className="alumni-profile-pro-line">
+                    <MapPin size={14} />
+                    <span>{[profile.city, profile.country].filter(Boolean).join(", ")}</span>
+                  </p>
+                )}
+              </div>
+
+              <div className="alumni-profile-pro-actions">
+                <Link
+                  href="/settings?section=profile&edit=1"
+                  className="alumni-profile-pro-primary"
+                >
+                  <Pencil size={15} />
+                  Editar perfil
+                </Link>
+
+                <button
+                  type="button"
+                  onClick={shareProfile}
+                  className="alumni-profile-pro-secondary"
+                >
+                  <Share2 size={15} />
+                  Compartir
+                </button>
+              </div>
+
+              <div className="alumni-profile-pro-stats">
+                <button
+                  type="button"
+                  onClick={() => setTab("posts")}
+                  className="alumni-profile-pro-stat"
+                >
+                  <strong>{posts.length}</strong>
+                  <span>Publicaciones</span>
+                </button>
+
+                <div className="alumni-profile-pro-stat">
+                  <strong>{followers}</strong>
+                  <span>Seguidores</span>
+                </div>
+
+                <div className="alumni-profile-pro-stat">
+                  <strong>{following}</strong>
+                  <span>Siguiendo</span>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <nav className="alumni-profile-pro-tabs" aria-label="Secciones de mi perfil">
+            <button
+              type="button"
+              data-active={tab === "posts" ? "true" : "false"}
+              onClick={() => setTab("posts")}
+            >
+              Posts
+            </button>
 
             <button
               type="button"
-              onClick={() => router.back()}
-              className="alumni-own-profile-v3-top-button is-left"
-              aria-label="Volver"
+              data-active={tab === "saved" ? "true" : "false"}
+              onClick={() => setTab("saved")}
             >
-              <span aria-hidden="true">←</span>
+              Guardados
             </button>
 
-            <Link
-              href="/settings"
-              className="alumni-own-profile-v3-top-button is-right"
-              aria-label="Configuración"
-              title="Configuración"
+            <button
+              type="button"
+              data-active={tab === "activity" ? "true" : "false"}
+              onClick={() => setTab("activity")}
             >
-              <Settings size={18} />
-            </Link>
-          </div>
+              Actividad
+            </button>
+          </nav>
 
-          <div className="alumni-own-profile-v3-main">
-            <div className="alumni-own-profile-v3-avatar-wrap">
-              <div className="alumni-own-profile-v3-avatar">
-                {profile.avatar_url ? (
-                  <HDProfileImage
-                    src={profile.avatar_url}
-                    alt="Avatar"
-                    variant="avatar"
-                    className="h-full w-full object-cover"
-                  />
-                ) : (
-                  profile.username
-                    ?.charAt(0)
-                    ?.toUpperCase() || "U"
-                )}
-              </div>
-            </div>
+          {tab === "posts" ? (
+            <section className="alumni-profile-pro-feed">
+              {posts.length === 0 ? (
+                <div className="alumni-profile-pro-empty">
+                  <strong>Aún no tienes publicaciones.</strong>
+                  <span>Cuando publiques en Alumni, aparecerá aquí.</span>
+                </div>
+              ) : (
+                <div className="alumni-profile-pro-post-list">
+                  {posts.map((post: any) => (
+                    <article key={post.id} className="alumni-profile-pro-post">
+                      <header className="alumni-profile-pro-post-head">
+                        <div className="alumni-profile-pro-post-avatar">
+                          <AlumniAvatar
+                            src={profile.avatar_url}
+                            name={profile.username}
+                            alt="Avatar"
+                            className="h-full w-full"
+                            imageClassName="h-full w-full object-cover"
+                          />
+                        </div>
 
-            <div className="alumni-own-profile-v3-identity">
-              <h1>
-                {profile.full_name ||
-                  `@${profile.username}`}
-              </h1>
-
-              <p className="alumni-own-profile-v3-handle">
-                @{profile.username}
-              </p>
-
-              {(profile.career ||
-                profile.education_program_name) && (
-                <p className="alumni-own-profile-v3-role">
-                  {profile.career ||
-                    profile.education_program_name}
-                  <span> · Alumni</span>
-                </p>
-              )}
-
-              {(profile.university ||
-                profile.education_institution_name) && (
-                <p className="alumni-own-profile-v3-fact">
-                  <GraduationCap size={14} />
-                  <span>
-                    {profile.university ||
-                      profile.education_institution_name}
-                  </span>
-                </p>
-              )}
-
-              {(profile.city || profile.country) && (
-                <p className="alumni-own-profile-v3-fact">
-                  <MapPin size={14} />
-                  <span>
-                    {[profile.city, profile.country]
-                      .filter(Boolean)
-                      .join(", ")}
-                  </span>
-                </p>
-              )}
-            </div>
-
-            <div className="alumni-own-profile-v3-actions">
-              <Link
-                href="/settings?section=profile&edit=1"
-                className="alumni-own-profile-v3-primary"
-              >
-                <Pencil size={15} />
-                Editar perfil
-              </Link>
-
-              <button
-                type="button"
-                onClick={shareProfile}
-                className="alumni-own-profile-v3-secondary"
-              >
-                <Share2 size={15} />
-                Compartir
-              </button>
-            </div>
-
-            <div className="alumni-own-profile-v3-stats">
-              <button
-                type="button"
-                onClick={() => setTab("posts")}
-              >
-                <strong>{posts.length}</strong>
-                <span>Publicaciones</span>
-              </button>
-
-              <div>
-                <strong>{followers}</strong>
-                <span>Seguidores</span>
-              </div>
-
-              <div>
-                <strong>{following}</strong>
-                <span>Siguiendo</span>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* NAVEGACIÓN DEL PERFIL */}
-        <nav
-          className="alumni-own-profile-v3-tabs"
-          aria-label="Secciones de mi perfil"
-        >
-          <button
-            type="button"
-            data-active={tab === "posts" ? "true" : "false"}
-            onClick={() => setTab("posts")}
-          >
-            Posts
-          </button>
-
-          <button
-            type="button"
-            data-active={tab === "saved" ? "true" : "false"}
-            onClick={() => setTab("saved")}
-          >
-            Guardados
-          </button>
-
-          <button
-            type="button"
-            data-active={tab === "activity" ? "true" : "false"}
-            onClick={() => setTab("activity")}
-          >
-            Actividad
-          </button>
-        </nav>
-
-        {/* POSTS COMO PROTAGONISTA */}
-        {tab === "posts" ? (
-          <section className="alumni-own-profile-v3-feed">
-            {posts.length === 0 ? (
-              <div className="alumni-own-profile-v3-empty">
-                <strong>Aún no tienes publicaciones.</strong>
-                <span>
-                  Cuando publiques algo en Alumni,
-                  aparecerá aquí.
-                </span>
-              </div>
-            ) : (
-              <div className="alumni-own-profile-v3-post-list">
-                {posts.map((post: any) => (
-                  <article
-                    key={post.id}
-                    className="alumni-own-profile-v3-post"
-                  >
-                    <header className="alumni-own-profile-v3-post-head">
-                      <div className="alumni-own-profile-v3-post-avatar">
-                        <AlumniAvatar
-                          src={profile.avatar_url}
-                          name={profile.username}
-                          alt="Avatar"
-                          className="h-full w-full"
-                          imageClassName="h-full w-full object-cover"
-                        />
-                      </div>
-
-                      <div className="alumni-own-profile-v3-post-author">
-                        <strong>
-                          {profile.full_name ||
-                            `@${profile.username}`}
-                        </strong>
-                        <span>
-                          @{profile.username} ·{" "}
-                          {formatDistanceToNow(
-                            new Date(post.created_at),
-                            {
+                        <div className="alumni-profile-pro-post-author">
+                          <strong>{profile.full_name || ("@" + profile.username)}</strong>
+                          <span>
+                            @{profile.username} · {formatDistanceToNow(new Date(post.created_at), {
                               addSuffix: true,
                               locale: es,
-                            }
-                          )}
-                        </span>
-                      </div>
+                            })}
+                          </span>
+                        </div>
 
-                      {post.pinned && (
-                        <span className="alumni-own-profile-v3-pinned">
-                          Fijada
-                        </span>
+                        {post.pinned && (
+                          <span className="alumni-profile-pro-pin-badge">Fijada</span>
+                        )}
+                      </header>
+
+                      {post.content && (
+                        <p className="alumni-profile-pro-post-copy">{post.content}</p>
                       )}
-                    </header>
 
-                    {post.content && (
-                      <p className="alumni-own-profile-v3-post-copy">
-                        {post.content}
-                      </p>
-                    )}
+                      {post.image_url && (
+                        <div className="alumni-profile-pro-media">
+                          <button
+                            type="button"
+                            onClick={() => setSelectedProfileMedia(post.image_url)}
+                            aria-label="Abrir fotografía"
+                          >
+                            <img src={post.image_url} alt="Publicación" />
+                          </button>
+                        </div>
+                      )}
 
-                    {post.image_url && (
-                      <div className="alumni-own-profile-v3-media">
-                        <button
-                          type="button"
-                          onClick={() =>
-                            setSelectedProfileMedia(
-                              post.image_url
-                            )
-                          }
-                          aria-label="Abrir fotografía"
-                        >
-                          <img
-                            src={post.image_url}
-                            alt="Publicación"
+                      <footer className="alumni-profile-pro-post-foot">
+                        <div className="alumni-profile-pro-engagement">
+                          <span>
+                            <Heart size={16} />
+                            {post.likes?.length || 0}
+                          </span>
+
+                          <span>
+                            <MessageCircle size={16} />
+                            {post.comments?.length || 0}
+                          </span>
+                        </div>
+
+                        <div className="alumni-profile-pro-owner">
+                          <ProfilePostOwnerMenu
+                            post={post}
+                            pinned={Boolean(post.pinned)}
+                            onEdit={(content) => editProfilePost(post.id, content)}
+                            onTogglePin={() => toggleProfilePin(post.id)}
+                            onDelete={() => deleteProfilePost(post.id)}
                           />
-                        </button>
-                      </div>
-                    )}
+                        </div>
+                      </footer>
+                    </article>
+                  ))}
+                </div>
+              )}
+            </section>
+          ) : tab === "saved" ? (
+            <section className="alumni-profile-pro-saved">
+              <ProfileSavedTab userId={profile.id} />
+            </section>
+          ) : (
+            <section className="alumni-profile-pro-activity">
+              {profile.bio && (
+                <div className="alumni-profile-pro-card">
+                  <span className="alumni-profile-pro-card-label">Acerca de</span>
+                  <p className="alumni-profile-pro-card-text">{profile.bio}</p>
+                </div>
+              )}
 
-                    <div className="alumni-own-profile-v3-post-foot">
-                      <div className="alumni-own-profile-v3-engagement">
-                        <span>
-                          <Heart size={17} />
-                          {post.likes?.length || 0}
-                        </span>
-
-                        <span>
-                          <MessageCircle size={17} />
-                          {post.comments?.length || 0}
-                        </span>
-                      </div>
-
-                      <ProfilePostOwnerMenu
-                        post={post}
-                        pinned={Boolean(post.pinned)}
-                        onEdit={(content) =>
-                          editProfilePost(
-                            post.id,
-                            content
-                          )
-                        }
-                        onTogglePin={() =>
-                          toggleProfilePin(post.id)
-                        }
-                        onDelete={() =>
-                          deleteProfilePost(post.id)
-                        }
-                      />
-                    </div>
-                  </article>
-                ))}
+              <div className="alumni-profile-pro-card">
+                <ProfessionalProfileOverview
+                  profile={profile}
+                  posts={posts}
+                  followers={followers}
+                  following={following}
+                  own
+                />
               </div>
-            )}
-          </section>
-        ) : tab === "saved" ? (
-          <section className="alumni-own-profile-v3-saved">
-            <ProfileSavedTab userId={profile.id} />
-          </section>
-        ) : (
-          <section className="alumni-own-profile-v3-activity">
-            {profile.bio && (
-              <div className="alumni-own-profile-v3-about-card">
-                <span>Acerca de</span>
-                <p>{profile.bio}</p>
+
+              <div className="alumni-profile-pro-card">
+                <ProfileHeaderFacts profile={profile} />
               </div>
-            )}
 
-            <ProfessionalProfileOverview
-              profile={profile}
-              posts={posts}
-              followers={followers}
-              following={following}
-              own
-            />
-
-            <div className="alumni-own-profile-v3-activity-block">
-              <ProfileHeaderFacts profile={profile} />
-            </div>
-
-            <div className="alumni-own-profile-v3-activity-block">
-              <ProfileIdentityMeta profile={profile} />
-            </div>
-
-            <div className="alumni-own-profile-v3-activity-block">
-              <ProfileSocialLinks profile={profile} />
-            </div>
-
-            {profileMusic && (
-              <div className="alumni-own-profile-v3-activity-block">
-                <ProfileMusicCard track={profileMusic} />
+              <div className="alumni-profile-pro-card">
+                <ProfileIdentityMeta profile={profile} />
               </div>
-            )}
 
-            <div className="alumni-own-profile-v3-activity-block">
-              <ProfilePassportPreview
-                userId={profile.id}
-                username={profile.username}
-                own
-              />
-            </div>
-          </section>
-        )}
+              <div className="alumni-profile-pro-card">
+                <ProfileSocialLinks profile={profile} className="" />
+              </div>
+
+              {profileMusic && (
+                <div className="alumni-profile-pro-card">
+                  <ProfileMusicCard track={profileMusic} className="" />
+                </div>
+              )}
+
+              <div className="alumni-profile-pro-card">
+                <ProfilePassportPreview
+                  userId={profile.id}
+                  username={profile.username}
+                  own
+                />
+              </div>
+            </section>
+          )}
+        </section>
       </div>
 
       {selectedProfileMedia && (
@@ -823,16 +758,14 @@ export default function ProfilePage() {
           src={selectedProfileMedia}
           type="image"
           alt="Publicación ampliada"
-          onClose={() =>
-            setSelectedProfileMedia(null)
-          }
+          onClose={() => setSelectedProfileMedia(null)}
         />
       )}
     </AppShell>
   );
 }
 
-/* ALUMNI_PROFILE_1_1_0_OWN_PROFILE_OPTION_3_EXACT */
+/* ALUMNI_PROFILE_1_1_1_PROFESSIONAL_EXACT */
 
 function Stat({
   value,

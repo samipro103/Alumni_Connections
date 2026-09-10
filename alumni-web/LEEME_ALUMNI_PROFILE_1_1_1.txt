@@ -1,0 +1,50 @@
+
+ALUMNI PROFILE 1.1.1 — PROFESSIONAL EXACT
+
+Este parche trabaja DIRECTAMENTE sobre el apartado real de Perfil:
+- src/app/profile/page.tsx
+
+No trabaja sobre Ajustes.
+No trabaja sobre /u/[username].
+
+OBJETIVO
+Dejar el perfil con una estructura más fiel al diseño elegido y con una
+presentación profesional, limpia y mobile-first.
+
+ESTRUCTURA RESULTANTE
+- Portada superior.
+- Avatar superpuesto.
+- Nombre y @usuario.
+- Carrera / programa.
+- Universidad.
+- Ubicación.
+- Botones: Editar perfil y Compartir.
+- Métricas en una sola fila.
+- Tabs:
+  * Posts
+  * Guardados
+  * Actividad
+- Publicaciones como contenido principal.
+- Actividad agrupa bio, overview, datos, enlaces, música y pasaporte.
+
+ENFOQUE
+- Diseño aislado con clases nuevas.
+- Menos riesgo de estilos montados.
+- Mobile-first real: 360, 390, 412, 430 px.
+- Claro/Oscuro.
+- Mantiene lógica de Supabase, edición, pin, borrar, media viewer y guardados.
+
+ARCHIVOS
+- src/app/profile/page.tsx
+- src/app/profile/profile-professional-exact-1-1-1.css
+
+EJECUTAR DESDE alumni-web:
+
+node .\aplicar_alumni_profile_1_1_1_professional_exact.js
+npm run build
+
+SI EL BUILD PASA:
+
+git add .
+git commit -m "Profile 1.1.1 - professional exact own profile"
+git push origin main
