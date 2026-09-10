@@ -1361,6 +1361,13 @@ export default function StoryComposer({
   const mediaInputRef =
     useRef<HTMLInputElement>(null);
 
+
+  // ALUMNI_STORIES_1_3_4_CAMERA_CLEAN_PUBLISH_ADS_OFF
+  const cameraVideoRef =
+    useRef<HTMLVideoElement>(null);
+
+  const cameraStreamRef =
+    useRef<MediaStream | null>(null);
   const collageInputRef =
     useRef<HTMLInputElement>(null);
 
@@ -1549,6 +1556,16 @@ export default function StoryComposer({
     setStoryReviewOpen,
   ] = useState(false);
 
+
+  const [
+    mobileCameraActive,
+    setMobileCameraActive,
+  ] = useState(false);
+
+  const [
+    mobileCameraError,
+    setMobileCameraError,
+  ] = useState("");
   const [
     collageFiles,
     setCollageFiles,
@@ -1606,6 +1623,153 @@ export default function StoryComposer({
         url
       );
   }, [file]);
+
+
+  useEffect(() => {
+    if (
+      !open ||
+      kind !== "standard" ||
+      file ||
+      sharedPost ||
+      collageFiles.length >= 2
+    ) {
+      const stream =
+        cameraStreamRef.current;
+
+      if (stream) {
+        stream
+          .getTracks()
+          .forEach((track) =>
+            track.stop()
+          );
+        cameraStreamRef.current =
+          null;
+      }
+
+      setMobileCameraActive(false);
+      return;
+    }
+
+    if (
+      typeof window === "undefined" ||
+      typeof navigator === "undefined"
+    ) {
+      return;
+    }
+
+    const phoneLike =
+      /Android|iPhone|iPad|iPod/i.test(
+        navigator.userAgent
+      ) ||
+      (
+        window.matchMedia(
+          "(pointer: coarse)"
+        ).matches &&
+        window.matchMedia(
+          "(max-width: 900px)"
+        ).matches
+      );
+
+    if (
+      !phoneLike ||
+      !navigator.mediaDevices?.getUserMedia
+    ) {
+      return;
+    }
+
+    let cancelled = false;
+
+    void (async () => {
+      try {
+        setMobileCameraError("");
+
+        const stream =
+          await navigator.mediaDevices.getUserMedia({
+            video: {
+              facingMode: {
+                ideal: "environment",
+              },
+              width: {
+                ideal: 1080,
+              },
+              height: {
+                ideal: 1920,
+              },
+            },
+            audio: false,
+          });
+
+        if (cancelled) {
+          stream
+            .getTracks()
+            .forEach((track) =>
+              track.stop()
+            );
+          return;
+        }
+
+        cameraStreamRef.current =
+          stream;
+
+        setMobileCameraActive(true);
+      } catch (error) {
+        console.warn(
+          "[Alumni Stories] Cámara no disponible:",
+          error
+        );
+
+        setMobileCameraActive(false);
+        setMobileCameraError(
+          "No pudimos abrir la cámara. Puedes elegir una foto de tu galería."
+        );
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+
+      const stream =
+        cameraStreamRef.current;
+
+      if (stream) {
+        stream
+          .getTracks()
+          .forEach((track) =>
+            track.stop()
+          );
+
+        cameraStreamRef.current =
+          null;
+      }
+    };
+  }, [
+    open,
+    kind,
+    file,
+    sharedPost,
+    collageFiles.length,
+  ]);
+
+  useEffect(() => {
+    if (
+      !mobileCameraActive ||
+      !cameraVideoRef.current ||
+      !cameraStreamRef.current
+    ) {
+      return;
+    }
+
+    const video =
+      cameraVideoRef.current;
+
+    video.srcObject =
+      cameraStreamRef.current;
+
+    void video.play().catch(() => {
+      // playsInline + muted suele permitir autoplay;
+      // si el navegador lo bloquea, el usuario aún puede usar galería.
+    });
+  }, [mobileCameraActive]);
 
   useEffect(() => {
     if (!open) {
@@ -1937,6 +2101,94 @@ export default function StoryComposer({
     }
   }, [kind]);
 
+
+  function stopMobileCamera() {
+    const stream =
+      cameraStreamRef.current;
+
+    if (stream) {
+      stream
+        .getTracks()
+        .forEach((track) =>
+          track.stop()
+        );
+
+      cameraStreamRef.current =
+        null;
+    }
+
+    if (cameraVideoRef.current) {
+      cameraVideoRef.current.srcObject =
+        null;
+    }
+
+    setMobileCameraActive(false);
+  }
+
+  function captureMobileCameraPhoto() {
+    const video =
+      cameraVideoRef.current;
+
+    if (
+      !video ||
+      video.readyState < 2 ||
+      !video.videoWidth ||
+      !video.videoHeight
+    ) {
+      return;
+    }
+
+    const canvas =
+      document.createElement(
+        "canvas"
+      );
+
+    canvas.width =
+      video.videoWidth;
+
+    canvas.height =
+      video.videoHeight;
+
+    const ctx =
+      canvas.getContext("2d");
+
+    if (!ctx) {
+      return;
+    }
+
+    ctx.drawImage(
+      video,
+      0,
+      0,
+      canvas.width,
+      canvas.height
+    );
+
+    canvas.toBlob(
+      (blob) => {
+        if (!blob) {
+          return;
+        }
+
+        const capturedFile =
+          new File(
+            [blob],
+            `alumni-story-camera-${Date.now()}.jpg`,
+            {
+              type: "image/jpeg",
+              lastModified:
+                Date.now(),
+            }
+          );
+
+        stopMobileCamera();
+        setFile(capturedFile);
+      },
+      "image/jpeg",
+      0.95
+    );
+  }
+
   function resetAll() {
     setKind("standard");
     setFile(null);
@@ -1991,6 +2243,8 @@ export default function StoryComposer({
     setStoryReviewOpen(
       false
     );
+    setMobileCameraActive(false);
+    setMobileCameraError("");
     setCollageFiles([]);
     setCollagePreviewUrls(
       []
@@ -2455,8 +2709,10 @@ export default function StoryComposer({
                 ? "video"
                 : "image",
             caption:
-              caption.trim() ||
-              null,
+              kind === "standard"
+                ? null
+                : caption.trim() ||
+                  null,
             story_kind:
               kind,
             headline:
@@ -2778,26 +3034,65 @@ export default function StoryComposer({
               <div className="absolute inset-x-[18%] top-[31%] h-px bg-white/[0.035]" />
             </>
           ) : (
-            <button
-              type="button"
-              onClick={() =>
-                mediaInputRef.current?.click()
-              }
-              className="absolute inset-0 flex flex-col items-center justify-center bg-[radial-gradient(circle_at_50%_38%,rgba(93,105,255,.12),transparent_30%),linear-gradient(180deg,#0a0d14_0%,#05070b_100%)]"
-              aria-label="Seleccionar foto o video"
-            >
-              <span className="flex h-14 w-14 items-center justify-center rounded-full border border-white/[0.12] bg-white/[0.055] text-white/90 backdrop-blur-xl">
-                <ImagePlus size={23} />
-              </span>
+            <div className="absolute inset-0 overflow-hidden bg-[#07090d]">
+              {mobileCameraActive ? (
+                <>
+                  <video
+                    ref={cameraVideoRef}
+                    autoPlay
+                    muted
+                    playsInline
+                    className="absolute inset-0 h-full w-full object-cover"
+                  />
 
-              <p className="mt-4 text-[13px] font-black tracking-[-0.02em] text-white/90">
-                Agregar foto o video
-              </p>
+                  <div className="pointer-events-none absolute left-1/2 top-[max(76px,calc(env(safe-area-inset-top)+66px))] z-[65] -translate-x-1/2 rounded-full bg-black/24 px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.12em] text-white/72 backdrop-blur-md">
+                    Cámara
+                  </div>
 
-              <p className="mt-1 text-[10px] text-white/35">
-                Toca para comenzar tu historia
-              </p>
-            </button>
+                  <button
+                    type="button"
+                    onClick={captureMobileCameraPhoto}
+                    className="absolute bottom-[108px] left-1/2 z-[75] flex h-[74px] w-[74px] -translate-x-1/2 items-center justify-center rounded-full border-[3px] border-white bg-white/18 shadow-[0_10px_30px_rgba(0,0,0,.24)] backdrop-blur-sm transition active:scale-95"
+                    aria-label="Tomar foto"
+                  >
+                    <span className="h-[58px] w-[58px] rounded-full bg-white" />
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() =>
+                      mediaInputRef.current?.click()
+                    }
+                    className="absolute bottom-[120px] left-[max(18px,env(safe-area-inset-left))] z-[75] flex h-12 w-12 items-center justify-center rounded-[15px] border border-white/14 bg-black/34 text-white backdrop-blur-xl transition active:scale-95"
+                    aria-label="Abrir galería"
+                  >
+                    <Images size={20} />
+                  </button>
+                </>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() =>
+                    mediaInputRef.current?.click()
+                  }
+                  className="absolute inset-0 flex flex-col items-center justify-center bg-[radial-gradient(circle_at_50%_38%,rgba(93,105,255,.12),transparent_30%),linear-gradient(180deg,#0a0d14_0%,#05070b_100%)]"
+                  aria-label="Seleccionar foto o video"
+                >
+                  <span className="flex h-14 w-14 items-center justify-center rounded-full border border-white/[0.12] bg-white/[0.055] text-white/90 backdrop-blur-xl">
+                    <ImagePlus size={23} />
+                  </span>
+
+                  <p className="mt-4 text-[13px] font-black tracking-[-0.02em] text-white/90">
+                    Agregar foto o video
+                  </p>
+
+                  <p className="mt-1 max-w-[260px] px-4 text-center text-[10px] leading-4 text-white/35">
+                    {mobileCameraError ||
+                      "Toca para elegir contenido de tu galería"}
+                  </p>
+                </button>
+              )}
+            </div>
           )}
 
           {/* ALUMNI_STORIES_1_3_2_OPTION_C_REAL_FIX: lienzo limpio, sin bandas de sombreado artificiales */}
@@ -2835,6 +3130,7 @@ export default function StoryComposer({
           <div className="pointer-events-none absolute inset-x-0 top-[max(14px,env(safe-area-inset-top))] z-[85] flex h-11 items-center justify-center">
             <div className="pointer-events-auto select-none text-[17px] font-black tracking-[-0.045em] text-white [text-shadow:none]">
               Alumni<span className="text-[#7b87ff]">.</span>
+              {/* ALUMNI_STORIES_1_3_4_CAMERA_CLEAN_PUBLISH_ADS_OFF */}
             </div>
           </div>
 
@@ -2846,22 +3142,6 @@ export default function StoryComposer({
           >
             <X size={25} strokeWidth={1.8} />
           </button>
-
-          <button
-            type="button"
-            onClick={() => {
-              setStoryTextEditing(false);
-              setStoryStyleOpen(false);
-              setStoryFilterOpen(false);
-            }}
-            className="absolute right-[max(16px,env(safe-area-inset-right))] top-[max(14px,env(safe-area-inset-top))] z-[90] flex h-11 w-11 flex-col items-center justify-center gap-[3px] rounded-full bg-transparent text-white transition active:scale-95 [filter:drop-shadow(0_1px_4px_rgba(0,0,0,.35))]"
-            aria-label="Opciones de historia"
-          >
-            <span className="h-[3px] w-[3px] rounded-full bg-current" />
-            <span className="h-[3px] w-[3px] rounded-full bg-current" />
-            <span className="h-[3px] w-[3px] rounded-full bg-current" />
-          </button>
-
           {hasMedia && (
             <div className="absolute right-[max(16px,env(safe-area-inset-right))] top-[38%] z-[88] flex -translate-y-1/2 flex-col gap-3">
               <button
@@ -3354,6 +3634,11 @@ export default function StoryComposer({
                 type="button"
                 onClick={() => {
                   if (!hasMedia) {
+                    if (mobileCameraActive) {
+                      captureMobileCameraPhoto();
+                      return;
+                    }
+
                     mediaInputRef.current?.click();
                     return;
                   }
@@ -3361,6 +3646,7 @@ export default function StoryComposer({
                   setStoryTextEditing(false);
                   setStoryStyleOpen(false);
                   setStoryFilterOpen(false);
+                  setCaption("");
                   setStoryReviewOpen(true);
                 }}
                 className="ml-auto flex h-[52px] min-w-[146px] items-center justify-center gap-3 rounded-[16px] bg-white px-5 text-[14px] font-black text-[#090b10] shadow-[0_12px_34px_rgba(0,0,0,.20)] transition active:scale-[0.98]"
@@ -3417,7 +3703,7 @@ export default function StoryComposer({
                       Publicar historia
                     </p>
                     <p className="mt-1 text-[11px] leading-5 text-white/40">
-                      Agrega un mensaje opcional o publícala directamente.
+                      Revisa tu historia y publícala cuando esté lista.
                     </p>
                   </div>
 
@@ -3430,15 +3716,6 @@ export default function StoryComposer({
                     <X size={16} />
                   </button>
                 </div>
-
-                <textarea
-                  value={caption}
-                  onChange={(event) => setCaption(event.target.value.slice(0, 280))}
-                  placeholder="Escribe un mensaje (opcional)"
-                  rows={3}
-                  className="mt-5 w-full resize-none rounded-[20px] border border-white/[0.08] bg-white/[0.04] px-4 py-3 text-[13px] leading-5 text-white outline-none placeholder:text-white/25 focus:border-[#8792ff]/35"
-                />
-
                 <div className="mt-4 flex items-center gap-3">
                   <button
                     type="button"

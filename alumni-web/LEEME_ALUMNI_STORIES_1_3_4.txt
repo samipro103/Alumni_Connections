@@ -1,0 +1,32 @@
+ALUMNI STORIES 1.3.4 — CAMERA + CLEAN PUBLISH + ADS OFF
+
+CAMBIOS
+1. Quita los tres puntos al crear una historia.
+2. Quita el comentario opcional antes de publicar.
+3. Deshabilita temporalmente AdSense sin borrar su código.
+4. En teléfono, al abrir Crear historia intenta mostrar la cámara trasera.
+5. Agrega botón circular de captura.
+6. Mantiene galería como respaldo.
+7. Agrega permiso CAMERA en AndroidManifest.xml.
+
+ARCHIVOS MODIFICADOS
+- src/components/stories/StoryComposer.tsx
+- src/components/ads/AdSenseSlot.tsx
+- android/app/src/main/AndroidManifest.xml
+
+EJECUTAR DESDE alumni-web:
+
+node .\aplicar_alumni_stories_1_3_4_camera_clean_publish_ads_off.js
+npm run build
+
+SI EL BUILD TERMINA BIEN:
+
+git add .
+git commit -m "Stories 1.3.4 - mobile camera clean publish and disable ads"
+git push origin main
+
+NOTA
+Los anuncios NO se borran. Para reactivarlos luego se cambia:
+ALUMNI_ADS_TEMPORARILY_DISABLED = true
+por:
+ALUMNI_ADS_TEMPORARILY_DISABLED = false

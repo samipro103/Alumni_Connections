@@ -12,12 +12,18 @@ declare global {
   }
 }
 
-const ENABLED = process.env.NEXT_PUBLIC_ADSENSE_ENABLED === "1";
+// ALUMNI_STORIES_1_3_4_CAMERA_CLEAN_PUBLISH_ADS_OFF
+const ALUMNI_ADS_TEMPORARILY_DISABLED = true;
+
+const ENABLED =
+  !ALUMNI_ADS_TEMPORARILY_DISABLED &&
+  process.env.NEXT_PUBLIC_ADSENSE_ENABLED === "1";
 const CLIENT = (process.env.NEXT_PUBLIC_ADSENSE_CLIENT || "").trim();
 const FEED_SLOT = (process.env.NEXT_PUBLIC_ADSENSE_FEED_SLOT || "").trim();
 const STORIES_SLOT = (process.env.NEXT_PUBLIC_ADSENSE_STORIES_SLOT || "").trim();
 const FEED_LAYOUT_KEY = (process.env.NEXT_PUBLIC_ADSENSE_FEED_LAYOUT_KEY || "").trim();
 const PREVIEW =
+  !ALUMNI_ADS_TEMPORARILY_DISABLED &&
   process.env.NODE_ENV !== "production" &&
   process.env.NEXT_PUBLIC_ADSENSE_PREVIEW === "1";
 
