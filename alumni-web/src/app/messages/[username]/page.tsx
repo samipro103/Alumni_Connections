@@ -43,6 +43,7 @@ import {
   MessageReplyQuote,
   SwipeToReply,
 } from "@/components/messages/MessageReplyExperience";
+import "../messages-design-1-6.css";
 
 const BUCKET = "message-media";
 const MAX_IMAGE =
@@ -2818,9 +2819,9 @@ setMessages(
     <AppShell immersiveMobile>
       <div
         style={chatStyle}
-        className="alumni-chat-stage fixed inset-x-0 top-[var(--chat-top)] z-[80] mx-auto flex h-[var(--chat-vh)] w-full max-w-[780px] flex-col overflow-hidden overscroll-none bg-[var(--app-bg)] lg:static lg:h-[calc(100vh-132px)] lg:min-h-[540px] lg:rounded-[24px] lg:border lg:border-[var(--app-border)] lg:bg-[var(--app-surface)] lg:shadow-[0_24px_70px_var(--app-shadow)]"
+        className="alumni-chat-stage alumni-chat-focused fixed inset-x-0 top-[var(--chat-top)] z-[80] mx-auto flex h-[var(--chat-vh)] w-full flex-col overflow-hidden overscroll-none" data-messages-design="chat-focused"
       >
-        <header className="relative z-50 shrink-0 border-b border-[var(--app-border)] bg-[color-mix(in_srgb,var(--app-surface)_95%,transparent)] pt-[env(safe-area-inset-top)] backdrop-blur-2xl">
+        <header className="alumni-chat-focus-header relative z-50 shrink-0 pt-[env(safe-area-inset-top)]">
           <div className="flex min-h-[56px] items-center gap-2 px-2.5 sm:px-3.5">
             <Link
               href="/messages"
@@ -3043,7 +3044,7 @@ setMessages(
               void loadOlderMessages();
             }
           }}
-          className="alumni-chat-scroll alumni-chat-wallpaper scrollbar-thin min-h-0 flex-1 overscroll-contain overflow-y-auto px-2.5 py-3 sm:px-5 sm:py-4"
+          className="alumni-chat-scroll alumni-chat-wallpaper alumni-chat-focus-scroll scrollbar-thin min-h-0 flex-1 overscroll-contain overflow-y-auto"
           style={{
             backgroundImage:
               "radial-gradient(circle at 12% 0%, color-mix(in srgb,var(--app-accent) 7%,transparent), transparent 34%), radial-gradient(circle at 88% 100%, color-mix(in srgb,var(--app-accent) 4%,transparent), transparent 30%), linear-gradient(180deg, color-mix(in srgb,var(--app-bg) 97%,var(--app-surface)), var(--app-bg))",
@@ -3593,7 +3594,7 @@ setMessages(
           onSubmit={
             handleSendMessage
           }
-          className="alumni-chat-composer-shell shrink-0 border-t border-[var(--app-border)] bg-[color-mix(in_srgb,var(--app-surface)_96%,transparent)] px-2 pb-[max(7px,env(safe-area-inset-bottom))] pt-1.5 backdrop-blur-2xl sm:px-3 sm:pb-3 sm:pt-2"
+          className="alumni-chat-composer-shell alumni-chat-focus-composer-shell shrink-0"
         >
           {editingMessage && (
             <div className="alumni-composer-reply-preview">
@@ -3685,7 +3686,7 @@ setMessages(
             </div>
           )}
 
-          <div className="alumni-chat-composer flex items-end gap-1 rounded-[21px] border p-1">
+          <div className="alumni-chat-composer alumni-chat-focus-composer flex items-end gap-1">
             <input
               ref={
                 fileInputRef
@@ -3715,7 +3716,7 @@ setMessages(
                   editingMessage
                 )
               }
-              className="flex h-[38px] w-[38px] shrink-0 items-center justify-center rounded-full text-[var(--app-accent)] transition active:bg-[var(--app-accent-soft)] disabled:opacity-40"
+              className="alumni-chat-attach flex h-[38px] w-[38px] shrink-0 items-center justify-center rounded-full transition disabled:opacity-40"
               aria-label="Adjuntar foto o video"
             >
               <ImagePlus
@@ -3796,7 +3797,7 @@ setMessages(
                 !receiver ||
                 sending
               }
-              className="alumni-accent-button flex h-[38px] w-[38px] shrink-0 items-center justify-center rounded-full transition active:scale-95 disabled:cursor-not-allowed disabled:opacity-35"
+              className="alumni-chat-send flex h-[38px] w-[38px] shrink-0 items-center justify-center rounded-full transition active:scale-95 disabled:cursor-not-allowed disabled:opacity-35"
               aria-label="Enviar mensaje"
             >
               {sending ? (
@@ -3941,3 +3942,5 @@ setMessages(
 /* ALUMNI_1_5_0_FIX3_VISIBLE_HYDRATED_ORDER */
 
 /* ALUMNI_PERFORMANCE_HARDENING_MESSAGING_DIRECT_V9 */
+
+/* ALUMNI_MESSAGES_1_6_0B_INBOX1_CHAT2_CRLF_FIX */

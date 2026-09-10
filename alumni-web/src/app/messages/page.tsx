@@ -23,6 +23,7 @@ import { supabase } from "@/lib/supabase";
 import { getSignedMediaUrlMap } from "@/lib/signedMediaUrlCache";
 import AppShell from "@/components/layout/AppShell";
 import CreateMessageGroupModal from "@/components/messages/CreateMessageGroupModal";
+import "./messages-design-1-6.css";
 
 type Conversation = {
   id: string;
@@ -733,8 +734,8 @@ export default function MessagesPage() {
 
   return (
     <AppShell>
-      <div className="alumni-messages-page mx-auto w-full max-w-[820px]">
-        <div className="flex items-end gap-4 pb-5 pt-1 sm:pb-7 sm:pt-2">
+      <div className="alumni-messages-page alumni-inbox-clean mx-auto w-full max-w-[820px]" data-messages-design="inbox-clean">
+        <div className="alumni-inbox-header flex items-center gap-4">
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2.5">
               <h1 className="text-[30px] font-black tracking-[-0.045em] text-[var(--app-text)] sm:text-[34px]">
@@ -751,12 +752,12 @@ export default function MessagesPage() {
               )}
             </div>
 
-            <p className="mt-1 text-sm text-[var(--app-muted-2)]">
+            <p className="alumni-inbox-subtitle">
               Conversaciones de tu comunidad Alumni.
             </p>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="alumni-inbox-actions flex items-center gap-2">
             <button
               type="button"
               onClick={() =>
@@ -786,7 +787,7 @@ export default function MessagesPage() {
           </div>
         </div>
 
-        <div className="alumni-messages-search flex h-12 items-center gap-2 border-b border-[var(--app-border)]">
+        <div className="alumni-messages-search alumni-inbox-search flex items-center gap-2">
           <Search
             size={17}
             className="shrink-0 text-[var(--app-muted-2)]"
@@ -804,7 +805,7 @@ export default function MessagesPage() {
           />
         </div>
 
-        <div className="flex items-center gap-5 border-b border-[var(--app-border)] py-3">
+        <div className="alumni-inbox-filters flex items-center gap-2">
           <button
             type="button"
             onClick={() =>
@@ -819,7 +820,7 @@ export default function MessagesPage() {
             Todos
             {filter ===
               "all" && (
-              <span className="absolute -bottom-3 left-0 right-0 h-[2px] rounded-full bg-[var(--app-accent)]" />
+              <span className="alumni-inbox-filter-legacy-line" />
             )}
           </button>
 
@@ -838,13 +839,13 @@ export default function MessagesPage() {
             No leídos
             {filter ===
               "unread" && (
-              <span className="absolute -bottom-3 left-0 right-0 h-[2px] rounded-full bg-[var(--app-accent)]" />
+              <span className="alumni-inbox-filter-legacy-line" />
             )}
           </button>
         </div>
 
         {visibleGroups.length > 0 && (
-          <section className="border-b border-[var(--app-border)] py-3">
+          <section className="alumni-inbox-groups">
             <div className="mb-1 flex items-center justify-between">
               <p className="text-[10px] font-black uppercase tracking-[0.13em] text-[var(--app-muted-2)]">
                 Grupos
@@ -992,7 +993,7 @@ export default function MessagesPage() {
               )}
           </div>
         ) : (
-          <div className="divide-y divide-[var(--app-border)]">
+          <div className="alumni-inbox-list">
             {filteredConversations.map(
               (conversation) => {
                 const item =
@@ -1157,3 +1158,5 @@ export default function MessagesPage() {
 /* ALUMNI_3_7_2_MESSAGING_PERFORMANCE_RELIABILITY */
 
 /* ALUMNI_PERFORMANCE_HARDENING_MESSAGING_INBOX_V9 */
+
+/* ALUMNI_MESSAGES_1_6_0B_INBOX1_CHAT2_CRLF_FIX */

@@ -36,6 +36,7 @@ import {
   MessageReplyQuote,
   SwipeToReply,
 } from "@/components/messages/MessageReplyExperience";
+import "../../messages-design-1-6.css";
 import {
   createMessageMediaPreview,
 } from "@/lib/messageMedia";
@@ -2406,10 +2407,10 @@ export default function GroupChatPage() {
       immersiveMobile
     >
       <div
-        className="fixed inset-x-0 top-0 z-[80] mx-auto flex h-[100dvh] w-full max-w-[780px] flex-col overflow-hidden bg-[var(--app-bg)] lg:static lg:h-[calc(100vh-120px)] lg:min-h-[560px] lg:rounded-[24px] lg:border lg:border-[var(--app-border)] lg:bg-[var(--app-surface)]"
+        className="alumni-chat-stage alumni-chat-focused alumni-group-chat-focused fixed inset-x-0 top-0 z-[80] mx-auto flex h-[100dvh] w-full flex-col overflow-hidden" data-messages-design="chat-focused"
         data-pull-refresh-lock="true"
       >
-        <header className="relative z-20 shrink-0 border-b border-[var(--app-border)] bg-[color-mix(in_srgb,var(--app-surface)_96%,transparent)] pt-[env(safe-area-inset-top)] backdrop-blur-2xl">
+        <header className="alumni-chat-focus-header relative z-20 shrink-0 pt-[env(safe-area-inset-top)]">
           <div className="flex min-h-[60px] items-center gap-2 px-2.5 sm:px-4">
             <Link
               href="/messages"
@@ -2500,7 +2501,7 @@ export default function GroupChatPage() {
               void loadOlderMessages();
             }
           }}
-          className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-2.5 py-3 sm:px-5 sm:py-4"
+          className="alumni-chat-scroll alumni-chat-wallpaper alumni-chat-focus-scroll min-h-0 flex-1 overflow-y-auto overscroll-contain"
           style={{
             backgroundImage:
               "radial-gradient(circle at 12% 0%, color-mix(in srgb,var(--app-accent) 7%,transparent), transparent 34%), radial-gradient(circle at 88% 100%, color-mix(in srgb,var(--app-accent) 4%,transparent), transparent 30%), linear-gradient(180deg, color-mix(in srgb,var(--app-bg) 97%,var(--app-surface)), var(--app-bg))",
@@ -2843,7 +2844,7 @@ export default function GroupChatPage() {
           onSubmit={
             send
           }
-          className="shrink-0 border-t border-[var(--app-border)] bg-[color-mix(in_srgb,var(--app-surface)_96%,transparent)] px-2 pb-[max(8px,env(safe-area-inset-bottom))] pt-2 backdrop-blur-2xl sm:px-3 sm:pb-3"
+          className="alumni-chat-composer-shell alumni-chat-focus-composer-shell shrink-0"
         >
           {editingMessage && (
             <div className="alumni-composer-reply-preview">
@@ -3059,3 +3060,5 @@ export default function GroupChatPage() {
 /* ALUMNI_1_5_0_MESSAGING_2_HOME_NAV:GROUP */
 
 /* ALUMNI_PERFORMANCE_HARDENING_MESSAGING_GROUP_V9 */
+
+/* ALUMNI_MESSAGES_1_6_0B_INBOX1_CHAT2_CRLF_FIX */
