@@ -1,0 +1,40 @@
+ALUMNI FEED 1.7.1 — HEADER + COMPOSER UNIFICADO
+
+QUÉ CORRIGE
+Al ocultar Stories quedó un espacio visual entre:
+- el TopBar / logo de ALUMNI
+- el bloque "¿Qué quieres publicar?"
+
+Ese espacio venía de la separación que tenía sentido cuando Stories
+ocupaba esa zona.
+
+CAMBIO
+En teléfono:
+- elimina ese hueco;
+- el Feed sube hasta el TopBar;
+- el Feed ocupa el ancho útil completo;
+- elimina redondeo/borde superior de la antigua tarjeta;
+- TopBar y composer usan la misma superficie;
+- composer + tabs forman una sola cabecera del Feed.
+
+IMPORTANTE
+- Solo afecta /feed.
+- Solo cambia el montaje móvil principal.
+- Escritorio se mantiene.
+- No reactiva Stories.
+- No elimina Stories del backend.
+- No toca Supabase.
+- No toca publicaciones.
+- No toca lógica de Feed.
+- Dark y Light usan var(--app-surface), var(--app-border), etc.
+
+EJECUTAR DESDE alumni-web
+
+node .\aplicar_alumni_feed_1_7_1_header_composer_unificado.js
+npm run build
+
+SI BUILD PASA
+
+git add .
+git commit -m "Feed 1.7.1 - unify header and composer"
+git push origin main
