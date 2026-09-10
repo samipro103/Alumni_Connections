@@ -1,0 +1,309 @@
+/*
+ * ALUMNI_SETTINGS_1_0_OPTION_1_CLASSIC_LIST
+ * Opción 1 — Lista clásica
+ * Referencia principal: teléfono 360–430 px.
+ */
+
+.alumni-settings-classic {
+  width: 100%;
+  max-width: 520px;
+  min-height: 100%;
+  margin: 0 auto;
+  padding: 0 0 34px;
+  color: var(--app-text);
+}
+
+.alumni-settings-classic-header,
+.alumni-settings-detail-header {
+  display: grid;
+  grid-template-columns: 42px minmax(0, 1fr) 42px;
+  min-height: 54px;
+  align-items: center;
+  border-bottom: 1px solid var(--app-border);
+}
+
+.alumni-settings-classic-header h1,
+.alumni-settings-detail-header h1 {
+  margin: 0;
+  color: var(--app-text);
+  font-size: 15px;
+  font-weight: 900;
+  line-height: 1;
+  text-align: center;
+  letter-spacing: -0.025em;
+}
+
+.alumni-settings-classic-back,
+.alumni-settings-detail-header button {
+  display: inline-flex;
+  width: 40px;
+  height: 40px;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--app-text);
+}
+
+.alumni-settings-classic-back:active,
+.alumni-settings-detail-header button:active {
+  background: var(--app-soft);
+}
+
+.alumni-settings-profile-row {
+  display: flex;
+  width: 100%;
+  min-height: 100px;
+  align-items: center;
+  gap: 13px;
+  padding: 17px 4px;
+  border: 0;
+  border-bottom: 1px solid var(--app-border);
+  background: transparent;
+  color: inherit;
+  text-align: left;
+}
+
+.alumni-settings-profile-avatar {
+  display: inline-flex;
+  width: 58px;
+  height: 58px;
+  flex: 0 0 58px;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border: 1px solid var(--app-border);
+  border-radius: 999px;
+  background: var(--app-surface-2);
+  color: var(--app-text);
+  font-size: 18px;
+  font-weight: 900;
+}
+
+.alumni-settings-profile-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.alumni-settings-profile-copy,
+.alumni-settings-row-copy {
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.alumni-settings-profile-copy strong {
+  display: block;
+  overflow: hidden;
+  color: var(--app-text);
+  font-size: 14px;
+  font-weight: 900;
+  line-height: 1.2;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.alumni-settings-profile-copy small {
+  display: block;
+  overflow: hidden;
+  margin-top: 3px;
+  color: var(--app-muted);
+  font-size: 10.5px;
+  font-weight: 500;
+  line-height: 1.15;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.alumni-settings-classic-list {
+  display: block;
+}
+
+.alumni-settings-classic-row,
+.alumni-settings-logout {
+  display: flex;
+  width: 100%;
+  min-height: 66px;
+  align-items: center;
+  gap: 13px;
+  padding: 10px 4px;
+  border: 0;
+  border-bottom: 1px solid var(--app-border);
+  background: transparent;
+  color: inherit;
+  text-align: left;
+}
+
+.alumni-settings-classic-row:active {
+  background: var(--app-soft);
+}
+
+.alumni-settings-row-icon {
+  display: inline-flex;
+  width: 32px;
+  height: 32px;
+  flex: 0 0 32px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  color: var(--app-text-soft);
+}
+
+.alumni-settings-row-copy strong {
+  display: block;
+  color: var(--app-text);
+  font-size: 13px;
+  font-weight: 820;
+  line-height: 1.15;
+}
+
+.alumni-settings-row-copy small {
+  display: block;
+  margin-top: 4px;
+  color: var(--app-muted-2);
+  font-size: 10px;
+  font-weight: 500;
+  line-height: 1.25;
+}
+
+.alumni-settings-row-chevron {
+  flex: 0 0 auto;
+  color: var(--app-muted-3);
+}
+
+.alumni-settings-logout {
+  margin-top: 10px;
+  border-bottom: 0;
+}
+
+.alumni-settings-logout .alumni-settings-row-icon,
+.alumni-settings-logout .alumni-settings-row-copy strong {
+  color: #e44f5f;
+}
+
+.alumni-settings-logout .alumni-settings-row-copy small {
+  color: color-mix(in srgb, #e44f5f 62%, var(--app-muted));
+}
+
+/* Detail views preserve existing functionality but no desktop sidebar. */
+.alumni-settings-classic-detail {
+  min-width: 0;
+  width: 100%;
+}
+
+.alumni-settings-detail-header {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  background: color-mix(in srgb, var(--app-bg) 94%, transparent);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+}
+
+.alumni-settings-detail-content {
+  min-width: 0;
+  padding-top: 14px;
+}
+
+/* Existing settings panels become flat/mobile-first. */
+.alumni-settings-classic .alumni-settings-panel,
+.alumni-settings-classic .alumni-profile-settings-hub {
+  overflow: hidden;
+  border: 1px solid var(--app-border) !important;
+  border-radius: 18px !important;
+  background: var(--app-surface) !important;
+  box-shadow: none !important;
+}
+
+.alumni-settings-classic .alumni-setting-row {
+  padding: 14px !important;
+}
+
+.alumni-settings-classic .alumni-settings-panel {
+  padding: 15px !important;
+}
+
+.alumni-settings-classic .alumni-settings-panel [class*="text-zinc-"],
+.alumni-settings-classic .alumni-profile-settings-hub [class*="text-zinc-"] {
+  color: inherit;
+}
+
+/* Appearance stays simple and list-like. */
+.alumni-settings-classic .alumni-settings-panel button {
+  touch-action: manipulation;
+}
+
+/* Light */
+html[data-theme="light"] .alumni-settings-classic {
+  background: #ffffff;
+}
+
+html[data-theme="light"] .alumni-settings-detail-header {
+  background: rgba(255,255,255,.94);
+}
+
+/* Dark */
+html[data-theme="dark"] .alumni-settings-classic {
+  background: var(--app-bg);
+}
+
+html[data-theme="dark"] .alumni-settings-detail-header {
+  background: rgba(9,11,15,.94);
+}
+
+/* Small phones */
+@media (max-width: 374px) {
+  .alumni-settings-profile-row {
+    min-height: 92px;
+  }
+
+  .alumni-settings-profile-avatar {
+    width: 54px;
+    height: 54px;
+    flex-basis: 54px;
+  }
+
+  .alumni-settings-classic-row,
+  .alumni-settings-logout {
+    min-height: 62px;
+  }
+
+  .alumni-settings-row-copy strong {
+    font-size: 12.5px;
+  }
+
+  .alumni-settings-row-copy small {
+    font-size: 9.5px;
+  }
+}
+
+/* Desktop: same phone-oriented structure, simply centered. */
+@media (min-width: 700px) {
+  .alumni-settings-classic {
+    max-width: 540px;
+    padding-top: 14px;
+    padding-bottom: 50px;
+  }
+
+  .alumni-settings-classic-header,
+  .alumni-settings-detail-header {
+    border: 1px solid var(--app-border);
+    border-radius: 16px 16px 0 0;
+  }
+
+  .alumni-settings-classic.is-home
+    .alumni-settings-profile-row {
+    padding-inline: 14px;
+    border-right: 1px solid var(--app-border);
+    border-left: 1px solid var(--app-border);
+  }
+
+  .alumni-settings-classic.is-home
+    .alumni-settings-classic-list,
+  .alumni-settings-classic.is-home
+    .alumni-settings-logout {
+    padding-inline: 14px;
+  }
+}

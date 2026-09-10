@@ -4,6 +4,8 @@ import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   ArrowLeft,
+  Bell,
+  CircleHelp,
   AtSign,
   Camera,
   ChevronRight,
@@ -35,6 +37,7 @@ import SavedPostsPanel from "@/components/settings/SavedPostsPanel";
 import ProfileEditorPro from "@/components/settings/ProfileEditorPro";
 import SpotifyPremiumMusicGate from "@/components/music/SpotifyPremiumMusicGate";
 import AccountTrustPanel from "@/components/settings/AccountTrustPanel";
+import "./settings-classic-1-0.css";
 
 type SettingsSectionId =
   | "appearance"
@@ -88,6 +91,7 @@ export default function SettingsPage() {
     useState(false);
   const [profileEditorOpen, setProfileEditorOpen] = useState(false);
   const [profileSavedOpen, setProfileSavedOpen] = useState(false);
+  const [classicAccountOpen, setClassicAccountOpen] = useState(false);
 
   const [form, setForm] = useState({
     full_name: "",
@@ -133,6 +137,7 @@ export default function SettingsPage() {
 
     if (section === "profile" && params.get("edit") === "1") {
       setProfileEditorOpen(true);
+      setClassicAccountOpen(true);
     }
 
     if (section === "profile" && params.get("view") === "saved") {
@@ -545,6 +550,74 @@ export default function SettingsPage() {
     window.history.replaceState({}, "", url.pathname + url.search);
   }
 
+  function updateSettingsUrl(
+    section?: SettingsSectionId,
+    extra?: { edit?: boolean; view?: string }
+  ) {
+    if (typeof window === "undefined") return;
+
+    const url = new URL(window.location.href);
+
+    if (section) {
+      url.searchParams.set("section", section);
+    } else {
+      url.searchParams.delete("section");
+    }
+
+    if (extra?.edit) {
+      url.searchParams.set("edit", "1");
+    } else {
+      url.searchParams.delete("edit");
+    }
+
+    if (extra?.view) {
+      url.searchParams.set("view", extra.view);
+    } else {
+      url.searchParams.delete("view");
+    }
+
+    window.history.pushState(
+      section
+        ? { alumniSettings: true, section }
+        : {},
+      "",
+      url.pathname + url.search
+    );
+  }
+
+  function openClassicSection(id: SettingsSectionId) {
+    setClassicAccountOpen(false);
+    setProfileEditorOpen(false);
+    setProfileSavedOpen(false);
+    setActiveSection(id);
+    setMobileSectionOpen(true);
+    updateSettingsUrl(id);
+  }
+
+  function openClassicAccount() {
+    setClassicAccountOpen(true);
+    setProfileSavedOpen(false);
+    setActiveSection("profile");
+    setMobileSectionOpen(true);
+    setProfileEditorOpen(true);
+    updateSettingsUrl("profile", { edit: true });
+  }
+
+  function returnClassicHome() {
+    setClassicAccountOpen(false);
+    setProfileEditorOpen(false);
+    setProfileSavedOpen(false);
+    setMobileSectionOpen(false);
+
+    if (typeof window !== "undefined") {
+      const url = new URL(window.location.href);
+      url.searchParams.delete("section");
+      url.searchParams.delete("edit");
+      url.searchParams.delete("view");
+      window.history.replaceState({}, "", url.pathname + url.search);
+    }
+  }
+
   async function logout() {
     await supabase.auth.signOut();
     window.location.href = "/login";
@@ -568,214 +641,372 @@ export default function SettingsPage() {
     );
   }
 
+  const classicDetailTitle =
+    activeSection === "profile"
+      ? "Privacidad"
+      : activeSection === "account"
+      ? "Seguridad"
+      : activeItem.label;
+
   return (
     <AppShell>
-      <div className={`alumni-settings-page mx-auto w-full max-w-[1080px] ${profileEditorOpen ? "is-profile-editing" : ""}`}>
-        <div className={`${profileEditorOpen ? "hidden" : mobileSectionOpen ? "hidden lg:block" : "block"} mb-6 pt-2`}>
-          <h1 className="text-[30px] font-black tracking-[-0.04em]">
-            Configuración
-          </h1>
-        </div>
-
-        <div className="alumni-settings-layout grid gap-5 lg:grid-cols-[280px_minmax(0,1fr)]">
-          <aside className={`alumni-settings-nav ${profileEditorOpen ? "hidden" : mobileSectionOpen ? "hidden lg:block" : "block"} h-fit lg:sticky lg:top-[88px] lg:overflow-hidden lg:rounded-[24px] lg:border lg:border-white/[0.07] lg:bg-[#101318]/95`}>
-            <nav className="divide-y divide-white/[0.06] lg:divide-y-0 lg:p-2">
-              {SETTINGS_ITEMS.map((item) => {
-                const Icon = item.icon;
-                const active = activeSection === item.id;
-
-                return (
-                  <button
-                    key={item.id}
-                    type="button"
-                    onClick={() => openSettingsSection(item.id)}
-                    className={`group flex w-full items-center gap-3 px-1 py-4 text-left transition lg:rounded-2xl lg:px-3 lg:py-3 ${
-                      active
-                        ? "bg-white/[0.06]"
-                        : "hover:bg-white/[0.035]"
-                    }`}
-                  >
-                    <span
-                      className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${
-                        active
-                          ? "bg-[#6d7cff]/12 text-[#8d98ff]"
-                          : "bg-white/[0.025] text-zinc-600"
-                      }`}
-                    >
-                      <Icon size={17} />
-                    </span>
-
-                    <span className="min-w-0 flex-1">
-                      <span
-                        className={`block text-sm font-black ${
-                          active
-                            ? "text-zinc-200"
-                            : "text-zinc-500"
-                        }`}
-                      >
-                        {item.label}
-                      </span>
-
-                    </span>
-
-                    <ChevronRight
-                      size={16}
-                      className={`shrink-0 transition ${
-                        active
-                          ? "text-[#8d98ff]"
-                          : "text-zinc-800 group-hover:text-zinc-600"
-                      }`}
-                    />
-                  </button>
-                );
-              })}
-            </nav>
-          </aside>
-
-          <section className={`alumni-settings-detail ${profileEditorOpen ? "block" : mobileSectionOpen ? "block" : "hidden lg:block"} min-w-0`}>
-            <div className={`${profileEditorOpen ? "hidden" : "flex"} mb-4 items-start justify-between gap-4`}>
+      <div
+        className={`alumni-settings-classic mx-auto w-full ${
+          mobileSectionOpen || profileEditorOpen
+            ? "is-detail-open"
+            : "is-home"
+        }`}
+        data-settings-design="option-1-classic"
+      >
+        {!mobileSectionOpen && !profileEditorOpen ? (
+          <>
+            <header className="alumni-settings-classic-header">
               <button
                 type="button"
-                onClick={closeMobileSettingsSection}
-                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-zinc-500 transition active:bg-white/[0.06] lg:hidden"
-                aria-label="Volver a Ajustes"
+                onClick={() => router.back()}
+                aria-label="Volver"
+                className="alumni-settings-classic-back"
               >
                 <ArrowLeft size={20} />
               </button>
-              <div>
-                <h2 className="text-xl font-black tracking-[-0.03em] text-zinc-100">
-                  {activeItem.label}
-                </h2>
-              </div>
 
-              {activeSection !== "appearance" &&
-                activeSection !== "account" &&
-                activeSection !== "music" &&
-                activeSection !== "profile" && (
-                  <button
-                    onClick={saveProfile}
-                    disabled={saving}
-                    className="flex h-10 shrink-0 items-center gap-2 rounded-xl bg-[#6d7cff] px-4 text-xs font-black text-white transition hover:bg-[#7b87ff] disabled:opacity-50"
-                  >
-                    <Save size={15} />
-                    {saving
-                      ? "Guardando..."
-                      : "Guardar"}
-                  </button>
+              <h1>Configuración</h1>
+
+              <span
+                className="alumni-settings-classic-header-spacer"
+                aria-hidden="true"
+              />
+            </header>
+
+            <button
+              type="button"
+              className="alumni-settings-profile-row"
+              onClick={() => {
+                if (form.username) {
+                  router.push(`/u/${form.username}`);
+                }
+              }}
+            >
+              <span className="alumni-settings-profile-avatar">
+                {avatarPreview ? (
+                  <img
+                    src={avatarPreview}
+                    alt=""
+                  />
+                ) : (
+                  (form.full_name ||
+                    form.username ||
+                    "A")
+                    .charAt(0)
+                    .toUpperCase()
                 )}
+              </span>
+
+              <span className="alumni-settings-profile-copy">
+                <strong>
+                  {form.full_name ||
+                    (form.username
+                      ? `@${form.username}`
+                      : "Mi perfil")}
+                </strong>
+
+                <small>
+                  {form.career || "Comunidad Alumni"}
+                </small>
+
+                {form.university && (
+                  <small>{form.university}</small>
+                )}
+              </span>
+
+              <ChevronRight
+                size={18}
+                className="alumni-settings-row-chevron"
+              />
+            </button>
+
+            <nav
+              className="alumni-settings-classic-list"
+              aria-label="Opciones de configuración"
+            >
+              <button
+                type="button"
+                className="alumni-settings-classic-row"
+                onClick={openClassicAccount}
+              >
+                <span className="alumni-settings-row-icon">
+                  <User size={19} />
+                </span>
+                <span className="alumni-settings-row-copy">
+                  <strong>Cuenta</strong>
+                  <small>Datos personales y perfil</small>
+                </span>
+                <ChevronRight
+                  size={17}
+                  className="alumni-settings-row-chevron"
+                />
+              </button>
+
+              <button
+                type="button"
+                className="alumni-settings-classic-row"
+                onClick={() =>
+                  openClassicSection("profile")
+                }
+              >
+                <span className="alumni-settings-row-icon">
+                  <LockKeyhole size={19} />
+                </span>
+                <span className="alumni-settings-row-copy">
+                  <strong>Privacidad</strong>
+                  <small>
+                    Quién puede seguirte y ver tu contenido
+                  </small>
+                </span>
+                <ChevronRight
+                  size={17}
+                  className="alumni-settings-row-chevron"
+                />
+              </button>
+
+              <button
+                type="button"
+                className="alumni-settings-classic-row"
+                onClick={() =>
+                  router.push("/notifications")
+                }
+              >
+                <span className="alumni-settings-row-icon">
+                  <Bell size={19} />
+                </span>
+                <span className="alumni-settings-row-copy">
+                  <strong>Notificaciones</strong>
+                  <small>Revisa tus alertas y actividad</small>
+                </span>
+                <ChevronRight
+                  size={17}
+                  className="alumni-settings-row-chevron"
+                />
+              </button>
+
+              <button
+                type="button"
+                className="alumni-settings-classic-row"
+                onClick={() =>
+                  openClassicSection("appearance")
+                }
+              >
+                <span className="alumni-settings-row-icon">
+                  <Palette size={19} />
+                </span>
+                <span className="alumni-settings-row-copy">
+                  <strong>Apariencia</strong>
+                  <small>Tema de la aplicación</small>
+                </span>
+                <ChevronRight
+                  size={17}
+                  className="alumni-settings-row-chevron"
+                />
+              </button>
+
+              <button
+                type="button"
+                className="alumni-settings-classic-row"
+                onClick={() =>
+                  openClassicSection("account")
+                }
+              >
+                <span className="alumni-settings-row-icon">
+                  <Shield size={19} />
+                </span>
+                <span className="alumni-settings-row-copy">
+                  <strong>Seguridad</strong>
+                  <small>
+                    Contraseña y protección de tu cuenta
+                  </small>
+                </span>
+                <ChevronRight
+                  size={17}
+                  className="alumni-settings-row-chevron"
+                />
+              </button>
+
+              <button
+                type="button"
+                className="alumni-settings-classic-row"
+                onClick={() =>
+                  router.push("/feedback")
+                }
+              >
+                <span className="alumni-settings-row-icon">
+                  <CircleHelp size={19} />
+                </span>
+                <span className="alumni-settings-row-copy">
+                  <strong>Ayuda</strong>
+                  <small>Soporte y comentarios</small>
+                </span>
+                <ChevronRight
+                  size={17}
+                  className="alumni-settings-row-chevron"
+                />
+              </button>
+            </nav>
+
+            <button
+              type="button"
+              onClick={() => void logout()}
+              className="alumni-settings-logout"
+            >
+              <span className="alumni-settings-row-icon">
+                <LogOut size={19} />
+              </span>
+
+              <span className="alumni-settings-row-copy">
+                <strong>Cerrar sesión</strong>
+                <small>Salir de tu cuenta</small>
+              </span>
+            </button>
+          </>
+        ) : (
+          <section className="alumni-settings-classic-detail">
+            {!profileEditorOpen && (
+              <header className="alumni-settings-detail-header">
+                <button
+                  type="button"
+                  onClick={returnClassicHome}
+                  aria-label="Volver a Configuración"
+                >
+                  <ArrowLeft size={20} />
+                </button>
+
+                <h1>{classicDetailTitle}</h1>
+
+                <span aria-hidden="true" />
+              </header>
+            )}
+
+            <div className="alumni-settings-detail-content">
+              {activeSection === "appearance" && (
+                <AppearancePanel
+                  theme={theme}
+                  setTheme={setTheme}
+                />
+              )}
+
+              {activeSection === "profile" &&
+                (profileEditorOpen ? (
+                  <ProfileEditorPro
+                    userId={user?.id || ""}
+                    onBack={() => {
+                      if (classicAccountOpen) {
+                        returnClassicHome();
+                        return;
+                      }
+
+                      setProfileEditorOpen(false);
+
+                      if (typeof window !== "undefined") {
+                        const url = new URL(window.location.href);
+                        url.searchParams.delete("edit");
+                        window.history.replaceState(
+                          window.history.state,
+                          "",
+                          url.pathname + url.search
+                        );
+                      }
+                    }}
+                    onSaved={getProfile}
+                  />
+                ) : profileSavedOpen ? (
+                  <SavedPostsPanel
+                    userId={user?.id || ""}
+                    onBack={() => {
+                      setProfileSavedOpen(false);
+
+                      if (typeof window !== "undefined") {
+                        const url = new URL(window.location.href);
+                        url.searchParams.delete("view");
+                        window.history.replaceState(
+                          window.history.state,
+                          "",
+                          url.pathname + url.search
+                        );
+                      }
+                    }}
+                  />
+                ) : (
+                  <ProfileSettingsHub
+                    isPrivate={isPrivate}
+                    privacySaving={privacySaving}
+                    updatePrivacy={updatePrivacy}
+                    followRequests={followRequests}
+                    requestsLoading={requestsLoading}
+                    acceptFollowRequest={acceptFollowRequest}
+                    rejectFollowRequest={rejectFollowRequest}
+                    onOpenSaved={() => {
+                      setProfileSavedOpen(true);
+
+                      if (typeof window !== "undefined") {
+                        const url = new URL(window.location.href);
+                        url.searchParams.set("section", "profile");
+                        url.searchParams.set("view", "saved");
+                        url.searchParams.delete("edit");
+                        window.history.replaceState(
+                          window.history.state,
+                          "",
+                          url.pathname + url.search
+                        );
+                      }
+                    }}
+                    onEditProfile={() => {
+                      setClassicAccountOpen(false);
+                      setProfileSavedOpen(false);
+                      setProfileEditorOpen(true);
+
+                      if (typeof window !== "undefined") {
+                        const url = new URL(window.location.href);
+                        url.searchParams.set("section", "profile");
+                        url.searchParams.set("edit", "1");
+                        url.searchParams.delete("view");
+                        window.history.replaceState(
+                          window.history.state,
+                          "",
+                          url.pathname + url.search
+                        );
+                      }
+                    }}
+                  />
+                ))}
+
+              {activeSection === "academic" && (
+                <AcademicPanel
+                  form={form}
+                  update={update}
+                />
+              )}
+
+              {activeSection === "links" && (
+                <LinksPanel
+                  form={form}
+                  update={update}
+                />
+              )}
+
+              {activeSection === "music" && (
+                <SpotifyPremiumMusicGate
+                  userId={user?.id || ""}
+                />
+              )}
+
+              {activeSection === "account" && (
+                <AccountTrustPanel
+                  email={user?.email || ""}
+                  logout={logout}
+                />
+              )}
             </div>
-
-            {activeSection === "appearance" && (
-              <AppearancePanel
-                theme={theme}
-                setTheme={setTheme}
-              />
-            )}
-
-            {activeSection === "profile" &&
-              (profileEditorOpen ? (
-                <ProfileEditorPro
-                  userId={user?.id || ""}
-                  onBack={() => {
-                    setProfileEditorOpen(false);
-                    if (typeof window !== "undefined") {
-                      const url = new URL(window.location.href);
-                      url.searchParams.delete("edit");
-                      window.history.replaceState(
-                        window.history.state,
-                        "",
-                        url.pathname + url.search
-                      );
-                    }
-                  }}
-                  onSaved={getProfile}
-                />
-              ) : profileSavedOpen ? (
-                <SavedPostsPanel
-                  userId={user?.id || ""}
-                  onBack={() => {
-                    setProfileSavedOpen(false);
-
-                    if (typeof window !== "undefined") {
-                      const url = new URL(window.location.href);
-                      url.searchParams.delete("view");
-                      window.history.replaceState(
-                        window.history.state,
-                        "",
-                        url.pathname + url.search
-                      );
-                    }
-                  }}
-                />
-              ) : (
-                <ProfileSettingsHub
-                  isPrivate={isPrivate}
-                  privacySaving={privacySaving}
-                  updatePrivacy={updatePrivacy}
-                  followRequests={followRequests}
-                  requestsLoading={requestsLoading}
-                  acceptFollowRequest={acceptFollowRequest}
-                  rejectFollowRequest={rejectFollowRequest}
-                  onOpenSaved={() => {
-                    setProfileSavedOpen(true);
-
-                    if (typeof window !== "undefined") {
-                      const url = new URL(window.location.href);
-                      url.searchParams.set("section", "profile");
-                      url.searchParams.set("view", "saved");
-                      url.searchParams.delete("edit");
-                      window.history.replaceState(
-                        window.history.state,
-                        "",
-                        url.pathname + url.search
-                      );
-                    }
-                  }}
-                  onEditProfile={() => {
-                    setProfileSavedOpen(false);
-                    setProfileEditorOpen(true);
-
-                    if (typeof window !== "undefined") {
-                      const url = new URL(window.location.href);
-                      url.searchParams.set("section", "profile");
-                      url.searchParams.set("edit", "1");
-                      url.searchParams.delete("view");
-                      window.history.replaceState(
-                        window.history.state,
-                        "",
-                        url.pathname + url.search
-                      );
-                    }
-                  }}
-                />
-              ))}
-
-            {activeSection === "academic" && (
-              <AcademicPanel
-                form={form}
-                update={update}
-              />
-            )}
-
-            {activeSection === "links" && (
-              <LinksPanel
-                form={form}
-                update={update}
-              />
-            )}
-
-            {activeSection === "music" && (
-              <SpotifyPremiumMusicGate userId={user?.id || ""} />
-            )}
-
-            {activeSection === "account" && (
-              <AccountTrustPanel
-                email={user?.email || ""}
-                logout={logout}
-              />
-            )}
           </section>
-        </div>
+        )}
       </div>
 
       {privacyModalOpen && (
@@ -788,7 +1019,6 @@ export default function SettingsPage() {
     </AppShell>
   );
 }
-
 function PrivacyModeModal({
   busy,
   onClose,
@@ -816,7 +1046,7 @@ function PrivacyModeModal({
             </h3>
             <p className="mt-2 text-sm leading-6 text-[var(--app-muted)]">
               Las personas nuevas tendrán que enviarte una solicitud para seguirte.
-              Solo tus seguidores aceptados podrán ver tus publicaciones e historias.
+              Solo tus seguidores aceptados podrán ver tus publicaciones.
             </p>
           </div>
 
@@ -964,7 +1194,7 @@ function ProfilePanel({
               Cuenta privada
             </p>
             <p className="mt-1 text-xs leading-5 text-[var(--app-muted-2)]">
-              Controla quién puede seguirte y ver tus publicaciones e historias.
+              Controla quién puede seguirte y ver tus publicaciones.
             </p>
           </div>
 
@@ -1459,3 +1689,5 @@ function SocialField({
 /* ALUMNI_1_4_1_PROFILE_REPOSTS_SAVED_READABILITY:SETTINGS */
 
 /* ALUMNI_3_1_1_PRODUCT_COPY_CLEANUP */
+
+/* ALUMNI_SETTINGS_1_0_OPTION_1_CLASSIC_LIST */

@@ -1,0 +1,76 @@
+ALUMNI SETTINGS 1.0 — OPCIÓN 1 / LISTA CLÁSICA
+
+DISEÑO APROBADO
+Se implementa la Opción 1 igual al concepto visual:
+
+- Cabecera simple "Configuración"
+- Flecha atrás
+- Perfil arriba con:
+  * avatar
+  * nombre
+  * carrera
+  * universidad
+  * chevron
+- Lista vertical clásica
+- Separadores
+- Iconos discretos
+- Título + descripción
+- Chevron a la derecha
+- Cerrar sesión en rojo
+
+MAPEO FUNCIONAL REAL
+
+Cuenta
+→ abre el editor real del perfil/datos.
+
+Privacidad
+→ abre los controles reales de cuenta privada,
+solicitudes, guardados y edición de perfil.
+
+Notificaciones
+→ abre /notifications.
+
+Apariencia
+→ abre el selector real de tema.
+
+Seguridad
+→ abre AccountTrustPanel:
+contraseña, recuperación, protección y demás
+opciones reales de cuenta.
+
+Ayuda
+→ abre /feedback.
+
+Cerrar sesión
+→ usa el logout real de Supabase.
+
+IMPORTANTE
+No se crearon botones falsos.
+
+MOBILE FIRST
+Referencia principal:
+360 / 390 / 412 / 430 px.
+
+Desktop mantiene la misma estructura y solamente
+la centra; no crea un sidebar diferente.
+
+STORIES
+Como Stories está oculto por decisión de producto,
+también se limpia su mención principal dentro del
+copy de privacidad.
+
+ARCHIVOS
+- src/app/settings/page.tsx
+- src/components/settings/ProfileSettingsHub.tsx
+- src/app/settings/settings-classic-1-0.css
+
+EJECUTAR DESDE alumni-web:
+
+node .\aplicar_alumni_settings_1_0_opcion_1_lista_clasica.js
+npm run build
+
+SI EL BUILD SALE BIEN:
+
+git add .
+git commit -m "Settings 1.0 - classic list mobile first"
+git push origin main
