@@ -539,3 +539,326 @@
 }
 
 /* ALUMNI_STORIES_1_1_1_COMPACT_VIEWER_END */
+
+
+/* ================================================================
+   ALUMNI_STORIES_THEME_1_4_4B_CLEAN_PUBLISH_DUAL_THEME
+   DARK/LIGHT CONTRACT — STORIES COMPLETO
+   ================================================================ */
+
+/* ---------- Rail / fuera del visor ---------- */
+html[data-theme="dark"] .alumni-feed-page .alumni-stories-section[data-stories-design="c"],
+html[data-theme="light"] .alumni-feed-page .alumni-stories-section[data-stories-design="c"] {
+  background: var(--app-surface) !important;
+  color: var(--app-text) !important;
+  border-color: var(--app-border) !important;
+}
+
+html[data-theme="dark"] .alumni-feed-page .alumni-story-compact-label,
+html[data-theme="light"] .alumni-feed-page .alumni-story-compact-label {
+  color: var(--app-text-soft) !important;
+}
+
+html[data-theme="dark"] .alumni-feed-page .alumni-story-compact-avatar,
+html[data-theme="light"] .alumni-feed-page .alumni-story-compact-avatar {
+  background: var(--app-surface-2) !important;
+  color: var(--app-text) !important;
+}
+
+/* ---------- Creator fullscreen ---------- */
+html[data-theme="dark"] .alumni-story-creator-c {
+  --story-ui-surface: rgba(5,7,11,.72);
+  --story-ui-surface-strong: rgba(5,7,11,.90);
+  --story-ui-border: rgba(255,255,255,.13);
+  --story-ui-text: #ffffff;
+  --story-ui-muted: rgba(255,255,255,.58);
+  --story-ui-shadow: rgba(0,0,0,.30);
+  background: #05070b !important;
+  color: #fff !important;
+}
+
+html[data-theme="light"] .alumni-story-creator-c {
+  --story-ui-surface: rgba(255,255,255,.86);
+  --story-ui-surface-strong: rgba(255,255,255,.96);
+  --story-ui-border: rgba(15,23,42,.12);
+  --story-ui-text: #10141b;
+  --story-ui-muted: rgba(39,48,60,.64);
+  --story-ui-shadow: rgba(15,23,42,.13);
+  background: var(--app-bg) !important;
+  color: var(--app-text) !important;
+}
+
+html[data-theme="dark"] .alumni-story-creator-stage {
+  background: #07090d !important;
+  border-color: rgba(255,255,255,.05) !important;
+}
+
+html[data-theme="light"] .alumni-story-creator-stage {
+  background: var(--app-bg-2) !important;
+  border-color: var(--app-border) !important;
+}
+
+.alumni-story-creator-c .alumni-story-creator-brand,
+.alumni-story-creator-c .alumni-story-creator-close {
+  color: var(--story-ui-text) !important;
+}
+
+html[data-theme="light"] .alumni-story-creator-c .alumni-story-creator-brand,
+html[data-theme="light"] .alumni-story-creator-c .alumni-story-creator-close {
+  filter: drop-shadow(0 1px 5px rgba(255,255,255,.55)) !important;
+}
+
+/* Herramientas flotantes y popovers: no mezclar negro con tema claro. */
+.alumni-story-creator-c .alumni-story-creator-tools button,
+.alumni-story-creator-c .alumni-story-style-panel,
+.alumni-story-creator-c .alumni-story-filter-panel,
+.alumni-story-creator-c .alumni-story-mention-menu {
+  border-color: var(--story-ui-border) !important;
+  background: var(--story-ui-surface-strong) !important;
+  color: var(--story-ui-text) !important;
+  box-shadow: 0 14px 38px var(--story-ui-shadow) !important;
+}
+
+.alumni-story-creator-c .alumni-story-style-panel p,
+.alumni-story-creator-c .alumni-story-filter-panel button,
+.alumni-story-creator-c .alumni-story-mention-menu p,
+.alumni-story-creator-c .alumni-story-mention-menu span {
+  color: var(--story-ui-muted);
+}
+
+/* Opciones seleccionadas conservan el acento Alumni. */
+.alumni-story-creator-c .alumni-story-creator-tools button[class*="bg-[#6d7cff]"],
+.alumni-story-creator-c .alumni-story-style-panel button[class*="bg-[#6d7cff]"],
+.alumni-story-creator-c .alumni-story-filter-panel button[class*="bg-[#6d7cff]"] {
+  background: var(--app-accent-soft) !important;
+  border-color: color-mix(in srgb, var(--app-accent) 42%, var(--story-ui-border)) !important;
+  color: var(--app-accent) !important;
+}
+
+/* Barra inferior */
+.alumni-story-creator-c .alumni-story-bottom-actions > button:not(.alumni-story-publish-direct) {
+  border-color: var(--story-ui-border) !important;
+  background: var(--story-ui-surface) !important;
+  color: var(--story-ui-text) !important;
+  box-shadow: 0 10px 28px var(--story-ui-shadow) !important;
+}
+
+.alumni-story-creator-c .alumni-story-publish-direct {
+  background: var(--app-accent-fill) !important;
+  color: var(--app-on-accent) !important;
+}
+
+/* ---------- Studio Logros / Oportunidades ---------- */
+html[data-theme="dark"] .alumni-story-studio-shell {
+  background: rgba(0,0,0,.90) !important;
+}
+
+html[data-theme="light"] .alumni-story-studio-shell {
+  background: rgba(238,241,246,.94) !important;
+}
+
+html[data-theme="dark"] .alumni-story-studio-shell-panel,
+html[data-theme="light"] .alumni-story-studio-shell-panel {
+  background: var(--app-surface) !important;
+  color: var(--app-text) !important;
+  border-color: var(--app-border) !important;
+}
+
+html[data-theme="light"] .alumni-story-studio-shell-panel [class*="bg-[#0b0e13]"],
+html[data-theme="light"] .alumni-story-studio-shell-panel [class*="bg-white/[0.025]"],
+html[data-theme="light"] .alumni-story-studio-shell-panel [class*="bg-white/[0.03]"],
+html[data-theme="light"] .alumni-story-studio-shell-panel [class*="bg-white/[0.05]"] {
+  background: var(--app-surface) !important;
+}
+
+html[data-theme="light"] .alumni-story-studio-shell-panel [class*="border-white"] {
+  border-color: var(--app-border) !important;
+}
+
+html[data-theme="light"] .alumni-story-studio-shell-panel .text-white,
+html[data-theme="light"] .alumni-story-studio-shell-panel [class*="text-white"] {
+  color: var(--app-text) !important;
+}
+
+/* Preview multimedia del Studio conserva controles con contraste propio. */
+.alumni-story-studio-shell-panel [class*="bg-black/"] {
+  color: #fff !important;
+}
+
+/* ---------- Viewer ---------- */
+html[data-theme="dark"] .alumni-story-viewer[data-story-design="c-1-1"] {
+  background:
+    radial-gradient(circle at 16% 18%, rgba(112,88,255,.16), transparent 34%),
+    #05070b !important;
+}
+
+html[data-theme="light"] .alumni-story-viewer[data-story-design="c-1-1"] {
+  background:
+    radial-gradient(circle at 16% 18%, rgba(82,103,232,.08), transparent 34%),
+    var(--app-bg) !important;
+}
+
+html[data-theme="dark"] .alumni-story-viewer[data-story-design="c-1-1"] .alumni-story-stage-c {
+  background: #05070b !important;
+  border-color: rgba(255,255,255,.10) !important;
+}
+
+html[data-theme="light"] .alumni-story-viewer[data-story-design="c-1-1"] .alumni-story-stage-c {
+  background: var(--app-surface) !important;
+  border-color: var(--app-border) !important;
+  box-shadow: 0 28px 78px rgba(15,23,42,.13) !important;
+}
+
+/* El propietario queda SIN banda, blur o sombra en ambos temas. */
+.alumni-story-viewer[data-story-design="c-1-1"] .alumni-story-owner-clean,
+.alumni-story-viewer[data-story-design="c-1-1"] .alumni-story-chrome-top:nth-of-type(2) {
+  background: transparent !important;
+  background-image: none !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  filter: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+/* Texto/acciones de cabecera por tema. */
+html[data-theme="dark"] .alumni-story-viewer[data-story-design="c-1-1"] .alumni-story-owner-clean {
+  color: #fff !important;
+}
+
+html[data-theme="light"] .alumni-story-viewer[data-story-design="c-1-1"] .alumni-story-owner-clean {
+  color: #10141b !important;
+}
+
+html[data-theme="dark"] .alumni-story-viewer[data-story-design="c-1-1"] .alumni-story-owner-clean p,
+html[data-theme="dark"] .alumni-story-viewer[data-story-design="c-1-1"] .alumni-story-owner-clean button {
+  color: #fff !important;
+}
+
+html[data-theme="light"] .alumni-story-viewer[data-story-design="c-1-1"] .alumni-story-owner-clean p,
+html[data-theme="light"] .alumni-story-viewer[data-story-design="c-1-1"] .alumni-story-owner-clean button {
+  color: #10141b !important;
+}
+
+/* Progress: dark = claro; light = tinta oscura. */
+html[data-theme="dark"] .alumni-story-viewer[data-story-design="c-1-1"] .alumni-story-chrome-top:first-child > div > div {
+  background: rgba(255,255,255,.22) !important;
+}
+
+html[data-theme="light"] .alumni-story-viewer[data-story-design="c-1-1"] .alumni-story-chrome-top:first-child > div > div {
+  background: rgba(15,23,42,.18) !important;
+}
+
+html[data-theme="dark"] .alumni-story-viewer[data-story-design="c-1-1"] .alumni-story-chrome-top:first-child > div > div > div {
+  background: #fff !important;
+}
+
+html[data-theme="light"] .alumni-story-viewer[data-story-design="c-1-1"] .alumni-story-chrome-top:first-child > div > div > div {
+  background: #10141b !important;
+}
+
+/* Reply / reacciones */
+html[data-theme="dark"] .alumni-story-viewer[data-story-design="c-1-1"] .alumni-story-reply-editor,
+html[data-theme="dark"] .alumni-story-viewer[data-story-design="c-1-1"] .alumni-story-reaction {
+  border-color: rgba(255,255,255,.14) !important;
+  background: rgba(14,16,22,.82) !important;
+  color: #fff !important;
+}
+
+html[data-theme="light"] .alumni-story-viewer[data-story-design="c-1-1"] .alumni-story-reply-editor,
+html[data-theme="light"] .alumni-story-viewer[data-story-design="c-1-1"] .alumni-story-reaction {
+  border-color: rgba(15,23,42,.12) !important;
+  background: rgba(255,255,255,.92) !important;
+  color: #10141b !important;
+  box-shadow: 0 12px 30px rgba(15,23,42,.12) !important;
+}
+
+html[data-theme="dark"] .alumni-story-viewer[data-story-design="c-1-1"] .alumni-story-reply-input {
+  color: #fff !important;
+}
+
+html[data-theme="light"] .alumni-story-viewer[data-story-design="c-1-1"] .alumni-story-reply-input {
+  color: #10141b !important;
+}
+
+html[data-theme="dark"] .alumni-story-viewer[data-story-design="c-1-1"] .alumni-story-reply-input::placeholder {
+  color: rgba(255,255,255,.48) !important;
+}
+
+html[data-theme="light"] .alumni-story-viewer[data-story-design="c-1-1"] .alumni-story-reply-input::placeholder {
+  color: rgba(39,48,60,.52) !important;
+}
+
+html[data-theme="dark"] .alumni-story-viewer[data-story-design="c-1-1"] .alumni-story-reply-send,
+html[data-theme="light"] .alumni-story-viewer[data-story-design="c-1-1"] .alumni-story-reply-send {
+  background: var(--app-accent-fill) !important;
+  color: var(--app-on-accent) !important;
+}
+
+/* Tarjeta C: dark realmente dark; light realmente light. */
+html[data-theme="dark"] .alumni-story-viewer[data-story-design="c-1-1"] .alumni-story-c-card {
+  --story-c-ink: var(--app-text);
+  --story-c-muted: var(--app-muted);
+  --story-c-paper: rgba(16,19,24,.96);
+  border-color: rgba(255,255,255,.09) !important;
+  box-shadow: 0 18px 52px rgba(0,0,0,.32) !important;
+}
+
+html[data-theme="dark"] .alumni-story-viewer[data-story-design="c-1-1"] .alumni-story-c-title,
+html[data-theme="dark"] .alumni-story-viewer[data-story-design="c-1-1"] .alumni-story-c-copy,
+html[data-theme="dark"] .alumni-story-viewer[data-story-design="c-1-1"] .alumni-story-c-kicker {
+  color: var(--app-text) !important;
+}
+
+html[data-theme="dark"] .alumni-story-viewer[data-story-design="c-1-1"] .alumni-story-c-quick,
+html[data-theme="dark"] .alumni-story-viewer[data-story-design="c-1-1"] .alumni-story-c-owner-stat {
+  background: var(--app-surface-2) !important;
+  border-color: var(--app-border) !important;
+  color: var(--app-text-soft) !important;
+}
+
+html[data-theme="dark"] .alumni-story-viewer[data-story-design="c-1-1"] .alumni-story-c-owner-stat strong,
+html[data-theme="dark"] .alumni-story-viewer[data-story-design="c-1-1"] .alumni-story-c-owner-stat span {
+  color: var(--app-text) !important;
+}
+
+html[data-theme="light"] .alumni-story-viewer[data-story-design="c-1-1"] .alumni-story-c-card {
+  --story-c-ink: var(--app-text);
+  --story-c-muted: var(--app-muted);
+  --story-c-paper: rgba(255,255,255,.98);
+  border-color: var(--app-border) !important;
+  box-shadow: 0 18px 52px rgba(15,23,42,.13) !important;
+}
+
+html[data-theme="light"] .alumni-story-viewer[data-story-design="c-1-1"] .alumni-story-c-quick,
+html[data-theme="light"] .alumni-story-viewer[data-story-design="c-1-1"] .alumni-story-c-owner-stat {
+  background: #f4f6fa !important;
+  border-color: var(--app-border) !important;
+  color: var(--app-text-soft) !important;
+}
+
+/* Desktop arrows */
+html[data-theme="dark"] .alumni-story-viewer[data-story-design="c-1-1"] button[aria-label="Anterior"],
+html[data-theme="dark"] .alumni-story-viewer[data-story-design="c-1-1"] button[aria-label="Siguiente"] {
+  background: rgba(8,10,14,.55) !important;
+  color: #fff !important;
+  border-color: rgba(255,255,255,.10) !important;
+}
+
+html[data-theme="light"] .alumni-story-viewer[data-story-design="c-1-1"] button[aria-label="Anterior"],
+html[data-theme="light"] .alumni-story-viewer[data-story-design="c-1-1"] button[aria-label="Siguiente"] {
+  background: rgba(255,255,255,.92) !important;
+  color: #10141b !important;
+  border-color: rgba(15,23,42,.10) !important;
+}
+
+/* En móvil no dejamos transiciones de tema que produzcan flash oscuro/claro. */
+.alumni-story-creator-c,
+.alumni-story-viewer[data-story-design="c-1-1"],
+.alumni-story-studio-shell,
+.alumni-story-studio-shell-panel {
+  transition:
+    background-color .16s ease,
+    border-color .16s ease,
+    color .16s ease;
+}

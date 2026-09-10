@@ -1,0 +1,36 @@
+ALUMNI STORIES / THEME 1.4.4B
+CORRECCIÓN DEL VALIDADOR FINAL
+
+El parche 1.4.4 anterior se detuvo al final porque verificaba erróneamente
+que no existiera NINGÚN componente <Send> en StoryComposer.tsx.
+
+Eso era demasiado amplio: Send puede existir en otro flujo sin formar parte
+del botón final de publicar.
+
+IMPORTANTE
+El 1.4.4 anterior guarda los archivos únicamente al final.
+Como apareció el error antes del guardado, NO dejó esos cambios escritos.
+
+1.4.4B mantiene los mismos cambios:
+- elimina el modal final;
+- cambia Siguiente por Publicar directo;
+- el CTA final dice solo Publicar;
+- mantiene Publicando... durante el proceso;
+- solo Oscuro y Claro;
+- corrige temas en rail, creador, herramientas, popovers y visor;
+- quita el bloqueo dark del StoryViewer;
+- mantiene la cabecera del propietario sin sombreado.
+
+La validación ahora comprueba específicamente el CTA Publicar en vez de
+rechazar cualquier uso de Send en todo el archivo.
+
+EJECUTAR DESDE alumni-web:
+
+node .\aplicar_alumni_stories_theme_1_4_4b_clean_publish_dual_theme.js
+npm run build
+
+Si termina bien:
+
+git add .
+git commit -m "Stories 1.4.4 - clean publish and dark light consistency"
+git push origin main

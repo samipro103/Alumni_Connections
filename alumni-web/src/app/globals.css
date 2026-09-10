@@ -2619,35 +2619,6 @@ html[data-theme="light"] {
   --app-shadow: rgba(31,41,55,.10);
 }
 
-html[data-theme="pride"] {
-  --app-bg: #120b16;
-  --app-bg-2: #170d1b;
-  --app-surface: #1b121f;
-  --app-surface-2: #25172a;
-  --app-soft: rgba(255,255,255,.045);
-  --app-soft-strong: rgba(255,255,255,.08);
-  --app-border: rgba(255,255,255,.11);
-  --app-text: #fff7fb;
-  --app-text-soft: #f0dfe9;
-  --app-muted: #c7b0c0;
-  --app-muted-2: #aa91a3;
-  --app-muted-3: #907789;
-  --app-accent: #ff79a8;
-  --app-accent-2: #e85b91;
-  --app-accent-fill:
-    linear-gradient(
-      90deg,
-      #d93663 0%,
-      #b65312 18%,
-      #8a6c00 34%,
-      #167b43 51%,
-      #2365b1 69%,
-      #6741d9 84%,
-      #9b38b5 100%
-    );
-  --app-accent-soft: rgba(232,91,145,.14);
-  --app-on-accent: #ffffff;
-}
 
 /* Dark overlays always keep white foreground, including Light theme. */
 html[data-theme] [class*="bg-black/"][class*="text-white"] {
@@ -3146,3 +3117,9 @@ html[data-theme="light"] .alumni-story-composer-modal textarea::placeholder {
     border-color .18s ease,
     color .18s ease;
 }
+
+
+/* ALUMNI_STORIES_THEME_1_4_4B_CLEAN_PUBLISH_DUAL_THEME
+   Contrato oficial de tema de ALUMNI: únicamente dark / light. */
+html[data-theme="dark"] { color-scheme: dark; }
+html[data-theme="light"] { color-scheme: light; }

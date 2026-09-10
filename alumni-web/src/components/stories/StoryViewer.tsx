@@ -947,10 +947,10 @@ if (
 
   return createPortal(
     <div
-      data-theme-lock="dark"
+      data-story-theme="adaptive"
       data-story-design="c-1-1"
       data-story-fix="ALUMNI_STORIES_1_3_1_FIX_PLUS_NO_OWNER_SHADOW"
-      className={`alumni-story-viewer fixed inset-0 z-[2147483000] flex h-[100dvh] w-screen items-center justify-center overflow-hidden bg-black ${holding ? "is-holding" : ""}`}
+      className={`alumni-story-viewer alumni-story-viewer-adaptive fixed inset-0 z-[2147483000] flex h-[100dvh] w-screen items-center justify-center overflow-hidden bg-black ${holding ? "is-holding" : ""}`}
     >
       <div className="alumni-story-stage-c relative flex h-[100dvh] w-screen max-w-none items-center justify-center overflow-hidden bg-black sm:h-[100dvh] sm:w-screen sm:max-w-none sm:rounded-none sm:border-0 sm:shadow-none">
         <div className="alumni-story-chrome alumni-story-chrome-top absolute left-3 right-3 top-[max(10px,env(safe-area-inset-top))] z-40 px-1">
@@ -1449,3 +1449,5 @@ if (
     document.body
   );
 }
+
+/* ALUMNI_STORIES_THEME_1_4_4B_CLEAN_PUBLISH_DUAL_THEME */
