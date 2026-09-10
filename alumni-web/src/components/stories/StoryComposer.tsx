@@ -3024,7 +3024,7 @@ export default function StoryComposer({
               <div className="absolute inset-x-[18%] top-[31%] h-px bg-white/[0.035]" />
             </>
           ) : (
-            <div className="absolute inset-0 overflow-hidden bg-[#07090d]">
+            <div className="alumni-story-camera-stage absolute inset-0 overflow-hidden bg-[#07090d]">
               {mobileCameraActive ? (
                 <>
                   <video
@@ -3065,7 +3065,7 @@ export default function StoryComposer({
                   onClick={() =>
                     mediaInputRef.current?.click()
                   }
-                  className="absolute inset-0 flex flex-col items-center justify-center bg-[radial-gradient(circle_at_50%_38%,rgba(93,105,255,.12),transparent_30%),linear-gradient(180deg,#0a0d14_0%,#05070b_100%)]"
+                  className="alumni-story-empty-state absolute inset-0 flex flex-col items-center justify-center"
                   aria-label="Seleccionar foto o video"
                 >
                   <span className="flex h-14 w-14 items-center justify-center rounded-full border border-white/[0.12] bg-white/[0.055] text-white/90 backdrop-blur-xl">
@@ -3118,6 +3118,7 @@ export default function StoryComposer({
           {/* ALUMNI_STORIES_1_3_0_OPTION_C_COMPOSER */}
           {/* ALUMNI_STORIES_1_3_3B_OPTION_C_EXACT_CREATOR */}
           {/* ALUMNI_STORIES_1_4_5_MOBILE_FIRST_REPAIR */}
+          {/* ALUMNI_STORIES_1_4_6_INTEGRITY_REPAIR */}
           <div className="pointer-events-none absolute inset-x-0 top-[max(14px,env(safe-area-inset-top))] z-[85] flex h-11 items-center justify-center">
             <div className="alumni-story-creator-brand pointer-events-auto select-none text-[17px] font-black tracking-[-0.045em] text-white [text-shadow:none]">
               Alumni<span className="text-[#7b87ff]">.</span>
@@ -3204,6 +3205,269 @@ export default function StoryComposer({
             </div>
           )}
 
+
+          {storyTextEditing && (
+            <div
+              className="alumni-story-text-editor absolute z-[112] -translate-x-1/2 -translate-y-1/2"
+              style={{
+                left: `${storyTextPosition.x}%`,
+                top: `${storyTextPosition.y}%`,
+              }}
+            >
+              <div
+                className={`alumni-story-text-editor-box relative ${
+                  storyTextFill === "black"
+                    ? "is-fill-black"
+                    : storyTextFill === "white"
+                    ? "is-fill-white"
+                    : "is-fill-none"
+                }`}
+              >
+                <textarea
+                  autoFocus
+                  value={storyText}
+                  onChange={(event) =>
+                    setStoryText(
+                      event.target.value.slice(0, 180)
+                    )
+                  }
+                  placeholder="Escribe… @usuario"
+                  rows={3}
+                  style={{
+                    fontSize: editorFontSize,
+                    color:
+                      storyTextFill === "white" &&
+                      storyTextColor === "white"
+                        ? "#090b10"
+                        : editorColor,
+                  }}
+                  className="alumni-story-text-input w-full resize-none bg-transparent text-center font-black leading-[1.04] tracking-[-0.045em] outline-none placeholder:text-current/35"
+                />
+
+                <button
+                  type="button"
+                  onClick={() => setStoryTextEditing(false)}
+                  className="alumni-story-text-done absolute"
+                  aria-label="Listo"
+                >
+                  <Check size={16} />
+                </button>
+
+                {mentionQuery !== null && (
+                  <div className="alumni-story-mention-menu absolute left-1/2 top-[calc(100%+10px)] -translate-x-1/2">
+                    <div className="alumni-story-mention-head flex items-center gap-2 px-3 py-2">
+                      <AtSign size={13} />
+                      <p>
+                        {mentionQuery
+                          ? `@ ${mentionQuery}`
+                          : "Personas que sigues"}
+                      </p>
+
+                      {mentionLoading && (
+                        <Loader2
+                          size={12}
+                          className="ml-auto animate-spin"
+                        />
+                      )}
+                    </div>
+
+                    {mentionResults.length > 0 ? (
+                      mentionResults.map((profile) => (
+                        <button
+                          key={profile.id}
+                          type="button"
+                          onClick={() => insertMention(profile)}
+                          className="alumni-story-mention-row flex w-full items-center gap-3 text-left"
+                        >
+                          <span className="alumni-story-mention-avatar flex shrink-0 items-center justify-center overflow-hidden rounded-full">
+                            {profile.avatar_url ? (
+                              <img
+                                src={profile.avatar_url}
+                                alt=""
+                                className="h-full w-full object-cover"
+                              />
+                            ) : (
+                              profile.username
+                                .charAt(0)
+                                .toUpperCase()
+                            )}
+                          </span>
+
+                          <span className="min-w-0 flex-1">
+                            <strong className="block truncate">
+                              @{profile.username}
+                            </strong>
+
+                            {profile.full_name && (
+                              <small className="mt-0.5 block truncate">
+                                {profile.full_name}
+                              </small>
+                            )}
+                          </span>
+                        </button>
+                      ))
+                    ) : (
+                      <p className="alumni-story-mention-empty">
+                        {mentionLoading
+                          ? "Buscando…"
+                          : "Sin coincidencias"}
+                      </p>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {storyStyleOpen && (
+            <div className="alumni-story-style-panel absolute z-[110]">
+              <div className="alumni-story-panel-section">
+                <p className="alumni-story-panel-label">
+                  Color del texto
+                </p>
+
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {STORY_TEXT_COLORS.map((item) => (
+                    <button
+                      key={item.id}
+                      type="button"
+                      onClick={() =>
+                        setStoryTextColor(item.id)
+                      }
+                      title={item.label}
+                      aria-label={`Color ${item.label}`}
+                      data-selected={
+                        storyTextColor === item.id
+                          ? "true"
+                          : "false"
+                      }
+                      className="alumni-story-color-choice relative"
+                      style={{
+                        background: item.value,
+                      }}
+                    >
+                      {storyTextColor === item.id && (
+                        <span className="absolute inset-0 flex items-center justify-center">
+                          <Check
+                            size={13}
+                            className={
+                              item.id === "white" ||
+                              item.id === "gold"
+                                ? "text-black"
+                                : "text-white"
+                            }
+                          />
+                        </span>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="alumni-story-panel-divider" />
+
+              <div className="alumni-story-panel-section">
+                <p className="alumni-story-panel-label">
+                  Fondo del texto
+                </p>
+
+                <div className="mt-3 grid grid-cols-3 gap-2">
+                  {[
+                    ["none", "Sin fondo"],
+                    ["black", "Negro"],
+                    ["white", "Blanco"],
+                  ].map(([id, label]) => (
+                    <button
+                      key={id}
+                      type="button"
+                      onClick={() =>
+                        setStoryTextFill(
+                          id as StoryTextFill
+                        )
+                      }
+                      data-selected={
+                        storyTextFill === id
+                          ? "true"
+                          : "false"
+                      }
+                      className="alumni-story-fill-choice"
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="alumni-story-panel-divider" />
+
+              <div className="alumni-story-panel-section">
+                <p className="alumni-story-panel-label">
+                  Tamaño
+                </p>
+
+                <div className="mt-3 flex items-center gap-2">
+                  <button
+                    type="button"
+                    className="alumni-story-scale-button"
+                    onClick={() =>
+                      setStoryTextScale((value) =>
+                        Math.max(
+                          0.55,
+                          Number((value - 0.1).toFixed(2))
+                        )
+                      )
+                    }
+                  >
+                    A−
+                  </button>
+
+                  <div className="alumni-story-scale-value">
+                    {Math.round(storyTextScale * 100)}%
+                  </div>
+
+                  <button
+                    type="button"
+                    className="alumni-story-scale-button"
+                    onClick={() =>
+                      setStoryTextScale((value) =>
+                        Math.min(
+                          2.2,
+                          Number((value + 0.1).toFixed(2))
+                        )
+                      )
+                    }
+                  >
+                    A+
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {storyFilterOpen && (
+            <div className="alumni-story-filter-panel absolute z-[110]">
+              <div className="alumni-story-filter-scroll">
+                {STORY_FILTERS.map((item) => (
+                  <button
+                    key={item.id}
+                    type="button"
+                    onClick={() =>
+                      setStoryFilter(item.id)
+                    }
+                    data-selected={
+                      storyFilter === item.id
+                        ? "true"
+                        : "false"
+                    }
+                    className="alumni-story-filter-choice"
+                  >
+                    {item.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
           {hasMedia && (
             <div className="alumni-story-bottom-actions absolute z-[100] flex items-center">
               <button
@@ -3270,7 +3534,7 @@ export default function StoryComposer({
                   null
                 )
               }
-              className="absolute bottom-[max(22px,env(safe-area-inset-bottom))] left-[max(14px,env(safe-area-inset-left))] z-[80] text-[9px] font-black uppercase tracking-[0.1em] text-white/45"
+              className="alumni-story-remove-media absolute z-[104] text-[9px] font-black uppercase tracking-[0.1em]"
             >
               Quitar publicación
             </button>
@@ -3285,7 +3549,7 @@ export default function StoryComposer({
                   []
                 )
               }
-              className="absolute bottom-[max(22px,env(safe-area-inset-bottom))] left-[max(14px,env(safe-area-inset-left))] z-[80] text-[9px] font-black uppercase tracking-[0.1em] text-white/45"
+              className="alumni-story-remove-media absolute z-[104] text-[9px] font-black uppercase tracking-[0.1em]"
             >
               Quitar collage
             </button>

@@ -1,0 +1,36 @@
+ALUMNI STORIES 1.4.6 — INTEGRITY REPAIR
+
+Este parche se enfoca SOLO en Historias.
+
+CORRIGE
+- Restaura UI real de Aa.
+- Restaura menciones @.
+- Restaura panel Estilo.
+- Restaura panel Filtros.
+- Agrega tamaño A-/A+ dentro de Estilo.
+- Reduce Publicar a un botón compacto.
+- Mueve Quitar publicación/collage para que no choque con Publicar.
+- Visualizaciones de historia propia siempre muestran el icono Eye.
+- Mientras carga el conteo muestra … en vez de esconder todo.
+- El contador usa una superficie legible por tema.
+- Claro y Oscuro tienen superficies separadas para editor.
+- Elimina el pseudo-gradiente de la foto que todavía oscurecía la zona del propietario.
+- Botones pequeños del header son legibles sin volver a sombrear el nombre.
+- Mantiene enfoque mobile-first 360–430 px.
+- Desktop sigue siendo adaptación secundaria.
+
+ARCHIVOS
+- src/components/stories/StoryComposer.tsx
+- src/components/stories/StoryViewer.tsx
+- src/app/feed/stories-visual-1-1.css
+
+EJECUTAR DESDE alumni-web
+
+node .\aplicar_alumni_stories_1_4_6_integrity_repair.js
+npm run build
+
+SI SALE BIEN
+
+git add .
+git commit -m "Stories 1.4.6 - integrity repair"
+git push origin main

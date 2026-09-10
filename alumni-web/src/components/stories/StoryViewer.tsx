@@ -1024,7 +1024,7 @@ if (
                   (value) => !value
                 )
               }
-              className="flex h-10 w-10 items-center justify-center rounded-full bg-transparent text-white/90 shadow-none [backdrop-filter:none]"
+              className="alumni-story-header-action flex h-10 w-10 items-center justify-center rounded-full shadow-none [backdrop-filter:none]"
               aria-label={
                 videoMuted
                   ? "Activar audio"
@@ -1046,7 +1046,7 @@ if (
                 deleteCurrentStory
               }
               disabled={deleting}
-              className="flex h-10 w-10 items-center justify-center rounded-full bg-transparent text-white/85 shadow-none [backdrop-filter:none] transition hover:text-red-300"
+              className="alumni-story-header-action flex h-10 w-10 items-center justify-center rounded-full shadow-none [backdrop-filter:none] transition hover:text-red-300"
               aria-label="Eliminar historia"
             >
               {deleting ? (
@@ -1063,7 +1063,7 @@ if (
           <button
             type="button"
             onClick={onClose}
-            className="flex h-10 w-10 items-center justify-center rounded-full bg-transparent text-white/95 shadow-none [backdrop-filter:none]"
+            className="alumni-story-header-action flex h-10 w-10 items-center justify-center rounded-full shadow-none [backdrop-filter:none]"
             aria-label="Cerrar historia"
           >
             <X size={19} />
@@ -1261,7 +1261,7 @@ if (
                   void toggleStorySave()
                 }
                 disabled={saveBusy}
-                className={`flex h-11 items-center gap-2 rounded-[15px] border px-4 text-xs font-black backdrop-blur-xl transition ${
+                className={`alumni-story-opportunity-save flex h-11 items-center gap-2 rounded-[15px] border px-4 text-xs font-black backdrop-blur-xl transition ${
                   saved
                     ? "border-emerald-300/25 bg-emerald-400/15 text-emerald-100"
                     : "border-white/10 bg-black/45 text-white/75"
@@ -1285,7 +1285,7 @@ if (
                 <button
                   type="button"
                   onClick={openOpportunity}
-                  className="ml-auto flex h-11 items-center gap-2 rounded-[15px] bg-white px-4 text-xs font-black text-black transition hover:bg-zinc-200"
+                  className="alumni-story-opportunity-open ml-auto flex h-11 items-center gap-2 rounded-[15px] border px-4 text-xs font-black transition"
                 >
                   Ver oportunidad
                   <ExternalLink size={14} />
@@ -1297,22 +1297,20 @@ if (
         {/* ALUMNI_STORIES_1_2_1_FULLSCREEN_CLEAN_VIEWER */}
         {ownStory ? (
           <div
-            className="alumni-story-chrome alumni-story-chrome-bottom absolute bottom-[max(18px,env(safe-area-inset-bottom))] left-5 z-40"
+            className="alumni-story-chrome alumni-story-chrome-bottom alumni-story-owner-insights absolute"
             onClick={(event) => event.stopPropagation()}
           >
-            {viewCount !== null && (
-              <div className="flex items-center gap-2.5 text-white [text-shadow:0_1px_6px_rgba(0,0,0,.45)]">
-                <Eye size={17} strokeWidth={2} />
-                <div className="leading-none">
-                  <div className="text-sm font-black tracking-[-0.02em]">
-                    {viewCount}
-                  </div>
-                  <div className="mt-1 text-[10px] font-semibold text-white/72">
-                    visualizaciones
-                  </div>
+            <div className="alumni-story-views-pill">
+              <Eye size={17} strokeWidth={2} />
+              <div className="leading-none">
+                <div className="text-[13px] font-black tracking-[-0.02em]">
+                  {viewCount === null ? "…" : viewCount}
+                </div>
+                <div className="alumni-story-views-label">
+                  visualizaciones
                 </div>
               </div>
-            )}
+            </div>
           </div>
         ) : (
           <div
@@ -1451,3 +1449,5 @@ if (
 }
 
 /* ALUMNI_STORIES_THEME_1_4_4B_CLEAN_PUBLISH_DUAL_THEME */
+
+/* ALUMNI_STORIES_1_4_6_INTEGRITY_REPAIR */
