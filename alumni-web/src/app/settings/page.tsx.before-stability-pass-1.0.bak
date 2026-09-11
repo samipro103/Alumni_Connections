@@ -6,6 +6,7 @@ import {
   Check,
   ArrowLeft,
   Bell,
+  CircleHelp,
   AtSign,
   Camera,
   ChevronRight,
@@ -43,7 +44,6 @@ import "../interior-ui-1-0.css";
 import "./settings-clean-2-0.css";
 import "./settings-edit-profile-option-1.css";
 import "./settings-edit-profile-repair-1-1.css";
-import "./settings-stability-3-0.css";
 
 type SettingsSectionId =
   | "appearance"
@@ -726,7 +726,7 @@ export default function SettingsPage() {
   if (loadingProfile) {
     return (
       <AppShell>
-        <div className="alumni-settings-loading py-16 text-center text-sm text-[var(--app-muted-2)]" data-alumni-motion-ignore="true">
+        <div className="alumni-settings-loading py-16 text-center text-sm text-[var(--app-muted-2)]">
           Cargando configuración...
         </div>
       </AppShell>
@@ -749,7 +749,6 @@ export default function SettingsPage() {
             : "is-home"
         }`}
         data-settings-design="option-1-classic"
-        data-alumni-motion-ignore="true"
       >
         {!mobileSectionOpen && !profileEditorOpen ? (
           <>
@@ -927,7 +926,25 @@ export default function SettingsPage() {
                 />
               </button>
 
-              
+              <button
+                type="button"
+                className="alumni-settings-classic-row"
+                onClick={() =>
+                  router.push("/feedback")
+                }
+              >
+                <span className="alumni-settings-row-icon">
+                  <CircleHelp size={19} />
+                </span>
+                <span className="alumni-settings-row-copy">
+                  <strong>Ayuda</strong>
+                  <small>Soporte y comentarios</small>
+                </span>
+                <ChevronRight
+                  size={17}
+                  className="alumni-settings-row-chevron"
+                />
+              </button>
             </nav>
 
             <button
@@ -1789,5 +1806,3 @@ function SocialField({
 /* ALUMNI_SETTINGS_2_2_NO_REDUNDANCY */
 
 /* ALUMNI_SETTINGS_2_3_VISIBILITY_ELIGIBILITY */
-
-/* ALUMNI_STABILITY_PASS_1_0:SETTINGS */

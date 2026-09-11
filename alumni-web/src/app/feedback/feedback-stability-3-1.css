@@ -1,0 +1,208 @@
+/*
+ * ALUMNI Feedback Stability 3.1
+ * Keeps the premium look but restores predictable geometry.
+ */
+
+.alumni-help-v2.alumni-feedback-pro-shell {
+  width:
+    100% !important;
+  max-width:
+    640px !important;
+  margin:
+    0 auto !important;
+  padding-bottom:
+    calc(
+      96px +
+      env(safe-area-inset-bottom)
+    ) !important;
+}
+
+.alumni-feedback-pro-shell
+.alumni-help-header {
+  position:
+    relative !important;
+  top:
+    auto !important;
+  z-index:
+    2 !important;
+  grid-template-columns:
+    40px
+    minmax(0, 1fr)
+    40px !important;
+  min-height:
+    50px !important;
+  margin-bottom:
+    12px;
+  border-bottom:
+    0 !important;
+  background:
+    transparent !important;
+  backdrop-filter:
+    none !important;
+  -webkit-backdrop-filter:
+    none !important;
+}
+
+.alumni-feedback-pro-shell
+.alumni-help-header
+> button {
+  width:
+    38px !important;
+  height:
+    38px !important;
+  border-radius:
+    12px !important;
+  transition:
+    transform 130ms
+      cubic-bezier(.2,.8,.2,1),
+    background-color
+      150ms ease;
+}
+
+.alumni-feedback-pro-shell
+.alumni-help-header
+> button:active {
+  transform:
+    scale(.93);
+}
+
+.alumni-feedback-pro-shell
+.alumni-help-header h1 {
+  font-size:
+    15px !important;
+  font-weight:
+    900 !important;
+}
+
+.alumni-feedback-pro-home {
+  padding-top:
+    0 !important;
+}
+
+.alumni-feedback-pro-hero {
+  padding:
+    24px 19px
+    21px !important;
+  border-radius:
+    22px !important;
+}
+
+.alumni-feedback-pro-hero h2 {
+  margin-top:
+    18px !important;
+  font-size:
+    clamp(
+      27px,
+      7.5vw,
+      38px
+    ) !important;
+}
+
+.alumni-feedback-pro-hero
+> p {
+  margin-top:
+    12px !important;
+  font-size:
+    11.5px !important;
+  line-height:
+    1.62 !important;
+}
+
+.alumni-feedback-pro-signal {
+  margin-top:
+    18px !important;
+}
+
+.alumni-feedback-pro-featured {
+  margin-top:
+    10px !important;
+}
+
+.alumni-feedback-pro-feature {
+  min-height:
+    72px;
+  padding:
+    13px 14px !important;
+  border-radius:
+    17px !important;
+}
+
+.alumni-feedback-pro-tools {
+  margin-top:
+    26px !important;
+}
+
+.alumni-feedback-pro-section-title {
+  padding-bottom:
+    9px !important;
+}
+
+.alumni-feedback-pro-tool-list {
+  border-radius:
+    17px !important;
+}
+
+.alumni-feedback-pro-tool-row {
+  min-height:
+    62px !important;
+  padding:
+    8px 13px !important;
+}
+
+.alumni-feedback-pro-direct {
+  padding:
+    13px !important;
+  border-radius:
+    17px !important;
+}
+
+.alumni-feedback-editorial,
+.alumni-help-detail,
+.alumni-help-success {
+  width:
+    100%;
+  max-width:
+    100%;
+  margin-right:
+    auto;
+  margin-left:
+    auto;
+}
+
+.alumni-feedback-editorial-hero,
+.alumni-help-detail-intro {
+  margin-top:
+    0 !important;
+}
+
+.alumni-help-faqs,
+.alumni-help-status-list,
+.alumni-help-legal-list {
+  width:
+    100%;
+}
+
+.alumni-feedback-editorial-field
+input,
+.alumni-feedback-editorial-field
+textarea {
+  width:
+    100%;
+  max-width:
+    100%;
+}
+
+.alumni-help-success {
+  max-width:
+    520px;
+}
+
+@media (max-width: 480px) {
+  .alumni-feedback-pro-hero {
+    padding:
+      22px 17px
+      20px !important;
+  }
+}
+
+/* ALUMNI_STABILITY_PASS_1_0 */

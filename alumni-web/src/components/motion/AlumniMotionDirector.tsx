@@ -4,155 +4,73 @@ import {
   useEffect,
 } from "react";
 
-const MOTION_SELECTOR = [
-  "article",
+/*
+ * Stability-first motion director.
+ *
+ * Motion sigue siendo parte de ALUMNI, pero el director automático
+ * ya no toca cualquier clase que contenga "row", "profile", "item", etc.
+ * Esas coincidencias amplias podían animar contenedores estructurales.
+ *
+ * Las pantallas premium usan Framer Motion de forma explícita.
+ * Este director queda como respaldo únicamente para superficies seguras.
+ */
+
+const SAFE_SELECTOR = [
+  "[data-alumni-motion-auto-target='true']",
+  ".alumni-feed-post-viewport",
+  ".events2-row",
+  ".community2-row",
   "[role='dialog']",
   "dialog",
   "[role='alert']",
-  "[class*='card']",
-  "[class*='Card']",
-  "[class*='row']",
-  "[class*='Row']",
-  "[class*='item']",
-  "[class*='Item']",
-  "[class*='tile']",
-  "[class*='Tile']",
-  "[class*='result']",
-  "[class*='Result']",
-  "[class*='post']",
-  "[class*='Post']",
-  "[class*='message']",
-  "[class*='Message']",
-  "[class*='event']",
-  "[class*='Event']",
-  "[class*='community']",
-  "[class*='Community']",
-  "[class*='profile']",
-  "[class*='Profile']",
-  "[class*='modal']",
-  "[class*='Modal']",
-  "[class*='sheet']",
-  "[class*='Sheet']",
-  "[class*='drawer']",
-  "[class*='Drawer']",
-  "[class*='popover']",
-  "[class*='Popover']",
-  "[class*='toast']",
-  "[class*='Toast']",
-  "[class*='empty']",
-  "[class*='Empty']",
-  "[class*='loading']",
-  "[class*='Loading']",
-  "[class*='skeleton']",
-  "[class*='Skeleton']",
+  ".alumni-pro-toast",
 ].join(",");
-
-const EXCLUDED_HINTS = [
-  "wrapper",
-  "container",
-  "layout",
-  "shell",
-  "grid",
-  "header",
-  "topbar",
-  "sidebar",
-  "rail",
-  "spacer",
-  "copy",
-  "icon",
-  "avatar",
-  "badge",
-  "counter",
-  "label",
-  "title",
-];
-
-function classText(
-  element: HTMLElement
-) {
-  return String(
-    element.className || ""
-  ).toLowerCase();
-}
 
 function kindOf(
   element: HTMLElement
 ) {
-  const classes =
-    classText(element);
-
   const role =
     element.getAttribute(
       "role"
     );
 
   if (
+    role === "dialog" ||
     element.tagName ===
-      "DIALOG" ||
-    role ===
-      "dialog" ||
-    /modal|sheet|drawer|popover/.test(
-      classes
-    )
+      "DIALOG"
   ) {
     return "overlay";
   }
 
   if (
     role === "alert" ||
-    /toast/.test(
-      classes
+    element.classList.contains(
+      "alumni-pro-toast"
     )
   ) {
     return "toast";
   }
 
-  if (
-    /loading|skeleton/.test(
-      classes
-    )
-  ) {
-    return "loading";
-  }
-
-  if (
-    /empty/.test(
-      classes
-    )
-  ) {
-    return "status";
-  }
-
-  if (
-    /message|comment/.test(
-      classes
-    )
-  ) {
-    return "conversation";
-  }
-
-  if (
-    /post|card|event|community|profile/.test(
-      classes
-    ) ||
-    element.tagName ===
-      "ARTICLE"
-  ) {
-    return "card";
-  }
-
-  return "row";
+  return "card";
 }
 
 function shouldSkip(
   element: HTMLElement
 ) {
   if (
-    element.dataset
-      .alumniMotionManual ===
-      "true" ||
     element.closest(
       "[data-alumni-motion-ignore='true']"
+    )
+  ) {
+    return true;
+  }
+
+  if (
+    element.closest(
+      "[data-alumni-mobile-nav='true']"
+    ) ||
+    element.closest(
+      "[data-alumni-topbar='true']"
     )
   ) {
     return true;
@@ -165,45 +83,16 @@ function shouldSkip(
     return true;
   }
 
-  if (
-    element ===
-      document.body ||
-    element ===
-      document.documentElement
-  ) {
-    return true;
-  }
-
-  const classes =
-    classText(element);
-
-  const hasStrongHint =
-    /modal|sheet|drawer|popover|toast|loading|skeleton|empty/.test(
-      classes
-    ) ||
-    element.getAttribute(
-      "role"
-    ) ===
-      "dialog" ||
-    element.tagName ===
-      "DIALOG";
+  const style =
+    window.getComputedStyle(
+      element
+    );
 
   if (
-    !hasStrongHint &&
-    EXCLUDED_HINTS.some(
-      (hint) =>
-        classes.includes(
-          hint
-        )
-    )
-  ) {
-    return true;
-  }
-
-  if (
-    element.closest(
-      "[data-alumni-mobile-nav='true']"
-    )
+    style.position ===
+      "fixed" ||
+    style.position ===
+      "sticky"
   ) {
     return true;
   }
@@ -218,12 +107,10 @@ export default function AlumniMotionDirector() {
         "(prefers-reduced-motion: reduce)"
       ).matches;
 
-    let frame = 0;
-
     const watched =
       new WeakSet<HTMLElement>();
 
-    const intersection =
+    const observer =
       new IntersectionObserver(
         (entries) => {
           for (
@@ -242,7 +129,7 @@ export default function AlumniMotionDirector() {
             element.dataset.alumniMotionState =
               "visible";
 
-            intersection.unobserve(
+            observer.unobserve(
               element
             );
           }
@@ -250,14 +137,14 @@ export default function AlumniMotionDirector() {
         {
           root: null,
           rootMargin:
-            "0px 0px -3% 0px",
+            "0px 0px -2% 0px",
           threshold: 0.04,
         }
       );
 
     function register(
       element: HTMLElement,
-      index = 0
+      order = 0
     ) {
       if (
         watched.has(
@@ -272,30 +159,6 @@ export default function AlumniMotionDirector() {
 
       const rect =
         element.getBoundingClientRect();
-
-      const classes =
-        classText(element);
-
-      const potentiallyHidden =
-        /modal|sheet|drawer|popover|toast/.test(
-          classes
-        ) ||
-        element.getAttribute(
-          "role"
-        ) ===
-          "dialog" ||
-        element.tagName ===
-          "DIALOG";
-
-      if (
-        !potentiallyHidden &&
-        (
-          rect.width < 56 ||
-          rect.height < 26
-        )
-      ) {
-        return;
-      }
 
       if (
         rect.width === 0 &&
@@ -319,8 +182,8 @@ export default function AlumniMotionDirector() {
         "--alumni-motion-order",
         String(
           Math.min(
-            index,
-            5
+            order,
+            4
           )
         )
       );
@@ -334,7 +197,7 @@ export default function AlumniMotionDirector() {
       element.dataset.alumniMotionState =
         "pending";
 
-      intersection.observe(
+      observer.observe(
         element
       );
     }
@@ -344,95 +207,65 @@ export default function AlumniMotionDirector() {
         | Document
         | HTMLElement
     ) {
-      const candidates =
-        root.querySelectorAll<HTMLElement>(
-          MOTION_SELECTOR
-        );
-
-      candidates.forEach(
-        (
-          element,
-          index
-        ) => {
-          register(
-            element,
-            index % 6
-          );
-        }
-      );
-
       if (
         root instanceof
           HTMLElement &&
         root.matches(
-          MOTION_SELECTOR
+          SAFE_SELECTOR
         )
       ) {
         register(
-          root
+          root,
+          0
         );
       }
-    }
 
-    function scheduleScan(
-      root:
-        | Document
-        | HTMLElement =
-          document
-    ) {
-      window.cancelAnimationFrame(
-        frame
-      );
-
-      frame =
-        window.requestAnimationFrame(
-          () => {
-            scan(root);
-          }
+      root
+        .querySelectorAll<HTMLElement>(
+          SAFE_SELECTOR
+        )
+        .forEach(
+          (
+            element,
+            index
+          ) =>
+            register(
+              element,
+              index % 5
+            )
         );
     }
 
-    scheduleScan(
+    scan(
       document
     );
 
     const mutation =
       new MutationObserver(
-        (mutations) => {
+        (changes) => {
           for (
             const change
-            of mutations
+            of changes
           ) {
             if (
-              change.type ===
-                "childList"
+              change.type !==
+              "childList"
             ) {
-              for (
-                const node
-                of change.addedNodes
-              ) {
-                if (
-                  node instanceof
-                    HTMLElement
-                ) {
-                  scheduleScan(
-                    node
-                  );
-                }
-              }
+              continue;
             }
 
-            if (
-              change.type ===
-                "attributes" &&
-              change.target instanceof
-                HTMLElement &&
-              !change.target.dataset
-                .alumniMotionAuto
+            for (
+              const node
+              of change.addedNodes
             ) {
-              scheduleScan(
-                change.target
-              );
+              if (
+                node instanceof
+                  HTMLElement
+              ) {
+                scan(
+                  node
+                );
+              }
             }
           }
         }
@@ -443,23 +276,12 @@ export default function AlumniMotionDirector() {
       {
         subtree: true,
         childList: true,
-        attributes: true,
-        attributeFilter: [
-          "class",
-          "style",
-          "open",
-          "aria-hidden",
-          "data-state",
-        ],
       }
     );
 
     return () => {
-      window.cancelAnimationFrame(
-        frame
-      );
       mutation.disconnect();
-      intersection.disconnect();
+      observer.disconnect();
     };
   }, []);
 
@@ -467,3 +289,4 @@ export default function AlumniMotionDirector() {
 }
 
 /* ALUMNI_MOTION_PASS_2_0_FULL_APP */
+/* ALUMNI_STABILITY_PASS_1_0 */

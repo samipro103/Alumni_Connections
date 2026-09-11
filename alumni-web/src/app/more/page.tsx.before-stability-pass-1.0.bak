@@ -11,8 +11,8 @@ import {
   BookOpen,
   CalendarDays,
   ChevronRight,
+  CircleHelp,
   Info,
-  MessageCircleMore,
   Settings2,
   UsersRound,
 } from "lucide-react";
@@ -44,7 +44,7 @@ const settingsItems = [
   {
     href: "/feedback",
     label: "Ayuda y feedback",
-    icon: MessageCircleMore,
+    icon: CircleHelp,
   },
   {
     href: "/about",
@@ -59,10 +59,7 @@ export default function MorePage() {
 
   return (
     <AppShell>
-      <main
-        className="alumni-more-clean mx-auto w-full max-w-[680px]"
-        data-alumni-motion-ignore="true"
-      >
+      <main className="alumni-more-clean mx-auto w-full max-w-[680px]">
         <motion.header
           className="alumni-more-clean-header"
           initial={
@@ -70,7 +67,7 @@ export default function MorePage() {
               ? false
               : {
                   opacity: 0,
-                  y: -6,
+                  y: -8,
                 }
           }
           animate={{
@@ -78,7 +75,7 @@ export default function MorePage() {
             y: 0,
           }}
           transition={{
-            duration: 0.4,
+            duration: 0.42,
             ease: [
               0.2,
               0.8,
@@ -87,9 +84,7 @@ export default function MorePage() {
             ],
           }}
         >
-          <h1>
-            Conecta con más
-          </h1>
+          <h1>Más</h1>
         </motion.header>
 
         <section className="alumni-more-clean-featured">
@@ -99,22 +94,30 @@ export default function MorePage() {
                 ? false
                 : {
                     opacity: 0,
-                    y: 10,
+                    y: 16,
+                    scale: 0.985,
                   }
             }
             animate={{
               opacity: 1,
               y: 0,
+              scale: 1,
             }}
             transition={{
-              delay: 0.07,
-              duration: 0.4,
+              delay: 0.08,
+              duration: 0.45,
+              ease: [
+                0.2,
+                0.8,
+                0.2,
+                1,
+              ],
             }}
             whileTap={
               reduceMotion
                 ? undefined
                 : {
-                    scale: 0.98,
+                    scale: 0.975,
                   }
             }
           >
@@ -124,7 +127,7 @@ export default function MorePage() {
             >
               <span className="alumni-more-clean-card-icon">
                 <CalendarDays
-                  size={21}
+                  size={22}
                   strokeWidth={1.9}
                 />
               </span>
@@ -145,22 +148,30 @@ export default function MorePage() {
                 ? false
                 : {
                     opacity: 0,
-                    y: 10,
+                    y: 16,
+                    scale: 0.985,
                   }
             }
             animate={{
               opacity: 1,
               y: 0,
+              scale: 1,
             }}
             transition={{
-              delay: 0.12,
-              duration: 0.4,
+              delay: 0.13,
+              duration: 0.45,
+              ease: [
+                0.2,
+                0.8,
+                0.2,
+                1,
+              ],
             }}
             whileTap={
               reduceMotion
                 ? undefined
                 : {
-                    scale: 0.98,
+                    scale: 0.975,
                   }
             }
           >
@@ -170,7 +181,7 @@ export default function MorePage() {
             >
               <span className="alumni-more-clean-card-icon">
                 <UsersRound
-                  size={21}
+                  size={22}
                   strokeWidth={1.9}
                 />
               </span>
@@ -193,47 +204,85 @@ export default function MorePage() {
               ? false
               : {
                   opacity: 0,
-                  y: 10,
+                  y: 18,
                 }
           }
-          animate={{
+          whileInView={{
             opacity: 1,
             y: 0,
           }}
+          viewport={{
+            once: true,
+            amount: 0.2,
+          }}
           transition={{
-            delay: 0.16,
-            duration: 0.42,
+            duration: 0.48,
+            ease: [
+              0.2,
+              0.8,
+              0.2,
+              1,
+            ],
           }}
         >
           <h2>Ajustes</h2>
 
           <div className="alumni-more-clean-list">
             {settingsItems.map(
-              ({
-                href,
-                label,
-                icon: Icon,
-              }) => (
-                <Link
+              (
+                {
+                  href,
+                  label,
+                  icon: Icon,
+                },
+                index
+              ) => (
+                <motion.div
                   key={href}
-                  href={href}
-                  className="alumni-more-clean-row"
+                  initial={
+                    reduceMotion
+                      ? false
+                      : {
+                          opacity: 0,
+                          x: -10,
+                        }
+                  }
+                  whileInView={{
+                    opacity: 1,
+                    x: 0,
+                  }}
+                  viewport={{
+                    once: true,
+                  }}
+                  transition={{
+                    delay:
+                      reduceMotion
+                        ? 0
+                        : index *
+                          0.035,
+                    duration: 0.32,
+                  }}
                 >
-                  <span className="alumni-more-clean-row-icon">
-                    <Icon
-                      size={18}
-                      strokeWidth={1.9}
+                  <Link
+                    href={href}
+                    className="alumni-more-clean-row"
+                  >
+                    <span className="alumni-more-clean-row-icon">
+                      <Icon
+                        size={18}
+                        strokeWidth={1.9}
+                      />
+                    </span>
+
+                    <strong>
+                      {label}
+                    </strong>
+
+                    <ChevronRight
+                      size={17}
                     />
-                  </span>
-
-                  <strong>
-                    {label}
-                  </strong>
-
-                  <ChevronRight
-                    size={17}
-                  />
-                </Link>
+                  </Link>
+                </motion.div>
               )
             )}
           </div>
@@ -244,4 +293,3 @@ export default function MorePage() {
 }
 
 /* ALUMNI_MORE_CLEAN_2_1 */
-/* ALUMNI_STABILITY_PASS_1_0 */

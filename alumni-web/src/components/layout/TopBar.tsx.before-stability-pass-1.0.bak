@@ -43,23 +43,7 @@ export default function TopBar() {
 
   const keepProfileNavVisible =
     pathname === "/profile" ||
-    pathname.startsWith("/u/") ||
-    pathname === "/more" ||
-    pathname.startsWith("/more/") ||
-    pathname === "/settings" ||
-    pathname.startsWith("/settings/") ||
-    pathname === "/feedback" ||
-    pathname.startsWith("/feedback/") ||
-    pathname === "/about" ||
-    pathname.startsWith("/about/") ||
-    pathname === "/notifications" ||
-    pathname.startsWith("/notifications/") ||
-    pathname === "/community" ||
-    pathname.startsWith("/community/") ||
-    pathname === "/events" ||
-    pathname.startsWith("/events/") ||
-    pathname === "/passport" ||
-    pathname.startsWith("/passport/");
+    pathname.startsWith("/u/");
 
   const { user } =
     useAuth();
@@ -498,5 +482,3 @@ export default function TopBar() {
 /* ALUMNI_PROFILE_2_1_TYPOGRAPHY_DYNAMIC_HEADER */
 
 /* ALUMNI_VISUAL_PASS_2_0:TOPBAR */
-
-/* ALUMNI_STABILITY_PASS_1_0:TOPBAR */

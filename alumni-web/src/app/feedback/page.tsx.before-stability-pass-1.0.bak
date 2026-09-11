@@ -45,7 +45,6 @@ import "../interior-ui-1-0.css";
 import "./feedback-help-2-0.css";
 import "./feedback-form-editorial-2-1.css";
 import "./feedback-pro-3-0.css";
-import "./feedback-stability-3-1.css";
 
 type FeedbackType =
   | "bug"
@@ -564,7 +563,7 @@ export default function FeedbackPage() {
   ) {
     return (
       <AppShell>
-        <main className="alumni-help-v2 alumni-feedback-pro-shell" data-alumni-motion-ignore="true">
+        <main className="alumni-help-v2 alumni-feedback-pro-shell">
           <div className="alumni-help-loading">
             Preparando ayuda...
           </div>
@@ -576,7 +575,7 @@ export default function FeedbackPage() {
   if (successId) {
     return (
       <AppShell>
-        <main className="alumni-help-v2 alumni-feedback-pro-shell" data-alumni-motion-ignore="true">
+        <main className="alumni-help-v2">
           <section className="alumni-help-success">
             <span className="alumni-help-success-icon">
               <CheckCircle2
@@ -619,8 +618,7 @@ export default function FeedbackPage() {
   return (
     <AppShell>
       <main
-        className="alumni-help-v2 alumni-feedback-pro-shell"
-        data-alumni-motion-ignore="true"
+        className="alumni-help-v2"
         data-feedback-view={
           view
         }
@@ -1899,5 +1897,3 @@ function FeedbackForm({
 /* ALUMNI_FEEDBACK_2_1_EDITORIAL_MODERNO */
 
 /* ALUMNI_FEEDBACK_PRO_NAV_COMPACT_3_0 */
-
-/* ALUMNI_STABILITY_PASS_1_0:FEEDBACK */

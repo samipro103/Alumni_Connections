@@ -162,7 +162,7 @@ export default function DeveloperAboutPage() {
         aria-hidden="true"
       />
 
-      <main className="alumni-about-page alumni-developer-page alumni-dev-showcase mx-auto w-full max-w-[680px]" data-alumni-motion-ignore="true">
+      <main className="alumni-about-page alumni-developer-page alumni-dev-showcase mx-auto w-full max-w-[680px]">
         <header className="alumni-about-topbar alumni-dev-topbar">
           <Link
             href="/about"
@@ -862,5 +862,3 @@ export default function DeveloperAboutPage() {
 
 /* ALUMNI_ABOUT_1_0_APP_STORE */
 /* ALUMNI_DEVELOPER_SHOWCASE_1_1 */
-
-/* ALUMNI_STABILITY_PASS_1_0:DEVELOPER */

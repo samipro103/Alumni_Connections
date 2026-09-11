@@ -1,0 +1,260 @@
+/*
+ * ALUMNI Settings Stability 3.0
+ * Stable geometry + clean hierarchy.
+ */
+
+.alumni-settings-classic {
+  width: 100% !important;
+  max-width: 580px !important;
+  margin:
+    0 auto !important;
+  padding-bottom:
+    30px !important;
+}
+
+.alumni-settings-classic-header,
+.alumni-settings-detail-header {
+  position:
+    relative !important;
+  top:
+    auto !important;
+  z-index:
+    2 !important;
+  grid-template-columns:
+    40px
+    minmax(0, 1fr)
+    40px !important;
+  min-height:
+    50px !important;
+  margin-bottom:
+    12px;
+  border-bottom:
+    0 !important;
+  background:
+    transparent !important;
+  backdrop-filter:
+    none !important;
+  -webkit-backdrop-filter:
+    none !important;
+  box-shadow:
+    none !important;
+}
+
+.alumni-settings-classic-header h1,
+.alumni-settings-detail-header h1 {
+  font-size:
+    15px !important;
+  font-weight:
+    900 !important;
+  letter-spacing:
+    -.025em !important;
+}
+
+.alumni-settings-classic-back,
+.alumni-settings-detail-header
+button {
+  width:
+    38px !important;
+  height:
+    38px !important;
+  border:
+    0 !important;
+  border-radius:
+    12px !important;
+  background:
+    transparent !important;
+  color:
+    var(--app-text) !important;
+  transition:
+    background-color 150ms ease,
+    transform 130ms
+      cubic-bezier(.2,.8,.2,1);
+}
+
+.alumni-settings-classic-back:active,
+.alumni-settings-detail-header
+button:active {
+  transform:
+    scale(.93);
+  background:
+    var(--app-soft) !important;
+}
+
+.alumni-settings-profile-row {
+  min-height:
+    82px !important;
+  margin:
+    0 0 12px !important;
+  padding:
+    12px !important;
+  border:
+    1px solid
+    var(--app-border) !important;
+  border-radius:
+    18px !important;
+  background:
+    var(--app-surface) !important;
+}
+
+.alumni-settings-profile-avatar {
+  width:
+    54px !important;
+  height:
+    54px !important;
+  flex:
+    0 0 54px !important;
+  border:
+    2px solid
+    var(--app-bg) !important;
+  box-shadow:
+    0 0 0 1px
+    var(--app-border);
+}
+
+.alumni-settings-classic-list {
+  overflow:
+    hidden;
+  border:
+    1px solid
+    var(--app-border);
+  border-radius:
+    18px;
+  background:
+    var(--app-surface);
+}
+
+.alumni-settings-classic-row {
+  min-height:
+    62px !important;
+  padding:
+    9px 12px !important;
+  border-bottom:
+    1px solid
+    var(--app-border) !important;
+  background:
+    transparent !important;
+}
+
+.alumni-settings-classic-row:last-child {
+  border-bottom:
+    0 !important;
+}
+
+.alumni-settings-row-icon {
+  width:
+    34px !important;
+  height:
+    34px !important;
+  flex:
+    0 0 34px !important;
+  border-radius:
+    11px !important;
+  background:
+    var(--app-soft) !important;
+  color:
+    var(--app-text-soft) !important;
+}
+
+.alumni-settings-row-copy
+strong {
+  font-size:
+    12px !important;
+  font-weight:
+    850 !important;
+}
+
+.alumni-settings-row-copy
+small {
+  margin-top:
+    3px !important;
+  color:
+    var(--app-muted) !important;
+  font-size:
+    9.5px !important;
+  line-height:
+    1.35 !important;
+}
+
+.alumni-settings-logout {
+  min-height:
+    60px !important;
+  margin-top:
+    12px !important;
+  padding:
+    9px 12px !important;
+  border:
+    1px solid
+    color-mix(
+      in srgb,
+      var(--app-danger) 18%,
+      var(--app-border)
+    ) !important;
+  border-radius:
+    16px !important;
+  background:
+    transparent !important;
+}
+
+.alumni-settings-detail-content {
+  width:
+    100%;
+  min-width:
+    0;
+  padding-top:
+    0 !important;
+}
+
+.alumni-settings-classic
+.alumni-settings-panel,
+.alumni-settings-classic
+.alumni-profile-settings-hub {
+  width:
+    100% !important;
+  max-width:
+    100% !important;
+  margin:
+    0 !important;
+}
+
+.alumni-settings-section-intro {
+  padding-top:
+    4px !important;
+}
+
+.alumni-profile-editor-top {
+  position:
+    relative !important;
+  top:
+    auto !important;
+  z-index:
+    2 !important;
+}
+
+.alumni-settings-privacy-backdrop,
+.alumni-account-flow-backdrop,
+.alumni-settings-picker-backdrop {
+  transform:
+    none !important;
+}
+
+.alumni-settings-privacy-modal,
+.alumni-account-flow-sheet,
+.alumni-settings-picker-sheet {
+  width:
+    100%;
+  max-width:
+    520px;
+  margin:
+    0 auto;
+}
+
+@media (min-width: 640px) {
+  .alumni-settings-privacy-modal,
+  .alumni-account-flow-sheet,
+  .alumni-settings-picker-sheet {
+    border-radius:
+      22px !important;
+  }
+}
+
+/* ALUMNI_STABILITY_PASS_1_0 */
