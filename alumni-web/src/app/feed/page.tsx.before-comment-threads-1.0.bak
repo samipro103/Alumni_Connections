@@ -948,7 +948,7 @@ function FeedContent() {
       ? supabase
           .from("comments")
           .select(
-            "id,post_id,user_id,content,created_at,parent_comment_id"
+            "id,post_id,user_id,content,created_at"
           )
           .in("post_id", postIds)
           .order("created_at", { ascending: true })
@@ -1658,8 +1658,7 @@ function FeedContent() {
 
   async function addComment(
     postId: number,
-    rawValue: string,
-    parentCommentId: number | null = null
+    rawValue: string
   ): Promise<boolean> {
     if (!currentUser) {
       window.location.href = "/login";
@@ -1673,7 +1672,7 @@ function FeedContent() {
     }
 
     const actionKey =
-      `comment:${postId}:${parentCommentId || "root"}`;
+      `comment:${postId}`;
 
     if (
       pendingPostActionsRef.current.has(
@@ -1687,6 +1686,10 @@ function FeedContent() {
       actionKey
     );
 
+    const targetPost = posts.find(
+      (item) => item.id === postId
+    );
+
     const optimisticId =
       optimisticCommentIdRef.current--;
 
@@ -1697,8 +1700,6 @@ function FeedContent() {
       post_id: postId,
       user_id: currentUser.id,
       content: value,
-      parent_comment_id:
-        parentCommentId,
       profile: {
         username:
           currentProfile?.username ||
@@ -1742,12 +1743,8 @@ function FeedContent() {
           post_id: postId,
           user_id: currentUser.id,
           content: value,
-          parent_comment_id:
-            parentCommentId,
         })
-        .select(
-          "id,created_at,parent_comment_id"
-        )
+        .select("id,created_at")
         .single();
 
       if (error || !inserted) {
@@ -1815,6 +1812,35 @@ function FeedContent() {
             : item
         )
       );
+
+      if (
+        targetPost &&
+        targetPost.user_id !==
+          currentUser.id
+      ) {
+        void supabase
+          .from("notifications")
+          .insert({
+            user_id:
+              targetPost.user_id,
+            actor_id:
+              currentUser.id,
+            type: "comment",
+            post_id: postId,
+            target_type:
+              "post_comment",
+            target_id:
+              String(inserted.id),
+          })
+          .then(({ error }) => {
+            if (error) {
+              console.warn(
+                "[Alumni Feed] comment notification:",
+                error
+              );
+            }
+          });
+      }
 
       return true;
     } finally {
@@ -2392,15 +2418,11 @@ function FeedContent() {
         <FeedCommentsSheet
           post={activeCommentsPost}
           currentUserId={currentUser?.id}
-          onSend={(
-            value,
-            parentCommentId
-          ) =>
+          onSend={(value) =>
             activeCommentsPost
               ? addComment(
                   activeCommentsPost.id,
-                  value,
-                  parentCommentId || null
+                  value
                 )
               : Promise.resolve(false)
           }
@@ -2509,5 +2531,3 @@ export default function FeedPage() {
 /* ALUMNI_MEDIA_RENDERING_1_0_INSTAGRAM_LEVEL */
 
 /* ALUMNI_FEED_PHOTO_SELECT_1_0_LIMPIO */
-
-/* ALUMNI_COMMENT_THREADS_1_0 */
