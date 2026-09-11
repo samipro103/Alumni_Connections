@@ -7,7 +7,6 @@ import {
   CalendarDays,
   ChevronRight,
   CircleHelp,
-  Info,
   LogOut,
   Settings,
   Users,
@@ -97,13 +96,6 @@ const secondaryItems = [
     description:
       "Estamos para ayudarte",
     icon: CircleHelp,
-  },
-  {
-    href: "/about",
-    label: "Acerca de ALUMNI",
-    description:
-      "La app y quién la construye",
-    icon: Info,
   },
 ];
 
@@ -462,5 +454,3 @@ export default function MorePage() {
 }
 
 /* ALUMNI_MORE_2_0_LISTA_LIMPIA */
-
-/* ALUMNI_ABOUT_1_0_APP_STORE */

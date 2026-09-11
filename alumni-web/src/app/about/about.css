@@ -1,0 +1,390 @@
+.alumni-about-page {
+  padding-bottom: 36px;
+  color: var(--app-text);
+}
+
+.alumni-about-topbar {
+  display: grid;
+  grid-template-columns: 40px minmax(0, 1fr) 40px;
+  align-items: center;
+  min-height: 48px;
+  margin-bottom: 18px;
+}
+
+.alumni-about-topbar h1 {
+  margin: 0;
+  text-align: center;
+  font-size: 16px;
+  font-weight: 850;
+  letter-spacing: -0.02em;
+}
+
+.alumni-about-back {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  color: var(--app-text);
+}
+
+.alumni-about-back:hover {
+  background: var(--app-soft);
+}
+
+.alumni-about-topbar-spacer {
+  width: 40px;
+}
+
+.alumni-about-app-hero {
+  display: flex;
+  align-items: center;
+  gap: 17px;
+  padding: 8px 2px 22px;
+}
+
+.alumni-about-app-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 84px;
+  height: 84px;
+  flex: 0 0 84px;
+  overflow: hidden;
+  border: 1px solid var(--app-border);
+  border-radius: 21px;
+  background: var(--app-surface);
+}
+
+.alumni-about-app-icon img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.alumni-about-app-copy {
+  min-width: 0;
+}
+
+.alumni-about-app-copy h2 {
+  margin: 0;
+  font-size: 28px;
+  line-height: 1;
+  font-weight: 900;
+  letter-spacing: -0.045em;
+}
+
+.alumni-about-app-copy p {
+  margin: 8px 0 4px;
+  color: var(--app-text-soft);
+  font-size: 13px;
+  font-weight: 650;
+}
+
+.alumni-about-app-copy small {
+  color: var(--app-muted);
+  font-size: 11px;
+  font-weight: 650;
+}
+
+.alumni-about-intro {
+  margin: 0;
+  padding: 0 2px 22px;
+  border-bottom: 1px solid var(--app-border);
+  color: var(--app-text-soft);
+  font-size: 14px;
+  line-height: 1.65;
+}
+
+.alumni-about-store-list {
+  margin-top: 10px;
+  border-bottom: 1px solid var(--app-border);
+}
+
+.alumni-about-store-row {
+  display: grid;
+  grid-template-columns: 38px minmax(0, 1fr) 24px;
+  align-items: center;
+  gap: 11px;
+  min-height: 76px;
+  border-top: 1px solid var(--app-border);
+  color: inherit;
+  text-decoration: none;
+}
+
+.alumni-about-store-row:first-child {
+  border-top: 0;
+}
+
+.alumni-about-store-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 11px;
+  background: var(--app-soft);
+  color: var(--app-text);
+}
+
+.alumni-about-store-copy {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.alumni-about-store-copy small {
+  color: var(--app-muted);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.alumni-about-store-copy strong {
+  overflow: hidden;
+  color: var(--app-text);
+  font-size: 14px;
+  font-weight: 850;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.alumni-about-store-copy span {
+  overflow: hidden;
+  color: var(--app-muted);
+  font-size: 11px;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.alumni-about-chevron {
+  color: var(--app-muted-2);
+}
+
+.alumni-about-note {
+  display: flex;
+  gap: 12px;
+  margin-top: 22px;
+  padding: 17px;
+  border: 1px solid var(--app-border);
+  border-radius: 18px;
+  background: var(--app-surface);
+}
+
+.alumni-about-note > svg {
+  margin-top: 1px;
+  flex: 0 0 auto;
+  color: var(--app-accent);
+}
+
+.alumni-about-note strong {
+  display: block;
+  margin-bottom: 5px;
+  font-size: 13px;
+  font-weight: 850;
+}
+
+.alumni-about-note p {
+  margin: 0;
+  color: var(--app-muted);
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.alumni-about-footer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 28px 0 8px;
+  color: var(--app-muted-2);
+  font-size: 11px;
+  font-weight: 650;
+}
+
+/* Developer story */
+
+.alumni-developer-hero {
+  padding: 24px 20px 28px;
+  border: 1px solid var(--app-border);
+  border-radius: 24px;
+  background: var(--app-surface);
+  text-align: center;
+}
+
+.alumni-developer-avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 76px;
+  height: 76px;
+  margin: 0 auto 16px;
+  border-radius: 50%;
+  background: var(--app-soft-strong);
+  color: var(--app-accent);
+}
+
+.alumni-developer-eyebrow {
+  margin: 0 0 6px;
+  color: var(--app-accent);
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.alumni-developer-hero h2 {
+  margin: 0;
+  font-size: 28px;
+  font-weight: 900;
+  letter-spacing: -0.04em;
+}
+
+.alumni-developer-role {
+  margin: 4px 0 0;
+  color: var(--app-muted);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.alumni-developer-hero blockquote {
+  max-width: 430px;
+  margin: 22px auto 0;
+  color: var(--app-text-soft);
+  font-size: 14px;
+  font-style: italic;
+  font-weight: 650;
+  line-height: 1.55;
+}
+
+.alumni-developer-opening {
+  padding: 28px 2px 4px;
+}
+
+.alumni-developer-opening p {
+  margin: 0 0 14px;
+  color: var(--app-text-soft);
+  font-size: 14px;
+  line-height: 1.75;
+}
+
+.alumni-developer-timeline {
+  padding-top: 20px;
+}
+
+.alumni-developer-step {
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr);
+  gap: 14px;
+}
+
+.alumni-developer-step-rail {
+  display: flex;
+  min-height: 100%;
+  flex-direction: column;
+  align-items: center;
+}
+
+.alumni-developer-step-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  flex: 0 0 34px;
+  border: 1px solid var(--app-border);
+  border-radius: 50%;
+  background: var(--app-surface);
+  color: var(--app-accent);
+}
+
+.alumni-developer-step-rail i {
+  width: 1px;
+  min-height: 38px;
+  flex: 1;
+  background: var(--app-border);
+}
+
+.alumni-developer-step-copy {
+  padding: 1px 0 34px;
+}
+
+.alumni-developer-step-copy small {
+  color: var(--app-accent);
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.alumni-developer-step-copy h3 {
+  margin: 5px 0 9px;
+  color: var(--app-text);
+  font-size: 18px;
+  line-height: 1.2;
+  font-weight: 900;
+  letter-spacing: -0.025em;
+}
+
+.alumni-developer-step-copy p {
+  margin: 0;
+  color: var(--app-text-soft);
+  font-size: 13px;
+  line-height: 1.7;
+}
+
+.alumni-developer-closing {
+  margin-top: 6px;
+  padding: 22px;
+  border-radius: 22px;
+  background: var(--app-soft);
+  text-align: center;
+}
+
+.alumni-developer-closing > svg {
+  color: var(--app-accent);
+}
+
+.alumni-developer-closing h3 {
+  margin: 10px 0 8px;
+  font-size: 18px;
+  font-weight: 900;
+  letter-spacing: -0.025em;
+}
+
+.alumni-developer-closing p {
+  max-width: 460px;
+  margin: 0 auto;
+  color: var(--app-muted);
+  font-size: 12px;
+  line-height: 1.65;
+}
+
+@media (max-width: 480px) {
+  .alumni-about-page {
+    padding-left: 0;
+    padding-right: 0;
+  }
+
+  .alumni-about-app-icon {
+    width: 76px;
+    height: 76px;
+    flex-basis: 76px;
+    border-radius: 19px;
+  }
+
+  .alumni-about-app-copy h2 {
+    font-size: 25px;
+  }
+
+  .alumni-developer-hero {
+    padding-left: 17px;
+    padding-right: 17px;
+  }
+}
+
+/* ALUMNI_ABOUT_1_0_APP_STORE */
