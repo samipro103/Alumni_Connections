@@ -1,0 +1,329 @@
+.alumni-feedback-simple {
+  width: 100%;
+  max-width: 560px;
+  min-height: 100%;
+  margin: 0 auto;
+  padding:
+    0 0
+    calc(
+      96px +
+      env(safe-area-inset-bottom)
+    );
+  color:
+    var(--app-text);
+}
+
+.alumni-feedback-simple-header {
+  display: grid;
+  grid-template-columns:
+    40px
+    minmax(0, 1fr)
+    40px;
+  min-height: 50px;
+  align-items: center;
+}
+
+.alumni-feedback-simple-header
+button {
+  display: inline-flex;
+  width: 38px;
+  height: 38px;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 0;
+  border-radius: 12px;
+  background: transparent;
+  color:
+    var(--app-text);
+}
+
+.alumni-feedback-simple-header
+button:active {
+  background:
+    var(--app-soft);
+  transform:
+    scale(.93);
+}
+
+.alumni-feedback-simple-header
+h1 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 900;
+  text-align: center;
+  letter-spacing: -.025em;
+}
+
+.alumni-feedback-simple-body {
+  padding-top: 18px;
+}
+
+.alumni-feedback-simple-body
+> p {
+  margin:
+    0 0 14px;
+  color:
+    var(--app-muted);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.alumni-feedback-simple-body
+textarea {
+  display: block;
+  width: 100%;
+  min-height: 210px;
+  max-height: 52dvh;
+  resize: vertical;
+  padding: 16px;
+  border:
+    1px solid
+    var(--app-border);
+  border-radius: 17px;
+  outline: 0;
+  background:
+    var(--app-surface);
+  color:
+    var(--app-text);
+  font: inherit;
+  font-size: 15px;
+  line-height: 1.55;
+  caret-color:
+    var(--app-accent);
+  transition:
+    border-color
+      160ms ease,
+    box-shadow
+      160ms ease;
+}
+
+.alumni-feedback-simple-body
+textarea::placeholder {
+  color:
+    var(--app-muted-3);
+}
+
+.alumni-feedback-simple-body
+textarea:focus {
+  border-color:
+    color-mix(
+      in srgb,
+      var(--app-accent) 42%,
+      var(--app-border)
+    );
+  box-shadow:
+    0 0 0 3px
+    color-mix(
+      in srgb,
+      var(--app-accent) 7%,
+      transparent
+    );
+}
+
+.alumni-feedback-simple-previews {
+  display: grid;
+  grid-template-columns:
+    repeat(
+      4,
+      minmax(0, 1fr)
+    );
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.alumni-feedback-simple-preview {
+  position: relative;
+  aspect-ratio: 1 / 1;
+  overflow: hidden;
+  border:
+    1px solid
+    var(--app-border);
+  border-radius: 12px;
+  background:
+    var(--app-surface-2);
+}
+
+.alumni-feedback-simple-preview
+img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.alumni-feedback-simple-preview
+button {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  display: inline-flex;
+  width: 25px;
+  height: 25px;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border:
+    1px solid
+    rgba(
+      255,
+      255,
+      255,
+      .14
+    );
+  border-radius: 999px;
+  background:
+    rgba(
+      0,
+      0,
+      0,
+      .62
+    );
+  color: #fff;
+}
+
+.alumni-feedback-simple-actions {
+  display: flex;
+  align-items: center;
+  justify-content:
+    space-between;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.alumni-feedback-simple-photo,
+.alumni-feedback-simple-send {
+  display: inline-flex;
+  min-height: 42px;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding:
+    0 14px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 850;
+}
+
+.alumni-feedback-simple-photo {
+  border:
+    1px solid
+    var(--app-border);
+  background:
+    transparent;
+  color:
+    var(--app-text-soft);
+}
+
+.alumni-feedback-simple-photo
+span {
+  color:
+    var(--app-muted);
+  font-size: 9px;
+}
+
+.alumni-feedback-simple-send {
+  min-width: 106px;
+  border: 0;
+  background:
+    var(--app-accent-fill);
+  color:
+    var(--app-on-accent);
+}
+
+.alumni-feedback-simple-send:disabled,
+.alumni-feedback-simple-photo:disabled {
+  opacity: .42;
+}
+
+.alumni-feedback-simple-success {
+  max-width: 420px;
+  margin:
+    min(
+      20dvh,
+      150px
+    )
+    auto 0;
+  text-align: center;
+}
+
+.alumni-feedback-simple-success
+> span {
+  display: inline-flex;
+  width: 50px;
+  height: 50px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background:
+    color-mix(
+      in srgb,
+      var(--app-success) 12%,
+      transparent
+    );
+  color:
+    var(--app-success);
+}
+
+.alumni-feedback-simple-success
+h1 {
+  margin:
+    15px 0 0;
+  font-size: 26px;
+  font-weight: 950;
+  letter-spacing: -.04em;
+}
+
+.alumni-feedback-simple-success
+p {
+  margin:
+    7px 0 0;
+  color:
+    var(--app-muted);
+  font-size: 11px;
+}
+
+.alumni-feedback-simple-success
+button {
+  min-height: 42px;
+  margin-top: 20px;
+  padding:
+    0 16px;
+  border:
+    1px solid
+    var(--app-border);
+  border-radius: 12px;
+  background:
+    var(--app-surface);
+  color:
+    var(--app-text);
+  font-size: 11px;
+  font-weight: 850;
+}
+
+.alumni-feedback-simple-loading {
+  padding:
+    50px 0;
+  color:
+    var(--app-muted);
+  font-size: 11px;
+  text-align: center;
+}
+
+@media (max-width: 390px) {
+  .alumni-feedback-simple-body
+  textarea {
+    min-height:
+      190px;
+  }
+
+  .alumni-feedback-simple-previews {
+    grid-template-columns:
+      repeat(
+        3,
+        minmax(0, 1fr)
+      );
+  }
+}
+
+/* ALUMNI_FEEDBACK_SIMPLE_4_0 */

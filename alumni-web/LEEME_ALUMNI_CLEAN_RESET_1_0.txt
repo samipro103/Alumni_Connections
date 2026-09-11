@@ -1,0 +1,71 @@
+ALUMNI — CLEAN RESET 1.0
+
+OBJETIVO
+Quitar las cajas que agregó Visual Pass 2.0 y volver al
+lenguaje limpio/plano que ya tenían las pantallas.
+
+SE LIMPIA
+
+FEED
+- Composer sin caja externa añadida.
+- Tabs sin superficie/caja extra.
+- Sin sombra del Visual Pass.
+
+MENSAJES
+- Header nuevamente plano.
+- Lista nuevamente plana.
+- Se conserva el diseño Inbox limpio original.
+
+BUSCAR
+- Header nuevamente plano.
+- Se elimina la caja/hero añadida.
+- Se conserva el buscador y categorías originales.
+
+PERFIL
+- Se eliminan bordes/sombra extras añadidos por Visual Pass.
+- Se conserva el diseño original del perfil y su avatar.
+
+EVENTOS
+- Se elimina padding lateral añadido.
+- Header vuelve a estar alineado.
+- Navegación y lista vuelven a estar alineadas.
+- Sin cajas externas añadidas.
+
+COMUNIDAD
+- Mismo arreglo que Eventos.
+- Texto nuevamente alineado con el contenido.
+
+FEEDBACK 4.0
+Se reemplaza toda la interfaz anterior por:
+- botón volver
+- un solo campo para escribir
+- adjuntar hasta 4 fotos
+- enviar
+
+NO muestra:
+- tipo de problema
+- prioridad
+- comportamiento esperado
+- pasos
+- centro de ayuda
+- estado
+- legal
+- cards explicativas
+
+Internamente sigue guardando la información necesaria para que
+el sistema actual de feedback continúe funcionando.
+
+MOTION
+Se conserva motion donde corresponde.
+No se vuelve a agregar framing/cajas a las pantallas.
+
+EJECUTAR
+
+node .\aplicar_alumni_clean_reset_1_0.js
+npm run build
+
+SI PASA
+
+git add .
+git commit -m "Restore clean layouts and simplify feedback"
+git push origin main
