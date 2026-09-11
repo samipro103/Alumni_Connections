@@ -1,0 +1,13 @@
+-- ALUMNI ADMIN CONTROL CENTER 2.0
+-- La migración `alumni_admin_control_center_2_0`
+-- ya fue aplicada a producción desde Supabase.
+--
+-- Incluye:
+-- user_warnings
+-- categorías/gravedad en user_reports
+-- alumni_admin_apply_user_action
+-- alumni_admin_user_overview
+-- alumni_admin_update_report_v2
+-- índices y RLS administrativos
+--
+-- Este archivo documenta el hito aplicado en producción.

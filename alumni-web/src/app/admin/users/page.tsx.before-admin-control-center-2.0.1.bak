@@ -1130,38 +1130,48 @@ export default function AdminUsersPage() {
 
                   <div className="mt-3 grid grid-cols-2 gap-2">
                     {[
-                      {
-                        label: "Publicar",
-                        enabled: restrictPosts,
-                        setter: setRestrictPosts,
-                      },
-                      {
-                        label: "Comentar",
-                        enabled: restrictComments,
-                        setter: setRestrictComments,
-                      },
-                      {
-                        label: "Mensajes",
-                        enabled: restrictMessages,
-                        setter: setRestrictMessages,
-                      },
-                      {
-                        label: "Social",
-                        enabled: restrictSocial,
-                        setter: setRestrictSocial,
-                      },
+                      [
+                        "Publicar",
+                        restrictPosts,
+                        setRestrictPosts,
+                      ],
+                      [
+                        "Comentar",
+                        restrictComments,
+                        setRestrictComments,
+                      ],
+                      [
+                        "Mensajes",
+                        restrictMessages,
+                        setRestrictMessages,
+                      ],
+                      [
+                        "Social",
+                        restrictSocial,
+                        setRestrictSocial,
+                      ],
                     ].map(
-                      ({
+                      ([
                         label,
                         enabled,
                         setter,
-                      }) => (
+                      ]) => (
                         <button
-                          key={label}
+                          key={
+                            String(
+                              label
+                            )
+                          }
                           type="button"
                           onClick={() =>
-                            setter(
-                              !enabled
+                            (
+                              setter as React.Dispatch<
+                                React.SetStateAction<boolean>
+                              >
+                            )(
+                              !Boolean(
+                                enabled
+                              )
                             )
                           }
                           className={`rounded-xl border px-3 py-2.5 text-xs font-black ${
@@ -1170,7 +1180,9 @@ export default function AdminUsersPage() {
                               : "border-[var(--app-border)] text-[var(--app-muted)]"
                           }`}
                         >
-                          {label}
+                          {
+                            label
+                          }
                         </button>
                       )
                     )}
@@ -1486,5 +1498,3 @@ export default function AdminUsersPage() {
 
 /* ALUMNI_ADMIN_CONTROL_CENTER_1_0 */
 /* ALUMNI_ADMIN_CONTROL_CENTER_2_0 */
-
-/* ALUMNI_ADMIN_CONTROL_CENTER_2_0_1_TYPESCRIPT_FIX */

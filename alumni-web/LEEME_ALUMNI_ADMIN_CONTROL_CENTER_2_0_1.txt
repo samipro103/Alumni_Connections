@@ -1,0 +1,20 @@
+ALUMNI ADMIN CONTROL CENTER 2.0.1
+
+Corrige únicamente el error TypeScript:
+
+Type 'string | boolean | Dispatch<SetStateAction<boolean>>'
+is not assignable to type 'ReactNode'
+
+No modifica Supabase.
+No cambia la lógica de moderación.
+
+EJECUTAR:
+
+node .\aplicar_alumni_admin_control_center_2_0_1_typescript_fix.js
+npm run build
+
+SI PASA:
+
+git add .
+git commit -m "Fix admin control center TypeScript"
+git push origin main

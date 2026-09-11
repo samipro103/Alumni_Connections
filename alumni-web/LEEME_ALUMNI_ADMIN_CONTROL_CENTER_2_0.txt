@@ -1,0 +1,71 @@
+ALUMNI — CENTRO DE CONTROL 2.0
+
+SUPABASE YA FUE ACTUALIZADO.
+
+NUEVO EN 2.0
+
+USUARIOS
+- Ficha integral por usuario.
+- Contador de publicaciones.
+- Contador de comentarios.
+- Total de reportes.
+- Reportes pendientes.
+- Total de advertencias.
+- Historial de acciones administrativas.
+- Historial de advertencias.
+
+MODERACIÓN
+- Advertencia sin bloquear la cuenta.
+- Restricción.
+- Suspensión.
+- Restauración.
+- Motivo obligatorio.
+- Categoría oficial.
+- Gravedad: baja, media, alta o crítica.
+- Duración:
+  24 horas
+  7 días
+  30 días
+  permanente
+
+RESTRICCIONES POR FUNCIÓN
+- Publicar
+- Comentar
+- Mensajes
+- Acciones sociales
+
+REPORTES
+- Cola de pendientes.
+- Resueltos.
+- Descartados.
+- Categoría.
+- Gravedad.
+- Reportes críticos destacados.
+- Nota de resolución.
+- Todo queda en auditoría.
+
+SEGURIDAD
+Las acciones no dependen de ocultar botones.
+Los RPC de Supabase verifican permisos administrativos.
+
+EJECUTAR
+
+node .\aplicar_alumni_admin_control_center_2_0.js
+npm run build
+
+SI BUILD PASA
+
+git add .
+git commit -m "Upgrade Alumni admin control center"
+git push origin main
+
+DESPUÉS
+Entrá a:
+https://alumnisv.com/admin/users
+
+Para moderar:
+Usuario > Gestionar
+
+RECORDATORIO QA
+
+node .\scripts\qa-demo\cleanup_alumni_demo.js --confirm=DELETE-ALUMNI-QA
