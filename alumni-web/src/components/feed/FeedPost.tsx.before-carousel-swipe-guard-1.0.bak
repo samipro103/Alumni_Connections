@@ -121,15 +121,6 @@ function FeedImage({
   const [loaded, setLoaded] =
     useState(!shouldLoad || !src);
 
-  const pointerStartRef = useRef<{
-    id: number;
-    x: number;
-    y: number;
-  } | null>(null);
-
-  const pointerMovedRef =
-    useRef(false);
-
   useEffect(() => {
     setLoaded(
       !shouldLoad || !src
@@ -142,77 +133,7 @@ function FeedImage({
       className="alumni-pro-image-button alumni-feed-media-loadable"
       data-fit={contain ? "contain" : "cover"}
       data-loaded={loaded ? "true" : "false"}
-      onPointerDown={(event) => {
-        pointerStartRef.current = {
-          id: event.pointerId,
-          x: event.clientX,
-          y: event.clientY,
-        };
-
-        pointerMovedRef.current = false;
-      }}
-      onPointerMove={(event) => {
-        const start =
-          pointerStartRef.current;
-
-        if (
-          !start ||
-          start.id !==
-            event.pointerId
-        ) {
-          return;
-        }
-
-        const distance =
-          Math.hypot(
-            event.clientX -
-              start.x,
-            event.clientY -
-              start.y
-          );
-
-        if (distance > 10) {
-          pointerMovedRef.current =
-            true;
-        }
-      }}
-      onPointerCancel={() => {
-        pointerStartRef.current =
-          null;
-        pointerMovedRef.current =
-          false;
-      }}
-      onPointerUp={(event) => {
-        const start =
-          pointerStartRef.current;
-
-        const distance =
-          start &&
-          start.id ===
-            event.pointerId
-            ? Math.hypot(
-                event.clientX -
-                  start.x,
-                event.clientY -
-                  start.y
-              )
-            : 0;
-
-        const wasSwipe =
-          pointerMovedRef.current ||
-          distance > 10;
-
-        pointerStartRef.current =
-          null;
-        pointerMovedRef.current =
-          false;
-
-        if (wasSwipe) {
-          return;
-        }
-
-        onPointerUp();
-      }}
+      onPointerUp={onPointerUp}
       aria-label="Abrir fotografía"
       aria-busy={!loaded}
     >
@@ -1142,5 +1063,3 @@ export default function FeedPost({
 /* ALUMNI_MEDIA_RENDERING_1_0_INSTAGRAM_LEVEL */
 
 /* ALUMNI_MEDIA_RENDERING_1_0_1_FEED_CLEAN_EDGES */
-
-/* ALUMNI_CAROUSEL_SWIPE_GUARD_1_0 */

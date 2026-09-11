@@ -1,0 +1,208 @@
+ALUMNI QA SEED 1.0 — COMUNIDAD ACTIVA
+
+OBJETIVO
+Llenar temporalmente ALUMNI con actividad realista para revisar
+cómo se ve la app cuando ya tiene movimiento.
+
+IMPORTANTE
+Esto es QA TEMPORAL.
+
+NO modifica el diseño de la app.
+NO toca usuarios reales.
+NO usa fotos de personas reales.
+NO depende de imágenes externas.
+
+Las imágenes son PNG sintéticos generados localmente por el script.
+
+QUÉ CREA POR DEFECTO
+
+18 usuarios ficticios
+72 publicaciones
+aprox. 45+ publicaciones con imagen
+varios carruseles
+4 relaciones de aspecto:
+- 4:5
+- 1:1
+- 4:3
+- 16:9
+
+100+ relaciones entre usuarios
+cientos de likes
+100+ comentarios aproximadamente
+8 eventos
+RSVP reales:
+- going
+- interested
+
+También crea:
+- avatars
+- banners
+- posts con fotografías sintéticas
+- perfiles completos
+- carrera
+- universidad
+- ciudad
+- biografía
+
+POR QUÉ LAS IMÁGENES SON SINTÉTICAS
+Para QA visual no necesitamos tomar fotos de personas reales de Internet.
+
+El script genera imágenes raster PNG:
+- retratos ficticios
+- campus
+- ciudad
+- café
+- trabajo
+- deporte
+- graduación
+- libreta/proyecto
+
+Así probamos el renderizado real de Storage, cards y perfiles.
+
+SEGURIDAD / REVERSIBILIDAD
+
+Cada ejecución crea un RUN ID.
+
+Todos los IDs creados se guardan FUERA del repositorio en:
+
+Windows:
+C:\Users\TU_USUARIO\.alumni_qa_demo\<project-ref>\manifest.json
+
+El cleanup lee ese manifiesto.
+
+NO hace:
+DELETE de "todos los posts"
+DELETE de "todos los usuarios"
+
+Solo elimina los IDs que el seed registró.
+
+REQUISITO
+
+Tu .env.local necesita:
+
+NEXT_PUBLIC_SUPABASE_URL=...
+y UNO de estos:
+
+SUPABASE_SECRET_KEY=...
+o
+SUPABASE_SERVICE_ROLE_KEY=...
+
+NO pegues esas claves en ChatGPT.
+NO uses NEXT_PUBLIC_SUPABASE_ANON_KEY para el seed.
+
+La app ya usa SUPABASE_SECRET_KEY / SERVICE_ROLE_KEY en servidor,
+por lo que si ya está configurada no tenés que cambiar nada.
+
+PASO 1 — EXTRAER ZIP
+Extraé todos los archivos en la raíz de:
+
+alumni-web
+
+PASO 2 — INSTALAR HERRAMIENTAS
+
+node .\aplicar_alumni_qa_seed_1_0.js
+
+No es necesario npm run build:
+estos son scripts locales de QA y no entran al bundle de Next.js.
+
+PASO 3 — CREAR LA COMUNIDAD DEMO
+
+node .\scripts\qa-demo\seed_alumni_demo.js --confirm=ALUMNI-QA
+
+El proceso tarda un poco porque:
+- crea usuarios Auth
+- genera PNG
+- sube imágenes
+- crea posts
+- agrega likes/comentarios
+- crea eventos
+
+AL FINAL
+El script imprime una cuenta demo:
+
+Email
+Password
+Usuario
+
+Podés iniciar sesión con esa cuenta para recorrer ALUMNI
+como un usuario ficticio.
+
+PERSONALIZAR CANTIDAD
+
+Ejemplo:
+
+node .\scripts\qa-demo\seed_alumni_demo.js --confirm=ALUMNI-QA --users=22 --posts=100 --events=10
+
+Límites de seguridad:
+
+usuarios: 8 a 30
+posts: 20 a 140
+eventos: 4 a 16
+
+RECOMENDACIÓN
+Primero usar los valores por defecto:
+
+18 usuarios
+72 posts
+8 eventos
+
+Ya es suficiente para ver la app llena.
+
+PASO 4 — CUANDO TERMINEMOS DE PROBAR
+
+node .\scripts\qa-demo\cleanup_alumni_demo.js --confirm=DELETE-ALUMNI-QA
+
+El cleanup elimina:
+
+- archivos QA de Storage
+- notificaciones generadas entre cuentas QA
+- RSVP QA
+- eventos QA
+- likes QA
+- comentarios QA
+- media QA
+- posts QA
+- follows QA
+- usuarios Auth QA
+- perfiles QA por cascade
+
+Y finalmente elimina el manifiesto.
+
+SI EL SEED FALLA A MITAD
+NO vuelvas a ejecutar el seed.
+
+Ejecutá primero:
+
+node .\scripts\qa-demo\cleanup_alumni_demo.js --confirm=DELETE-ALUMNI-QA
+
+El manifiesto se guarda incrementalmente precisamente para poder
+limpiar una ejecución incompleta.
+
+GIT
+Estas herramientas son para QA local.
+
+NO hace falta:
+git add
+git commit
+git push
+
+Después de terminar las pruebas podemos decidir si queremos conservar
+las herramientas QA en el repositorio o eliminarlas.
+
+ESQUEMA VALIDADO
+Este seed fue preparado contra las tablas reales actuales:
+
+profiles
+posts
+post_media
+comments
+likes
+follows
+events
+event_rsvps
+notifications
+
+Y Storage:
+
+profiles
+posts

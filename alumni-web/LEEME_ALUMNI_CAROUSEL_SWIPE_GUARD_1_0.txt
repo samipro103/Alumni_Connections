@@ -1,0 +1,57 @@
+ALUMNI CAROUSEL SWIPE GUARD 1.0
+
+BUG
+Cuando una publicación tiene más de una foto, al deslizar el carrusel
+el pointerup podía interpretarse como un tap y abrir el visor.
+
+CAUSA
+FeedImage ejecutaba directamente:
+
+onPointerUp={onPointerUp}
+
+sin comprobar cuánto se había movido el dedo.
+
+SOLUCIÓN
+Se registra:
+
+pointerdown:
+- X inicial
+- Y inicial
+- pointerId
+
+pointermove:
+- si se mueve más de 10 px, se marca como swipe
+
+pointerup:
+- swipe -> NO abre visor
+- tap real -> abre visor
+
+También se maneja pointercancel.
+
+NO CAMBIA
+- scroll horizontal
+- scroll snap
+- flechas
+- dots
+- lazy loading
+- renderizado 4:5 / 1:1 / 4:3 / 16:9
+- doble tap para like
+- visor de fotos
+
+ARCHIVO
+src/components/feed/FeedPost.tsx
+
+EJECUCIÓN
+
+node .\aplicar_alumni_carousel_swipe_guard_1_0.js
+npm run build
+
+SI BUILD PASA
+
+git add .
+git commit -m "Fix carousel swipe opening media viewer"
+git push origin main
+
+PARA BORRAR LA COMUNIDAD QA
+
+node .\scripts\qa-demo\cleanup_alumni_demo.js --confirm=DELETE-ALUMNI-QA
