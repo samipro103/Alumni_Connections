@@ -122,11 +122,6 @@ function FeedImage({
   const [loaded, setLoaded] =
     useState(!shouldLoad || !src);
 
-  const imageRef =
-    useRef<HTMLImageElement>(
-      null
-    );
-
   const pointerStartRef = useRef<{
     id: number;
     x: number;
@@ -137,76 +132,9 @@ function FeedImage({
     useRef(false);
 
   useEffect(() => {
-    if (
-      !shouldLoad ||
-      !src
-    ) {
-      setLoaded(true);
-      return;
-    }
-
-    setLoaded(false);
-
-    const syncLoaded = () => {
-      const image =
-        imageRef.current;
-
-      if (
-        image?.complete &&
-        image.naturalWidth > 0
-      ) {
-        setLoaded(true);
-      }
-    };
-
-    syncLoaded();
-
-    const frame =
-      window.requestAnimationFrame(
-        syncLoaded
-      );
-
-    const timer =
-      window.setTimeout(
-        syncLoaded,
-        80
-      );
-
-    const handleVisible = () => {
-      if (
-        document.visibilityState ===
-        "visible"
-      ) {
-        syncLoaded();
-      }
-    };
-
-    window.addEventListener(
-      "pageshow",
-      syncLoaded
+    setLoaded(
+      !shouldLoad || !src
     );
-
-    document.addEventListener(
-      "visibilitychange",
-      handleVisible
-    );
-
-    return () => {
-      window.cancelAnimationFrame(
-        frame
-      );
-      window.clearTimeout(
-        timer
-      );
-      window.removeEventListener(
-        "pageshow",
-        syncLoaded
-      );
-      document.removeEventListener(
-        "visibilitychange",
-        handleVisible
-      );
-    };
   }, [shouldLoad, src]);
 
   return (
@@ -291,12 +219,11 @@ function FeedImage({
     >
       {src && (
         <img
-          ref={imageRef}
           className="alumni-feed-image-main"
           src={src}
           alt="Publicación"
           loading={
-            postIndex < 3 &&
+            postIndex === 0 &&
             mediaIndex === 0 &&
             active
               ? "eager"
@@ -304,7 +231,7 @@ function FeedImage({
           }
           decoding="async"
           fetchPriority={
-            postIndex < 3 &&
+            postIndex === 0 &&
             mediaIndex === 0 &&
             active
               ? "high"
@@ -1241,5 +1168,3 @@ export default function FeedPost({
 /* ALUMNI_CAROUSEL_SWIPE_GUARD_1_0 */
 
 /* ALUMNI_VERIFIED_BADGE_FEED_1_0 */
-
-/* ALUMNI_FEED_IMAGE_RETURN_FIX_1_0:FEED_POST */

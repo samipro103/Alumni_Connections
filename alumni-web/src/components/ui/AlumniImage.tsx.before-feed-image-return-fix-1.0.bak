@@ -2,7 +2,6 @@
 
 import {
   useEffect,
-  useRef,
   useState,
   type ImgHTMLAttributes,
   type ReactNode,
@@ -60,93 +59,17 @@ export default function AlumniImage({
       "loading" | "loaded" | "error"
     >(initialState);
 
-  const imageRef =
-    useRef<HTMLImageElement>(
-      null
-    );
-
   useEffect(() => {
     if (!source) {
       setState("error");
       return;
     }
 
-    const image =
-      imageRef.current;
-
-    const syncState = () => {
-      const current =
-        imageRef.current;
-
-      if (!current) {
-        return;
-      }
-
-      if (!current.complete) {
-        setState("loading");
-        return;
-      }
-
-      if (current.naturalWidth > 0) {
-        loadedSources.add(source);
-        setState("loaded");
-      } else {
-        setState("error");
-      }
-    };
-
-    if (image?.complete) {
-      syncState();
-    } else {
-      setState("loading");
-    }
-
-    const frame =
-      window.requestAnimationFrame(
-        syncState
-      );
-
-    const timer =
-      window.setTimeout(
-        syncState,
-        80
-      );
-
-    const handleVisible = () => {
-      if (
-        document.visibilityState ===
-        "visible"
-      ) {
-        syncState();
-      }
-    };
-
-    window.addEventListener(
-      "pageshow",
-      syncState
+    setState(
+      loadedSources.has(source)
+        ? "loaded"
+        : "loading"
     );
-
-    document.addEventListener(
-      "visibilitychange",
-      handleVisible
-    );
-
-    return () => {
-      window.cancelAnimationFrame(
-        frame
-      );
-      window.clearTimeout(
-        timer
-      );
-      window.removeEventListener(
-        "pageshow",
-        syncState
-      );
-      document.removeEventListener(
-        "visibilitychange",
-        handleVisible
-      );
-    };
   }, [source]);
 
   return (
@@ -156,7 +79,6 @@ export default function AlumniImage({
     >
       {source ? (
         <img
-          ref={imageRef}
           {...rest}
           src={source}
           alt={alt}
@@ -265,5 +187,3 @@ export function AlumniAvatar({
 /* ALUMNI_2_9_0_IMAGE_LAYER */
 
 /* ALUMNI_2_9_2_PUBLIC_IMAGE_CDN:ALUMNI_IMAGE */
-
-/* ALUMNI_FEED_IMAGE_RETURN_FIX_1_0:ALUMNI_IMAGE */

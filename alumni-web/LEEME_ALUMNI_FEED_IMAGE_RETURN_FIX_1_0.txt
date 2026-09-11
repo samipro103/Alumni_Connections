@@ -1,0 +1,38 @@
+ALUMNI — FEED IMAGE RETURN FIX 1.0
+
+BUG
+1. Entrás al Feed y la foto carga bien.
+2. Vas a Buscar o Mensajes.
+3. Volvés al Feed.
+4. La imagen puede quedar en blanco.
+
+CAUSA
+Al volver mediante navegación interna, el navegador puede tener la
+imagen completamente cacheada antes de que React reciba el evento onLoad.
+El componente se queda esperando un evento que ya ocurrió.
+
+CORRECCIÓN
+- AlumniImage ahora comprueba img.complete + naturalWidth.
+- FeedImage hace la misma comprobación.
+- Se vuelve a sincronizar en requestAnimationFrame.
+- Hay una comprobación adicional a los 80 ms.
+- Se resincroniza en pageshow / visibilitychange.
+- Las primeras fotos visibles del Feed usan carga eager más agresiva.
+
+CUBRE
+- fotos de publicaciones
+- avatares del Feed
+- navegación Feed -> Buscar -> Feed
+- navegación Feed -> Mensajes -> Feed
+- recursos ya presentes en caché
+
+EJECUTAR
+
+node .\aplicar_alumni_feed_image_return_fix_1_0.js
+npm run build
+
+SI PASA
+
+git add .
+git commit -m "Fix feed images after navigation"
+git push origin main
