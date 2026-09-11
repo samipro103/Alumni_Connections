@@ -310,64 +310,6 @@ export default function NotificationsPage() {
   }, [loading, user, router]);
 
   useEffect(() => {
-    if (
-      typeof window === "undefined"
-    ) {
-      return;
-    }
-
-    const params =
-      new URLSearchParams(
-        window.location.search
-      );
-
-    if (
-      params.get(
-        "preferences"
-      ) === "1"
-    ) {
-      setPreferencesOpen(
-        true
-      );
-    }
-  }, []);
-
-  function closePreferences() {
-    setPreferencesOpen(
-      false
-    );
-
-    if (
-      typeof window ===
-      "undefined"
-    ) {
-      return;
-    }
-
-    const url =
-      new URL(
-        window.location.href
-      );
-
-    if (
-      url.searchParams.has(
-        "preferences"
-      )
-    ) {
-      url.searchParams.delete(
-        "preferences"
-      );
-
-      window.history.replaceState(
-        window.history.state,
-        "",
-        url.pathname +
-          url.search
-      );
-    }
-  }
-
-  useEffect(() => {
     if (!user) return;
 
     void loadPage(0, true);
@@ -1137,7 +1079,7 @@ export default function NotificationsPage() {
             role="presentation"
             onMouseDown={(event) => {
               if (event.target === event.currentTarget) {
-                closePreferences();
+                setPreferencesOpen(false);
               }
             }}
           >
@@ -1155,7 +1097,7 @@ export default function NotificationsPage() {
 
                 <button
                   type="button"
-                  onClick={() => closePreferences()}
+                  onClick={() => setPreferencesOpen(false)}
                   aria-label="Cerrar"
                 >
                   <X size={18} />
@@ -1184,6 +1126,11 @@ export default function NotificationsPage() {
                       "mentions",
                       "Menciones",
                       "Cuando alguien escribe tu @usuario.",
+                    ],
+                    [
+                      "stories",
+                      "Historias",
+                      "Respuestas y actividad de historias.",
                     ],
                     [
                       "groups",
@@ -1236,5 +1183,3 @@ export default function NotificationsPage() {
 /* ALUMNI_2_7_0_LOADING_STATES:NOTIFICATIONS */
 
 /* ALUMNI_2_9_0_IMAGE_LAYER:NOTIFICATIONS */
-
-/* ALUMNI_SETTINGS_2_2_NO_REDUNDANCY */

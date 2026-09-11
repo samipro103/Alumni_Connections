@@ -689,10 +689,7 @@ export default function SettingsPage() {
               onClick={() => {
                 if (form.username) {
                   router.push(`/u/${form.username}`);
-                  return;
                 }
-
-                openClassicAccount();
               }}
             >
               <span className="alumni-settings-profile-avatar">
@@ -746,8 +743,8 @@ export default function SettingsPage() {
                   <User size={19} />
                 </span>
                 <span className="alumni-settings-row-copy">
-                  <strong>Editar perfil</strong>
-                  <small>Nombre, foto, biografía y datos personales</small>
+                  <strong>Cuenta</strong>
+                  <small>Datos personales y perfil</small>
                 </span>
                 <ChevronRight
                   size={17}
@@ -781,15 +778,15 @@ export default function SettingsPage() {
                 type="button"
                 className="alumni-settings-classic-row"
                 onClick={() =>
-                  router.push("/notifications?preferences=1")
+                  router.push("/notifications")
                 }
               >
                 <span className="alumni-settings-row-icon">
                   <Bell size={19} />
                 </span>
                 <span className="alumni-settings-row-copy">
-                  <strong>Preferencias de notificaciones</strong>
-                  <small>Elige qué alertas quieres recibir</small>
+                  <strong>Notificaciones</strong>
+                  <small>Revisa tus alertas y actividad</small>
                 </span>
                 <ChevronRight
                   size={17}
@@ -951,6 +948,38 @@ export default function SettingsPage() {
                     requestsLoading={requestsLoading}
                     acceptFollowRequest={acceptFollowRequest}
                     rejectFollowRequest={rejectFollowRequest}
+                    onOpenSaved={() => {
+                      setProfileSavedOpen(true);
+
+                      if (typeof window !== "undefined") {
+                        const url = new URL(window.location.href);
+                        url.searchParams.set("section", "profile");
+                        url.searchParams.set("view", "saved");
+                        url.searchParams.delete("edit");
+                        window.history.replaceState(
+                          window.history.state,
+                          "",
+                          url.pathname + url.search
+                        );
+                      }
+                    }}
+                    onEditProfile={() => {
+                      setClassicAccountOpen(false);
+                      setProfileSavedOpen(false);
+                      setProfileEditorOpen(true);
+
+                      if (typeof window !== "undefined") {
+                        const url = new URL(window.location.href);
+                        url.searchParams.set("section", "profile");
+                        url.searchParams.set("edit", "1");
+                        url.searchParams.delete("view");
+                        window.history.replaceState(
+                          window.history.state,
+                          "",
+                          url.pathname + url.search
+                        );
+                      }
+                    }}
                   />
                 ))}
 
@@ -1713,5 +1742,3 @@ function SocialField({
 /* ALUMNI_NAV_PROFILE_EDITOR_1_0_FLOATING_OPTION1 */
 
 /* ALUMNI_PROFILE_EDITOR_1_1_REPAIR */
-
-/* ALUMNI_SETTINGS_2_2_NO_REDUNDANCY */

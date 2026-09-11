@@ -1,0 +1,117 @@
+ALUMNI SETTINGS 2.2 — NO REDUNDANCY
+
+OBJETIVO
+Que cada botón de Ajustes tenga una función real y única.
+
+REGLA
+- Si un botón abre exactamente lo mismo donde ya estás: se elimina.
+- Si un botón no hace nada: se corrige o elimina.
+- Si el nombre no coincide con lo que hace: se renombra.
+
+CAMBIOS
+
+1. FILA SUPERIOR DEL PERFIL
+Antes:
+- si no había username, tocarla no hacía nada.
+
+Ahora:
+- con username -> abre perfil público.
+- sin username -> abre Editar perfil.
+
+Nunca queda muerta.
+
+2. CUENTA -> EDITAR PERFIL
+Antes:
+"Cuenta"
+pero realmente abría directamente el editor de perfil.
+
+Ahora:
+"Editar perfil"
+Nombre, foto, biografía y datos personales.
+
+El texto coincide con la acción.
+
+3. PRIVACIDAD
+Antes:
+al entrar a Privacidad aparecían:
+- Cuenta privada
+- Solicitudes
+- Guardados
+- Editar perfil
+
+Guardados y Editar perfil eran redundantes.
+
+Ahora Privacidad SOLO contiene:
+- Cuenta privada
+- Solicitudes de seguimiento
+
+4. GUARDADOS
+No se elimina la función.
+Sigue accesible desde "Más", que es su acceso correcto.
+
+También sigue funcionando la URL directa actual.
+
+5. PREFERENCIAS DE NOTIFICACIONES
+Antes:
+Ajustes > Notificaciones abría la bandeja de actividad.
+
+Eso duplicaba el acceso a Notificaciones.
+
+Ahora:
+Ajustes > Preferencias de notificaciones
+abre directamente el panel de preferencias:
+
+/notifications?preferences=1
+
+La pantalla normal:
+/notifications
+sigue siendo la bandeja de actividad.
+
+6. HISTORIAS
+Stories está oculto como decisión de producto.
+
+Por lo tanto se elimina el botón visible:
+"Historias"
+de Preferencias de notificaciones.
+
+El campo interno se conserva por compatibilidad de base de datos.
+
+7. CERRAR PREFERENCIAS
+Al cerrar el panel se limpia ?preferences=1 de la URL
+para evitar navegación rara o reapertura accidental.
+
+ESTRUCTURA FINAL DE AJUSTES
+
+- Perfil superior -> perfil público
+- Editar perfil
+- Privacidad
+- Preferencias de notificaciones
+- Apariencia
+- Seguridad
+- Ayuda
+- Cerrar sesión
+
+NO TOCA
+- Supabase
+- RLS
+- datos
+- lógica de perfil
+- lógica de solicitudes
+- Guardados
+- backend de notificaciones
+
+ARCHIVOS MODIFICADOS
+src/app/settings/page.tsx
+src/components/settings/ProfileSettingsHub.tsx
+src/app/notifications/page.tsx
+
+EJECUCIÓN
+
+node .\aplicar_alumni_settings_2_2_no_redundancy.js
+npm run build
+
+SI BUILD PASA
+
+git add .
+git commit -m "Settings 2.2 - remove redundant navigation"
+git push origin main
