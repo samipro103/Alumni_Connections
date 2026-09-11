@@ -1,0 +1,119 @@
+ALUMNI PROFILE 2.0 — OPCIÓN 3 ACTIVITY
+
+DISEÑO SELECCIONADO
+La Opción 3 del NUEVO tablero de perfiles:
+"Más enfocado en actividad".
+
+IMPORTANTE
+Este NO es el diseño antiguo Opción 3.
+Es el nuevo diseño que acabamos de seleccionar.
+
+OBJETIVO
+Que el contenido y las publicaciones sean protagonistas.
+
+ESTRUCTURA
+
+1. PORTADA
+- limpia
+- amplia
+- back / share discretos
+
+2. AVATAR
+- superpuesto
+- sin cámara flotante
+- para editar ya existe el botón Editar perfil
+
+3. IDENTIDAD
+- nombre
+- verificación si existe
+- @usuario
+- carrera
+- universidad
+- ubicación
+
+4. ACCIONES
+
+TU PROPIO PERFIL:
+/profile
+
+- Editar perfil
+- Compartir
+
+PERFIL DE OTRA PERSONA:
+/u/[username]
+
+- Seguir
+- Mensaje
+- seguridad sigue disponible
+
+5. MÉTRICAS
+- Publicaciones
+- Seguidores
+- Siguiendo
+
+6. TABS
+Tu perfil:
+- Posts
+- Guardados
+- Actividad
+
+Perfil ajeno:
+- Posts
+- Compartidos
+- Actividad
+
+No exponemos Guardados privados de otro usuario.
+
+7. FEED
+El Feed es el protagonista:
+- publicaciones planas
+- separadores limpios
+- media dentro de marco
+- sin cards pesadas
+- mismo lenguaje visual que ALUMNI
+
+REDES Y PASAPORTE
+NO se eliminan.
+
+Pero ya no compiten en el encabezado.
+
+En tu perfil:
+- las redes/música se muestran en Actividad como Presencia digital
+- Pasaporte Alumni sigue en Actividad
+- Enlaces sigue en Actividad
+
+Así conservamos la funcionalidad y el header queda como el diseño seleccionado.
+
+DARK / LIGHT
+Usa tokens de ALUMNI.
+
+MOBILE-FIRST
+Vista canónica:
+360–430 px.
+
+DESKTOP
+Misma composición, centrada.
+No se convierte en otro producto.
+
+REQUISITOS
+Este parche espera la base actual revisada:
+- Profile 1.3.0 en /profile
+- Option 3 actual en /u/[username]
+
+ARCHIVOS MODIFICADOS
+src/app/profile/page.tsx
+src/app/u/[username]/page.tsx
+
+ARCHIVO NUEVO
+src/app/profile/profile-option-3-selected-2-0.css
+
+EJECUCIÓN
+
+node .\aplicar_alumni_profile_2_0_opcion_3_activity.js
+npm run build
+
+SI BUILD PASA
+
+git add .
+git commit -m "Profile 2.0 - selected option 3 activity"
+git push origin main

@@ -51,7 +51,6 @@ import "@/components/profile/ProfilePostOwnerMenu.css";
 import "../media-rendering-1-0.css";
 import "./profile-option-3-launch.css";
 import "./profile-launch-final-polish-1-3-0.css";
-import "./profile-option-3-selected-2-0.css";
 
 
 type ProfileTab = "posts" | "saved" | "activity";
@@ -486,7 +485,7 @@ export default function ProfilePage() {
     <AppShell>
       <div
         className="alumni-profile-launch"
-        data-profile-design="option-3-activity-selected"
+        data-profile-design="option-3-launch-final-polish"
       >
         <section className="alumni-profile-launch-shell">
           {/* ===================================================
@@ -913,39 +912,6 @@ export default function ProfilePage() {
                ACTIVIDAD — COMO LA PROPUESTA APROBADA
                =============================================== */
             <section className="alumni-profile-launch-activity">
-              {(profile.linkedin ||
-                profile.github ||
-                profile.instagram ||
-                profile.website ||
-                profileMusic) && (
-                <div className="alumni-profile-selected-digital">
-                  <div className="alumni-profile-selected-digital-copy">
-                    <strong>Presencia digital</strong>
-                    <small>
-                      Redes, sitio web y música
-                    </small>
-                  </div>
-
-                  <div className="alumni-profile-selected-digital-links">
-                    <ProfileSocialLinks
-                      profile={profile}
-                      className="alumni-profile-selected-social-links"
-                    />
-
-                    {profileMusic && (
-                      <Link
-                        href="/settings?section=music"
-                        className="alumni-profile-selected-spotify"
-                        aria-label="Música de perfil"
-                        title="Música"
-                      >
-                        <SpotifyLogo size={19} />
-                      </Link>
-                    )}
-                  </div>
-                </div>
-              )}
-
               <Link
                 href="/settings?section=profile&edit=1"
                 className="alumni-profile-launch-activity-row"
@@ -1193,5 +1159,3 @@ function Detail({
 /* ALUMNI_MEDIA_RENDERING_1_0_INSTAGRAM_LEVEL */
 
 /* ALUMNI_PROFILE_1_3_0_FINAL_POLISH */
-
-/* ALUMNI_PROFILE_2_0_OPTION_3_ACTIVITY_SELECTED */

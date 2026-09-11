@@ -1,0 +1,1384 @@
+const fs = require("fs");
+const path = require("path");
+
+const ROOT = process.cwd();
+const MARKER =
+  "ALUMNI_PROFILE_2_0_OPTION_3_ACTIVITY_SELECTED";
+
+const OWN = path.join(
+  ROOT,
+  "src",
+  "app",
+  "profile",
+  "page.tsx"
+);
+
+const PUBLIC = path.join(
+  ROOT,
+  "src",
+  "app",
+  "u",
+  "[username]",
+  "page.tsx"
+);
+
+const CSS = path.join(
+  ROOT,
+  "src",
+  "app",
+  "profile",
+  "profile-option-3-selected-2-0.css"
+);
+
+function fail(message) {
+  console.error("❌ " + message);
+  process.exit(1);
+}
+
+function read(file) {
+  if (!fs.existsSync(file)) {
+    fail(
+      "No encontré " +
+        path.relative(ROOT, file) +
+        ". Ejecutá este parche dentro de alumni-web."
+    );
+  }
+
+  return fs
+    .readFileSync(file, "utf8")
+    .replace(/\r\n/g, "\n");
+}
+
+function backup(file) {
+  const bak =
+    file +
+    ".before-profile-2.0.bak";
+
+  if (!fs.existsSync(bak)) {
+    fs.copyFileSync(file, bak);
+  }
+}
+
+function replaceRequired(
+  source,
+  before,
+  after,
+  label
+) {
+  if (source.includes(after)) {
+    return source;
+  }
+
+  if (!source.includes(before)) {
+    fail(
+      "No encontré el bloque esperado: " +
+        label +
+        ". No escribí cambios."
+    );
+  }
+
+  return source.replace(
+    before,
+    after
+  );
+}
+
+let own = read(OWN);
+let publicProfile = read(PUBLIC);
+
+if (
+  own.includes(MARKER) &&
+  publicProfile.includes(MARKER) &&
+  fs.existsSync(CSS)
+) {
+  console.log(
+    "✅ ALUMNI Profile 2.0 ya estaba aplicado."
+  );
+  process.exit(0);
+}
+
+/* =========================================================
+   BASE VALIDATION
+   ========================================================= */
+
+if (
+  !own.includes(
+    "ALUMNI_PROFILE_1_3_0_FINAL_POLISH"
+  ) ||
+  !own.includes(
+    "alumni-profile-launch"
+  )
+) {
+  fail(
+    "El /profile actual no coincide con la base 1.3.0 revisada."
+  );
+}
+
+if (
+  !publicProfile.includes(
+    "alumni-profile-v3"
+  )
+) {
+  fail(
+    "El perfil público no coincide con la base Option 3 revisada."
+  );
+}
+
+/* =========================================================
+   OWN PROFILE
+   ========================================================= */
+
+/* Import selected design CSS last. */
+if (
+  !own.includes(
+    'import "./profile-option-3-selected-2-0.css";'
+  )
+) {
+  own = own.replace(
+    'import "./profile-launch-final-polish-1-3-0.css";',
+    'import "./profile-launch-final-polish-1-3-0.css";\nimport "./profile-option-3-selected-2-0.css";'
+  );
+}
+
+own = own.replace(
+  'data-profile-design="option-3-launch-final-polish"',
+  'data-profile-design="option-3-activity-selected"'
+);
+
+/*
+ * Keep social/profile music functionality but move it
+ * from the crowded header into Activity.
+ */
+const activityOpen = `            <section className="alumni-profile-launch-activity">
+              <Link
+                href="/settings?section=profile&edit=1"
+                className="alumni-profile-launch-activity-row"
+              >`;
+
+const activityOpenNew = `            <section className="alumni-profile-launch-activity">
+              {(profile.linkedin ||
+                profile.github ||
+                profile.instagram ||
+                profile.website ||
+                profileMusic) && (
+                <div className="alumni-profile-selected-digital">
+                  <div className="alumni-profile-selected-digital-copy">
+                    <strong>Presencia digital</strong>
+                    <small>
+                      Redes, sitio web y música
+                    </small>
+                  </div>
+
+                  <div className="alumni-profile-selected-digital-links">
+                    <ProfileSocialLinks
+                      profile={profile}
+                      className="alumni-profile-selected-social-links"
+                    />
+
+                    {profileMusic && (
+                      <Link
+                        href="/settings?section=music"
+                        className="alumni-profile-selected-spotify"
+                        aria-label="Música de perfil"
+                        title="Música"
+                      >
+                        <SpotifyLogo size={19} />
+                      </Link>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              <Link
+                href="/settings?section=profile&edit=1"
+                className="alumni-profile-launch-activity-row"
+              >`;
+
+own = replaceRequired(
+  own,
+  activityOpen,
+  activityOpenNew,
+  "inicio del tab Actividad"
+);
+
+/* =========================================================
+   PUBLIC PROFILE
+   ========================================================= */
+
+/* Add verified icon to the current Option 3 public layout. */
+const lucideMatch =
+  publicProfile.match(
+    /import\s*\{([\s\S]*?)\}\s*from\s*"lucide-react";/
+  );
+
+if (!lucideMatch) {
+  fail(
+    "No encontré import lucide-react del perfil público."
+  );
+}
+
+const lucideNames =
+  lucideMatch[1]
+    .split(",")
+    .map((item) =>
+      item.trim()
+    )
+    .filter(Boolean);
+
+if (
+  !lucideNames.includes(
+    "BadgeCheck"
+  )
+) {
+  const nextNames = [
+    ...lucideNames,
+    "BadgeCheck",
+  ];
+
+  const nextImport =
+    `import {\n${nextNames
+      .map(
+        (name) =>
+          `  ${name},`
+      )
+      .join("\n")}\n} from "lucide-react";`;
+
+  publicProfile =
+    publicProfile.replace(
+      lucideMatch[0],
+      nextImport
+    );
+}
+
+/* Shared final CSS. */
+if (
+  !publicProfile.includes(
+    'import "../../profile/profile-option-3-selected-2-0.css";'
+  )
+) {
+  publicProfile =
+    publicProfile.replace(
+      'import "../../media-rendering-1-0.css";',
+      'import "../../media-rendering-1-0.css";\nimport "../../profile/profile-option-3-selected-2-0.css";'
+    );
+}
+
+publicProfile =
+  publicProfile.replace(
+    'data-profile-design="option-3-activity"',
+    'data-profile-design="option-3-activity-selected"'
+  );
+
+const publicName = `            <div className="alumni-profile-v3-identity">
+              <h1>
+                {profile.full_name ||
+                  \`@\${profile.username}\`}
+              </h1>
+
+              <p className="alumni-profile-v3-handle">`;
+
+const publicNameNew = `            <div className="alumni-profile-v3-identity">
+              <div className="alumni-profile-v3-name-row">
+                <h1>
+                  {profile.full_name ||
+                    \`@\${profile.username}\`}
+                </h1>
+
+                {(profile.is_verified ||
+                  profile.verified ||
+                  profile.verified_at) && (
+                  <BadgeCheck
+                    size={18}
+                    className="alumni-profile-v3-verified"
+                    aria-label="Perfil verificado"
+                  />
+                )}
+              </div>
+
+              <p className="alumni-profile-v3-handle">`;
+
+publicProfile =
+  replaceRequired(
+    publicProfile,
+    publicName,
+    publicNameNew,
+    "nombre/verificación del perfil público"
+  );
+
+/* =========================================================
+   SHARED CSS — SELECTED NEW OPTION 3
+   ========================================================= */
+
+const css = `/*
+ * ${MARKER}
+ *
+ * Selected board: Option 3 — Activity focused.
+ * Mobile canonical: 360–430 px.
+ *
+ * Own profile:
+ *   Editar perfil / Compartir
+ *
+ * Public profile:
+ *   Seguir / Mensaje
+ */
+
+/* ======================================================
+   COMMON PROFILE CANVAS
+   ====================================================== */
+
+.alumni-profile-launch,
+.alumni-profile-v3 {
+  width: calc(100% + 32px) !important;
+  max-width: none !important;
+  margin: 0 -16px !important;
+  overflow-x: clip;
+  color: var(--app-text);
+  background: var(--app-bg);
+}
+
+.alumni-profile-launch-shell {
+  padding-bottom:
+    calc(
+      100px +
+      env(safe-area-inset-bottom)
+    ) !important;
+}
+
+.alumni-profile-v3 {
+  padding-bottom:
+    calc(
+      100px +
+      env(safe-area-inset-bottom)
+    );
+}
+
+/* ======================================================
+   COVER — clean, wide, no decorative clutter
+   ====================================================== */
+
+.alumni-profile-launch-cover,
+.alumni-profile-v3-cover {
+  position: relative;
+  width: 100%;
+  height: 176px !important;
+  overflow: hidden;
+  border-radius: 0 !important;
+  background: #101722;
+}
+
+.alumni-profile-launch-cover-image,
+.alumni-profile-v3-cover-image,
+.alumni-profile-launch-cover img,
+.alumni-profile-v3-cover img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover !important;
+}
+
+.alumni-profile-launch-cover-overlay,
+.alumni-profile-v3-cover-shade {
+  background:
+    linear-gradient(
+      180deg,
+      rgba(3,6,10,.05) 0%,
+      rgba(3,6,10,.05) 52%,
+      rgba(3,6,10,.42) 100%
+    ) !important;
+}
+
+/* Back/share: quiet glass circles */
+.alumni-profile-launch-cover-action,
+.alumni-profile-v3-top-button {
+  width: 38px !important;
+  height: 38px !important;
+  border:
+    1px solid
+    rgba(255,255,255,.18) !important;
+  border-radius:
+    999px !important;
+  background:
+    rgba(5,8,13,.42) !important;
+  color: #fff !important;
+  box-shadow: none !important;
+  backdrop-filter:
+    blur(12px);
+  -webkit-backdrop-filter:
+    blur(12px);
+}
+
+/* ======================================================
+   AVATAR
+   ====================================================== */
+
+.alumni-profile-launch-avatar-row {
+  height: 48px !important;
+}
+
+.alumni-profile-launch-avatar-wrap {
+  top: -42px !important;
+  width: 88px !important;
+  height: 88px !important;
+  flex: 0 0 88px !important;
+}
+
+.alumni-profile-launch-avatar,
+.alumni-profile-v3-avatar {
+  width: 88px !important;
+  height: 88px !important;
+  border:
+    3px solid
+    var(--app-bg) !important;
+  box-shadow:
+    0 5px 20px
+    rgba(0,0,0,.18) !important;
+}
+
+/*
+ * Selected Option 3 does not show a camera floating on avatar.
+ * Editing is a real action in "Editar perfil".
+ */
+.alumni-profile-launch-camera {
+  display: none !important;
+}
+
+/*
+ * Passport remains a real function, but moves out of
+ * the primary identity area and stays available in Activity.
+ */
+.alumni-profile-launch-passport {
+  display: none !important;
+}
+
+/* ======================================================
+   IDENTITY
+   ====================================================== */
+
+.alumni-profile-launch-header,
+.alumni-profile-v3-main {
+  padding-right:
+    16px !important;
+  padding-left:
+    16px !important;
+}
+
+.alumni-profile-launch-identity {
+  margin-top:
+    0 !important;
+}
+
+.alumni-profile-v3-identity {
+  padding-top:
+    4px !important;
+}
+
+.alumni-profile-launch-name-row,
+.alumni-profile-v3-name-row {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 6px;
+}
+
+.alumni-profile-launch-name-row h1,
+.alumni-profile-v3-name-row h1,
+.alumni-profile-v3-identity h1 {
+  min-width: 0;
+  margin: 0;
+  overflow: hidden;
+  color:
+    var(--app-text) !important;
+  font-size:
+    21px !important;
+  font-weight:
+    950 !important;
+  line-height:
+    1.08 !important;
+  letter-spacing:
+    -.04em !important;
+  text-overflow:
+    ellipsis;
+  white-space:
+    nowrap;
+}
+
+.alumni-profile-v3-verified,
+.alumni-profile-launch-verified {
+  flex: 0 0 auto;
+  color: #3b82f6;
+}
+
+.alumni-profile-launch-handle,
+.alumni-profile-v3-handle {
+  margin-top:
+    3px !important;
+  color:
+    var(--app-muted) !important;
+  font-size:
+    11.5px !important;
+  font-weight:
+    560 !important;
+}
+
+.alumni-profile-launch-meta,
+.alumni-profile-v3-fact,
+.alumni-profile-v3-role {
+  margin-top:
+    6px !important;
+  color:
+    var(--app-text-soft) !important;
+  font-size:
+    11px !important;
+  font-weight:
+    560 !important;
+  line-height:
+    1.3 !important;
+}
+
+.alumni-profile-v3-role span {
+  display: none;
+}
+
+/* Header socials from previous design are intentionally removed. */
+.alumni-profile-launch-socials {
+  display: none !important;
+}
+
+/* ======================================================
+   ACTIONS — simple and functional
+   ====================================================== */
+
+.alumni-profile-launch-actions,
+.alumni-profile-v3-actions {
+  display: flex !important;
+  align-items: center;
+  gap:
+    8px !important;
+  margin-top:
+    14px !important;
+}
+
+.alumni-profile-launch-primary,
+.alumni-profile-launch-secondary,
+.alumni-profile-v3-primary,
+.alumni-profile-v3-secondary {
+  display: inline-flex;
+  min-width: 0;
+  height:
+    40px !important;
+  flex:
+    1 1 0;
+  align-items: center;
+  justify-content: center;
+  gap: 0 !important;
+  padding:
+    0 12px !important;
+  border-radius:
+    10px !important;
+  font-size:
+    10.5px !important;
+  font-weight:
+    850 !important;
+  white-space:
+    nowrap;
+  box-shadow:
+    none !important;
+}
+
+.alumni-profile-v3-primary > svg,
+.alumni-profile-v3-secondary > svg {
+  display: none !important;
+}
+
+.alumni-profile-launch-primary,
+.alumni-profile-v3-primary {
+  border: 0 !important;
+  background:
+    var(--app-accent-fill) !important;
+  color:
+    var(--app-on-accent) !important;
+}
+
+.alumni-profile-v3-primary.is-following {
+  border:
+    1px solid
+    var(--app-border) !important;
+  background:
+    var(--app-soft) !important;
+  color:
+    var(--app-text) !important;
+}
+
+.alumni-profile-launch-secondary,
+.alumni-profile-v3-secondary {
+  border:
+    1px solid
+    var(--app-border) !important;
+  background:
+    var(--app-soft) !important;
+  color:
+    var(--app-text) !important;
+}
+
+/* Keep safety as a compact real action. */
+.alumni-profile-v3-safety {
+  flex:
+    0 0 auto;
+}
+
+/* ======================================================
+   STATS
+   ====================================================== */
+
+.alumni-profile-launch-stats,
+.alumni-profile-v3-stats {
+  display: grid;
+  grid-template-columns:
+    repeat(
+      3,
+      minmax(0,1fr)
+    );
+  margin-top:
+    15px !important;
+  border-bottom:
+    1px solid
+    var(--app-border) !important;
+}
+
+.alumni-profile-launch-stats > *,
+.alumni-profile-v3-stats > * {
+  min-height:
+    58px !important;
+}
+
+.alumni-profile-launch-stats strong,
+.alumni-profile-v3-stats strong {
+  color:
+    var(--app-text) !important;
+  font-size:
+    14.5px !important;
+  font-weight:
+    950 !important;
+}
+
+.alumni-profile-launch-stats span,
+.alumni-profile-v3-stats span {
+  margin-top:
+    5px !important;
+  color:
+    var(--app-muted-2) !important;
+  font-size:
+    8.5px !important;
+  font-weight:
+    620 !important;
+}
+
+/* ======================================================
+   TABS — content takes priority
+   ====================================================== */
+
+.alumni-profile-launch-tabs,
+.alumni-profile-v3-tabs {
+  position: sticky;
+  top: 0;
+  z-index: 24;
+  display: grid;
+  grid-template-columns:
+    repeat(
+      3,
+      minmax(0,1fr)
+    );
+  min-height:
+    47px !important;
+  border-bottom:
+    1px solid
+    var(--app-border) !important;
+  background:
+    color-mix(
+      in srgb,
+      var(--app-bg) 97%,
+      transparent
+    ) !important;
+  backdrop-filter:
+    blur(18px);
+  -webkit-backdrop-filter:
+    blur(18px);
+}
+
+.alumni-profile-launch-tabs button,
+.alumni-profile-v3-tabs button {
+  color:
+    var(--app-muted-2) !important;
+  font-size:
+    10.5px !important;
+  font-weight:
+    760 !important;
+}
+
+.alumni-profile-launch-tabs
+  button[data-active="true"],
+.alumni-profile-v3-tabs
+  button[data-active="true"] {
+  color:
+    var(--app-text) !important;
+}
+
+.alumni-profile-launch-tabs
+  button[data-active="true"]::after,
+.alumni-profile-v3-tabs
+  button[data-active="true"]::after {
+  right:
+    18px !important;
+  left:
+    18px !important;
+  height:
+    2px !important;
+  background:
+    var(--app-accent) !important;
+}
+
+/* ======================================================
+   FEED — protagonist, flatter and cleaner
+   ====================================================== */
+
+.alumni-profile-launch-feed {
+  padding:
+    0 0
+    calc(
+      24px +
+      env(safe-area-inset-bottom)
+    ) !important;
+  background:
+    var(--app-bg) !important;
+}
+
+.alumni-profile-launch-post-list,
+.alumni-profile-v3-post-list {
+  display:
+    block !important;
+}
+
+.alumni-profile-launch-post,
+.alumni-profile-v3-post {
+  margin: 0 !important;
+  padding:
+    14px 16px
+    13px !important;
+  overflow:
+    visible !important;
+  border: 0 !important;
+  border-bottom:
+    1px solid
+    var(--app-border) !important;
+  border-radius:
+    0 !important;
+  background:
+    var(--app-bg) !important;
+  box-shadow:
+    none !important;
+}
+
+.alumni-profile-launch-post-head,
+.alumni-profile-v3-post-head {
+  gap:
+    9px !important;
+  padding:
+    0 !important;
+}
+
+.alumni-profile-launch-post-avatar,
+.alumni-profile-v3-post-avatar {
+  width:
+    36px !important;
+  height:
+    36px !important;
+  flex:
+    0 0 36px !important;
+}
+
+.alumni-profile-launch-post-copy,
+.alumni-profile-v3-post-copy {
+  margin-top:
+    10px !important;
+  color:
+    var(--app-text-soft) !important;
+  font-size:
+    12.5px !important;
+  line-height:
+    1.48 !important;
+}
+
+.alumni-profile-launch-media,
+.alumni-profile-v3-media {
+  overflow:
+    hidden !important;
+  margin:
+    11px 0 0 !important;
+  border-radius:
+    12px !important;
+  background:
+    #05070b !important;
+}
+
+.alumni-profile-launch-media button {
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+
+.alumni-profile-launch-media img,
+.alumni-profile-v3-media img {
+  max-width:
+    100% !important;
+  border-radius:
+    0 !important;
+}
+
+.alumni-profile-launch-post-footer {
+  padding:
+    10px 0 0 !important;
+}
+
+.alumni-profile-v3-post-actions {
+  padding-top:
+    10px !important;
+}
+
+/* ======================================================
+   SAVED / SECONDARY / ACTIVITY
+   ====================================================== */
+
+.alumni-profile-launch-saved,
+.alumni-profile-launch-activity,
+.alumni-profile-v3-secondary-tab,
+.alumni-profile-v3-activity {
+  padding-bottom:
+    calc(
+      104px +
+      env(safe-area-inset-bottom)
+    ) !important;
+}
+
+.alumni-profile-launch-activity {
+  background:
+    var(--app-bg);
+}
+
+.alumni-profile-launch-activity-row {
+  min-height:
+    68px !important;
+  padding:
+    11px 16px !important;
+  border-bottom:
+    1px solid
+    var(--app-border) !important;
+  background:
+    transparent !important;
+  border-radius:
+    0 !important;
+}
+
+.alumni-profile-launch-activity-icon {
+  background:
+    var(--app-soft) !important;
+}
+
+/* Socials preserved, but secondary as selected design requires. */
+.alumni-profile-selected-digital {
+  padding:
+    16px;
+  border-bottom:
+    1px solid
+    var(--app-border);
+}
+
+.alumni-profile-selected-digital-copy
+  strong {
+  display:
+    block;
+  color:
+    var(--app-text);
+  font-size:
+    12px;
+  font-weight:
+    850;
+}
+
+.alumni-profile-selected-digital-copy
+  small {
+  display:
+    block;
+  margin-top:
+    4px;
+  color:
+    var(--app-muted-2);
+  font-size:
+    9.5px;
+}
+
+.alumni-profile-selected-digital-links {
+  display:
+    flex;
+  flex-wrap:
+    wrap;
+  gap:
+    8px;
+  margin-top:
+    12px;
+}
+
+.alumni-profile-selected-social-links {
+  display:
+    flex !important;
+  flex-wrap:
+    wrap !important;
+  gap:
+    8px !important;
+}
+
+.alumni-profile-selected-social-links a,
+.alumni-profile-selected-spotify {
+  display:
+    inline-flex !important;
+  width:
+    36px !important;
+  height:
+    36px !important;
+  max-width:
+    36px !important;
+  align-items:
+    center !important;
+  justify-content:
+    center !important;
+  padding:
+    0 !important;
+  overflow:
+    hidden;
+  border:
+    1px solid
+    var(--app-border) !important;
+  border-radius:
+    999px !important;
+  background:
+    var(--app-soft) !important;
+  color:
+    var(--app-text-soft) !important;
+  text-decoration:
+    none !important;
+}
+
+.alumni-profile-selected-social-links
+  a > span:last-child {
+  display:
+    none !important;
+}
+
+.alumni-profile-selected-social-links
+  a > span:first-child,
+.alumni-profile-selected-social-links
+  a > span:first-child svg {
+  width:
+    18px !important;
+  height:
+    18px !important;
+}
+
+.alumni-profile-selected-social-links
+  a[data-social-kind="linkedin"] {
+  background:
+    #0a66c2 !important;
+  color:
+    #fff !important;
+}
+
+.alumni-profile-selected-social-links
+  a[data-social-kind="github"] {
+  background:
+    #191b20 !important;
+  color:
+    #fff !important;
+}
+
+.alumni-profile-selected-social-links
+  a[data-social-kind="instagram"] {
+  background:
+    radial-gradient(
+      circle at 32% 105%,
+      #feda75 0%,
+      #fa7e1e 30%,
+      #d62976 54%,
+      #962fbf 75%,
+      #4f5bd5 100%
+    ) !important;
+  color:
+    #fff !important;
+}
+
+.alumni-profile-selected-spotify {
+  border-color:
+    rgba(
+      30,
+      215,
+      96,
+      .35
+    ) !important;
+  background:
+    #16261c !important;
+  color:
+    #1ed760 !important;
+}
+
+/* ======================================================
+   PRIVATE / EMPTY STATES
+   ====================================================== */
+
+.alumni-profile-v3-private,
+.alumni-profile-launch-empty,
+.alumni-profile-v3-empty {
+  margin:
+    20px 16px;
+  padding:
+    28px 18px !important;
+  border:
+    1px solid
+    var(--app-border) !important;
+  border-radius:
+    16px !important;
+  background:
+    var(--app-surface) !important;
+  text-align:
+    center;
+}
+
+/* ======================================================
+   MOBILE CANONICAL
+   ====================================================== */
+
+@media (max-width: 430px) {
+  .alumni-profile-launch-header,
+  .alumni-profile-v3-main {
+    padding-right:
+      14px !important;
+    padding-left:
+      14px !important;
+  }
+
+  .alumni-profile-launch-cover,
+  .alumni-profile-v3-cover {
+    height:
+      168px !important;
+  }
+
+  .alumni-profile-launch-avatar-wrap {
+    top:
+      -40px !important;
+  }
+
+  .alumni-profile-launch-avatar-wrap,
+  .alumni-profile-launch-avatar,
+  .alumni-profile-v3-avatar {
+    width:
+      84px !important;
+    height:
+      84px !important;
+  }
+
+  .alumni-profile-launch-avatar-wrap {
+    flex:
+      0 0 84px !important;
+  }
+
+  .alumni-profile-v3-avatar {
+    top:
+      -42px !important;
+    left:
+      14px !important;
+  }
+
+  .alumni-profile-v3-avatar-wrap {
+    height:
+      40px !important;
+  }
+
+  .alumni-profile-launch-name-row h1,
+  .alumni-profile-v3-name-row h1,
+  .alumni-profile-v3-identity h1 {
+    font-size:
+      20px !important;
+  }
+
+  .alumni-profile-launch-post,
+  .alumni-profile-v3-post {
+    padding-right:
+      14px !important;
+    padding-left:
+      14px !important;
+  }
+}
+
+@media (max-width: 374px) {
+  .alumni-profile-launch-cover,
+  .alumni-profile-v3-cover {
+    height:
+      158px !important;
+  }
+
+  .alumni-profile-launch-avatar-wrap,
+  .alumni-profile-launch-avatar,
+  .alumni-profile-v3-avatar {
+    width:
+      80px !important;
+    height:
+      80px !important;
+  }
+
+  .alumni-profile-launch-avatar-wrap {
+    flex:
+      0 0 80px !important;
+  }
+
+  .alumni-profile-launch-primary,
+  .alumni-profile-launch-secondary,
+  .alumni-profile-v3-primary,
+  .alumni-profile-v3-secondary {
+    padding:
+      0 9px !important;
+    font-size:
+      10px !important;
+  }
+}
+
+/* ======================================================
+   DESKTOP — same composition, simply centered
+   ====================================================== */
+
+@media (min-width: 700px) {
+  .alumni-profile-launch,
+  .alumni-profile-v3 {
+    width:
+      100% !important;
+    max-width:
+      720px !important;
+    margin:
+      14px auto 0 !important;
+  }
+
+  .alumni-profile-launch-shell {
+    max-width:
+      720px !important;
+    margin:
+      0 auto;
+  }
+
+  .alumni-profile-launch-cover,
+  .alumni-profile-v3-cover {
+    height:
+      210px !important;
+    border-radius:
+      18px 18px 0 0 !important;
+  }
+}
+
+@media (min-width: 1024px) {
+  .alumni-profile-launch,
+  .alumni-profile-v3,
+  .alumni-profile-launch-shell {
+    max-width:
+      760px !important;
+  }
+}
+
+/* ======================================================
+   LIGHT / DARK
+   ====================================================== */
+
+:root[data-theme="light"]
+  .alumni-profile-launch,
+:root[data-theme="light"]
+  .alumni-profile-v3 {
+  background:
+    var(--app-bg) !important;
+}
+
+:root[data-theme="dark"]
+  .alumni-profile-launch,
+:root[data-theme="dark"]
+  .alumni-profile-v3 {
+  background:
+    var(--app-bg) !important;
+}
+
+/* ${MARKER} */
+`;
+
+/* =========================================================
+   TSX PARSE VALIDATION
+   ========================================================= */
+
+try {
+  const ts =
+    require("typescript");
+
+  for (
+    const [name, source]
+    of [
+      [
+        "src/app/profile/page.tsx",
+        own,
+      ],
+      [
+        "src/app/u/[username]/page.tsx",
+        publicProfile,
+      ],
+    ]
+  ) {
+    const parsed =
+      ts.createSourceFile(
+        name,
+        source,
+        ts.ScriptTarget.Latest,
+        true,
+        ts.ScriptKind.TSX
+      );
+
+    const diagnostics =
+      parsed.parseDiagnostics ||
+      [];
+
+    if (
+      diagnostics.length
+    ) {
+      const first =
+        diagnostics[0];
+
+      const message =
+        ts.flattenDiagnosticMessageText(
+          first.messageText,
+          "\n"
+        );
+
+      const pos =
+        typeof first.start ===
+        "number"
+          ? parsed
+              .getLineAndCharacterOfPosition(
+                first.start
+              )
+          : null;
+
+      fail(
+        name +
+          ": sintaxis inválida" +
+          (
+            pos
+              ? ` línea ${pos.line + 1}, columna ${pos.character + 1}`
+              : ""
+          ) +
+          ": " +
+          message
+      );
+    }
+  }
+
+  console.log(
+    "✅ Parser TypeScript: perfiles válidos"
+  );
+} catch (error) {
+  if (
+    !(
+      error &&
+      typeof error ===
+        "object" &&
+      error.code ===
+        "MODULE_NOT_FOUND"
+    )
+  ) {
+    throw error;
+  }
+}
+
+/* =========================================================
+   FINAL VALIDATION + WRITE
+   ========================================================= */
+
+if (
+  !own.includes(
+    "alumni-profile-selected-digital"
+  )
+) {
+  fail(
+    "Validación: no quedó la presencia digital dentro de Actividad."
+  );
+}
+
+if (
+  !publicProfile.includes(
+    "alumni-profile-v3-name-row"
+  ) ||
+  !publicProfile.includes(
+    "BadgeCheck"
+  )
+) {
+  fail(
+    "Validación: perfil público no quedó con nombre/verificación."
+  );
+}
+
+backup(OWN);
+backup(PUBLIC);
+
+own +=
+  `\n/* ${MARKER} */\n`;
+
+publicProfile +=
+  `\n/* ${MARKER} */\n`;
+
+fs.writeFileSync(
+  OWN,
+  own,
+  "utf8"
+);
+
+fs.writeFileSync(
+  PUBLIC,
+  publicProfile,
+  "utf8"
+);
+
+fs.writeFileSync(
+  CSS,
+  css,
+  "utf8"
+);
+
+console.log("");
+console.log(
+  "✅ ALUMNI Profile 2.0 aplicado."
+);
+console.log(
+  "✅ Opción 3 seleccionada: enfoque en actividad."
+);
+console.log(
+  "✅ /profile y /u/[username] comparten el mismo lenguaje."
+);
+console.log(
+  "✅ Header más limpio."
+);
+console.log(
+  "✅ Feed de publicaciones como protagonista."
+);
+console.log(
+  "✅ Redes/Pasaporte preservados como funciones secundarias."
+);
+console.log(
+  "✅ Dark / Light preservados."
+);
+console.log(
+  "✅ Mobile-first 360–430 px."
+);
+console.log("");
+console.log(
+  "Ahora ejecutá: npm run build"
+);

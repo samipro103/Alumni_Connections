@@ -1,11 +1,7 @@
 "use client";
 
-import {
-  useEffect,
-  useMemo,
-  useState } from "react";
-import { useParams,
-  useRouter } from "next/navigation";
+import { useEffect, useMemo, useState } from "react";
+import { useParams, useRouter } from "next/navigation";
 import {
   ArrowLeft,
   Briefcase,
@@ -21,7 +17,6 @@ import {
   Share2,
   UserCheck,
   UserPlus,
-  BadgeCheck,
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { es } from "date-fns/locale";
@@ -51,7 +46,6 @@ import ProfilePostOwnerMenu from "@/components/profile/ProfilePostOwnerMenu";
 import "@/components/profile/ProfilePostOwnerMenu.css";
 import "./profile-option-3-exact.css";
 import "../../media-rendering-1-0.css";
-import "../../profile/profile-option-3-selected-2-0.css";
 
 type ProfileTab = "posts" | "secondary" | "activity";
 
@@ -567,7 +561,7 @@ export default function UserProfilePage() {
     <AppShell>
       <div
         className="alumni-profile-v3"
-        data-profile-design="option-3-activity-selected"
+        data-profile-design="option-3-activity"
       >
         {/* HERO / PORTADA */}
         <section className="alumni-profile-v3-hero">
@@ -623,22 +617,10 @@ export default function UserProfilePage() {
             </div>
 
             <div className="alumni-profile-v3-identity">
-              <div className="alumni-profile-v3-name-row">
-                <h1>
-                  {profile.full_name ||
-                    `@${profile.username}`}
-                </h1>
-
-                {(profile.is_verified ||
-                  profile.verified ||
-                  profile.verified_at) && (
-                  <BadgeCheck
-                    size={18}
-                    className="alumni-profile-v3-verified"
-                    aria-label="Perfil verificado"
-                  />
-                )}
-              </div>
+              <h1>
+                {profile.full_name ||
+                  `@${profile.username}`}
+              </h1>
 
               <p className="alumni-profile-v3-handle">
                 @{profile.username}
@@ -1333,5 +1315,3 @@ function Detail({
 /* ALUMNI_2_3_2_RECOVERY_PROFILE_PASSPORT_NAV:PUBLIC_PROFILE */
 
 /* ALUMNI_MEDIA_RENDERING_1_0_INSTAGRAM_LEVEL */
-
-/* ALUMNI_PROFILE_2_0_OPTION_3_ACTIVITY_SELECTED */
