@@ -38,7 +38,6 @@ import {
 } from "@/lib/appVersion";
 import "../interior-ui-1-0.css";
 import "./feedback-help-2-0.css";
-import "./feedback-form-editorial-2-1.css";
 
 type FeedbackType =
   | "bug"
@@ -1205,97 +1204,9 @@ function FeedbackForm({
     formMode ===
     "problem";
 
-  const editorial =
-    formMode === "idea"
-      ? {
-          icon:
-            Lightbulb,
-          eyebrow:
-            "TU IDEA CUENTA",
-          title:
-            "Ideas que generan impacto",
-          copy:
-            "Tu experiencia como alumni es valiosa. Cuéntanos cómo podríamos mejorar la app para todos.",
-        }
-      : formMode ===
-        "support"
-      ? {
-          icon:
-            Mail,
-          eyebrow:
-            "ESTAMOS PARA AYUDARTE",
-          title:
-            "Cuéntanos qué necesitas",
-          copy:
-            "Describe tu consulta con tranquilidad. Entre más contexto tengamos, mejor podremos entenderla.",
-        }
-      : {
-          icon:
-            TriangleAlert,
-          eyebrow:
-            "AYÚDANOS A MEJORAR",
-          title:
-            "Cuéntanos qué ocurrió",
-          copy:
-            "Explícanos qué pasó y dónde lo notaste. Si puedes, agrega una captura para ayudarnos a revisarlo.",
-        };
-
-  const EditorialIcon =
-    editorial.icon;
-
   return (
-    <section
-      className="alumni-feedback-editorial"
-      data-mode={
-        formMode
-      }
-    >
-      <div className="alumni-feedback-editorial-hero">
-        <span className="alumni-feedback-editorial-hero-icon">
-          <EditorialIcon
-            size={23}
-            strokeWidth={
-              1.8
-            }
-          />
-        </span>
-
-        <div>
-          <small>
-            {
-              editorial.eyebrow
-            }
-          </small>
-
-          <h2>
-            {
-              editorial.title
-            }
-          </h2>
-
-          <p>
-            {editorial.copy}
-          </p>
-        </div>
-      </div>
-
-      <div className="alumni-feedback-editorial-note">
-        <CircleHelp
-          size={15}
-          strokeWidth={
-            1.9
-          }
-        />
-        <span>
-          Sé específico y cuéntanos el contexto. Entre más claro sea el mensaje, mejor podremos evaluarlo.
-        </span>
-      </div>
-
-      <div
-        className="alumni-feedback-editorial-type"
-        role="group"
-        aria-label="Tipo de feedback"
-      >
+    <section className="alumni-feedback-form-v2">
+      <div className="alumni-feedback-type-tabs">
         {[
           [
             "bug",
@@ -1338,17 +1249,10 @@ function FeedbackForm({
         )}
       </div>
 
-      <label className="alumni-feedback-editorial-field">
+      <label className="alumni-feedback-field">
         <span>
-          {formMode ===
-          "idea"
-            ? "Título de la sugerencia"
-            : formMode ===
-              "support"
-            ? "Asunto"
-            : "Título"}
+          Asunto
         </span>
-
         <input
           value={title}
           maxLength={120}
@@ -1363,38 +1267,24 @@ function FeedbackForm({
           placeholder={
             formMode ===
             "idea"
-              ? "Ej. Mejora en el buscador de eventos"
+              ? "Resume tu idea..."
               : formMode ===
                 "support"
-              ? "Resume brevemente tu consulta"
-              : "Resumen breve del problema"
+              ? "¿En qué podemos ayudarte?"
+              : "Resume brevemente el problema..."
           }
         />
-
-        <small className="alumni-feedback-editorial-counter">
-          {title.length}/120
-        </small>
       </label>
 
-      <label className="alumni-feedback-editorial-field alumni-feedback-editorial-field-large">
+      <label className="alumni-feedback-field">
         <span>
-          {formMode ===
-          "idea"
-            ? "Descripción de la sugerencia"
-            : formMode ===
-              "support"
-            ? "Cuéntanos más"
-            : "Descripción"}
+          Cuéntanos más
         </span>
-
         <textarea
           value={
             description
           }
-          maxLength={
-            1000
-          }
-          rows={8}
+          rows={6}
           onChange={(
             event
           ) =>
@@ -1406,44 +1296,136 @@ function FeedbackForm({
           placeholder={
             formMode ===
             "idea"
-              ? "Comparte tu idea, cómo funcionaría y por qué sería útil..."
-              : formMode ===
-                "support"
-              ? "Describe tu consulta con el contexto que consideres importante..."
-              : "Describe qué ocurrió, dónde lo viste y cómo podemos reproducirlo..."
+              ? "Cuéntanos qué mejorarías y por qué sería útil..."
+              : "Describe lo que ocurrió con el detalle que consideres necesario..."
           }
         />
-
-        <small className="alumni-feedback-editorial-counter">
-          {
-            description.length
-          }
-          /1000
-        </small>
       </label>
 
-      <label className="alumni-feedback-editorial-attach">
-        <span className="alumni-feedback-editorial-attach-icon">
+      {isProblem && (
+        <details className="alumni-feedback-advanced">
+          <summary>
+            Más detalles
+          </summary>
+
+          <label className="alumni-feedback-field">
+            <span>
+              ¿Qué esperabas?
+            </span>
+            <textarea
+              value={
+                expected
+              }
+              rows={3}
+              onChange={(
+                event
+              ) =>
+                setExpected(
+                  event.target
+                    .value
+                )
+              }
+              placeholder="Lo que debería haber ocurrido."
+            />
+          </label>
+
+          <label className="alumni-feedback-field">
+            <span>
+              Pasos para repetirlo
+            </span>
+            <textarea
+              value={
+                steps
+              }
+              rows={3}
+              onChange={(
+                event
+              ) =>
+                setSteps(
+                  event.target
+                    .value
+                )
+              }
+              placeholder={
+                "1. Abrí...\n2. Toqué...\n3. Apareció..."
+              }
+            />
+          </label>
+        </details>
+      )}
+
+      <div className="alumni-feedback-severity">
+        <span>
+          Prioridad
+        </span>
+
+        <div>
+          {[
+            [
+              "low",
+              "Baja",
+            ],
+            [
+              "medium",
+              "Media",
+            ],
+            [
+              "high",
+              "Alta",
+            ],
+            [
+              "blocker",
+              "Bloquea",
+            ],
+          ].map(
+            ([
+              value,
+              label,
+            ]) => (
+              <button
+                key={
+                  value
+                }
+                type="button"
+                data-active={
+                  priority ===
+                    value
+                    ? "true"
+                    : "false"
+                }
+                onClick={() =>
+                  setPriority(
+                    value as
+                      Priority
+                  )
+                }
+              >
+                {label}
+              </button>
+            )
+          )}
+        </div>
+      </div>
+
+      <label className="alumni-feedback-attach">
+        <span className="alumni-feedback-attach-icon">
           <ImagePlus
-            size={21}
-            strokeWidth={
-              1.8
-            }
+            size={20}
           />
         </span>
 
-        <span className="alumni-feedback-editorial-attach-copy">
+        <span>
           <strong>
             Adjuntar captura
           </strong>
           <small>
-            Opcional · hasta {MAX_FILES} imágenes de máximo 8 MB
+            JPG, PNG o imagen · máximo 8 MB
           </small>
         </span>
 
-        <span className="alumni-feedback-editorial-attach-action">
-          Agregar
-        </span>
+        <ChevronRight
+          size={17}
+        />
 
         <input
           type="file"
@@ -1462,7 +1444,7 @@ function FeedbackForm({
 
       {files.length >
         0 && (
-        <div className="alumni-feedback-editorial-previews">
+        <div className="alumni-feedback-previews">
           {previews.map(
             (
               item,
@@ -1499,118 +1481,14 @@ function FeedbackForm({
         </div>
       )}
 
-      <div className="alumni-feedback-editorial-priority">
-        <span>
-          Prioridad
-        </span>
-
-        <div>
-          {[
-            [
-              "low",
-              "Baja",
-            ],
-            [
-              "medium",
-              "Media",
-            ],
-            [
-              "high",
-              "Alta",
-            ],
-            [
-              "blocker",
-              "Urgente",
-            ],
-          ].map(
-            ([
-              value,
-              label,
-            ]) => (
-              <button
-                key={
-                  value
-                }
-                type="button"
-                data-active={
-                  priority ===
-                    value
-                    ? "true"
-                    : "false"
-                }
-                onClick={() =>
-                  setPriority(
-                    value as
-                      Priority
-                  )
-                }
-              >
-                {label}
-              </button>
-            )
-          )}
-        </div>
-      </div>
-
-      {isProblem && (
-        <details className="alumni-feedback-editorial-more">
-          <summary>
-            Añadir detalles técnicos
-          </summary>
-
-          <div>
-            <label className="alumni-feedback-editorial-field">
-              <span>
-                ¿Qué esperabas que ocurriera?
-              </span>
-
-              <textarea
-                value={
-                  expected
-                }
-                rows={3}
-                onChange={(
-                  event
-                ) =>
-                  setExpected(
-                    event.target
-                      .value
-                  )
-                }
-                placeholder="Describe el resultado esperado."
-              />
-            </label>
-
-            <label className="alumni-feedback-editorial-field">
-              <span>
-                Pasos para repetirlo
-              </span>
-
-              <textarea
-                value={
-                  steps
-                }
-                rows={3}
-                onChange={(
-                  event
-                ) =>
-                  setSteps(
-                    event.target
-                      .value
-                  )
-                }
-                placeholder={
-                  "1. Abrí...\n2. Toqué...\n3. Apareció..."
-                }
-              />
-            </label>
-          </div>
-        </details>
-      )}
+      <p className="alumni-feedback-attachment-limit">
+        {files.length}/
+        {MAX_FILES} capturas
+      </p>
 
       <button
         type="button"
-        className="alumni-feedback-editorial-send"
+        className="alumni-feedback-send-v2"
         disabled={
           sending ||
           !canSend
@@ -1632,22 +1510,17 @@ function FeedbackForm({
 
         {sending
           ? "Enviando..."
-          : formMode ===
-            "idea"
-          ? "Enviar sugerencia"
-          : formMode ===
-            "support"
-          ? "Enviar mensaje"
-          : "Enviar reporte"}
+          : "Enviar feedback"}
       </button>
 
-      <p className="alumni-feedback-editorial-safe">
-        Tu mensaje se envía de forma segura al equipo de Alumni.
+      <p className="alumni-feedback-safe-note">
+        <CircleHelp
+          size={13}
+        />
+        Tu feedback se envía de forma segura al equipo de Alumni.
       </p>
     </section>
   );
 }
 
 /* ALUMNI_FEEDBACK_2_0_HELP_HUB_CLEAN */
-
-/* ALUMNI_FEEDBACK_2_1_EDITORIAL_MODERNO */
