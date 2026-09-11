@@ -1,0 +1,30 @@
+ALUMNI SETTINGS 2.0.1 — CHECK IMPORT HOTFIX
+
+CORRIGE ESTE ERROR:
+
+src/app/settings/page.tsx
+Cannot find name 'Check'
+
+CAUSA
+Settings 2.0 usa el icono Check en Apariencia,
+pero faltó agregarlo al import de lucide-react.
+
+NO TOCA
+- diseño
+- Supabase
+- privacidad
+- seguridad
+- perfil
+- estilos
+- lógica
+
+EJECUCIÓN
+
+node .\aplicar_alumni_settings_2_0_1_check_import_hotfix.js
+npm run build
+
+SI BUILD PASA:
+
+git add .
+git commit -m "Settings 2.0.1 - fix appearance check icon"
+git push origin main

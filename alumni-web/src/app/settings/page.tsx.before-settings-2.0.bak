@@ -3,7 +3,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
-  Check,
   ArrowLeft,
   Bell,
   CircleHelp,
@@ -40,7 +39,6 @@ import SpotifyPremiumMusicGate from "@/components/music/SpotifyPremiumMusicGate"
 import AccountTrustPanel from "@/components/settings/AccountTrustPanel";
 import "./settings-classic-1-0.css";
 import "../interior-ui-1-0.css";
-import "./settings-clean-2-0.css";
 
 type SettingsSectionId =
   | "appearance"
@@ -637,7 +635,7 @@ export default function SettingsPage() {
   if (loadingProfile) {
     return (
       <AppShell>
-        <div className="alumni-settings-loading py-16 text-center text-sm text-[var(--app-muted-2)]">
+        <div className="py-16 text-center text-sm text-zinc-600">
           Cargando configuración...
         </div>
       </AppShell>
@@ -1033,11 +1031,11 @@ function PrivacyModeModal({
 }) {
   return (
     <div
-      className="alumni-settings-privacy-backdrop fixed inset-0 z-[9999] flex items-end justify-center p-0 sm:items-center sm:p-5"
+      className="fixed inset-0 z-[9999] flex items-end justify-center bg-black/70 p-0 backdrop-blur-sm sm:items-center sm:p-5"
       role="dialog"
       aria-modal="true"
     >
-      <div className="alumni-settings-privacy-modal w-full max-w-[460px] p-5 pb-[max(20px,env(safe-area-inset-bottom))] sm:p-6">
+      <div className="w-full max-w-[460px] rounded-t-[28px] border border-white/[0.08] bg-[var(--app-surface)] p-5 pb-[max(20px,env(safe-area-inset-bottom))] shadow-[0_30px_100px_rgba(0,0,0,.5)] sm:rounded-[28px] sm:p-6">
         <div className="flex items-start gap-4">
           <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[var(--app-accent-soft)] text-[var(--app-accent)]">
             <LockKeyhole size={21} />
@@ -1115,93 +1113,57 @@ function AppearancePanel({
   setTheme: (theme: any) => void;
 }) {
   return (
-    <div className="alumni-settings-appearance-v2">
-      <div className="alumni-settings-section-intro">
-        <strong>Apariencia</strong>
-        <p>
-          Elige cómo quieres ver Alumni.
+    <Panel>
+      <div className="space-y-1">
+        <p className="text-sm font-black text-zinc-200">
+          Tema de la aplicación
         </p>
       </div>
 
-      <div
-        className="alumni-settings-choice-list"
-        role="radiogroup"
-        aria-label="Tema de la aplicación"
-      >
+      <div className="mt-5 divide-y divide-white/[0.06]">
         {ALUMNI_THEMES.map((item) => {
-          const selected =
-            theme === item.id;
-
-          const description =
-            item.id === "light"
-              ? "Fondo claro y contraste suave"
-              : "Fondo oscuro y menor brillo";
+          const selected = theme === item.id;
 
           return (
             <button
               key={item.id}
               type="button"
-              role="radio"
-              aria-checked={selected}
-              data-selected={
-                selected
-                  ? "true"
-                  : "false"
-              }
-              onClick={() =>
-                setTheme(item.id)
-              }
-              className="alumni-settings-theme-row"
+              onClick={() => setTheme(item.id)}
+              className="flex w-full items-center gap-4 py-4 text-left"
             >
-              <span className="alumni-settings-theme-preview">
-                {item.swatches
-                  .slice(0, 2)
-                  .map(
-                    (
-                      color,
-                      index
-                    ) => (
-                      <i
-                        key={`${item.id}-${index}`}
-                        style={{
-                          background:
-                            color,
-                        }}
-                      />
-                    )
-                  )}
-              </span>
+              <div className="flex shrink-0 items-center">
+                {item.swatches.map(
+                  (color, index) => (
+                    <span
+                      key={`${item.id}-${index}`}
+                      className={`h-8 w-8 rounded-full border border-black/10 ${
+                        index > 0 ? "-ml-2" : ""
+                      }`}
+                      style={{ background: color }}
+                    />
+                  )
+                )}
+              </div>
 
-              <span className="alumni-settings-theme-copy">
-                <strong>
+              <div className="min-w-0 flex-1">
+                <p className="text-sm font-black text-zinc-200">
                   {item.name}
-                </strong>
-                <small>
-                  {description}
-                </small>
-              </span>
+                </p>
+
+              </div>
 
               <span
-                className="alumni-settings-theme-check"
-                data-selected={
+                className={`h-5 w-5 shrink-0 rounded-full border-2 ${
                   selected
-                    ? "true"
-                    : "false"
-                }
-                aria-hidden="true"
-              >
-                {selected && (
-                  <Check
-                    size={13}
-                    strokeWidth={3}
-                  />
-                )}
-              </span>
+                    ? "border-[#6d7cff] bg-[#6d7cff] shadow-[inset_0_0_0_4px_var(--app-surface)]"
+                    : "border-white/[0.12]"
+                }`}
+              />
             </button>
           );
         })}
       </div>
-    </div>
+    </Panel>
   );
 }
 
@@ -1363,10 +1325,10 @@ function ProfilePanel({
       </div>
 
       <Panel>
-        <p className="text-sm font-black text-[var(--app-text)]">
+        <p className="text-sm font-black text-zinc-200">
           Foto y portada
         </p>
-        <p className="mt-1 text-xs text-[var(--app-muted-3)]">
+        <p className="mt-1 text-xs text-zinc-700">
           Así te reconocerán dentro de la comunidad.
         </p>
 
@@ -1429,10 +1391,10 @@ function ProfilePanel({
             </div>
 
             <div className="pb-1">
-              <p className="text-sm font-black text-[var(--app-text)]">
+              <p className="text-sm font-black text-zinc-200">
                 Foto de perfil
               </p>
-              <p className="mt-1 text-xs text-[var(--app-muted-3)]">
+              <p className="mt-1 text-xs text-zinc-700">
                 Recomendado: imagen cuadrada y clara.
               </p>
             </div>
@@ -1441,10 +1403,10 @@ function ProfilePanel({
       </Panel>
 
       <Panel>
-        <p className="text-sm font-black text-[var(--app-text)]">
+        <p className="text-sm font-black text-zinc-200">
           Información básica
         </p>
-        <p className="mt-1 text-xs text-[var(--app-muted-3)]">
+        <p className="mt-1 text-xs text-zinc-700">
           Datos principales que aparecen en tu perfil.
         </p>
 
@@ -1500,10 +1462,10 @@ function AcademicPanel({
 }: any) {
   return (
     <Panel>
-      <p className="text-sm font-black text-[var(--app-text)]">
+      <p className="text-sm font-black text-zinc-200">
         Datos académicos y ubicación
       </p>
-      <p className="mt-1 text-xs text-[var(--app-muted-3)]">
+      <p className="mt-1 text-xs text-zinc-700">
         Esta información mejora las recomendaciones de conexiones.
       </p>
 
@@ -1576,10 +1538,10 @@ function LinksPanel({
 }: any) {
   return (
     <Panel>
-      <p className="text-sm font-black text-[var(--app-text)]">
+      <p className="text-sm font-black text-zinc-200">
         Enlaces externos
       </p>
-      <p className="mt-1 text-xs text-[var(--app-muted-3)]">
+      <p className="mt-1 text-xs text-zinc-700">
         Añade solo los enlaces que quieras mostrar públicamente.
       </p>
 
@@ -1634,28 +1596,28 @@ function AccountPanel({
   return (
     <div className="space-y-5">
       <Panel>
-        <p className="text-sm font-black text-[var(--app-text)]">
+        <p className="text-sm font-black text-zinc-200">
           Información de la cuenta
         </p>
-        <p className="mt-1 text-xs text-[var(--app-muted-3)]">
+        <p className="mt-1 text-xs text-zinc-700">
           Datos vinculados a tu sesión de Alumni.
         </p>
 
         <div className="mt-5">
-          <p className="text-xs font-bold text-[var(--app-muted-2)]">
+          <p className="text-xs font-bold text-zinc-600">
             Correo electrónico
           </p>
-          <p className="mt-2 rounded-xl border border-white/[0.07] bg-white/[0.025] px-4 py-3 text-sm text-[var(--app-text-soft)]">
+          <p className="mt-2 rounded-xl border border-white/[0.07] bg-white/[0.025] px-4 py-3 text-sm text-zinc-300">
             {email || "Sin correo disponible"}
           </p>
         </div>
       </Panel>
 
       <Panel>
-        <p className="text-sm font-black text-[var(--app-text)]">
+        <p className="text-sm font-black text-zinc-200">
           Sesión
         </p>
-        <p className="mt-1 text-xs leading-5 text-[var(--app-muted-3)]">
+        <p className="mt-1 text-xs leading-5 text-zinc-700">
           Puedes cerrar tu sesión actual sin eliminar tu cuenta.
         </p>
 
@@ -1680,7 +1642,7 @@ function Field({
 }) {
   return (
     <label className="block">
-      <span className="mb-2 block text-xs font-bold text-[var(--app-muted-2)]">
+      <span className="mb-2 block text-xs font-bold text-zinc-600">
         {label}
       </span>
       {children}
@@ -1701,12 +1663,12 @@ function SocialField({
 }) {
   return (
     <label className="flex items-center gap-3 rounded-2xl border border-white/[0.07] bg-white/[0.025] px-4 transition hover:bg-white/[0.04]">
-      <span className="text-[var(--app-muted-3)]">
+      <span className="text-zinc-700">
         {icon}
       </span>
 
       <div className="min-w-0 flex-1">
-        <span className="block pt-2 text-[10px] font-bold uppercase tracking-[0.12em] text-[var(--app-muted-3)]">
+        <span className="block pt-2 text-[10px] font-bold uppercase tracking-[0.12em] text-zinc-700">
           {label}
         </span>
 
@@ -1715,7 +1677,7 @@ function SocialField({
           onChange={(e) =>
             onChange(e.target.value)
           }
-          className="h-9 w-full bg-transparent text-sm text-[var(--app-text-soft)] outline-none placeholder:text-[var(--app-muted-3)]"
+          className="h-9 w-full bg-transparent text-sm text-zinc-300 outline-none placeholder:text-zinc-700"
           placeholder={`${label}...`}
         />
       </div>
@@ -1732,7 +1694,3 @@ function SocialField({
 /* ALUMNI_SETTINGS_1_0_OPTION_1_CLASSIC_LIST */
 
 /* ALUMNI_INTERNAL_UI_1_0_DARK_LIGHT_CLEAN */
-
-/* ALUMNI_SETTINGS_2_0_INTERIORES_LIMPIOS */
-
-/* ALUMNI_SETTINGS_2_0_1_CHECK_IMPORT_HOTFIX */

@@ -1122,8 +1122,8 @@ function PickerShell({
   children: React.ReactNode;
 }) {
   return (
-    <div className="alumni-settings-picker-backdrop fixed inset-0 z-[9999] flex items-end justify-center sm:items-center sm:p-5">
-      <div className="alumni-settings-picker-sheet flex h-[78dvh] w-full max-w-[520px] flex-col p-4 pb-[max(16px,env(safe-area-inset-bottom))] sm:h-[70dvh] sm:p-5">
+    <div className="fixed inset-0 z-[9999] flex items-end justify-center bg-black/65 sm:items-center sm:p-5">
+      <div className="flex h-[78dvh] w-full max-w-[520px] flex-col rounded-t-[28px] border border-[var(--app-border)] bg-[var(--app-surface)] p-4 pb-[max(16px,env(safe-area-inset-bottom))] shadow-[0_28px_90px_rgba(0,0,0,.48)] sm:h-[70dvh] sm:rounded-[28px] sm:p-5">
         <div className="flex items-center gap-3">
           <h3 className="min-w-0 flex-1 text-base font-black text-[var(--app-text)]">
             {title}
@@ -1152,7 +1152,7 @@ function SearchBox({
   placeholder: string;
 }) {
   return (
-    <div className="alumni-settings-picker-search mt-4 flex h-11 items-center gap-2">
+    <div className="mt-4 flex h-11 items-center gap-2 border-b border-[var(--app-border)]">
       <Search size={16} className="text-[var(--app-muted-2)]" />
       <input
         autoFocus
@@ -1164,5 +1164,3 @@ function SearchBox({
     </div>
   );
 }
-
-/* ALUMNI_SETTINGS_2_0_INTERIORES_LIMPIOS */

@@ -29,9 +29,9 @@ function Panel({
   children: React.ReactNode;
 }) {
   return (
-    <section className="alumni-account-trust-section">
+    <div className="rounded-[24px] border border-white/[0.07] bg-[#101318]/95 p-5 sm:p-6">
       {children}
-    </section>
+    </div>
   );
 }
 
@@ -459,25 +459,25 @@ export default function AccountTrustPanel({
   }
 
   return (
-    <div className="alumni-account-trust">
+    <div className="space-y-5">
       <Panel>
         <div className="flex items-start gap-3">
           <ShieldCheck
             size={18}
-            className="mt-0.5 text-[var(--app-accent)]"
+            className="mt-0.5 text-[#8d98ff]"
           />
           <div>
-            <p className="text-sm font-black text-[var(--app-text)]">
+            <p className="text-sm font-black text-zinc-200">
               Seguridad de la cuenta
             </p>
           </div>
         </div>
 
-        <div className="mt-5 border-y border-[var(--app-border)] py-4">
-          <p className="text-[10px] font-black uppercase tracking-[0.12em] text-[var(--app-muted-3)]">
+        <div className="mt-5 border-y border-white/[0.06] py-4">
+          <p className="text-[10px] font-black uppercase tracking-[0.12em] text-zinc-700">
             Correo
           </p>
-          <p className="mt-1 break-all text-sm text-[var(--app-text-soft)]">
+          <p className="mt-1 break-all text-sm text-zinc-300">
             {email ||
               "Sin correo disponible"}
           </p>
@@ -535,16 +535,16 @@ export default function AccountTrustPanel({
       {(blocked.length > 0 ||
         muted.length > 0) && (
         <Panel>
-          <p className="text-sm font-black text-[var(--app-text)]">
+          <p className="text-sm font-black text-zinc-200">
             Controles de comunidad
           </p>
 
           {blocked.length > 0 && (
             <div className="mt-4">
-              <p className="mb-2 text-[10px] font-black uppercase tracking-[0.12em] text-[var(--app-muted-3)]">
+              <p className="mb-2 text-[10px] font-black uppercase tracking-[0.12em] text-zinc-700">
                 Bloqueados
               </p>
-              <div className="divide-y divide-[var(--app-border)]">
+              <div className="divide-y divide-white/[0.06]">
                 {blocked.map(
                   (person) => (
                     <div
@@ -557,7 +557,7 @@ export default function AccountTrustPanel({
                         size={16}
                         className="text-red-400"
                       />
-                      <span className="min-w-0 flex-1 truncate text-xs font-bold text-[var(--app-muted)]">
+                      <span className="min-w-0 flex-1 truncate text-xs font-bold text-zinc-400">
                         @
                         {
                           person.username
@@ -570,7 +570,7 @@ export default function AccountTrustPanel({
                             person.id
                           )
                         }
-                        className="text-[10px] font-black text-[var(--app-accent)]"
+                        className="text-[10px] font-black text-[#8d98ff]"
                       >
                         Desbloquear
                       </button>
@@ -583,10 +583,10 @@ export default function AccountTrustPanel({
 
           {muted.length > 0 && (
             <div className="mt-4">
-              <p className="mb-2 text-[10px] font-black uppercase tracking-[0.12em] text-[var(--app-muted-3)]">
+              <p className="mb-2 text-[10px] font-black uppercase tracking-[0.12em] text-zinc-700">
                 Silenciados
               </p>
-              <div className="divide-y divide-[var(--app-border)]">
+              <div className="divide-y divide-white/[0.06]">
                 {muted.map(
                   (person) => (
                     <div
@@ -597,9 +597,9 @@ export default function AccountTrustPanel({
                     >
                       <VolumeX
                         size={16}
-                        className="text-[var(--app-muted-2)]"
+                        className="text-zinc-600"
                       />
-                      <span className="min-w-0 flex-1 truncate text-xs font-bold text-[var(--app-muted)]">
+                      <span className="min-w-0 flex-1 truncate text-xs font-bold text-zinc-400">
                         @
                         {
                           person.username
@@ -612,7 +612,7 @@ export default function AccountTrustPanel({
                             person.id
                           )
                         }
-                        className="text-[10px] font-black text-[var(--app-accent)]"
+                        className="text-[10px] font-black text-[#8d98ff]"
                       >
                         Activar
                       </button>
@@ -626,7 +626,7 @@ export default function AccountTrustPanel({
       )}
 
       <Panel>
-        <p className="text-sm font-black text-[var(--app-text)]">
+        <p className="text-sm font-black text-zinc-200">
           Tus datos y confianza
         </p>
 
@@ -636,7 +636,7 @@ export default function AccountTrustPanel({
             void exportData()
           }
           disabled={exporting}
-          className="mt-4 flex h-10 items-center gap-2 text-xs font-black text-[var(--app-accent)] disabled:opacity-50"
+          className="mt-4 flex h-10 items-center gap-2 text-xs font-black text-[#8d98ff] disabled:opacity-50"
         >
           {exporting ? (
             <Loader2
@@ -649,22 +649,22 @@ export default function AccountTrustPanel({
           Descargar mis datos
         </button>
 
-        <div className="mt-4 flex flex-wrap gap-x-5 gap-y-2 border-t border-[var(--app-border)] pt-4 text-xs font-bold text-[var(--app-muted-2)]">
+        <div className="mt-4 flex flex-wrap gap-x-5 gap-y-2 border-t border-white/[0.06] pt-4 text-xs font-bold text-zinc-600">
           <Link
             href="/legal/privacy"
-            className="hover:text-[var(--app-text-soft)]"
+            className="hover:text-zinc-300"
           >
             Privacidad
           </Link>
           <Link
             href="/legal/terms"
-            className="hover:text-[var(--app-text-soft)]"
+            className="hover:text-zinc-300"
           >
             Términos
           </Link>
           <Link
             href="/legal/community"
-            className="hover:text-[var(--app-text-soft)]"
+            className="hover:text-zinc-300"
           >
             Normas de comunidad
           </Link>
@@ -672,14 +672,14 @@ export default function AccountTrustPanel({
       </Panel>
 
       <Panel>
-        <p className="text-sm font-black text-[var(--app-text)]">
+        <p className="text-sm font-black text-zinc-200">
           Sesión
         </p>
 
         <button
           type="button"
           onClick={logout}
-          className="mt-4 flex h-10 items-center gap-2 text-xs font-black text-[var(--app-muted)] transition hover:text-[var(--app-text)]"
+          className="mt-4 flex h-10 items-center gap-2 text-xs font-black text-zinc-500 transition hover:text-white"
         >
           <LogOut size={15} />
           Cerrar sesión
@@ -712,7 +712,7 @@ export default function AccountTrustPanel({
 
       {accountFlow && (
         <div
-          className="alumni-account-flow-backdrop fixed inset-0 z-[2147483000] flex items-end justify-center sm:items-center sm:p-5"
+          className="fixed inset-0 z-[2147483000] flex items-end justify-center bg-black/60 sm:items-center sm:p-5"
           role="dialog"
           aria-modal="true"
           onMouseDown={(event) => {
@@ -724,7 +724,7 @@ export default function AccountTrustPanel({
             }
           }}
         >
-          <section className="alumni-account-flow-sheet w-full max-w-[470px] overflow-hidden">
+          <section className="w-full max-w-[470px] overflow-hidden rounded-t-[24px] border border-[var(--app-border)] bg-[var(--app-surface)] shadow-[0_28px_100px_rgba(0,0,0,.5)] sm:rounded-[24px]">
             <header className="flex min-h-[64px] items-center gap-3 border-b border-[var(--app-border)] px-5">
               <h3 className="min-w-0 flex-1 text-[17px] font-black text-[var(--app-text)]">
                 {accountFlow ===
@@ -988,5 +988,3 @@ export default function AccountTrustPanel({
 /* ALUMNI_3_1_1_PRODUCT_COPY_CLEANUP */
 
 /* ALUMNI_3_1_2A_SAFE_PRODUCT_FLOWS */
-
-/* ALUMNI_SETTINGS_2_0_INTERIORES_LIMPIOS */

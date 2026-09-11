@@ -3,7 +3,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
-  Check,
   ArrowLeft,
   Bell,
   CircleHelp,
@@ -1734,5 +1733,3 @@ function SocialField({
 /* ALUMNI_INTERNAL_UI_1_0_DARK_LIGHT_CLEAN */
 
 /* ALUMNI_SETTINGS_2_0_INTERIORES_LIMPIOS */
-
-/* ALUMNI_SETTINGS_2_0_1_CHECK_IMPORT_HOTFIX */
