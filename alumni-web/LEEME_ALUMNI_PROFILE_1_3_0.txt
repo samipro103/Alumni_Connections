@@ -1,0 +1,70 @@
+ALUMNI PROFILE 1.3.0 — FINAL POLISH
+
+OBJETIVO
+Dejar el perfil público /profile exactamente en la línea del diseño elegido:
+Opción 3 — Enfoque en actividad, limpio, profesional y listo para salida.
+
+IMPORTANTE
+Este parche no sustituye la base del perfil.
+Se monta SOBRE el perfil launch ya aplicado.
+
+REQUISITO PREVIO
+Debe estar aplicado:
+ALUMNI_PROFILE_1_2_0B_LAUNCH_MATCH_OPCION_3
+
+SI NO ESTÁ
+el parche se detendrá para no tocar a ciegas.
+
+QUÉ HACE
+
+1. Importa una capa nueva de CSS final:
+src/app/profile/profile-launch-final-polish-1-3-0.css
+
+2. Refuerza el look del perfil público:
+- portada mejor presentada
+- avatar mejor posicionado
+- cámara mejor anclada
+- badge Pasaporte Alumni limpio
+- nombre y @usuario bien alineados
+- carrera / universidad / ubicación con mejor jerarquía
+- logos sociales más claros
+- botones Editar perfil / Compartir más consistentes
+- métricas más limpias
+- tabs más sólidas
+- mejor espacio interior para posts y actividad
+- mejor acabado en dark / light
+
+3. Si faltaba data-social-kind en ProfileSocialLinks, lo agrega.
+
+NO TOCA
+- backend
+- supabase
+- lógica de follow
+- guardados
+- actividad funcional
+- datos del perfil
+- tablas
+- RLS
+
+ARCHIVOS
+Modifica:
+src/app/profile/page.tsx
+src/components/profile/ProfileSocialLinks.tsx
+
+Crea:
+src/app/profile/profile-launch-final-polish-1-3-0.css
+
+VISTA CANÓNICA
+- teléfono 360–430 px
+- desktop conserva la misma estructura, solo más centrada
+
+EJECUCIÓN
+
+node .\aplicar_alumni_profile_1_3_0_final_polish.js
+npm run build
+
+SI BUILD PASA
+
+git add .
+git commit -m "Profile 1.3.0 - final polish option 3"
+git push origin main
