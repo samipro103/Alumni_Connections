@@ -315,7 +315,7 @@ export default function MobileNav() {
                     });
                   }
                 }}
-                className="alumni-mobile-nav-item flex min-h-[52px] items-center justify-center rounded-[18px]"
+                className="alumni-mobile-nav-item flex min-h-[52px] flex-col items-center justify-center gap-1 rounded-[18px]"
                 data-active={
                   active
                     ? "true"
@@ -326,12 +326,10 @@ export default function MobileNav() {
                     ? "page"
                     : undefined
                 }
-                aria-label={label}
-                title={label}
               >
-                <span className="alumni-mobile-nav-icon relative flex h-10 w-12 items-center justify-center rounded-xl transition-colors duration-150">
+                <span className="alumni-mobile-nav-icon relative flex h-9 w-11 items-center justify-center rounded-lg transition-colors duration-150">
                   <Icon
-                    size={22}
+                    size={20}
                     strokeWidth={
                       active
                         ? 2.25
@@ -351,6 +349,9 @@ export default function MobileNav() {
                     )}
                 </span>
 
+                <span className="alumni-mobile-nav-label text-[10px]">
+                  {label}
+                </span>
               </Link>
             );
           }
@@ -364,5 +365,3 @@ export default function MobileNav() {
 /* ALUMNI_MORE_2_0_LISTA_LIMPIA */
 
 /* ALUMNI_NAV_PROFILE_EDITOR_1_0_FLOATING_OPTION1 */
-
-/* ALUMNI_NAVBAR_ICONS_ONLY_1_0 */

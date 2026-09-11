@@ -1,0 +1,45 @@
+ALUMNI NAVBAR ICONS ONLY 1.0
+
+CAMBIO
+La navbar móvil flotante deja de mostrar los nombres:
+
+- Inicio
+- Mensajes
+- Buscar
+- Más
+
+Solo quedan los 4 iconos.
+
+MEJORAS
+- iconos ligeramente más grandes
+- mejor centrados
+- sin espacio vacío debajo
+- badge de mensajes no cambia
+- estado activo no cambia
+- rutas no cambian
+- navbar flotante no cambia
+
+ACCESIBILIDAD
+Los nombres NO se eliminan de la lógica.
+
+Cada botón conserva:
+
+aria-label
+title
+
+Por eso lectores de pantalla siguen sabiendo qué hace cada icono.
+
+ARCHIVO MODIFICADO
+
+src/components/layout/MobileNav.tsx
+
+EJECUCIÓN
+
+node .\aplicar_alumni_navbar_icons_only_1_0.js
+npm run build
+
+SI BUILD PASA
+
+git add .
+git commit -m "Navbar - icons only"
+git push origin main
