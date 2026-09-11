@@ -1,0 +1,55 @@
+ALUMNI FEED PHOTO SELECT 1.0.5 — MOBILE OVERLAY CONTROLS
+
+OBJETIVO
+Corregir de verdad la pantalla antes de publicar una foto en el feed.
+
+PROBLEMA
+En teléfono no se estaban viendo los botones:
+- X
+- OK / confirmar
+
+y el responsive de la pantalla seguía inestable.
+
+QUÉ HACE ESTE PARCHE
+
+1) MUEVE LOS CONTROLES A OVERLAY REAL
+En vez de confiar en el topbar anterior, ahora:
+- X
+- +
+- OK
+
+van montados sobre la foto como una capa superior real.
+
+2) RESPONSIVE MÓVIL
+Se refuerza:
+- ancho completo en móvil
+- stage limpio
+- contenedores estables
+- controles visibles siempre arriba
+
+3) NO TOCA LO QUE YA ESTÁ BIEN
+Se mantiene:
+- la foto
+- la cuadrícula
+- el arrastre
+- el recorte
+- la lógica de confirmar
+- la lógica de agregar otra
+
+ARCHIVOS
+- modifica src/components/feed/ImageCropEditor.tsx
+- intenta sincronizar también:
+  - files/src/components/feed/ImageCropEditor.tsx
+  - payload/src/components/feed/ImageCropEditor.tsx
+- modifica src/app/feed/feed-photo-confirm-1-0.css
+
+EJECUCIÓN
+
+node .\aplicar_alumni_feed_photo_select_1_0_5_mobile_overlay_controls.js
+npm run build
+
+SI BUILD PASA
+
+git add .
+git commit -m "Feed Photo Select 1.0.5 - mobile overlay controls"
+git push origin main

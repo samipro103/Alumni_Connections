@@ -609,80 +609,78 @@ export default function ImageCropEditor({
       data-pull-refresh-lock="true"
     >
       <div className="alumni-photo-confirm-dialog">
-        <div className="alumni-photo-confirm-body">
-          <div className="alumni-photo-confirm-stage-shell">
-            <div className="alumni-photo-confirm-overlay-controls">
-              <button
-                type="button"
-                className="alumni-photo-confirm-close"
-                onClick={onClose}
-                disabled={saving}
-                aria-label="Salir"
-              >
-                <X
-                  size={21}
-                  strokeWidth={2}
-                />
-              </button>
+        <header className="alumni-photo-confirm-topbar">
+          <button
+            type="button"
+            className="alumni-photo-confirm-close"
+            onClick={onClose}
+            disabled={saving}
+            aria-label="Salir"
+          >
+            <X
+              size={21}
+              strokeWidth={2}
+            />
+          </button>
 
-              <div className="alumni-photo-confirm-actions">
-                <button
-                  type="button"
-                  className="alumni-photo-confirm-add"
-                  onClick={
-                    onAddMore
-                  }
-                  disabled={saving}
-                  aria-label="Agregar otra foto o video"
-                >
-                  <Plus
-                    size={21}
-                    strokeWidth={2}
-                  />
-                </button>
+          <div className="alumni-photo-confirm-actions">
+            <button
+              type="button"
+              className="alumni-photo-confirm-add"
+              onClick={
+                onAddMore
+              }
+              disabled={saving}
+              aria-label="Agregar otra foto o video"
+            >
+              <Plus
+                size={21}
+                strokeWidth={2}
+              />
+            </button>
 
-                <button
-                  type="button"
-                  className="alumni-photo-confirm-accept"
-                  onClick={() =>
-                    void confirmPhoto()
-                  }
-                  disabled={
-                    saving ||
-                    !natural.width
-                  }
-                  aria-label="Confirmar foto"
-                >
-                  <Check
-                    size={18}
-                    strokeWidth={2.8}
-                  />
-                  <span>
-                    {saving
-                      ? "Confirmando"
-                      : "Confirmar"}
-                  </span>
-                </button>
-              </div>
-            </div>
-
-            <div
-              ref={stageRef}
-              className="alumni-photo-confirm-stage"
-              onPointerDown={
-                pointerDown
+            <button
+              type="button"
+              className="alumni-photo-confirm-accept"
+              onClick={() =>
+                void confirmPhoto()
               }
-              onPointerMove={
-                pointerMove
-              }
-              onPointerUp={
-                pointerEnd
-              }
-              onPointerCancel={
-                pointerEnd
+              disabled={
+                saving ||
+                !natural.width
               }
             >
-              <img
+              <Check
+                size={16}
+                strokeWidth={2.8}
+              />
+              <span>
+                {saving
+                  ? "Confirmando"
+                  : "Confirmar"}
+              </span>
+            </button>
+          </div>
+        </header>
+
+        <div className="alumni-photo-confirm-body">
+          <div
+            ref={stageRef}
+            className="alumni-photo-confirm-stage"
+            onPointerDown={
+              pointerDown
+            }
+            onPointerMove={
+              pointerMove
+            }
+            onPointerUp={
+              pointerEnd
+            }
+            onPointerCancel={
+              pointerEnd
+            }
+          >
+            <img
               ref={imageRef}
               src={objectUrl}
               alt=""
@@ -717,7 +715,6 @@ export default function ImageCropEditor({
               className="alumni-photo-confirm-grid"
               aria-hidden="true"
             />
-            </div>
           </div>
 
           {error && (
@@ -737,5 +734,3 @@ export default function ImageCropEditor({
 /* ALUMNI_FEED_PHOTO_SELECT_1_0_LIMPIO */
 
 /* ALUMNI_FEED_PHOTO_SELECT_1_0_2_NULL_STAGE_HOTFIX */
-
-/* ALUMNI_FEED_PHOTO_SELECT_1_0_5_MOBILE_OVERLAY_CONTROLS */
