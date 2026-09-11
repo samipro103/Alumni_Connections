@@ -1,0 +1,72 @@
+ALUMNI — VISUAL PASS 2.0
+
+REFERENCIA
+La pantalla Desarrollador queda como referencia oficial
+de claridad, motion y acabado premium de ALUMNI.
+
+ESTE PARCHE HACE:
+
+NAVBAR / PERFIL
+- La barra superior ya NO se oculta al hacer scroll dentro
+  de tu perfil o perfiles públicos.
+- El avatar del perfil queda visible.
+- Se refuerza z-index/visibility del avatar del perfil.
+- La foto no depende de tocar la pantalla para aparecer.
+
+MÁS
+Se reconstruye preservando toda la funcionalidad real:
+
+Perfil
+
+ACTIVIDAD
+- Notificaciones
+- Comunidad
+- Eventos
+- Pasaporte Alumni
+- Guardados
+
+SOPORTE Y SISTEMA
+- Configuración
+- Ayuda y feedback
+- Acerca de ALUMNI
+
+Cerrar sesión queda separado.
+
+VISUAL PASS 2.0
+Se aplica lenguaje premium a:
+- Feed
+- Perfil
+- Buscar
+- Mensajes
+- Configuración
+- Eventos
+- Comunidades
+- Notificaciones
+- Más
+
+PRINCIPIOS
+- jerarquía fuerte
+- headers más claros
+- superficies limpias
+- bordes controlados
+- espacios consistentes
+- botones de volver con feedback
+- microinteracciones
+- motion existente
+- dark/light
+- mobile-first
+
+IMPORTANTE
+No cambia las consultas, RPCs ni lógica de negocio.
+Es una pasada visual + corrección de navbar/perfil.
+
+EJECUTAR
+
+node .\aplicar_alumni_visual_pass_2_0_nav_profile_fix.js
+npm run build
+
+SI PASA
+
+git add .
+git commit -m "Apply Alumni visual pass 2 and fix profile navbar"
+git push origin main

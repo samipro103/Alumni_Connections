@@ -851,19 +851,3 @@ html[data-theme="dark"]
     height: 214px;
   }
 }
-
-/* ALUMNI_VISUAL_PASS_2_0:PROFILE */
-.alumni-profile-launch-avatar-row,
-.alumni-profile-launch-avatar-wrap,
-.alumni-profile-launch-avatar {
-  overflow: visible;
-}
-
-.alumni-profile-launch-avatar-wrap {
-  z-index: 12;
-}
-
-.alumni-profile-launch-avatar {
-  opacity: 1;
-  visibility: visible;
-}

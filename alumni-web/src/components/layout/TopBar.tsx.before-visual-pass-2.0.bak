@@ -11,7 +11,6 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import {
-  usePathname,
   useRouter,
 } from "next/navigation";
 import {
@@ -37,13 +36,6 @@ const topBarCache =
 export default function TopBar() {
   const router =
     useRouter();
-
-  const pathname =
-    usePathname();
-
-  const keepProfileNavVisible =
-    pathname === "/profile" ||
-    pathname.startsWith("/u/");
 
   const { user } =
     useAuth();
@@ -224,15 +216,6 @@ export default function TopBar() {
 
   useEffect(() => {
     if (
-      keepProfileNavVisible
-    ) {
-      setHiddenByScroll(
-        false
-      );
-      return;
-    }
-
-    if (
       typeof window ===
       "undefined"
     ) {
@@ -341,9 +324,7 @@ export default function TopBar() {
         mediaChange
       );
     };
-  }, [
-    keepProfileNavVisible,
-  ]);
+  }, []);
 
   function submitSearch(
     event:
@@ -372,8 +353,7 @@ export default function TopBar() {
           : "false"
       }
       className={`fixed inset-x-0 top-0 z-[70] h-[calc(68px+env(safe-area-inset-top))] border-b border-[var(--app-border)] bg-[color-mix(in_srgb,var(--app-surface)_98%,transparent)] backdrop-blur-md transition-transform duration-200 ease-out will-change-transform [transform:translateZ(0)] lg:h-[68px] lg:translate-y-0 ${
-        hiddenByScroll &&
-        !keepProfileNavVisible
+        hiddenByScroll
           ? "-translate-y-full"
           : "translate-y-0"
       }`}
@@ -452,7 +432,7 @@ export default function TopBar() {
                 ? "/profile"
                 : "/login"
             }
-            className="alumni-topbar-profile-avatar ml-1 flex h-10 w-10 items-center justify-center overflow-hidden rounded-full bg-[var(--app-surface-2)] text-sm font-bold text-[var(--app-text)] ring-1 ring-[var(--app-border)] transition hover:ring-[color-mix(in_srgb,var(--app-accent)_35%,var(--app-border))]"
+            className="ml-1 flex h-10 w-10 items-center justify-center overflow-hidden rounded-full bg-[var(--app-surface-2)] text-sm font-bold text-[var(--app-text)] ring-1 ring-[var(--app-border)] transition hover:ring-[color-mix(in_srgb,var(--app-accent)_35%,var(--app-border))]"
             aria-label="Ver mi perfil"
             title="Ver mi perfil"
           >
@@ -480,5 +460,3 @@ export default function TopBar() {
 /* ALUMNI_FEED_1_7_1_HEADER_COMPOSER_UNIFICADO */
 
 /* ALUMNI_PROFILE_2_1_TYPOGRAPHY_DYNAMIC_HEADER */
-
-/* ALUMNI_VISUAL_PASS_2_0:TOPBAR */
