@@ -69,7 +69,7 @@ type EngagementState = {
   mode: "likes" | "reposts";
 } | null;
 
-const FEED_PAGE_SIZE = 18;
+const FEED_PAGE_SIZE = 30;
 
 /*
  * Stories queda oculto superficialmente por decisión de producto.
@@ -2513,5 +2513,3 @@ export default function FeedPage() {
 /* ALUMNI_COMMENT_THREADS_1_0 */
 
 /* ALUMNI_VERIFIED_BADGE_FEED_1_0 */
-
-/* ALUMNI_UI_FIXES_1_1:FEED */

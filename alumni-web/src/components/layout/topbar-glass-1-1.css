@@ -1,0 +1,49 @@
+/*
+ * ALUMNI TopBar Glass 1.1
+ * Transparent enough to let content breathe underneath,
+ * while keeping text/icons readable.
+ */
+
+[data-alumni-topbar="true"] {
+  border-bottom-color:
+    color-mix(
+      in srgb,
+      var(--app-border) 68%,
+      transparent
+    ) !important;
+
+  background:
+    color-mix(
+      in srgb,
+      var(--app-bg) 82%,
+      transparent
+    ) !important;
+
+  -webkit-backdrop-filter:
+    blur(16px)
+    saturate(1.08) !important;
+
+  backdrop-filter:
+    blur(16px)
+    saturate(1.08) !important;
+
+  box-shadow:
+    0 1px 0
+    color-mix(
+      in srgb,
+      var(--app-text) 2%,
+      transparent
+    );
+}
+
+html[data-theme="light"]
+[data-alumni-topbar="true"] {
+  background:
+    color-mix(
+      in srgb,
+      var(--app-bg) 86%,
+      transparent
+    ) !important;
+}
+
+/* ALUMNI_TOPBAR_GLASS_1_1 */

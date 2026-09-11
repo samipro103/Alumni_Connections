@@ -22,7 +22,6 @@ import {
 } from "@/lib/supabase";
 import BrandMark from "@/components/brand/BrandMark";
 import { AlumniAvatar } from "@/components/ui/AlumniImage";
-import "./topbar-glass-1-1.css";
 
 type TopBarCachedState = {
   profile: any;
@@ -501,5 +500,3 @@ export default function TopBar() {
 /* ALUMNI_VISUAL_PASS_2_0:TOPBAR */
 
 /* ALUMNI_STABILITY_PASS_1_0:TOPBAR */
-
-/* ALUMNI_UI_FIXES_1_1:TOPBAR */

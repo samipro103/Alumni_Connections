@@ -684,3 +684,120 @@
 }
 
 /* ALUMNI_2_1_5_EVENTS_OPEN_EDITORIAL */
+
+/* =========================================================
+   ALUMNI UI Fixes 1.1 — Events containment
+   ========================================================= */
+
+.alumni-events-2 {
+  min-width: 0;
+  overflow-x: clip;
+}
+
+.alumni-events-2
+.events2-hero,
+.alumni-events-2
+.events2-navigation,
+.alumni-events-2
+.events2-list,
+.alumni-events-2
+.events2-row {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+}
+
+.alumni-events-2
+.events2-hero
+> div {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.alumni-events-2
+.events2-hero h1 {
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}
+
+.alumni-events-2
+.events2-primary-action {
+  max-width: 100%;
+}
+
+.alumni-events-2
+.events2-tabs {
+  max-width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none;
+}
+
+.alumni-events-2
+.events2-tabs::-webkit-scrollbar {
+  display: none;
+}
+
+.alumni-events-2
+.events2-row-main {
+  min-width: 0;
+  overflow: hidden;
+}
+
+.alumni-events-2
+.events2-row-kicker,
+.alumni-events-2
+.events2-row-title,
+.alumni-events-2
+.events2-row-meta {
+  max-width: 100%;
+}
+
+.alumni-events-2
+.events2-row-kicker,
+.alumni-events-2
+.events2-row-title,
+.alumni-events-2
+.events2-row-meta {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.alumni-events-2
+.events2-row-side {
+  min-width: 0;
+}
+
+@media (max-width: 430px) {
+  .alumni-events-2
+  .events2-hero h1 {
+    font-size:
+      clamp(
+        30px,
+        10vw,
+        38px
+      );
+  }
+
+  .alumni-events-2
+  .events2-row {
+    grid-template-columns:
+      44px
+      minmax(0, 1fr)
+      16px;
+    gap: 10px;
+  }
+
+  .alumni-events-2
+  .events2-row-side {
+    gap: 0;
+  }
+
+  .alumni-events-2
+  .events2-row-meta {
+    max-width: 100%;
+  }
+}
+
+/* ALUMNI_UI_FIXES_1_1_EVENTS */

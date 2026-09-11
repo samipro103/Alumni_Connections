@@ -1,0 +1,108 @@
+.alumni-mobile-nav-clean {
+  transform: none !important;
+  animation:
+    alumniNavSoftFade
+    260ms
+    cubic-bezier(.2,.8,.2,1)
+    both !important;
+
+  border-color:
+    color-mix(
+      in srgb,
+      var(--app-border) 88%,
+      transparent
+    ) !important;
+
+  background:
+    color-mix(
+      in srgb,
+      var(--app-surface) 90%,
+      transparent
+    ) !important;
+
+  -webkit-backdrop-filter:
+    blur(10px)
+    saturate(1.04);
+  backdrop-filter:
+    blur(10px)
+    saturate(1.04);
+
+  box-shadow:
+    0 8px 24px
+      color-mix(
+        in srgb,
+        var(--app-shadow) 68%,
+        transparent
+      ),
+    inset 0 1px 0
+      color-mix(
+        in srgb,
+        var(--app-text) 3%,
+        transparent
+      );
+}
+
+.alumni-mobile-nav-clean
+.alumni-mobile-nav-item {
+  min-width: 0;
+}
+
+.alumni-mobile-nav-clean
+.alumni-mobile-nav-icon {
+  color:
+    var(--app-muted);
+  transition:
+    transform
+      140ms
+      cubic-bezier(.2,.8,.2,1),
+    background-color
+      160ms
+      ease,
+    color
+      160ms
+      ease;
+}
+
+.alumni-mobile-nav-clean
+.alumni-mobile-nav-item[
+  data-active="true"
+]
+.alumni-mobile-nav-icon {
+  background:
+    color-mix(
+      in srgb,
+      var(--app-accent) 10%,
+      transparent
+    );
+  color:
+    var(--app-accent);
+}
+
+.alumni-mobile-nav-clean
+.alumni-mobile-nav-item:active
+.alumni-mobile-nav-icon {
+  transform:
+    scale(.92);
+}
+
+@keyframes alumniNavSoftFade {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@media (
+  prefers-reduced-motion:
+  reduce
+) {
+  .alumni-mobile-nav-clean {
+    animation:
+      none !important;
+  }
+}
+
+/* ALUMNI_NAVBAR_REFINE_1_0 */
