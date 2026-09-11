@@ -1,0 +1,27 @@
+ALUMNI — MORE EVENTS / COMMUNITIES FIX 1.0
+
+CORRIGE SOLAMENTE LOS DOS ACCESOS QUE APARECEN AL ENTRAR A MÁS (···):
+
+- Eventos
+- Comunidades
+
+CAMBIOS
+- ambos bloques tienen exactamente el mismo alto
+- iconos quedan alineados
+- textos quedan contenidos
+- Comunidades ya no desplaza la estructura
+- flechas quedan en el mismo eje
+- mejor comportamiento entre 360 y 430 px
+- conserva Motion
+- no toca Ajustes ni el resto de la pantalla
+
+EJECUTAR
+
+node .\aplicar_alumni_more_events_communities_fix_1_0.js
+npm run build
+
+SI PASA
+
+git add .
+git commit -m "Fix More events and communities layout"
+git push origin main
