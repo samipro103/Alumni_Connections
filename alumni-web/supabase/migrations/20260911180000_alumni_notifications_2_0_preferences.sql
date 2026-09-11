@@ -1,0 +1,8 @@
+-- ALUMNI NOTIFICATIONS 2.0
+-- La migración alumni_notifications_2_0_preferences
+-- ya fue aplicada a producción.
+--
+-- Alinea alumni_notifications_before_insert()
+-- con notification_preferences:
+-- push_enabled, messages, story_replies,
+-- likes, comments, follows, events.

@@ -26,10 +26,6 @@ import { NotificationsLoadingSkeleton } from "@/components/ui/AlumniLoading";
 import AlumniImage, { AlumniAvatar } from "@/components/ui/AlumniImage";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { supabase } from "@/lib/supabase";
-import {
-  disableWebPushRegistration,
-  syncPushRegistration,
-} from "@/lib/pushNotifications";
 import { hydratePostMediaItems } from "@/lib/feedMedia";
 import InvitationNotificationActions from "@/components/social/InvitationNotificationActions";
 import "./notifications-pro.css";
@@ -39,17 +35,15 @@ type FilterType =
   | "all"
   | "interactions"
   | "connections"
-  | "mentions"
-  | "events";
+  | "mentions";
 
 type Preferences = {
-  push_enabled: boolean;
-  messages: boolean;
-  story_replies: boolean;
-  likes: boolean;
-  comments: boolean;
-  follows: boolean;
-  events: boolean;
+  enabled: boolean;
+  interactions: boolean;
+  connections: boolean;
+  mentions: boolean;
+  stories: boolean;
+  groups: boolean;
 };
 
 type GroupedNotification = {
@@ -68,13 +62,12 @@ type GroupedNotification = {
 const PAGE_SIZE = 40;
 
 const DEFAULT_PREFS: Preferences = {
-  push_enabled: true,
-  messages: true,
-  story_replies: true,
-  likes: true,
-  comments: true,
-  follows: true,
-  events: true,
+  enabled: true,
+  interactions: true,
+  connections: true,
+  mentions: true,
+  stories: true,
+  groups: true,
 };
 
 function categoryOf(
@@ -91,16 +84,11 @@ function categoryOf(
       "follow_request_accepted",
       "community_invite",
       "community_join_request",
+      "event_invite",
+      "event_reminder",
     ].includes(t)
   ) {
     return "connections";
-  }
-
-  if (
-    t.startsWith("event") ||
-    target === "event"
-  ) {
-    return "events";
   }
 
   if (
@@ -417,7 +405,7 @@ export default function NotificationsPage() {
     const { data } = await supabase
       .from("notification_preferences")
       .select(
-        "push_enabled,messages,story_replies,likes,comments,follows,events"
+        "enabled,interactions,connections,mentions,stories,groups"
       )
       .eq("user_id", user.id)
       .maybeSingle();
@@ -869,98 +857,33 @@ export default function NotificationsPage() {
   async function togglePreference(key: keyof Preferences) {
     if (!user || savingPreference) return;
 
-    const enabled =
-      !preferences[key];
-
-    setSavingPreference(
-      key
-    );
-
-    if (
-      key ===
-        "push_enabled" &&
-      enabled
-    ) {
-      const result =
-        await syncPushRegistration({
-          requestPermission:
-            true,
-        });
-
-      if (
-        result ===
-          "denied" ||
-        result ===
-          "unsupported" ||
-        result ===
-          "error"
-      ) {
-        setSavingPreference(
-          null
-        );
-
-        alert(
-          result ===
-            "denied"
-            ? "Debes permitir notificaciones en este dispositivo."
-            : "No se pudo activar Push en este dispositivo."
-        );
-        return;
-      }
-    }
-
     const next = {
       ...preferences,
-      [key]: enabled,
+      [key]: !preferences[key],
     };
 
-    setPreferences(
-      next
-    );
+    setPreferences(next);
+    setSavingPreference(key);
 
-    const { error } =
-      await supabase
-        .from(
-          "notification_preferences"
-        )
-        .upsert(
-          {
-            user_id:
-              user.id,
-            ...next,
-            updated_at:
-              new Date().toISOString(),
-          },
-          {
-            onConflict:
-              "user_id",
-          }
-        );
+    const { error } = await supabase
+      .from("notification_preferences")
+      .upsert(
+        {
+          user_id: user.id,
+          ...next,
+          updated_at: new Date().toISOString(),
+        },
+        {
+          onConflict: "user_id",
+        }
+      );
 
     if (error) {
-      setPreferences(
-        preferences
-      );
-      alert(
-        error.message
-      );
-      setSavingPreference(
-        null
-      );
-      return;
+      setPreferences(preferences);
+      alert(error.message);
     }
 
-    if (
-      key ===
-        "push_enabled" &&
-      !enabled
-    ) {
-      await disableWebPushRegistration();
-    }
-
-    setSavingPreference(
-      null
-    );
+    setSavingPreference(null);
   }
 
   const tabs: Array<{
@@ -971,7 +894,6 @@ export default function NotificationsPage() {
     { id: "interactions", label: "Interacciones" },
     { id: "connections", label: "Conexiones" },
     { id: "mentions", label: "Menciones" },
-    { id: "events", label: "Eventos" },
   ];
 
   return (
@@ -1250,39 +1172,29 @@ export default function NotificationsPage() {
                 {(
                   [
                     [
-                      "push_enabled",
-                      "Push",
-                      "Avisos en este dispositivo.",
+                      "enabled",
+                      "Notificaciones",
+                      "Control general de la bandeja.",
                     ],
                     [
-                      "messages",
-                      "Mensajes",
-                      "Mensajes privados y actividad importante de grupos.",
+                      "interactions",
+                      "Interacciones",
+                      "Likes, comentarios y compartidos.",
                     ],
                     [
-                      "story_replies",
-                      "Respuestas a historias",
-                      "Cuando alguien responde a una historia.",
+                      "connections",
+                      "Conexiones",
+                      "Seguidores y solicitudes.",
                     ],
                     [
-                      "likes",
-                      "Likes y compartidos",
-                      "Reacciones, likes y reposts.",
+                      "mentions",
+                      "Menciones",
+                      "Cuando alguien escribe tu @usuario.",
                     ],
                     [
-                      "comments",
-                      "Comentarios y respuestas",
-                      "Comentarios, respuestas y menciones.",
-                    ],
-                    [
-                      "follows",
-                      "Seguidores",
-                      "Nuevos seguidores, solicitudes e invitaciones.",
-                    ],
-                    [
-                      "events",
-                      "Eventos",
-                      "Invitaciones y recordatorios de eventos.",
+                      "groups",
+                      "Grupos",
+                      "Menciones y actividad importante en grupos.",
                     ],
                   ] as Array<
                     [
@@ -1336,5 +1248,3 @@ export default function NotificationsPage() {
 /* ALUMNI_SETTINGS_2_3_VISIBILITY_ELIGIBILITY */
 
 /* ALUMNI_COMMENT_THREADS_1_0 */
-
-/* ALUMNI_NOTIFICATIONS_2_0 */

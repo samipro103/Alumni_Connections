@@ -7,7 +7,6 @@ import TopBar from "./TopBar";
 import MobileNav from "./MobileNav";
 import AppUtilities from "./AppUtilities";
 import EventReminderBootstrap from "@/components/events/EventReminderBootstrap";
-import PushNotificationBootstrap from "@/components/notifications/PushNotificationBootstrap";
 
 interface Props {
   children: ReactNode;
@@ -25,7 +24,6 @@ export default function AppShell({
   return (
     <>
       <EventReminderBootstrap />
-      <PushNotificationBootstrap />
       <div
         className={
           immersiveMobile
@@ -89,5 +87,3 @@ export default function AppShell({
 /* ALUMNI_1_0_12_NO_LOGIN_2FA_GUARD */
 
 /* ALUMNI_3_1_0_PROFESSIONAL_VISUAL_CORE */
-
-/* ALUMNI_NOTIFICATIONS_2_0 */

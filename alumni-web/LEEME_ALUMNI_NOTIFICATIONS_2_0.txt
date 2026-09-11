@@ -1,0 +1,48 @@
+ALUMNI NOTIFICATIONS 2.0
+
+SUPABASE YA QUEDÓ ACTUALIZADO.
+
+CORRIGE
+- Preferencias antiguas del frontend.
+- Ahora usa los campos reales:
+  push_enabled
+  messages
+  story_replies
+  likes
+  comments
+  follows
+  events
+
+AGREGA
+- Registro Push Android con FCM.
+- Registro Web/PWA.
+- Actualización automática del token.
+- Apertura de la URL correcta al tocar Push.
+- Push se registra sin pedir permisos al iniciar si ya estaban concedidos.
+- El permiso solo se solicita cuando el usuario activa Push.
+- Eventos tienen filtro propio en Notificaciones.
+
+EJECUTAR
+
+node .\aplicar_alumni_notifications_2_0.js
+npm run build
+
+SI BUILD PASA
+
+git add .
+git commit -m "Upgrade Alumni notifications"
+git push origin main
+
+ANDROID
+Para garantizar que el plugin nativo PushNotifications esté incluido en la APK:
+
+npx cap sync android
+cd android
+.\gradlew.bat assembleDebug
+
+APK:
+android\app\build\outputs\apk\debug\app-debug.apk
+
+RECORDATORIO QA
+
+node .\scripts\qa-demo\cleanup_alumni_demo.js --confirm=DELETE-ALUMNI-QA
