@@ -1,6 +1,10 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useState,
+} from "react";
 import { supabase } from "@/lib/supabase";
 
 export type AdminPermission =
@@ -9,7 +13,9 @@ export type AdminPermission =
   | "manage_posts"
   | "manage_events"
   | "view_stats"
-  | "manage_admins";
+  | "manage_admins"
+  | "manage_moderation"
+  | "manage_verifications";
 
 export type AdminAccess = {
   is_admin: boolean;
@@ -19,6 +25,8 @@ export type AdminAccess = {
   manage_events: boolean;
   view_stats: boolean;
   manage_admins: boolean;
+  manage_moderation: boolean;
+  manage_verifications: boolean;
 };
 
 const EMPTY_ACCESS: AdminAccess = {
@@ -29,47 +37,73 @@ const EMPTY_ACCESS: AdminAccess = {
   manage_events: false,
   view_stats: false,
   manage_admins: false,
+  manage_moderation: false,
+  manage_verifications: false,
 };
 
 export function useAdminAccess() {
-  const [access, setAccess] = useState<AdminAccess>(EMPTY_ACCESS);
-  const [loading, setLoading] = useState(true);
+  const [access, setAccess] =
+    useState<AdminAccess>(EMPTY_ACCESS);
+  const [loading, setLoading] =
+    useState(true);
 
-  const refresh = useCallback(async () => {
-    setLoading(true);
+  const refresh = useCallback(
+    async () => {
+      setLoading(true);
 
-    const {
-      data: { session },
-    } = await supabase.auth.getSession();
+      const {
+        data: { session },
+      } =
+        await supabase.auth.getSession();
 
-    if (!session?.user) {
-      setAccess(EMPTY_ACCESS);
+      if (!session?.user) {
+        setAccess(EMPTY_ACCESS);
+        setLoading(false);
+        return;
+      }
+
+      const { data, error } =
+        await supabase.rpc(
+          "get_my_admin_access"
+        );
+
+      if (error) {
+        console.error(
+          "No se pudieron cargar permisos administrativos:",
+          error
+        );
+        setAccess(EMPTY_ACCESS);
+      } else {
+        setAccess({
+          ...EMPTY_ACCESS,
+          ...((data || {}) as Partial<AdminAccess>),
+        });
+      }
+
       setLoading(false);
-      return;
-    }
-
-    const { data, error } = await supabase.rpc("get_my_admin_access");
-
-    if (error) {
-      console.error("No se pudieron cargar permisos administrativos:", error);
-      setAccess(EMPTY_ACCESS);
-    } else {
-      setAccess({
-        ...EMPTY_ACCESS,
-        ...((data || {}) as Partial<AdminAccess>),
-      });
-    }
-
-    setLoading(false);
-  }, []);
+    },
+    []
+  );
 
   useEffect(() => {
-    refresh();
+    void refresh();
   }, [refresh]);
 
-  function can(permission: AdminPermission) {
-    return access.is_admin && Boolean(access[permission]);
+  function can(
+    permission: AdminPermission
+  ) {
+    return (
+      access.is_admin &&
+      Boolean(access[permission])
+    );
   }
 
-  return { access, loading, can, refresh };
+  return {
+    access,
+    loading,
+    can,
+    refresh,
+  };
 }
+
+/* ALUMNI_ADMIN_CONTROL_CENTER_1_0 */
