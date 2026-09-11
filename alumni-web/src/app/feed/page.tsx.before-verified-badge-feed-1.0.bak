@@ -717,7 +717,7 @@ function FeedContent() {
           supabase
             .from("profiles")
             .select(
-              "id,username,full_name,avatar_url,university,education_institution_name,education_program_name,career,city,country,residence_country_code,is_verified"
+              "id,username,full_name,avatar_url,university,education_institution_name,education_program_name,career,city,country,residence_country_code"
             )
             .eq("id", user.id)
             .maybeSingle(),
@@ -868,7 +868,7 @@ function FeedContent() {
           ? supabase
               .from("profiles")
               .select(
-                "id,username,avatar_url,full_name,university,education_institution_name,education_program_name,career,city,country,residence_country_code,is_verified"
+                "id,username,avatar_url,full_name,university,education_institution_name,education_program_name,career,city,country,residence_country_code"
               )
               .in("id", authorIds)
           : Promise.resolve({
@@ -1034,7 +1034,7 @@ function FeedContent() {
       const { data } = await supabase
         .from("profiles")
         .select(
-          "id,username,full_name,avatar_url,university,career,is_verified"
+          "id,username,full_name,avatar_url,university,career"
         )
         .in("id", socialProfileIds);
 
@@ -2511,5 +2511,3 @@ export default function FeedPage() {
 /* ALUMNI_FEED_PHOTO_SELECT_1_0_LIMPIO */
 
 /* ALUMNI_COMMENT_THREADS_1_0 */
-
-/* ALUMNI_VERIFIED_BADGE_FEED_1_0 */

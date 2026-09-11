@@ -1,7 +1,6 @@
 "use client";
 
 import {
-  BadgeCheck,
   Bookmark,
   Check,
   ChevronLeft,
@@ -812,13 +811,6 @@ export default function FeedPost({
           >
             @{post.latestRepostProfile.username}
           </Link>
-          {post.latestRepostProfile?.is_verified && (
-            <BadgeCheck
-              size={13}
-              className="alumni-pro-verified-badge"
-              aria-label="Cuenta verificada"
-            />
-          )}
           <span>compartió</span>
         </div>
       )}
@@ -847,13 +839,6 @@ export default function FeedPost({
             >
               @{post.profiles?.username || "alumni"}
             </Link>
-            {post.profiles?.is_verified && (
-              <BadgeCheck
-                size={15}
-                className="alumni-pro-verified-badge"
-                aria-label="Cuenta verificada"
-              />
-            )}
             <span>·</span>
             <time>
               {formatDistanceToNow(new Date(post.created_at), {
@@ -1115,13 +1100,6 @@ export default function FeedPost({
           <strong>
             @{latestComment.profile?.username || "usuario"}
           </strong>
-          {latestComment.profile?.is_verified && (
-            <BadgeCheck
-              size={13}
-              className="alumni-pro-verified-badge"
-              aria-label="Cuenta verificada"
-            />
-          )}
           <span>{latestComment.content}</span>
         </button>
       )}
@@ -1166,5 +1144,3 @@ export default function FeedPost({
 /* ALUMNI_MEDIA_RENDERING_1_0_1_FEED_CLEAN_EDGES */
 
 /* ALUMNI_CAROUSEL_SWIPE_GUARD_1_0 */
-
-/* ALUMNI_VERIFIED_BADGE_FEED_1_0 */
