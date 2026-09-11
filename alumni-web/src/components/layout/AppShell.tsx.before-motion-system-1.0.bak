@@ -8,9 +8,6 @@ import MobileNav from "./MobileNav";
 import AppUtilities from "./AppUtilities";
 import EventReminderBootstrap from "@/components/events/EventReminderBootstrap";
 import PushNotificationBootstrap from "@/components/notifications/PushNotificationBootstrap";
-import {
-  AlumniRouteMotion,
-} from "@/components/motion/AlumniMotion";
 
 interface Props {
   children: ReactNode;
@@ -62,9 +59,7 @@ export default function AppShell({
             </aside>
 
             <main className="min-w-0">
-              <AlumniRouteMotion>
-                {children}
-              </AlumniRouteMotion>
+              {children}
             </main>
 
             <aside className="hidden xl:block">
@@ -96,5 +91,3 @@ export default function AppShell({
 /* ALUMNI_3_1_0_PROFESSIONAL_VISUAL_CORE */
 
 /* ALUMNI_NOTIFICATIONS_2_0 */
-
-/* ALUMNI_MOTION_SYSTEM_1_0 */
