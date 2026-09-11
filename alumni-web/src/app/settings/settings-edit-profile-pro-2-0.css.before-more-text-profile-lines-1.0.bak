@@ -739,29 +739,3 @@ a:first-child {
     font-size: 14px !important;
   }
 }
-
-/* =========================================================
-   ALUMNI Profile Editor — remove top separator lines only
-   ========================================================= */
-
-.alumni-profile-editor
-.alumni-edit-row-text,
-.alumni-profile-editor
-.alumni-edit-row-picker {
-  border-top:
-    0 !important;
-}
-
-/*
- * Keep only the lower separator so fields remain readable.
- */
-.alumni-profile-editor
-.alumni-edit-row-text,
-.alumni-profile-editor
-.alumni-edit-row-picker {
-  border-bottom:
-    1px solid
-    var(--app-border) !important;
-}
-
-/* ALUMNI_PROFILE_EDITOR_NO_TOP_LINES_1_0 */

@@ -1,0 +1,32 @@
+ALUMNI — MORE TEXT + PROFILE LINES FIX 1.0
+
+CAMBIOS
+
+MÁS
+- corrige únicamente los textos de:
+  Eventos
+  Comunidades
+- ya no se cortan
+- ya no se desplazan
+- mantienen icono + flecha
+- ambos botones conservan el mismo tamaño
+
+EDITAR PERFIL
+- quita únicamente las rayas superiores de los campos
+- conserva las rayas inferiores
+- no cambia motion
+- no cambia portada
+- no cambia avatar
+- no cambia Guardar
+- no cambia lógica
+
+EJECUTAR
+
+node .\aplicar_alumni_more_text_profile_lines_fix_1_0.js
+npm run build
+
+SI PASA
+
+git add .
+git commit -m "Fix More labels and profile editor separators"
+git push origin main
