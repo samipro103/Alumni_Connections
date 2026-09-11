@@ -1,0 +1,106 @@
+ALUMNI PROFILE 2.2 — PROFESSIONAL TYPE SCALE
+
+PROBLEMA
+El perfil tenía demasiados textos pequeños:
+
+8.5 px
+9.5 px
+10.5 px
+11 px
+12.5 px
+
+Aunque Geist sea correcta, esos tamaños hacen que una app móvil
+se sienta como demo/prototipo.
+
+SOLUCIÓN
+Aplicamos una escala tipográfica profesional y jerárquica.
+
+ESCALA PRINCIPAL
+
+Nombre:
+24 px
+
+@usuario:
+13 px
+
+Carrera / universidad / ubicación:
+13 px
+
+Botones principales:
+13.5 px
+
+Números de métricas:
+18 px
+
+Etiquetas:
+12 px
+
+Tabs:
+13 px
+
+Autor de publicación:
+14 px
+
+Tiempo / metadata de publicación:
+12 px
+
+Texto de publicación:
+15 px
+
+Acciones de publicación:
+12.5 px
+
+Comentarios:
+14 px
+
+Actividad:
+14 px título
+12.5 px descripción
+
+Estados vacíos:
+14–17 px
+
+MOBILE FIRST
+En teléfonos de 360 px:
+
+- nombre baja solo a 22 px
+- botones a 13 px
+- tabs a 12.5 px
+- etiquetas de métricas 11.5 px
+
+No volvemos a tamaños microscópicos.
+
+FILOSOFÍA PARA ALUMNI
+Esta escala será la referencia para próximas revisiones de:
+
+- Feed
+- Ajustes
+- Buscar
+- Mensajes
+- Notificaciones
+- Más
+- Comunidad
+- Eventos
+
+No conviene cambiar toda la app de golpe sin revisar cada pantalla,
+porque puede romper layouts. Primero dejamos el perfil correcto y
+luego propagamos el sistema tipográfico.
+
+ARCHIVO MODIFICADO
+src/app/profile/profile-option-3-selected-2-0.css
+
+REQUISITO
+Profile 2.0 Opción 3 debe estar aplicado.
+
+Compatible con el parche Profile 2.1.
+
+EJECUCIÓN
+
+node .\aplicar_alumni_profile_2_2_professional_type_scale.js
+npm run build
+
+SI BUILD PASA
+
+git add .
+git commit -m "Profile 2.2 - professional typography scale"
+git push origin main
