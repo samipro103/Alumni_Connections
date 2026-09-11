@@ -1,0 +1,70 @@
+ALUMNI MÁS 2.0 — OPCIÓN 1 LISTA LIMPIA
+
+DECISIÓN DE NAVEGACIÓN
+La barra inferior queda en solo 4 destinos:
+
+Inicio · Mensajes · Buscar · Más
+
+"Crear" sale de la barra inferior.
+La creación de publicaciones sigue disponible desde el compositor
+del Feed ("¿Qué quieres publicar?").
+
+MÁS
+Ya no abre un bottom sheet.
+Ahora abre una página completa:
+
+/more
+
+DISEÑO
+Opción 1 — Lista limpia.
+
+ORDEN
+- Mi perfil
+- Notificaciones
+- Comunidad
+- Eventos
+- Pasaporte Alumni
+- Guardados
+- Configuración
+- Ayuda y feedback
+- Cerrar sesión
+
+PRINCIPIOS
+- Mobile-first 360–430px
+- Geist
+- Dark / Light
+- sin tarjetas innecesarias
+- iconos discretos
+- descripciones cortas
+- separadores suaves
+- chevrons
+- selección de la nav con Accent, sin pastillas enormes
+- desktop secundario, misma estructura centrada
+
+NO DUPLICAMOS PRIVACIDAD
+Privacidad sigue dentro de Configuración.
+
+ARCHIVOS
+- reemplaza src/components/layout/MobileNav.tsx
+- crea src/app/more/page.tsx
+- crea src/app/more/more-2-0.css
+
+NO TOCA
+- Supabase/RLS
+- Feed
+- Mensajería
+- Buscar
+- Perfil
+- Configuración interna
+- lógica de publicaciones
+
+EJECUCIÓN
+
+node .\aplicar_alumni_more_2_0_lista_limpia.js
+npm run build
+
+SI BUILD PASA
+
+git add .
+git commit -m "More 2.0 - clean four tab navigation"
+git push origin main
