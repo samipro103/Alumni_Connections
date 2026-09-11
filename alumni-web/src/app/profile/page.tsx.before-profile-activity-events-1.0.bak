@@ -39,7 +39,6 @@ import { AlumniAvatar } from "@/components/ui/AlumniImage";
 import ProfileSocialLinks from "@/components/profile/ProfileSocialLinks";
 import SpotifyLogo from "@/components/music/SpotifyLogo";
 import ProfileSavedTab from "@/components/profile/ProfileSavedTab";
-import ProfileActivityEvents from "@/components/profile/ProfileActivityEvents";
 import { hydratePostMedia } from "@/lib/privateMedia";
 import {
   classifyPostMediaFrame,
@@ -914,9 +913,152 @@ export default function ProfilePage() {
                ACTIVIDAD — COMO LA PROPUESTA APROBADA
                =============================================== */
             <section className="alumni-profile-launch-activity">
-              <ProfileActivityEvents
-                userId={profile.id}
-              />
+              {(profile.linkedin ||
+                profile.github ||
+                profile.instagram ||
+                profile.website ||
+                profileMusic) && (
+                <div className="alumni-profile-selected-digital">
+                  <div className="alumni-profile-selected-digital-copy">
+                    <strong>Presencia digital</strong>
+                    <small>
+                      Redes, sitio web y música
+                    </small>
+                  </div>
+
+                  <div className="alumni-profile-selected-digital-links">
+                    <ProfileSocialLinks
+                      profile={profile}
+                      className="alumni-profile-selected-social-links"
+                    />
+
+                    {profileMusic && (
+                      <Link
+                        href="/settings?section=music"
+                        className="alumni-profile-selected-spotify"
+                        aria-label="Música de perfil"
+                        title="Música"
+                      >
+                        <SpotifyLogo size={19} />
+                      </Link>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              <Link
+                href="/settings?section=profile&edit=1"
+                className="alumni-profile-launch-activity-row"
+              >
+                <span className="alumni-profile-launch-activity-icon">
+                  <UserRound size={19} />
+                </span>
+
+                <span className="alumni-profile-launch-activity-copy">
+                  <strong>Sobre mí</strong>
+                  <small>
+                    Mi historia, intereses y más
+                  </small>
+                </span>
+
+                <ChevronRight size={17} />
+              </Link>
+
+              <Link
+                href="/settings?section=academic"
+                className="alumni-profile-launch-activity-row"
+              >
+                <span className="alumni-profile-launch-activity-icon">
+                  <BookOpen size={19} />
+                </span>
+
+                <span className="alumni-profile-launch-activity-copy">
+                  <strong>
+                    Trayectoria académica
+                  </strong>
+                  <small>
+                    Estudios y logros
+                  </small>
+                </span>
+
+                <ChevronRight size={17} />
+              </Link>
+
+              <Link
+                href="/settings?section=profile&edit=1"
+                className="alumni-profile-launch-activity-row"
+              >
+                <span className="alumni-profile-launch-activity-icon">
+                  <Briefcase size={19} />
+                </span>
+
+                <span className="alumni-profile-launch-activity-copy">
+                  <strong>
+                    Experiencia profesional
+                  </strong>
+                  <small>
+                    Trabajo y proyectos
+                  </small>
+                </span>
+
+                <ChevronRight size={17} />
+              </Link>
+
+              <Link
+                href="/settings?section=links"
+                className="alumni-profile-launch-activity-row"
+              >
+                <span className="alumni-profile-launch-activity-icon">
+                  <Link2 size={19} />
+                </span>
+
+                <span className="alumni-profile-launch-activity-copy">
+                  <strong>Enlaces</strong>
+                  <small>
+                    Mis redes y sitios web
+                  </small>
+                </span>
+
+                <ChevronRight size={17} />
+              </Link>
+
+              <Link
+                href="/settings?section=music"
+                className="alumni-profile-launch-activity-row"
+              >
+                <span className="alumni-profile-launch-activity-icon">
+                  <Music2 size={19} />
+                </span>
+
+                <span className="alumni-profile-launch-activity-copy">
+                  <strong>Música</strong>
+                  <small>
+                    Lo que me inspira
+                  </small>
+                </span>
+
+                <ChevronRight size={17} />
+              </Link>
+
+              <Link
+                href="/passport"
+                className="alumni-profile-launch-activity-row"
+              >
+                <span className="alumni-profile-launch-activity-icon">
+                  <IdCard size={19} />
+                </span>
+
+                <span className="alumni-profile-launch-activity-copy">
+                  <strong>
+                    Pasaporte Alumni
+                  </strong>
+                  <small>
+                    Mi identificación Alumni
+                  </small>
+                </span>
+
+                <ChevronRight size={17} />
+              </Link>
             </section>
           )}
         </section>
@@ -1053,5 +1195,3 @@ function Detail({
 /* ALUMNI_PROFILE_1_3_0_FINAL_POLISH */
 
 /* ALUMNI_PROFILE_2_0_OPTION_3_ACTIVITY_SELECTED */
-
-/* ALUMNI_PROFILE_ACTIVITY_EVENTS_1_0 */
