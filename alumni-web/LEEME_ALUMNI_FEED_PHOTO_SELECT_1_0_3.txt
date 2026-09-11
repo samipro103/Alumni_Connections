@@ -1,0 +1,33 @@
+ALUMNI FEED PHOTO SELECT 1.0.3 — X + CHECK VISIBLE
+
+ESTE PARCHE HACE SOLO DOS COSAS:
+
+- muestra X arriba a la izquierda
+- muestra ✓ arriba a la derecha
+
+NO TOCA:
+- foto
+- cuadrícula
+- botón +
+- arrastre
+- recorte
+- calidad
+- upload
+- Supabase
+- Feed
+- textos
+- navegación
+
+El botón Confirmar conserva exactamente la misma acción,
+solo se muestra como ✓ circular.
+
+EJECUCIÓN
+
+node .\aplicar_alumni_feed_photo_select_1_0_3_x_check_visible.js
+npm run build
+
+SI BUILD PASA
+
+git add .
+git commit -m "Feed Photo Select 1.0.3 - show X and check"
+git push origin main
