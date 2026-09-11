@@ -1,0 +1,814 @@
+/*
+ * ALUMNI_FEEDBACK_PRO_3_0
+ * Premium product-feedback experience.
+ */
+
+.alumni-feedback-pro-home {
+  --feedback-accent-wash:
+    color-mix(
+      in srgb,
+      var(--app-accent) 10%,
+      transparent
+    );
+  --feedback-accent-line:
+    color-mix(
+      in srgb,
+      var(--app-accent) 28%,
+      var(--app-border)
+    );
+  padding:
+    12px 0
+    20px;
+}
+
+.alumni-feedback-pro-hero {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  padding:
+    30px 22px
+    25px;
+  border:
+    1px solid
+    var(--app-border);
+  border-radius:
+    26px;
+  background:
+    var(--app-surface);
+}
+
+.alumni-feedback-pro-hero::before {
+  content: "";
+  position: absolute;
+  z-index: -2;
+  top: -118px;
+  right: -106px;
+  width: 236px;
+  height: 236px;
+  border:
+    1px solid
+    var(--feedback-accent-line);
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.alumni-feedback-pro-orbit {
+  position: absolute;
+  z-index: -1;
+  border:
+    1px solid
+    var(--app-border);
+  border-radius: 50%;
+  opacity: .65;
+  pointer-events: none;
+}
+
+.alumni-feedback-pro-orbit::after {
+  content: "";
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background:
+    var(--app-accent);
+  box-shadow:
+    0 0 0 5px
+    var(--feedback-accent-wash);
+}
+
+.alumni-feedback-pro-orbit-a {
+  width: 112px;
+  height: 112px;
+  left: -70px;
+  bottom: 20px;
+}
+
+.alumni-feedback-pro-orbit-a::after {
+  top: 14px;
+  right: 10px;
+}
+
+.alumni-feedback-pro-orbit-b {
+  width: 76px;
+  height: 76px;
+  right: 17px;
+  bottom: -46px;
+}
+
+.alumni-feedback-pro-orbit-b::after {
+  top: 8px;
+  left: 9px;
+}
+
+.alumni-feedback-pro-badge {
+  display:
+    inline-flex;
+  min-height: 27px;
+  align-items:
+    center;
+  gap: 6px;
+  padding:
+    0 10px;
+  border:
+    1px solid
+    var(--feedback-accent-line);
+  border-radius:
+    999px;
+  background:
+    var(--feedback-accent-wash);
+  color:
+    var(--app-accent);
+  font-size:
+    9px;
+  font-weight:
+    900;
+  letter-spacing:
+    .11em;
+  text-transform:
+    uppercase;
+}
+
+.alumni-feedback-pro-hero h2 {
+  max-width: 480px;
+  margin:
+    23px 0 0;
+  color:
+    var(--app-text);
+  font-size:
+    clamp(
+      30px,
+      8.5vw,
+      43px
+    );
+  font-weight:
+    950;
+  line-height:
+    1.02;
+  letter-spacing:
+    -.055em;
+}
+
+.alumni-feedback-pro-hero > p {
+  max-width: 470px;
+  margin:
+    16px 0 0;
+  color:
+    var(--app-text-soft);
+  font-size:
+    12px;
+  line-height:
+    1.7;
+}
+
+.alumni-feedback-pro-signal {
+  display:
+    inline-flex;
+  align-items:
+    center;
+  gap: 7px;
+  margin-top:
+    24px;
+  color:
+    var(--app-muted);
+  font-size:
+    9.5px;
+  font-weight:
+    750;
+}
+
+.alumni-feedback-pro-signal > span {
+  width: 7px;
+  height: 7px;
+  border-radius:
+    50%;
+  background:
+    var(--app-success);
+  box-shadow:
+    0 0 0 5px
+    color-mix(
+      in srgb,
+      var(--app-success) 10%,
+      transparent
+    );
+}
+
+.alumni-feedback-pro-featured {
+  display: grid;
+  gap: 9px;
+  margin-top: 14px;
+}
+
+.alumni-feedback-pro-feature {
+  display: grid;
+  width: 100%;
+  grid-template-columns:
+    42px
+    minmax(0,1fr)
+    20px;
+  align-items:
+    center;
+  gap: 12px;
+  padding:
+    16px;
+  border:
+    1px solid
+    var(--app-border);
+  border-radius:
+    19px;
+  background:
+    var(--app-surface);
+  color:
+    var(--app-text);
+  text-align:
+    left;
+}
+
+.alumni-feedback-pro-feature:active {
+  background:
+    var(--app-soft);
+}
+
+.alumni-feedback-pro-feature-icon {
+  display:
+    inline-flex;
+  width: 42px;
+  height: 42px;
+  align-items:
+    center;
+  justify-content:
+    center;
+  border-radius:
+    13px;
+}
+
+.alumni-feedback-pro-feature-problem
+.alumni-feedback-pro-feature-icon {
+  background:
+    color-mix(
+      in srgb,
+      var(--app-danger) 10%,
+      transparent
+    );
+  color:
+    var(--app-danger);
+}
+
+.alumni-feedback-pro-feature-idea
+.alumni-feedback-pro-feature-icon {
+  background:
+    color-mix(
+      in srgb,
+      var(--app-success) 11%,
+      transparent
+    );
+  color:
+    var(--app-success);
+}
+
+.alumni-feedback-pro-feature-copy {
+  display: flex;
+  min-width: 0;
+  flex-direction:
+    column;
+}
+
+.alumni-feedback-pro-feature-copy
+  small {
+  color:
+    var(--app-muted-3);
+  font-size:
+    8px;
+  font-weight:
+    900;
+  letter-spacing:
+    .12em;
+}
+
+.alumni-feedback-pro-feature-copy
+  strong {
+  margin-top: 4px;
+  color:
+    var(--app-text);
+  font-size:
+    13px;
+  font-weight:
+    900;
+}
+
+.alumni-feedback-pro-feature-copy
+  span {
+  margin-top: 4px;
+  color:
+    var(--app-muted);
+  font-size:
+    9.5px;
+  line-height:
+    1.45;
+}
+
+.alumni-feedback-pro-feature
+  > svg {
+  color:
+    var(--app-muted-3);
+}
+
+.alumni-feedback-pro-tools {
+  margin-top: 34px;
+}
+
+.alumni-feedback-pro-section-title {
+  padding:
+    0 3px
+    12px;
+}
+
+.alumni-feedback-pro-section-title
+  > span {
+  color:
+    var(--app-accent);
+  font-size:
+    8.5px;
+  font-weight:
+    900;
+  letter-spacing:
+    .14em;
+}
+
+.alumni-feedback-pro-section-title h3 {
+  margin:
+    5px 0 0;
+  color:
+    var(--app-text);
+  font-size:
+    19px;
+  font-weight:
+    930;
+  letter-spacing:
+    -.035em;
+}
+
+.alumni-feedback-pro-tool-list {
+  overflow: hidden;
+  border:
+    1px solid
+    var(--app-border);
+  border-radius:
+    19px;
+  background:
+    var(--app-surface);
+}
+
+.alumni-feedback-pro-tool-row {
+  display: grid;
+  width: 100%;
+  grid-template-columns:
+    36px
+    minmax(0,1fr)
+    18px;
+  align-items:
+    center;
+  gap: 11px;
+  min-height:
+    68px;
+  padding:
+    9px 14px;
+  border: 0;
+  border-bottom:
+    1px solid
+    var(--app-border);
+  background:
+    transparent;
+  color:
+    inherit;
+  text-align:
+    left;
+}
+
+.alumni-feedback-pro-tool-row:last-child {
+  border-bottom: 0;
+}
+
+.alumni-feedback-pro-tool-row:active {
+  background:
+    var(--app-soft);
+}
+
+.alumni-feedback-pro-tool-icon {
+  display:
+    inline-flex;
+  width: 35px;
+  height: 35px;
+  align-items:
+    center;
+  justify-content:
+    center;
+  border-radius:
+    11px;
+  background:
+    var(--app-soft);
+  color:
+    var(--app-accent);
+}
+
+.alumni-feedback-pro-tool-row
+  > span:nth-child(2) {
+  display: flex;
+  min-width: 0;
+  flex-direction:
+    column;
+  gap: 3px;
+}
+
+.alumni-feedback-pro-tool-row
+  strong {
+  color:
+    var(--app-text);
+  font-size:
+    11.5px;
+  font-weight:
+    850;
+}
+
+.alumni-feedback-pro-tool-row
+  small {
+  color:
+    var(--app-muted);
+  font-size:
+    9.5px;
+}
+
+.alumni-feedback-pro-tool-row
+  > svg {
+  color:
+    var(--app-muted-3);
+}
+
+.alumni-feedback-pro-direct {
+  display: grid;
+  grid-template-columns:
+    39px
+    minmax(0,1fr)
+    18px;
+  align-items:
+    center;
+  gap: 12px;
+  margin-top: 12px;
+  padding:
+    15px;
+  border:
+    1px solid
+    var(--feedback-accent-line);
+  border-radius:
+    18px;
+  background:
+    var(--feedback-accent-wash);
+  color:
+    inherit;
+  text-decoration:
+    none;
+}
+
+.alumni-feedback-pro-direct-icon {
+  display:
+    inline-flex;
+  width: 39px;
+  height: 39px;
+  align-items:
+    center;
+  justify-content:
+    center;
+  border-radius:
+    12px;
+  background:
+    var(--app-accent-fill);
+  color:
+    var(--app-on-accent);
+}
+
+.alumni-feedback-pro-direct
+  > span:nth-child(2) {
+  display: flex;
+  min-width: 0;
+  flex-direction:
+    column;
+}
+
+.alumni-feedback-pro-direct
+  small {
+  color:
+    var(--app-accent);
+  font-size:
+    8px;
+  font-weight:
+    900;
+  letter-spacing:
+    .12em;
+}
+
+.alumni-feedback-pro-direct
+  strong {
+  overflow: hidden;
+  margin-top: 4px;
+  color:
+    var(--app-text);
+  font-size:
+    11px;
+  font-weight:
+    900;
+  text-overflow:
+    ellipsis;
+  white-space:
+    nowrap;
+}
+
+.alumni-feedback-pro-direct
+  span span {
+  margin-top: 3px;
+  color:
+    var(--app-muted);
+  font-size:
+    9px;
+}
+
+.alumni-feedback-pro-direct
+  > svg {
+  color:
+    var(--app-accent);
+}
+
+.alumni-feedback-pro-legal {
+  margin-top: 26px;
+}
+
+.alumni-feedback-pro-legal
+  button {
+  display: grid;
+  width: 100%;
+  grid-template-columns:
+    28px
+    minmax(0,1fr)
+    18px;
+  align-items:
+    center;
+  gap: 10px;
+  padding:
+    13px 3px;
+  border: 0;
+  border-top:
+    1px solid
+    var(--app-border);
+  border-bottom:
+    1px solid
+    var(--app-border);
+  background:
+    transparent;
+  color:
+    inherit;
+  text-align:
+    left;
+}
+
+.alumni-feedback-pro-legal
+  button > svg:first-child {
+  color:
+    var(--app-muted);
+}
+
+.alumni-feedback-pro-legal
+  button > span {
+  display: flex;
+  flex-direction:
+    column;
+  gap: 3px;
+}
+
+.alumni-feedback-pro-legal
+  strong {
+  color:
+    var(--app-text);
+  font-size:
+    10.5px;
+  font-weight:
+    850;
+}
+
+.alumni-feedback-pro-legal
+  small {
+  color:
+    var(--app-muted);
+  font-size:
+    9px;
+}
+
+.alumni-feedback-pro-legal
+  button > svg:last-child {
+  color:
+    var(--app-muted-3);
+}
+
+.alumni-feedback-pro-footer {
+  padding:
+    23px 8px
+    2px;
+  color:
+    var(--app-muted-3);
+  font-size:
+    9px;
+  font-weight:
+    650;
+  text-align:
+    center;
+}
+
+/* Upgrade inner feedback views */
+
+.alumni-help-v2[
+  data-feedback-view="form"
+]
+.alumni-feedback-pro-shell
+.alumni-feedback-editorial,
+.alumni-feedback-pro-shell
+.alumni-feedback-editorial {
+  animation:
+    alumniFeedbackProEnter
+    .4s
+    cubic-bezier(.2,.8,.2,1)
+    both;
+}
+
+.alumni-feedback-pro-shell
+.alumni-feedback-editorial-hero {
+  margin-top: 10px;
+  padding:
+    21px 18px;
+  border:
+    1px solid
+    var(--app-border);
+  border-radius:
+    20px;
+  background:
+    var(--app-surface);
+}
+
+.alumni-feedback-pro-shell
+.alumni-feedback-editorial-note {
+  margin-top: 11px;
+  border-radius:
+    14px;
+}
+
+.alumni-feedback-pro-shell
+.alumni-feedback-editorial-field
+  input,
+.alumni-feedback-pro-shell
+.alumni-feedback-editorial-field
+  textarea {
+  border-radius:
+    15px;
+  background:
+    var(--app-surface);
+}
+
+.alumni-feedback-pro-shell
+.alumni-feedback-editorial-attach {
+  border-radius:
+    16px;
+  background:
+    var(--app-surface);
+}
+
+.alumni-feedback-pro-shell
+.alumni-feedback-editorial-send {
+  min-height:
+    49px;
+  border-radius:
+    15px;
+  box-shadow:
+    0 10px 28px
+    color-mix(
+      in srgb,
+      var(--app-accent) 14%,
+      transparent
+    );
+}
+
+.alumni-feedback-pro-shell
+.alumni-help-detail {
+  animation:
+    alumniFeedbackProEnter
+    .36s
+    cubic-bezier(.2,.8,.2,1)
+    both;
+}
+
+.alumni-feedback-pro-shell
+.alumni-help-detail-intro {
+  margin-top: 10px;
+  padding:
+    18px;
+  border:
+    1px solid
+    var(--app-border);
+  border-radius:
+    18px;
+  background:
+    var(--app-surface);
+}
+
+.alumni-feedback-pro-shell
+.alumni-help-faqs {
+  margin-top: 12px;
+  overflow: hidden;
+  border:
+    1px solid
+    var(--app-border);
+  border-radius:
+    18px;
+  background:
+    var(--app-surface);
+}
+
+.alumni-feedback-pro-shell
+.alumni-help-faq {
+  padding-left: 15px;
+  padding-right: 15px;
+}
+
+.alumni-feedback-pro-shell
+.alumni-help-status-list,
+.alumni-feedback-pro-shell
+.alumni-help-legal-list {
+  margin-top: 12px;
+  overflow: hidden;
+  border:
+    1px solid
+    var(--app-border);
+  border-radius:
+    18px;
+  background:
+    var(--app-surface);
+}
+
+.alumni-feedback-pro-shell
+.alumni-help-status-list
+  > div,
+.alumni-feedback-pro-shell
+.alumni-help-legal-list
+  a {
+  padding-left: 15px;
+  padding-right: 15px;
+}
+
+.alumni-feedback-pro-shell
+.alumni-help-success {
+  border:
+    1px solid
+    var(--app-border);
+  border-radius:
+    25px;
+  background:
+    var(--app-surface);
+}
+
+@keyframes alumniFeedbackProEnter {
+  from {
+    opacity: 0;
+    transform:
+      translateY(12px);
+  }
+
+  to {
+    opacity: 1;
+    transform:
+      translateY(0);
+  }
+}
+
+@media (max-width: 480px) {
+  .alumni-feedback-pro-hero {
+    padding:
+      27px 18px
+      23px;
+    border-radius:
+      23px;
+  }
+
+  .alumni-feedback-pro-feature {
+    padding:
+      14px;
+  }
+}
+
+@media (
+  prefers-reduced-motion:
+  reduce
+) {
+  .alumni-feedback-pro-shell
+  .alumni-feedback-editorial,
+  .alumni-feedback-pro-shell
+  .alumni-help-detail {
+    animation: none;
+  }
+}
+
+/* ALUMNI_FEEDBACK_PRO_NAV_COMPACT_3_0 */

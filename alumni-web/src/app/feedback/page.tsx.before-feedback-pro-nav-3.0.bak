@@ -10,10 +10,6 @@ import {
 } from "next/navigation";
 import Link from "next/link";
 import {
-  motion,
-  useReducedMotion,
-} from "framer-motion";
-import {
   Activity,
   ArrowLeft,
   BookOpen,
@@ -27,7 +23,6 @@ import {
   Mail,
   Send,
   ShieldCheck,
-  Sparkles,
   TriangleAlert,
   X,
 } from "lucide-react";
@@ -44,7 +39,6 @@ import {
 import "../interior-ui-1-0.css";
 import "./feedback-help-2-0.css";
 import "./feedback-form-editorial-2-1.css";
-import "./feedback-pro-3-0.css";
 
 type FeedbackType =
   | "bug"
@@ -563,7 +557,7 @@ export default function FeedbackPage() {
   ) {
     return (
       <AppShell>
-        <main className="alumni-help-v2 alumni-feedback-pro-shell">
+        <main className="alumni-help-v2">
           <div className="alumni-help-loading">
             Preparando ayuda...
           </div>
@@ -967,19 +961,42 @@ function HelpHome({
   onSupport: () => void;
   onLegal: () => void;
 }) {
-  const reduceMotion =
-    useReducedMotion();
-
-  const utilityRows = [
+  const rows = [
     {
       label:
         "Centro de ayuda",
       description:
-        "Respuestas rápidas para resolver dudas",
+        "Preguntas y respuestas rápidas",
       icon:
         BookOpen,
+      tone:
+        "blue",
       onClick:
         onHelp,
+    },
+    {
+      label:
+        "Reportar un problema",
+      description:
+        "Errores, fallos o algo que no se ve bien",
+      icon:
+        TriangleAlert,
+      tone:
+        "red",
+      onClick:
+        onProblem,
+    },
+    {
+      label:
+        "Sugerir una mejora",
+      description:
+        "Ideas para nuevas funciones",
+      icon:
+        Lightbulb,
+      tone:
+        "green",
+      onClick:
+        onIdea,
     },
     {
       label:
@@ -988,6 +1005,8 @@ function HelpHome({
         "Versión y diagnóstico de tu sesión",
       icon:
         Activity,
+      tone:
+        "violet",
       onClick:
         onStatus,
     },
@@ -995,378 +1014,115 @@ function HelpHome({
       label:
         "Contactar soporte",
       description:
-        "Cuéntanos directamente qué necesitas",
+        "Cuéntanos en qué podemos ayudarte",
       icon:
         Mail,
+      tone:
+        "blue",
       onClick:
         onSupport,
     },
   ] as const;
 
   return (
-    <div className="alumni-feedback-pro-home">
-      <motion.section
-        className="alumni-feedback-pro-hero"
-        initial={
-          reduceMotion
-            ? false
-            : {
-                opacity: 0,
-                y: 18,
-                scale: 0.99,
-              }
-        }
-        animate={{
-          opacity: 1,
-          y: 0,
-          scale: 1,
-        }}
-        transition={{
-          duration: 0.58,
-          ease: [
-            0.2,
-            0.8,
-            0.2,
-            1,
-          ],
-        }}
-      >
-        <div
-          className="alumni-feedback-pro-orbit alumni-feedback-pro-orbit-a"
-          aria-hidden="true"
-        />
-        <div
-          className="alumni-feedback-pro-orbit alumni-feedback-pro-orbit-b"
-          aria-hidden="true"
-        />
-
-        <motion.span
-          className="alumni-feedback-pro-badge"
-          initial={
-            reduceMotion
-              ? false
-              : {
-                  opacity: 0,
-                  scale: 0.92,
-                }
-          }
-          animate={{
-            opacity: 1,
-            scale: 1,
-          }}
-          transition={{
-            delay: 0.12,
-            duration: 0.38,
-          }}
-        >
-          <Sparkles size={13} />
-          Tu voz construye ALUMNI
-        </motion.span>
-
-        <motion.h2
-          initial={
-            reduceMotion
-              ? false
-              : {
-                  opacity: 0,
-                  y: 12,
-                }
-          }
-          animate={{
-            opacity: 1,
-            y: 0,
-          }}
-          transition={{
-            delay: 0.17,
-            duration: 0.48,
-          }}
-        >
-          Hagamos que la siguiente versión sea mejor.
-        </motion.h2>
-
-        <motion.p
-          initial={
-            reduceMotion
-              ? false
-              : {
-                  opacity: 0,
-                  y: 10,
-                }
-          }
-          animate={{
-            opacity: 1,
-            y: 0,
-          }}
-          transition={{
-            delay: 0.24,
-            duration: 0.48,
-          }}
-        >
-          Encontraste un problema, tienes una idea o
-          simplemente hay algo que podría sentirse mejor.
-          Queremos saberlo.
-        </motion.p>
-
-        <div className="alumni-feedback-pro-signal">
-          <span />
-          Canal directo de producto
-        </div>
-      </motion.section>
-
-      <section className="alumni-feedback-pro-featured">
-        <motion.button
-          type="button"
-          className="alumni-feedback-pro-feature alumni-feedback-pro-feature-problem"
-          onClick={onProblem}
-          initial={
-            reduceMotion
-              ? false
-              : {
-                  opacity: 0,
-                  y: 20,
-                }
-          }
-          animate={{
-            opacity: 1,
-            y: 0,
-          }}
-          transition={{
-            delay: 0.3,
-            duration: 0.45,
-          }}
-          whileTap={
-            reduceMotion
-              ? undefined
-              : {
-                  scale: 0.985,
-                }
-          }
-        >
-          <span className="alumni-feedback-pro-feature-icon">
-            <TriangleAlert
-              size={20}
-              strokeWidth={1.9}
-            />
-          </span>
-
-          <span className="alumni-feedback-pro-feature-copy">
-            <small>ALGO FALLÓ</small>
-            <strong>
-              Reportar un problema
-            </strong>
-            <span>
-              Cuéntanos qué pasó y ayúdanos a encontrarlo.
-            </span>
-          </span>
-
-          <ChevronRight
-            size={18}
-          />
-        </motion.button>
-
-        <motion.button
-          type="button"
-          className="alumni-feedback-pro-feature alumni-feedback-pro-feature-idea"
-          onClick={onIdea}
-          initial={
-            reduceMotion
-              ? false
-              : {
-                  opacity: 0,
-                  y: 20,
-                }
-          }
-          animate={{
-            opacity: 1,
-            y: 0,
-          }}
-          transition={{
-            delay: 0.36,
-            duration: 0.45,
-          }}
-          whileTap={
-            reduceMotion
-              ? undefined
-              : {
-                  scale: 0.985,
-                }
-          }
-        >
-          <span className="alumni-feedback-pro-feature-icon">
-            <Lightbulb
-              size={20}
-              strokeWidth={1.9}
-            />
-          </span>
-
-          <span className="alumni-feedback-pro-feature-copy">
-            <small>TIENES UNA IDEA</small>
-            <strong>
-              Proponer una mejora
-            </strong>
-            <span>
-              Las mejores versiones empiezan con una observación.
-            </span>
-          </span>
-
-          <ChevronRight
-            size={18}
-          />
-        </motion.button>
+    <>
+      <section className="alumni-help-home-intro">
+        <p>
+          Cuéntanos cómo mejorar Alumni o encuentra ayuda con un problema.
+        </p>
       </section>
 
-      <motion.section
-        className="alumni-feedback-pro-tools"
-        initial={
-          reduceMotion
-            ? false
-            : {
-                opacity: 0,
-                y: 18,
+      <section className="alumni-help-home-list">
+        {rows.map(
+          ({
+            label,
+            description,
+            icon: Icon,
+            tone,
+            onClick,
+          }) => (
+            <button
+              key={label}
+              type="button"
+              className="alumni-help-home-row"
+              onClick={
+                onClick
               }
-        }
-        whileInView={{
-          opacity: 1,
-          y: 0,
-        }}
-        viewport={{
-          once: true,
-          amount: 0.3,
-        }}
-        transition={{
-          duration: 0.5,
-        }}
-      >
-        <div className="alumni-feedback-pro-section-title">
-          <span>AYUDA</span>
-          <h3>
-            Encuentra lo que necesitas
-          </h3>
-        </div>
-
-        <div className="alumni-feedback-pro-tool-list">
-          {utilityRows.map(
-            ({
-              label,
-              description,
-              icon: Icon,
-              onClick,
-            }) => (
-              <button
-                key={label}
-                type="button"
-                className="alumni-feedback-pro-tool-row"
-                onClick={onClick}
+            >
+              <span
+                className="alumni-help-home-icon"
+                data-tone={
+                  tone
+                }
               >
-                <span className="alumni-feedback-pro-tool-icon">
-                  <Icon
-                    size={18}
-                    strokeWidth={1.8}
-                  />
-                </span>
-
-                <span>
-                  <strong>
-                    {label}
-                  </strong>
-                  <small>
-                    {description}
-                  </small>
-                </span>
-
-                <ChevronRight
-                  size={17}
+                <Icon
+                  size={21}
+                  strokeWidth={
+                    1.8
+                  }
                 />
-              </button>
-            )
-          )}
-        </div>
-      </motion.section>
+              </span>
 
-      <motion.a
-        href="mailto:samuel.riiveraa@hotmail.com"
-        className="alumni-feedback-pro-direct"
-        initial={
-          reduceMotion
-            ? false
-            : {
-                opacity: 0,
-                y: 18,
-              }
-        }
-        whileInView={{
-          opacity: 1,
-          y: 0,
-        }}
-        viewport={{
-          once: true,
-        }}
-        transition={{
-          duration: 0.48,
-        }}
-      >
-        <span className="alumni-feedback-pro-direct-icon">
-          <Mail size={18} />
-        </span>
+              <span className="alumni-help-home-copy">
+                <strong>
+                  {label}
+                </strong>
+                <small>
+                  {
+                    description
+                  }
+                </small>
+              </span>
 
+              <ChevronRight
+                size={18}
+                className="alumni-help-chevron"
+              />
+            </button>
+          )
+        )}
+      </section>
+
+      <section className="alumni-help-legal-block">
         <span>
-          <small>CONTACTO DIRECTO</small>
-          <strong>
-            samuel.riiveraa@hotmail.com
-          </strong>
-          <span>
-            Para consultas que prefieras enviar por correo.
-          </span>
+          Información legal
         </span>
 
-        <ChevronRight
-          size={17}
-        />
-      </motion.a>
-
-      <motion.section
-        className="alumni-feedback-pro-legal"
-        initial={
-          reduceMotion
-            ? false
-            : {
-                opacity: 0,
-              }
-        }
-        whileInView={{
-          opacity: 1,
-        }}
-        viewport={{
-          once: true,
-        }}
-      >
         <button
           type="button"
-          onClick={onLegal}
+          onClick={
+            onLegal
+          }
+          className="alumni-help-home-row"
         >
-          <ShieldCheck
-            size={17}
-          />
-          <span>
+          <span
+            className="alumni-help-home-icon"
+            data-tone="neutral"
+          >
+            <ShieldCheck
+              size={21}
+              strokeWidth={
+                1.8
+              }
+            />
+          </span>
+
+          <span className="alumni-help-home-copy">
             <strong>
-              Privacidad, términos y comunidad
+              Términos y privacidad
             </strong>
             <small>
-              Consulta cómo protegemos y cuidamos ALUMNI.
+              Consulta las políticas de Alumni
             </small>
           </span>
+
           <ChevronRight
-            size={16}
+            size={18}
+            className="alumni-help-chevron"
           />
         </button>
-      </motion.section>
-
-      <footer className="alumni-feedback-pro-footer">
-        <span>
-          Cada reporte llega al sistema de revisión de ALUMNI.
-        </span>
-      </footer>
-    </div>
+      </section>
+    </>
   );
 }
 
@@ -1895,5 +1651,3 @@ function FeedbackForm({
 /* ALUMNI_FEEDBACK_2_0_HELP_HUB_CLEAN */
 
 /* ALUMNI_FEEDBACK_2_1_EDITORIAL_MODERNO */
-
-/* ALUMNI_FEEDBACK_PRO_NAV_COMPACT_3_0 */

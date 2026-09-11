@@ -1,0 +1,46 @@
+ALUMNI — FEEDBACK PRO + NAV COMPACT 3.0
+
+CAMBIOS
+
+1. CONTACTO
+Acerca de ALUMNI ahora muestra:
+samuel.riiveraa@hotmail.com
+
+El botón abre el cliente de correo directamente.
+
+2. FEEDBACK PRO 3.0
+- Hero premium animado.
+- Mensaje "Tu voz construye ALUMNI".
+- Cards principales:
+  Reportar un problema
+  Proponer una mejora
+- Centro de ayuda.
+- Estado de la app.
+- Contactar soporte.
+- Correo directo.
+- Legal.
+- Animaciones Framer Motion.
+- Mejor presentación de formulario.
+- Mejor presentación de FAQ/status/legal.
+- Dark / Light.
+- prefers-reduced-motion.
+- Toda la lógica real de feedback se conserva.
+
+3. NAVBAR MÓVIL
+- Más angosta.
+- Menos alta.
+- Iconos ligeramente más pequeños.
+- Bordes más compactos.
+- Badge de mensajes más pequeño.
+- /about ahora cuenta como sección de "Más".
+
+EJECUTAR
+
+node .\aplicar_alumni_feedback_pro_nav_compact_3_0.js
+npm run build
+
+SI PASA
+
+git add .
+git commit -m "Upgrade feedback experience and compact mobile nav"
+git push origin main

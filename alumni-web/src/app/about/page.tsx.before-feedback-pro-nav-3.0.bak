@@ -8,7 +8,7 @@ import {
   ExternalLink,
   Heart,
   Info,
-  Mail,
+  MessageCircle,
 } from "lucide-react";
 import AppShell from "@/components/layout/AppShell";
 import "./about.css";
@@ -96,25 +96,25 @@ export default function AboutPage() {
             />
           </a>
 
-          <a
-            href="mailto:samuel.riiveraa@hotmail.com"
+          <Link
+            href="/feedback"
             className="alumni-about-store-row"
           >
             <span className="alumni-about-store-icon">
-              <Mail size={18} />
+              <MessageCircle size={18} />
             </span>
 
             <span className="alumni-about-store-copy">
               <small>Contacto</small>
-              <strong>samuel.riiveraa@hotmail.com</strong>
-              <span>Correo directo del desarrollador</span>
+              <strong>Ayuda y feedback</strong>
+              <span>Cuéntanos qué podemos mejorar</span>
             </span>
 
             <ChevronRight
               size={17}
               className="alumni-about-chevron"
             />
-          </a>
+          </Link>
         </section>
 
         <section className="alumni-about-note">
@@ -139,5 +139,3 @@ export default function AboutPage() {
 }
 
 /* ALUMNI_ABOUT_1_0_APP_STORE */
-
-/* ALUMNI_FEEDBACK_PRO_NAV_COMPACT_3_0 */
