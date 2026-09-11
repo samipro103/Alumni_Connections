@@ -1,0 +1,37 @@
+ALUMNI — PROFILE EDITOR 2.0 PRO MOTION
+
+OBJETIVO
+Dejar Editar Perfil con una apariencia más pro,
+más limpia y con motion, sin meter mucho texto.
+
+APLICA
+- top bar glass y sticky
+- botón Guardar más fino
+- banner / portada más premium
+- avatar mejor integrado
+- cámara y acciones con chips limpios
+- se reduce el texto auxiliar
+- secciones más elegantes
+- filas más limpias
+- inputs más claros
+- focus states más bonitos
+- motion de entrada y microinteracciones
+- oscuro/claro coherentes
+
+NO CAMBIA
+- lógica del formulario
+- guardado
+- uploads
+- pickers
+- rutas
+
+EJECUTAR
+
+node .\aplicar_alumni_profile_editor_2_0_pro_motion.js
+npm run build
+
+SI PASA
+
+git add .
+git commit -m "Polish profile editor with pro motion styling"
+git push origin main
