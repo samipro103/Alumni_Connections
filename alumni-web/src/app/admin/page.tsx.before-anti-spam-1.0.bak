@@ -8,7 +8,6 @@ import {
   MessageSquareWarning,
   ScrollText,
   ShieldAlert,
-  ShieldCheck,
   Users,
 } from "lucide-react";
 import AdminShell from "@/components/admin/AdminShell";
@@ -62,18 +61,6 @@ export default function AdminPage() {
       visible:
         can("manage_feedback") ||
         can("manage_moderation"),
-    },
-    {
-      href: "/admin/spam",
-      title: "Anti-Spam",
-      description:
-        "Revisa actividad anormal, contenido repetido y cuentas que alcanzan límites automáticos.",
-      icon: ShieldCheck,
-      visible:
-        can("manage_moderation") ||
-        can("manage_users") ||
-        can("manage_admins") ||
-        can("view_stats"),
     },
     {
       href: "/admin/events",
@@ -165,5 +152,3 @@ export default function AdminPage() {
 }
 
 /* ALUMNI_ADMIN_CONTROL_CENTER_1_0 */
-
-/* ALUMNI_ANTI_SPAM_1_0 */

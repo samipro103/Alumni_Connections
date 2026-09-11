@@ -1,0 +1,12 @@
+-- ALUMNI ANTI SPAM 1.0
+-- La migración alumni_anti_spam_1_0 ya fue aplicada en producción.
+-- Incluye:
+-- anti_spam_events
+-- índices de actividad
+-- alumni_anti_spam_guard()
+-- triggers BEFORE INSERT
+-- protección de publicaciones, comentarios, likes, follows,
+-- mensajes, reposts y reportes
+-- reglas especiales para cuentas menores de 48 horas
+-- detección de contenido repetido y exceso de enlaces
+-- RPC alumni_admin_update_spam_event

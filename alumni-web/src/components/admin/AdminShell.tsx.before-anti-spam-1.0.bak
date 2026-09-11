@@ -13,7 +13,6 @@ import {
   MessageSquareWarning,
   ScrollText,
   ShieldAlert,
-  ShieldCheck,
   Users,
 } from "lucide-react";
 import AppShell from "@/components/layout/AppShell";
@@ -80,19 +79,6 @@ function permissionForPath(
     return [
       "manage_feedback",
       "manage_moderation",
-    ];
-  }
-
-  if (
-    pathname.startsWith(
-      "/admin/spam"
-    )
-  ) {
-    return [
-      "manage_moderation",
-      "manage_users",
-      "manage_admins",
-      "view_stats",
     ];
   }
 
@@ -179,16 +165,6 @@ export default function AdminShell({
       visible:
         can("manage_feedback") ||
         can("manage_moderation"),
-    },
-    {
-      href: "/admin/spam",
-      label: "Anti-Spam",
-      icon: ShieldCheck,
-      visible:
-        can("manage_moderation") ||
-        can("manage_users") ||
-        can("manage_admins") ||
-        can("view_stats"),
     },
     {
       href: "/admin/events",
@@ -287,5 +263,3 @@ export default function AdminShell({
 }
 
 /* ALUMNI_ADMIN_CONTROL_CENTER_1_0 */
-
-/* ALUMNI_ANTI_SPAM_1_0 */
