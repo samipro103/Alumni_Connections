@@ -1,0 +1,101 @@
+ALUMNI PROFILE EDITOR 1.1 — REPAIR
+
+ESTE PARCHE NO REDISEÑA DESDE CERO.
+REPARA LA OPCIÓN 1 YA ELEGIDA.
+
+ERRORES ENCONTRADOS
+
+1. PORTADA
+El CSS anterior aplicaba estilos del pequeño botón "Cambiar portada"
+al botón COMPLETO que contiene la imagen de portada.
+
+Esto podía romper:
+- ancho
+- alto
+- posición
+- responsive
+
+SOLUCIÓN:
+- botón completo = alumni-profile-editor-banner-button
+- acción visual = alumni-profile-editor-banner-action
+
+2. CHEVRONS FALSOS
+El CSS añadía "›" a TODAS las filas:
+- Nombre
+- Usuario
+- Biografía
+- Universidad
+- País
+etc.
+
+Eso era incorrecto.
+
+Además, PickerRow YA trae su propio ChevronRight,
+por lo que podía verse duplicado.
+
+SOLUCIÓN:
+- filas de texto = 2 columnas, sin chevron
+- filas selectoras = usan el chevron real del componente
+
+3. GUARDAR
+El topbar podía quedarse sin espacio en teléfonos pequeños.
+
+SOLUCIÓN:
+- título centrado
+- botón "Guardar" compacto
+- spinner visible al procesar/guardar
+
+4. BIOGRAFÍA
+La regla global centraba verticalmente todas las filas.
+
+SOLUCIÓN:
+- Biografía vuelve a alinearse arriba
+- área de texto con altura correcta
+
+5. PICKERS VS NAVBAR FLOTANTE
+Universidad / carrera / país tenían z-index 9999.
+Navbar flotante tiene z-index mucho mayor.
+
+Resultado:
+la navbar podía quedar ENCIMA del modal.
+
+SOLUCIÓN:
+picker modal = z-index superior a navbar.
+
+6. ESPACIO INFERIOR
+Editar Perfil ahora reserva espacio real para la navbar flotante,
+para que las últimas filas no queden tapadas.
+
+7. MOBILE-FIRST
+360–430 px es la vista canónica.
+
+ARCHIVOS
+
+Modifica:
+src/components/settings/ProfileEditorPro.tsx
+src/app/settings/page.tsx
+
+Crea:
+src/app/settings/settings-edit-profile-repair-1-1.css
+
+NO TOCA
+- Supabase
+- upload de avatar
+- upload de portada
+- perfil público
+- RLS
+- tablas
+- lógica de universidad
+- lógica de países
+- lógica de guardar
+
+EJECUCIÓN
+
+node .\aplicar_alumni_profile_editor_1_1_repair.js
+npm run build
+
+SI BUILD PASA
+
+git add .
+git commit -m "Profile Editor 1.1 - repair mobile layout"
+git push origin main
