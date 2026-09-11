@@ -1,0 +1,936 @@
+/*
+ * ALUMNI_FEEDBACK_2_0_HELP_HUB_CLEAN
+ * Opción 1 — Ayuda y feedback.
+ * Lista limpia + formulario bajo demanda.
+ */
+
+.alumni-help-v2 {
+  width: 100%;
+  max-width: 560px;
+  min-height: 100%;
+  margin: 0 auto;
+  padding:
+    0 0
+    calc(
+      104px +
+      env(safe-area-inset-bottom)
+    );
+  color:
+    var(--app-text);
+}
+
+.alumni-help-header {
+  position: sticky;
+  top: 0;
+  z-index: 25;
+  display: grid;
+  grid-template-columns:
+    42px minmax(0, 1fr) 42px;
+  min-height: 54px;
+  align-items: center;
+  border-bottom:
+    1px solid
+    var(--app-border);
+  background:
+    color-mix(
+      in srgb,
+      var(--app-bg) 96%,
+      transparent
+    );
+  backdrop-filter:
+    blur(18px);
+  -webkit-backdrop-filter:
+    blur(18px);
+}
+
+.alumni-help-header
+  > button {
+  display: inline-flex;
+  width: 40px;
+  height: 40px;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background:
+    transparent;
+  color:
+    var(--app-text);
+}
+
+.alumni-help-header
+  > button:active {
+  background:
+    var(--app-soft);
+}
+
+.alumni-help-header h1 {
+  margin: 0;
+  overflow: hidden;
+  color:
+    var(--app-text);
+  font-size: 15px;
+  font-weight: 900;
+  line-height: 1;
+  text-align: center;
+  text-overflow:
+    ellipsis;
+  white-space: nowrap;
+  letter-spacing:
+    -.025em;
+}
+
+/* Home */
+.alumni-help-home-intro {
+  padding:
+    20px 4px 22px;
+  border-bottom:
+    1px solid
+    var(--app-border);
+}
+
+.alumni-help-home-intro p {
+  max-width: 420px;
+  margin: 0;
+  color:
+    var(--app-text-soft);
+  font-size: 14px;
+  font-weight: 520;
+  line-height: 1.48;
+}
+
+.alumni-help-home-list {
+  display: block;
+}
+
+.alumni-help-home-row {
+  display: grid;
+  width: 100%;
+  grid-template-columns:
+    46px minmax(0, 1fr) auto;
+  min-height: 82px;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 4px;
+  border: 0;
+  border-bottom:
+    1px solid
+    var(--app-border);
+  background:
+    transparent;
+  color: inherit;
+  text-align: left;
+  text-decoration: none;
+  -webkit-tap-highlight-color:
+    transparent;
+}
+
+.alumni-help-home-row:active {
+  background:
+    var(--app-soft);
+}
+
+.alumni-help-home-icon {
+  display: inline-flex;
+  width: 42px;
+  height: 42px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+}
+
+.alumni-help-home-icon[
+  data-tone="blue"
+] {
+  background:
+    color-mix(
+      in srgb,
+      var(--app-accent) 12%,
+      transparent
+    );
+  color:
+    var(--app-accent);
+}
+
+.alumni-help-home-icon[
+  data-tone="red"
+] {
+  background:
+    color-mix(
+      in srgb,
+      var(--app-danger) 11%,
+      transparent
+    );
+  color:
+    var(--app-danger);
+}
+
+.alumni-help-home-icon[
+  data-tone="green"
+] {
+  background:
+    color-mix(
+      in srgb,
+      var(--app-success) 12%,
+      transparent
+    );
+  color:
+    var(--app-success);
+}
+
+.alumni-help-home-icon[
+  data-tone="violet"
+] {
+  background:
+    color-mix(
+      in srgb,
+      var(--app-accent) 10%,
+      transparent
+    );
+  color:
+    var(--app-accent);
+}
+
+.alumni-help-home-icon[
+  data-tone="neutral"
+] {
+  background:
+    var(--app-soft);
+  color:
+    var(--app-text-soft);
+}
+
+.alumni-help-home-copy {
+  min-width: 0;
+}
+
+.alumni-help-home-copy
+  strong,
+.alumni-help-home-copy
+  small {
+  display: block;
+  overflow: hidden;
+  text-overflow:
+    ellipsis;
+}
+
+.alumni-help-home-copy
+  strong {
+  color:
+    var(--app-text);
+  font-size: 13px;
+  font-weight: 850;
+  line-height: 1.2;
+}
+
+.alumni-help-home-copy
+  small {
+  margin-top: 4px;
+  color:
+    var(--app-muted-2);
+  font-size: 10.5px;
+  font-weight: 500;
+  line-height: 1.3;
+}
+
+.alumni-help-chevron {
+  color:
+    var(--app-muted-3);
+}
+
+.alumni-help-legal-block {
+  margin-top: 22px;
+}
+
+.alumni-help-legal-block
+  > span {
+  display: block;
+  padding: 0 4px 8px;
+  color:
+    var(--app-muted-3);
+  font-size: 9px;
+  font-weight: 900;
+  letter-spacing:
+    .13em;
+  text-transform:
+    uppercase;
+}
+
+.alumni-help-legal-block
+  .alumni-help-home-row {
+  border-top:
+    1px solid
+    var(--app-border);
+}
+
+/* Details */
+.alumni-help-detail {
+  padding:
+    18px 0 0;
+}
+
+.alumni-help-detail-intro {
+  display: flex;
+  align-items:
+    flex-start;
+  gap: 12px;
+  padding:
+    0 4px 18px;
+  border-bottom:
+    1px solid
+    var(--app-border);
+  color:
+    var(--app-accent);
+}
+
+.alumni-help-detail-intro
+  > div {
+  min-width: 0;
+}
+
+.alumni-help-detail-intro
+  strong {
+  display: block;
+  color:
+    var(--app-text);
+  font-size: 14px;
+  font-weight: 900;
+}
+
+.alumni-help-detail-intro p {
+  margin-top: 4px;
+  color:
+    var(--app-muted-2);
+  font-size: 10.5px;
+  line-height: 1.4;
+}
+
+.alumni-help-faq {
+  display: grid;
+  width: 100%;
+  grid-template-columns:
+    minmax(0, 1fr)
+    auto;
+  align-items:
+    start;
+  gap: 14px;
+  min-height: 62px;
+  padding:
+    16px 4px;
+  border: 0;
+  border-bottom:
+    1px solid
+    var(--app-border);
+  background:
+    transparent;
+  color: inherit;
+  text-align: left;
+}
+
+.alumni-help-faq strong {
+  color:
+    var(--app-text);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.alumni-help-faq p {
+  margin-top: 8px;
+  color:
+    var(--app-muted);
+  font-size: 11px;
+  line-height: 1.55;
+}
+
+.alumni-help-faq svg {
+  margin-top: 1px;
+  color:
+    var(--app-muted-3);
+  transition:
+    transform .16s ease;
+}
+
+.alumni-help-faq[
+  data-open="true"
+] svg {
+  transform:
+    rotate(180deg);
+}
+
+.alumni-help-status-list {
+  display: block;
+  border-bottom:
+    1px solid
+    var(--app-border);
+}
+
+.alumni-help-status-list
+  > div {
+  display: grid;
+  grid-template-columns:
+    minmax(0, 1fr)
+    auto;
+  min-height: 58px;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 4px;
+  border-bottom:
+    1px solid
+    var(--app-border);
+}
+
+.alumni-help-status-list
+  > div:last-child {
+  border-bottom: 0;
+}
+
+.alumni-help-status-list
+  span {
+  color:
+    var(--app-muted-2);
+  font-size: 11px;
+}
+
+.alumni-help-status-list
+  strong {
+  max-width: 230px;
+  overflow: hidden;
+  color:
+    var(--app-text);
+  font-size: 11px;
+  font-weight: 780;
+  text-align: right;
+  text-overflow:
+    ellipsis;
+  white-space: nowrap;
+}
+
+.alumni-help-status-note {
+  margin:
+    18px 4px 0;
+  color:
+    var(--app-muted);
+  font-size: 11px;
+  line-height: 1.55;
+}
+
+.alumni-help-primary-action {
+  width:
+    calc(100% - 8px);
+  min-height: 46px;
+  margin:
+    18px 4px 0;
+  border: 0;
+  border-radius: 13px;
+  background:
+    var(--app-accent-fill);
+  color:
+    var(--app-on-accent);
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.alumni-help-legal-list a {
+  display: flex;
+  min-height: 62px;
+  align-items: center;
+  gap: 12px;
+  padding:
+    10px 4px;
+  border-bottom:
+    1px solid
+    var(--app-border);
+  color:
+    var(--app-text);
+  text-decoration: none;
+}
+
+.alumni-help-legal-list
+  a span {
+  min-width: 0;
+  flex: 1 1 auto;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.alumni-help-legal-list
+  a svg {
+  color:
+    var(--app-muted-3);
+}
+
+/* Form */
+.alumni-feedback-form-v2 {
+  padding:
+    18px 0 0;
+}
+
+.alumni-feedback-type-tabs {
+  display: grid;
+  grid-template-columns:
+    repeat(
+      3,
+      minmax(0, 1fr)
+    );
+  gap: 7px;
+  margin-bottom: 22px;
+}
+
+.alumni-feedback-type-tabs
+  button {
+  min-height: 42px;
+  border:
+    1px solid
+    var(--app-border);
+  border-radius: 12px;
+  background:
+    var(--app-soft);
+  color:
+    var(--app-muted);
+  font-size: 10.5px;
+  font-weight: 800;
+}
+
+.alumni-feedback-type-tabs
+  button[
+    data-active="true"
+  ] {
+  border-color:
+    color-mix(
+      in srgb,
+      var(--app-accent) 50%,
+      var(--app-border)
+    );
+  background:
+    var(--app-accent-soft);
+  color:
+    var(--app-accent);
+}
+
+.alumni-feedback-field {
+  display: block;
+  margin-top: 17px;
+}
+
+.alumni-feedback-field
+  > span,
+.alumni-feedback-severity
+  > span {
+  display: block;
+  margin-bottom: 8px;
+  color:
+    var(--app-text-soft);
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.alumni-feedback-field
+  input,
+.alumni-feedback-field
+  textarea {
+  width: 100%;
+  border:
+    1px solid
+    var(--app-border);
+  border-radius: 13px;
+  outline: 0;
+  background:
+    var(--app-surface-2);
+  color:
+    var(--app-text);
+  font-size: 14px;
+  box-shadow: none;
+}
+
+.alumni-feedback-field
+  input {
+  height: 48px;
+  padding: 0 13px;
+}
+
+.alumni-feedback-field
+  textarea {
+  resize: none;
+  padding: 12px 13px;
+  line-height: 1.5;
+}
+
+.alumni-feedback-field
+  input::placeholder,
+.alumni-feedback-field
+  textarea::placeholder {
+  color:
+    var(--app-muted-3);
+}
+
+.alumni-feedback-field
+  input:focus,
+.alumni-feedback-field
+  textarea:focus {
+  border-color:
+    var(--app-accent);
+  box-shadow:
+    0 0 0 3px
+    var(--app-accent-soft);
+}
+
+.alumni-feedback-advanced {
+  margin-top: 18px;
+  border-top:
+    1px solid
+    var(--app-border);
+  border-bottom:
+    1px solid
+    var(--app-border);
+}
+
+.alumni-feedback-advanced
+  summary {
+  min-height: 52px;
+  padding: 17px 2px;
+  color:
+    var(--app-muted);
+  font-size: 11px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.alumni-feedback-advanced[
+  open
+] {
+  padding-bottom: 16px;
+}
+
+.alumni-feedback-severity {
+  margin-top: 18px;
+}
+
+.alumni-feedback-severity
+  > div {
+  display: grid;
+  grid-template-columns:
+    repeat(
+      4,
+      minmax(0, 1fr)
+    );
+  gap: 6px;
+}
+
+.alumni-feedback-severity
+  button {
+  min-height: 36px;
+  border:
+    1px solid
+    var(--app-border);
+  border-radius: 10px;
+  background:
+    transparent;
+  color:
+    var(--app-muted-2);
+  font-size: 9.5px;
+  font-weight: 800;
+}
+
+.alumni-feedback-severity
+  button[
+    data-active="true"
+  ] {
+  border-color:
+    var(--app-accent);
+  background:
+    var(--app-accent-soft);
+  color:
+    var(--app-accent);
+}
+
+.alumni-feedback-attach {
+  position: relative;
+  display: grid;
+  grid-template-columns:
+    42px minmax(0, 1fr) auto;
+  min-height: 70px;
+  align-items: center;
+  gap: 12px;
+  margin-top: 22px;
+  padding:
+    10px 4px;
+  border-top:
+    1px solid
+    var(--app-border);
+  border-bottom:
+    1px solid
+    var(--app-border);
+  cursor: pointer;
+}
+
+.alumni-feedback-attach
+  input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.alumni-feedback-attach-icon {
+  display: inline-flex;
+  width: 40px;
+  height: 40px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background:
+    var(--app-soft);
+  color:
+    var(--app-text-soft);
+}
+
+.alumni-feedback-attach
+  > span:nth-child(2)
+  strong,
+.alumni-feedback-attach
+  > span:nth-child(2)
+  small {
+  display: block;
+}
+
+.alumni-feedback-attach
+  > span:nth-child(2)
+  strong {
+  color:
+    var(--app-text);
+  font-size: 11.5px;
+  font-weight: 820;
+}
+
+.alumni-feedback-attach
+  > span:nth-child(2)
+  small {
+  margin-top: 3px;
+  color:
+    var(--app-muted-2);
+  font-size: 9.5px;
+}
+
+.alumni-feedback-attach
+  > svg {
+  color:
+    var(--app-muted-3);
+}
+
+.alumni-feedback-previews {
+  display: grid;
+  grid-template-columns:
+    repeat(
+      4,
+      minmax(0, 1fr)
+    );
+  gap: 7px;
+  margin-top: 10px;
+}
+
+.alumni-feedback-previews
+  > div {
+  position: relative;
+  aspect-ratio: 1;
+  overflow: hidden;
+  border:
+    1px solid
+    var(--app-border);
+  border-radius: 11px;
+  background:
+    var(--app-soft);
+}
+
+.alumni-feedback-previews
+  img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.alumni-feedback-previews
+  button {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  display: inline-flex;
+  width: 26px;
+  height: 26px;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background:
+    rgba(5,7,11,.72);
+  color: white;
+}
+
+.alumni-feedback-attachment-limit {
+  margin-top: 7px;
+  color:
+    var(--app-muted-3);
+  font-size: 9.5px;
+  text-align: right;
+}
+
+.alumni-feedback-send-v2 {
+  display: flex;
+  width: 100%;
+  min-height: 48px;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 24px;
+  border: 0;
+  border-radius: 13px;
+  background:
+    var(--app-accent-fill);
+  color:
+    var(--app-on-accent);
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.alumni-feedback-send-v2:disabled {
+  opacity: .42;
+}
+
+.alumni-feedback-safe-note {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin-top: 12px;
+  color:
+    var(--app-muted-3);
+  font-size: 9.5px;
+}
+
+/* Success / Loading */
+.alumni-help-loading {
+  padding: 64px 0;
+  color:
+    var(--app-muted-2);
+  font-size: 12px;
+  text-align: center;
+}
+
+.alumni-help-success {
+  display: flex;
+  min-height:
+    min(
+      70dvh,
+      620px
+    );
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 36px 18px;
+  text-align: center;
+}
+
+.alumni-help-success-icon {
+  display: inline-flex;
+  width: 60px;
+  height: 60px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background:
+    color-mix(
+      in srgb,
+      var(--app-success) 12%,
+      transparent
+    );
+  color:
+    var(--app-success);
+}
+
+.alumni-help-success h1 {
+  margin-top: 17px;
+  color:
+    var(--app-text);
+  font-size: 23px;
+  font-weight: 950;
+  letter-spacing:
+    -.04em;
+}
+
+.alumni-help-success p {
+  max-width: 360px;
+  margin-top: 8px;
+  color:
+    var(--app-muted);
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.alumni-help-success small {
+  margin-top: 12px;
+  color:
+    var(--app-muted-3);
+  font-size: 9px;
+  font-weight: 800;
+}
+
+.alumni-help-success button {
+  min-height: 44px;
+  margin-top: 20px;
+  padding: 0 18px;
+  border: 0;
+  border-radius: 12px;
+  background:
+    var(--app-accent-fill);
+  color:
+    var(--app-on-accent);
+  font-size: 10.5px;
+  font-weight: 900;
+}
+
+@media (max-width: 374px) {
+  .alumni-help-home-row {
+    min-height: 76px;
+  }
+
+  .alumni-help-home-icon {
+    width: 40px;
+    height: 40px;
+  }
+
+  .alumni-feedback-severity
+    > div {
+    grid-template-columns:
+      repeat(
+        2,
+        minmax(0, 1fr)
+      );
+  }
+}
+
+@media (min-width: 700px) {
+  .alumni-help-v2 {
+    max-width: 560px;
+    padding-top: 14px;
+  }
+
+  .alumni-help-header {
+    border:
+      1px solid
+      var(--app-border);
+    border-radius:
+      16px 16px 0 0;
+  }
+
+  .alumni-help-home-intro,
+  .alumni-help-home-row,
+  .alumni-help-detail,
+  .alumni-feedback-form-v2 {
+    padding-right: 14px;
+    padding-left: 14px;
+  }
+}
+
+/* ALUMNI_FEEDBACK_2_0_HELP_HUB_CLEAN */
