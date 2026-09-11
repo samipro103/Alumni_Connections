@@ -1,0 +1,36 @@
+ALUMNI FEED PHOTO SELECT 1.0.4 — MOBILE X / OK VISIBLE
+
+OBJETIVO
+Forzar que en teléfono sí se vean los controles al publicar una foto:
+- X
+- OK / Confirmar
+
+ESTE PARCHE
+- solo toca el CSS del editor de foto
+- refuerza el topbar en móvil
+- coloca los botones por encima de la foto
+- mantiene:
+  - cuadrícula
+  - arrastre
+  - recorte
+  - lógica
+  - botón +
+  - calidad
+
+NO TOCA
+- Supabase
+- Feed
+- upload
+- rendering
+- desktop
+
+EJECUCIÓN
+
+node .\aplicar_alumni_feed_photo_select_1_0_4_mobile_x_ok_visible.js
+npm run build
+
+SI BUILD PASA
+
+git add .
+git commit -m "Feed Photo Select 1.0.4 - mobile X and OK visible"
+git push origin main
