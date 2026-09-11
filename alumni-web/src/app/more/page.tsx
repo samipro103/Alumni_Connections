@@ -1,466 +1,332 @@
 "use client";
 
+import Link from "next/link";
 import {
-  Bell,
-  Bookmark,
-  BookOpen,
+  motion,
+  useReducedMotion,
+} from "framer-motion";
+import {
   CalendarDays,
   ChevronRight,
   CircleHelp,
   Info,
-  LogOut,
-  Settings,
-  Users,
+  MessageCircleMore,
+  Search,
+  Settings2,
+  Sparkles,
+  UsersRound,
 } from "lucide-react";
-import Link from "next/link";
-import {
-  useEffect,
-  useMemo,
-  useState,
-} from "react";
-import {
-  useRouter,
-} from "next/navigation";
 import AppShell from "@/components/layout/AppShell";
-import {
-  useAuth,
-} from "@/components/auth/AuthProvider";
-import {
-  supabase,
-} from "@/lib/supabase";
-import {
-  AlumniAvatar,
-} from "@/components/ui/AlumniImage";
-import "./more-2-0.css";
+import "./more-premium.css";
 
-type MoreProfile = {
-  username?: string | null;
-  full_name?: string | null;
-  avatar_url?: string | null;
-  career?: string | null;
-  university?: string | null;
-  education_institution_name?:
-    | string
-    | null;
+type MoreItem = {
+  href: string;
+  label: string;
+  description: string;
+  icon: React.ComponentType<{
+    size?: number;
+    strokeWidth?: number;
+  }>;
+  tag?: string;
 };
 
-const primaryItems = [
+const exploreItems: MoreItem[] = [
   {
-    href: "/notifications",
-    label: "Notificaciones",
+    href: "/search",
+    label: "Buscar",
     description:
-      "Mantente al día",
-    icon: Bell,
+      "Descubre personas, publicaciones y conexiones.",
+    icon: Search,
   },
   {
-    href: "/community",
-    label: "Comunidad",
+    href: "/messages",
+    label: "Mensajes",
     description:
-      "Conecta con otros alumni",
-    icon: Users,
+      "Sigue conversaciones y mantén el contacto.",
+    icon: MessageCircleMore,
+  },
+];
+
+const communityItems: MoreItem[] = [
+  {
+    href: "/communities",
+    label: "Comunidades",
+    description:
+      "Participa en grupos y espacios compartidos.",
+    icon: UsersRound,
   },
   {
     href: "/events",
     label: "Eventos",
     description:
-      "Encuentros y actividades",
+      "Encuentra encuentros, actividades y experiencias.",
     icon: CalendarDays,
-  },
-  {
-    href: "/passport",
-    label: "Pasaporte Alumni",
-    description:
-      "Tu recorrido, en un solo lugar",
-    icon: BookOpen,
-  },
-  {
-    href:
-      "/settings?section=profile&view=saved",
-    label: "Guardados",
-    description:
-      "Publicaciones y recursos",
-    icon: Bookmark,
   },
 ];
 
-const secondaryItems = [
-  {
-    href: "/settings",
-    label: "Configuración",
-    description:
-      "Preferencias de la app",
-    icon: Settings,
-  },
+const systemItems: MoreItem[] = [
   {
     href: "/feedback",
-    label: "Ayuda y feedback",
+    label: "Feedback",
     description:
-      "Estamos para ayudarte",
+      "Reporta problemas y propón mejoras para ALUMNI.",
     icon: CircleHelp,
   },
   {
     href: "/about",
     label: "Acerca de ALUMNI",
     description:
-      "La app y quién la construye",
+      "Conoce la app, su autor y el camino del proyecto.",
     icon: Info,
+    tag: "Nuevo",
+  },
+  {
+    href: "/settings",
+    label: "Ajustes",
+    description:
+      "Personaliza tu experiencia, notificaciones y cuenta.",
+    icon: Settings2,
   },
 ];
 
+function Section({
+  eyebrow,
+  title,
+  copy,
+  items,
+  delay = 0,
+}: {
+  eyebrow: string;
+  title: string;
+  copy: string;
+  items: MoreItem[];
+  delay?: number;
+}) {
+  const reduceMotion =
+    useReducedMotion();
+
+  return (
+    <motion.section
+      className="alumni-more-premium-section"
+      initial={
+        reduceMotion
+          ? false
+          : {
+              opacity: 0,
+              y: 18,
+            }
+      }
+      whileInView={{
+        opacity: 1,
+        y: 0,
+      }}
+      viewport={{
+        once: true,
+        amount: 0.18,
+      }}
+      transition={{
+        duration: 0.46,
+        delay:
+          reduceMotion
+            ? 0
+            : delay,
+        ease: [
+          0.2,
+          0.8,
+          0.2,
+          1,
+        ],
+      }}
+    >
+      <header className="alumni-more-premium-section-head">
+        <small>{eyebrow}</small>
+        <h2>{title}</h2>
+        <p>{copy}</p>
+      </header>
+
+      <div className="alumni-more-premium-list">
+        {items.map(
+          (
+            {
+              href,
+              label,
+              description,
+              icon: Icon,
+              tag,
+            },
+            index
+          ) => (
+            <motion.div
+              key={href}
+              initial={
+                reduceMotion
+                  ? false
+                  : {
+                      opacity: 0,
+                      y: 12,
+                    }
+              }
+              whileInView={{
+                opacity: 1,
+                y: 0,
+              }}
+              viewport={{
+                once: true,
+              }}
+              transition={{
+                duration: 0.34,
+                delay:
+                  reduceMotion
+                    ? 0
+                    : delay +
+                      index * 0.05,
+              }}
+            >
+              <Link
+                href={href}
+                className="alumni-more-premium-row"
+                data-alumni-motion="card"
+              >
+                <span className="alumni-more-premium-row-icon">
+                  <Icon
+                    size={18}
+                    strokeWidth={1.9}
+                  />
+                </span>
+
+                <span className="alumni-more-premium-row-copy">
+                  <span className="alumni-more-premium-row-top">
+                    <strong>{label}</strong>
+
+                    {tag && (
+                      <em>{tag}</em>
+                    )}
+                  </span>
+
+                  <small>
+                    {description}
+                  </small>
+                </span>
+
+                <ChevronRight
+                  size={18}
+                  className="alumni-more-premium-row-chevron"
+                />
+              </Link>
+            </motion.div>
+          )
+        )}
+      </div>
+    </motion.section>
+  );
+}
+
 export default function MorePage() {
-  const router =
-    useRouter();
-
-  const {
-    user,
-    loading,
-  } = useAuth();
-
-  const [
-    profile,
-    setProfile,
-  ] =
-    useState<MoreProfile | null>(
-      null
-    );
-
-  const [
-    profileLoading,
-    setProfileLoading,
-  ] = useState(true);
-
-  const [
-    signingOut,
-    setSigningOut,
-  ] = useState(false);
-
-  useEffect(() => {
-    if (
-      !loading &&
-      !user
-    ) {
-      router.replace(
-        "/login"
-      );
-    }
-  }, [
-    loading,
-    user,
-    router,
-  ]);
-
-  useEffect(() => {
-    if (!user?.id) {
-      setProfile(null);
-      setProfileLoading(false);
-      return;
-    }
-
-    let active = true;
-
-    async function loadProfile() {
-      setProfileLoading(true);
-
-      const {
-        data,
-        error,
-      } =
-        await supabase
-          .from("profiles")
-          .select(
-            "username,full_name,avatar_url,career,university,education_institution_name"
-          )
-          .eq(
-            "id",
-            user!.id
-          )
-          .maybeSingle();
-
-      if (!active) {
-        return;
-      }
-
-      if (error) {
-        console.warn(
-          "[Alumni More] profile:",
-          error
-        );
-      }
-
-      setProfile(
-        data || null
-      );
-      setProfileLoading(
-        false
-      );
-    }
-
-    void loadProfile();
-
-    return () => {
-      active = false;
-    };
-  }, [user?.id]);
-
-  const education =
-    useMemo(
-      () =>
-        profile
-          ?.education_institution_name ||
-        profile?.university ||
-        "",
-      [
-        profile
-          ?.education_institution_name,
-        profile?.university,
-      ]
-    );
-
-  async function logout() {
-    if (signingOut) {
-      return;
-    }
-
-    const approved =
-      window.confirm(
-        "¿Cerrar sesión en Alumni?"
-      );
-
-    if (!approved) {
-      return;
-    }
-
-    setSigningOut(true);
-
-    try {
-      await supabase.auth.signOut();
-      window.location.href =
-        "/login";
-    } finally {
-      setSigningOut(false);
-    }
-  }
-
-  if (
-    loading ||
-    !user
-  ) {
-    return (
-      <AppShell>
-        <main className="alumni-more-clean mx-auto w-full max-w-[560px]">
-          <div className="alumni-more-loading">
-            Cargando...
-          </div>
-        </main>
-      </AppShell>
-    );
-  }
+  const reduceMotion =
+    useReducedMotion();
 
   return (
     <AppShell>
-      <main
-        className="alumni-more-clean mx-auto w-full max-w-[560px]"
-        data-more-design="option-1-clean-list"
-      >
-        <header className="alumni-more-header">
-          <h1>Más</h1>
-        </header>
-
-        <Link
-          href="/profile"
-          className="alumni-more-profile"
-        >
-          <span className="alumni-more-avatar">
-            {profileLoading ? (
-              <span className="alumni-more-avatar-skeleton" />
-            ) : (
-              <AlumniAvatar
-                src={
-                  profile
-                    ?.avatar_url ||
-                  null
+      <main className="alumni-more-premium-page mx-auto w-full max-w-[680px]">
+        <motion.section
+          className="alumni-more-premium-hero"
+          initial={
+            reduceMotion
+              ? false
+              : {
+                  opacity: 0,
+                  y: 18,
+                  scale: 0.992,
                 }
-                name={
-                  profile
-                    ?.full_name ||
-                  profile
-                    ?.username ||
-                  "Alumni"
-                }
-                alt=""
-                className="h-full w-full"
-                imageClassName="h-full w-full object-cover"
-              />
-            )}
-          </span>
-
-          <span className="alumni-more-profile-copy">
-            <strong>
-              {profileLoading
-                ? "Mi perfil"
-                : profile
-                    ?.full_name ||
-                  (profile
-                    ?.username
-                    ? `@${profile.username}`
-                    : "Mi perfil")}
-            </strong>
-
-            {profile
-              ?.username &&
-              profile
-                ?.full_name && (
-                <small>
-                  @
-                  {
-                    profile.username
-                  }
-                </small>
-              )}
-
-            {(profile?.career ||
-              education) && (
-              <small>
-                {[
-                  profile
-                    ?.career,
-                  education,
-                ]
-                  .filter(Boolean)
-                  .join(" · ")}
-              </small>
-            )}
-
-            {!profileLoading &&
-              !profile
-                ?.career &&
-              !education && (
-                <small>
-                  Ver tu perfil
-                </small>
-              )}
-          </span>
-
-          <ChevronRight
-            size={18}
-            className="alumni-more-chevron"
-          />
-        </Link>
-
-        <nav
-          className="alumni-more-list"
-          aria-label="Más secciones de Alumni"
-        >
-          {primaryItems.map(
-            ({
-              href,
-              label,
-              description,
-              icon: Icon,
-            }) => (
-              <Link
-                key={href}
-                href={href}
-                className="alumni-more-row"
-              >
-                <span className="alumni-more-row-icon">
-                  <Icon
-                    size={19}
-                    strokeWidth={1.9}
-                  />
-                </span>
-
-                <span className="alumni-more-row-copy">
-                  <strong>
-                    {label}
-                  </strong>
-                  <small>
-                    {
-                      description
-                    }
-                  </small>
-                </span>
-
-                <ChevronRight
-                  size={17}
-                  className="alumni-more-chevron"
-                />
-              </Link>
-            )
-          )}
-        </nav>
-
-        <nav
-          className="alumni-more-list alumni-more-list-secondary"
-          aria-label="Configuración y ayuda"
-        >
-          {secondaryItems.map(
-            ({
-              href,
-              label,
-              description,
-              icon: Icon,
-            }) => (
-              <Link
-                key={href}
-                href={href}
-                className="alumni-more-row"
-              >
-                <span className="alumni-more-row-icon">
-                  <Icon
-                    size={19}
-                    strokeWidth={1.9}
-                  />
-                </span>
-
-                <span className="alumni-more-row-copy">
-                  <strong>
-                    {label}
-                  </strong>
-                  <small>
-                    {
-                      description
-                    }
-                  </small>
-                </span>
-
-                <ChevronRight
-                  size={17}
-                  className="alumni-more-chevron"
-                />
-              </Link>
-            )
-          )}
-        </nav>
-
-        <button
-          type="button"
-          onClick={() =>
-            void logout()
           }
-          disabled={signingOut}
-          className="alumni-more-logout"
+          animate={{
+            opacity: 1,
+            y: 0,
+            scale: 1,
+          }}
+          transition={{
+            duration: 0.58,
+            ease: [
+              0.2,
+              0.8,
+              0.2,
+              1,
+            ],
+          }}
         >
-          <span className="alumni-more-row-icon">
-            <LogOut
-              size={19}
-              strokeWidth={1.9}
-            />
-          </span>
+          <div
+            className="alumni-more-premium-orbit alumni-more-premium-orbit-a"
+            aria-hidden="true"
+          />
+          <div
+            className="alumni-more-premium-orbit alumni-more-premium-orbit-b"
+            aria-hidden="true"
+          />
 
-          <span className="alumni-more-row-copy">
-            <strong>
-              {signingOut
-                ? "Cerrando sesión..."
-                : "Cerrar sesión"}
-            </strong>
-          </span>
-        </button>
+          <motion.span
+            className="alumni-more-premium-badge"
+            initial={
+              reduceMotion
+                ? false
+                : {
+                    opacity: 0,
+                    scale: 0.9,
+                  }
+            }
+            animate={{
+              opacity: 1,
+              scale: 1,
+            }}
+            transition={{
+              delay: 0.12,
+              duration: 0.38,
+            }}
+          >
+            <Sparkles size={13} />
+            Más claridad, menos ruido
+          </motion.span>
+
+          <h1>Más</h1>
+
+          <p>
+            Un espacio limpio para acceder a funciones,
+            comunidad y soporte sin que todo se vea
+            amontonado.
+          </p>
+
+          <div className="alumni-more-premium-note">
+            Separé las opciones normales de las opciones del
+            sistema para que la navegación se sienta más
+            profesional y enfocada.
+          </div>
+        </motion.section>
+
+        <Section
+          eyebrow="ACCESO RÁPIDO"
+          title="Explorar y conectar"
+          copy="Lo principal para moverte dentro de la experiencia diaria de ALUMNI."
+          items={exploreItems}
+          delay={0.05}
+        />
+
+        <Section
+          eyebrow="COMUNIDAD"
+          title="Espacios y actividades"
+          copy="Todo lo relacionado con participación, grupos y encuentros."
+          items={communityItems}
+          delay={0.08}
+        />
+
+        <Section
+          eyebrow="SOPORTE Y SISTEMA"
+          title="Cuenta, ayuda y producto"
+          copy="Aquí viven las opciones de ajustes, feedback y la información de ALUMNI."
+          items={systemItems}
+          delay={0.11}
+        />
       </main>
     </AppShell>
   );
 }
 
-/* ALUMNI_MORE_2_0_LISTA_LIMPIA */
-
-/* ALUMNI_ABOUT_1_0_APP_STORE */
+/* ALUMNI_VISUAL_LANGUAGE_1_0_MORE_GROUPED */

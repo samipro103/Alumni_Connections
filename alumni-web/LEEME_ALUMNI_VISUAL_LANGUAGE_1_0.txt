@@ -1,0 +1,57 @@
+ALUMNI — VISUAL LANGUAGE 1.0 + MORE GROUPED
+
+OBJETIVO
+Tomar como referencia la claridad visual de la pantalla
+Desarrollador y trasladar ese lenguaje a la app.
+
+EN ESTE PARCHE
+- Se rehace la pantalla /more con un look premium.
+- Se separan las opciones en grupos claros.
+- Se evita que Feedback / Acerca de / Ajustes se vean amontonados.
+- Se dejan utilidades visuales globales para seguir aplicando
+  el mismo lenguaje al resto de pantallas.
+
+ESTRUCTURA DE /MORE
+1. Explorar y conectar
+   - Buscar
+   - Mensajes
+
+2. Comunidad
+   - Comunidades
+   - Eventos
+
+3. Soporte y sistema
+   - Feedback
+   - Acerca de ALUMNI
+   - Ajustes
+
+ESTILO
+- Hero tipo showcase
+- Motion
+- Mejor jerarquía
+- Espaciado limpio
+- Grupos claros
+- Sensación más profesional
+
+IMPORTANTE
+Este parche deja la BASE del lenguaje visual.
+Después podemos hacer un segundo pase para aplicar este
+mismo lenguaje de forma más agresiva en:
+- Feed
+- Perfil
+- Search
+- Settings
+- Messages
+- Events
+- Communities
+
+EJECUTAR
+
+node .\aplicar_alumni_visual_language_1_0_more_grouped.js
+npm run build
+
+SI PASA
+
+git add .
+git commit -m "Upgrade More layout and establish Alumni visual language"
+git push origin main
