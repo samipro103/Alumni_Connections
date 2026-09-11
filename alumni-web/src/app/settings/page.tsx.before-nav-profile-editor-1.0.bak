@@ -41,7 +41,6 @@ import AccountTrustPanel from "@/components/settings/AccountTrustPanel";
 import "./settings-classic-1-0.css";
 import "../interior-ui-1-0.css";
 import "./settings-clean-2-0.css";
-import "./settings-edit-profile-option-1.css";
 
 type SettingsSectionId =
   | "appearance"
@@ -1737,5 +1736,3 @@ function SocialField({
 /* ALUMNI_SETTINGS_2_0_INTERIORES_LIMPIOS */
 
 /* ALUMNI_SETTINGS_2_0_1_CHECK_IMPORT_HOTFIX */
-
-/* ALUMNI_NAV_PROFILE_EDITOR_1_0_FLOATING_OPTION1 */
