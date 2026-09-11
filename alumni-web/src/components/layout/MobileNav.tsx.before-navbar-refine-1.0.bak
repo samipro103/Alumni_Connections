@@ -23,7 +23,6 @@ import {
 import {
   supabase,
 } from "@/lib/supabase";
-import "./mobile-nav-refine-1-0.css";
 
 const unreadMessagesCache =
   new Map<string, number>();
@@ -275,9 +274,9 @@ export default function MobileNav() {
       data-alumni-mobile-nav="true"
       data-nav-design="clean-four"
       style={{
-        bottom: "max(14px, calc(env(safe-area-inset-bottom) + 8px))",
+        bottom: "max(7px, env(safe-area-inset-bottom))",
       }}
-      className="alumni-mobile-nav-clean fixed inset-x-4 z-[2147482000] mx-auto w-auto max-w-[398px] rounded-[18px] border px-1.5 py-1 [backface-visibility:hidden] lg:hidden"
+      className="alumni-mobile-nav-clean fixed left-1/2 z-[2147482000] w-[calc(100%-26px)] max-w-[390px] -translate-x-1/2 rounded-[20px] border border-[var(--app-border)] bg-[color-mix(in_srgb,var(--app-surface)_97%,transparent)] px-1.5 py-1 shadow-[0_12px_32px_var(--app-shadow)] backdrop-blur-xl [backface-visibility:hidden] lg:hidden"
     >
       <div className="grid w-full grid-cols-4">
         {navItems.map(
@@ -371,5 +370,3 @@ export default function MobileNav() {
 /* ALUMNI_NAVBAR_ICONS_ONLY_1_0 */
 
 /* ALUMNI_FEEDBACK_PRO_NAV_COMPACT_3_0 */
-
-/* ALUMNI_NAVBAR_REFINE_1_0 */
