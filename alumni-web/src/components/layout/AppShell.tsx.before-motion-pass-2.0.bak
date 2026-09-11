@@ -11,7 +11,6 @@ import PushNotificationBootstrap from "@/components/notifications/PushNotificati
 import {
   AlumniRouteMotion,
 } from "@/components/motion/AlumniMotion";
-import AlumniMotionDirector from "@/components/motion/AlumniMotionDirector";
 
 interface Props {
   children: ReactNode;
@@ -30,7 +29,6 @@ export default function AppShell({
     <>
       <EventReminderBootstrap />
       <PushNotificationBootstrap />
-      <AlumniMotionDirector />
       <div
         className={
           immersiveMobile
@@ -100,5 +98,3 @@ export default function AppShell({
 /* ALUMNI_NOTIFICATIONS_2_0 */
 
 /* ALUMNI_MOTION_SYSTEM_1_0 */
-
-/* ALUMNI_MOTION_PASS_2_0_FULL_APP */

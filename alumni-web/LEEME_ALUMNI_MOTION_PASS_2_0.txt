@@ -1,0 +1,98 @@
+ALUMNI — MOTION PASS 2.0 FULL APP
+
+OBJETIVO
+Dar motion a toda la experiencia existente de ALUMNI,
+no solamente a pantallas nuevas.
+
+CUBRE AUTOMÁTICAMENTE
+
+- Feed
+- Posts
+- Infinite scroll
+- Perfil
+- Cards de perfiles
+- Mensajes
+- Comentarios
+- Buscar
+- Resultados
+- Más
+- Eventos
+- Comunidades
+- Cards
+- Filas/listas
+- Modales
+- Sheets
+- Drawers
+- Popovers
+- Toasts
+- Loaders
+- Skeletons
+- Estados vacíos
+- Navbar móvil
+- Contenido agregado dinámicamente
+
+CÓMO FUNCIONA
+
+Se agrega AlumniMotionDirector.
+
+No reescribe la lógica de cada pantalla.
+Observa la interfaz y aplica el lenguaje motion estándar
+a superficies relevantes a medida que aparecen.
+
+Usa:
+- IntersectionObserver
+- MutationObserver
+- requestAnimationFrame
+- CSS transform/opacity
+
+No usa polling.
+
+MOTION POR TIPO
+
+Cards:
+fade + translate + micro-scale
+
+Listas:
+fade + translate + stagger
+
+Mensajes/comentarios:
+entrada rápida y suave
+
+Modales/sheets:
+scale + translate desde abajo
+
+Toasts:
+entrada superior suave
+
+Loaders:
+respiración sutil
+
+Navbar:
+entrada + estado activo + feedback al tocar
+
+CONTENIDO DINÁMICO
+
+También funciona con elementos creados después del primer render,
+incluyendo posts nuevos de infinite scroll.
+
+ACCESIBILIDAD
+
+prefers-reduced-motion desactiva las animaciones de desplazamiento,
+escala y loops.
+
+REGLA OFICIAL DE ALUMNI
+
+Todo lo nuevo se diseña con motion desde el inicio.
+El Motion Director es respaldo global, no sustituto para
+animaciones especiales de pantallas premium.
+
+EJECUTAR
+
+node .\aplicar_alumni_motion_pass_2_0_full_app.js
+npm run build
+
+SI PASA
+
+git add .
+git commit -m "Apply motion across Alumni app"
+git push origin main
