@@ -65,11 +65,6 @@ export default function TopBar() {
       0
   );
 
-  const [
-    hiddenByScroll,
-    setHiddenByScroll,
-  ] = useState(false);
-
   useEffect(() => {
     if (!user) {
       setProfile(null);
@@ -214,118 +209,6 @@ export default function TopBar() {
     };
   }, [user?.id]);
 
-  useEffect(() => {
-    if (
-      typeof window ===
-      "undefined"
-    ) {
-      return;
-    }
-
-    const media =
-      window.matchMedia(
-        "(max-width: 1023px)"
-      );
-
-    let lastY =
-      window.scrollY;
-
-    let ticking =
-      false;
-
-    function updateHeader() {
-      const currentY =
-        window.scrollY;
-
-      if (!media.matches) {
-        setHiddenByScroll(
-          false
-        );
-        lastY =
-          currentY;
-        ticking =
-          false;
-        return;
-      }
-
-      const delta =
-        currentY - lastY;
-
-      if (
-        currentY <= 18
-      ) {
-        setHiddenByScroll(
-          false
-        );
-      } else if (
-        delta > 3 &&
-        currentY > 88
-      ) {
-        setHiddenByScroll(
-          true
-        );
-      } else if (
-        delta < -3
-      ) {
-        setHiddenByScroll(
-          false
-        );
-      }
-
-      lastY =
-        currentY;
-
-      ticking =
-        false;
-    }
-
-    function alumniMobileTopbarScroll() {
-      if (ticking) {
-        return;
-      }
-
-      ticking =
-        true;
-
-      window.requestAnimationFrame(
-        updateHeader
-      );
-    }
-
-    function mediaChange() {
-      if (!media.matches) {
-        setHiddenByScroll(
-          false
-        );
-      }
-    }
-
-    window.addEventListener(
-      "scroll",
-      alumniMobileTopbarScroll,
-      {
-        passive: true,
-      }
-    );
-
-    media.addEventListener?.(
-      "change",
-      mediaChange
-    );
-
-    return () => {
-      window.removeEventListener(
-        "scroll",
-        alumniMobileTopbarScroll
-      );
-
-      media.removeEventListener?.(
-        "change",
-        mediaChange
-      );
-    };
-  }, []);
-
   function submitSearch(
     event:
       React.FormEvent
@@ -345,19 +228,7 @@ export default function TopBar() {
   }
 
   return (
-    <header
-      data-alumni-topbar="true"
-      data-scroll-hidden={
-        hiddenByScroll
-          ? "true"
-          : "false"
-      }
-      className={`fixed inset-x-0 top-0 z-[70] h-[calc(68px+env(safe-area-inset-top))] border-b border-[var(--app-border)] bg-[color-mix(in_srgb,var(--app-surface)_98%,transparent)] backdrop-blur-md transition-transform duration-200 ease-out will-change-transform [transform:translateZ(0)] lg:h-[68px] lg:translate-y-0 ${
-        hiddenByScroll
-          ? "-translate-y-full"
-          : "translate-y-0"
-      }`}
-    >
+    <header data-alumni-topbar="true" className="fixed inset-x-0 top-0 z-[70] h-[calc(68px+env(safe-area-inset-top))] border-b border-[var(--app-border)] bg-[color-mix(in_srgb,var(--app-surface)_98%,transparent)] backdrop-blur-md [transform:translateZ(0)] lg:h-[68px]">
       <div className="mx-auto flex h-full w-full max-w-[1500px] items-center gap-5 px-4 pt-[env(safe-area-inset-top)] sm:px-6 lg:px-8 lg:pt-0">
         <Link
           href="/feed"
@@ -458,5 +329,3 @@ export default function TopBar() {
 /* ALUMNI_3_1_0_PROFESSIONAL_VISUAL_CORE */
 
 /* ALUMNI_FEED_1_7_1_HEADER_COMPOSER_UNIFICADO */
-
-/* ALUMNI_PROFILE_2_1_TYPOGRAPHY_DYNAMIC_HEADER */
