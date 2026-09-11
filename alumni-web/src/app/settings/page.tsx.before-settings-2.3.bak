@@ -32,7 +32,6 @@ import {
 } from "@/components/theme/ThemeProvider";
 import { supabase } from "@/lib/supabase";
 import { uploadImage } from "@/lib/storage";
-import { getSpotifyPremiumSession } from "@/lib/spotifyClient";
 import AppShell from "@/components/layout/AppShell";
 import ProfileSettingsHub from "@/components/settings/ProfileSettingsHub";
 import SavedPostsPanel from "@/components/settings/SavedPostsPanel";
@@ -126,15 +125,6 @@ export default function SettingsPage() {
   const [privacyModalOpen, setPrivacyModalOpen] = useState(false);
   const [followRequests, setFollowRequests] = useState<any[]>([]);
   const [requestsLoading, setRequestsLoading] = useState(false);
-  const [
-    spotifySettingsVisible,
-    setSpotifySettingsVisible,
-  ] = useState(false);
-
-  const [
-    spotifyAccessChecked,
-    setSpotifyAccessChecked,
-  ] = useState(false);
 
   useEffect(() => {
     if (!loading && !user) router.push("/login");
@@ -143,83 +133,6 @@ export default function SettingsPage() {
   useEffect(() => {
     if (user) getProfile();
   }, [user?.id]);
-
-  useEffect(() => {
-    if (!user) {
-      setSpotifySettingsVisible(false);
-      setSpotifyAccessChecked(false);
-      return;
-    }
-
-    let cancelled = false;
-
-    async function checkSpotifySettingsAccess() {
-      try {
-        const session =
-          await getSpotifyPremiumSession();
-
-        if (cancelled) return;
-
-        setSpotifySettingsVisible(
-          Boolean(
-            session.connected &&
-              session.premium
-          )
-        );
-      } catch {
-        if (cancelled) return;
-
-        setSpotifySettingsVisible(false);
-      } finally {
-        if (!cancelled) {
-          setSpotifyAccessChecked(true);
-        }
-      }
-    }
-
-    void checkSpotifySettingsAccess();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [user?.id]);
-
-  useEffect(() => {
-    if (
-      !spotifyAccessChecked ||
-      spotifySettingsVisible ||
-      typeof window === "undefined"
-    ) {
-      return;
-    }
-
-    const url =
-      new URL(
-        window.location.href
-      );
-
-    if (
-      url.searchParams.get("section") !==
-      "music"
-    ) {
-      return;
-    }
-
-    setActiveSection("profile");
-    setMobileSectionOpen(false);
-
-    url.searchParams.delete("section");
-    url.searchParams.delete("spotify");
-
-    window.history.replaceState(
-      {},
-      "",
-      url.pathname + url.search
-    );
-  }, [
-    spotifyAccessChecked,
-    spotifySettingsVisible,
-  ]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -1055,13 +968,11 @@ export default function SettingsPage() {
                 />
               )}
 
-              {activeSection === "music" &&
-                spotifyAccessChecked &&
-                spotifySettingsVisible && (
-                  <SpotifyPremiumMusicGate
-                    userId={user?.id || ""}
-                  />
-                )}
+              {activeSection === "music" && (
+                <SpotifyPremiumMusicGate
+                  userId={user?.id || ""}
+                />
+              )}
 
               {activeSection === "account" && (
                 <AccountTrustPanel
@@ -1804,5 +1715,3 @@ function SocialField({
 /* ALUMNI_PROFILE_EDITOR_1_1_REPAIR */
 
 /* ALUMNI_SETTINGS_2_2_NO_REDUNDANCY */
-
-/* ALUMNI_SETTINGS_2_3_VISIBILITY_ELIGIBILITY */

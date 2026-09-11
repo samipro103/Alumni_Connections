@@ -1,0 +1,116 @@
+ALUMNI SETTINGS 2.3 — VISIBILITY & ELIGIBILITY
+
+OBJETIVO
+No mostrar a todos funciones que no aplican a su cuenta.
+
+REGLA
+Una opción se muestra si:
+- el usuario puede usarla realmente, o
+- es una función universal de cuenta.
+
+CAMBIOS
+
+1. MÚSICA / SPOTIFY
+Ahora la sección Música solo puede mostrarse si:
+
+- Spotify está conectado
+- la cuenta de Spotify es Premium
+
+Si una cuenta no cumple:
+- no se renderiza la configuración de música
+- un acceso directo ?section=music vuelve a Configuración
+
+No se elimina ninguna tabla ni lógica Spotify.
+
+2. CAMBIAR CONTRASEÑA
+Solo se muestra si la cuenta de Supabase tiene proveedor:
+
+email
+
+Las cuentas únicamente OAuth:
+- Google
+- Apple
+- etc.
+
+no verán una opción de contraseña que no corresponde.
+
+3. CORREO DE RECUPERACIÓN
+Misma regla:
+solo proveedor email.
+
+4. HISTORIAS
+Historias está oculto como decisión de producto.
+
+Por eso:
+- se elimina "Historias" de Preferencias de notificaciones
+
+El campo interno sigue existiendo por compatibilidad.
+
+5. SOLICITUDES DE SEGUIMIENTO
+NO se modifica.
+
+Ya está correcto:
+solo aparece cuando la cuenta es privada.
+
+6. BLOQUEADOS / SILENCIADOS
+NO se modifica.
+
+Ya está correcto:
+solo aparece cuando existen registros.
+
+7. FUNCIONES QUE SIGUEN PARA TODOS
+No se ocultan:
+
+- Editar perfil
+- Privacidad
+- Preferencias de notificaciones
+- Apariencia
+- Seguridad
+- Ayuda
+- Exportar mis datos
+- Eliminar cuenta
+- Cerrar sesión
+
+Estas son funciones universales de cuenta.
+
+8. COMPATIBILIDAD SETTINGS 2.2
+Si tu copia local todavía conserva:
+
+Cuenta
+o
+Notificaciones -> bandeja
+
+el parche también corrige:
+
+Cuenta -> Editar perfil
+Notificaciones -> Preferencias de notificaciones
+
+ARCHIVOS MODIFICADOS
+
+src/app/settings/page.tsx
+src/components/settings/AccountTrustPanel.tsx
+src/app/notifications/page.tsx
+
+NO TOCA
+
+- RLS
+- tablas
+- Supabase schema
+- permisos administrativos
+- datos del usuario
+- lógica de eliminar cuenta
+- exportación
+- follow requests
+- bloqueos
+- silenciados
+
+EJECUCIÓN
+
+node .\aplicar_alumni_settings_2_3_visibility_eligibility.js
+npm run build
+
+SI BUILD PASA
+
+git add .
+git commit -m "Settings 2.3 - visibility and eligibility"
+git push origin main

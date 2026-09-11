@@ -43,31 +43,6 @@ export default function AccountTrustPanel({
   logout: () => void;
 }) {
   const { user } = useAuth();
-
-  const authProviders =
-    Array.from(
-      new Set(
-        [
-          ...(
-            Array.isArray(
-              user?.app_metadata?.providers
-            )
-              ? user?.app_metadata?.providers
-              : []
-          ),
-          user?.app_metadata?.provider,
-          ...(
-            user?.identities || []
-          ).map(
-            (identity) =>
-              identity.provider
-          ),
-        ].filter(Boolean)
-      )
-    );
-
-  const supportsEmailPassword =
-    authProviders.includes("email");
   const [password, setPassword] =
     useState("");
   const [confirmPassword, setConfirmPassword] =
@@ -508,53 +483,51 @@ export default function AccountTrustPanel({
           </p>
         </div>
 
-        {supportsEmailPassword && (
-          <div className="mt-1 divide-y divide-[var(--app-border)] border-t border-[var(--app-border)]">
-            <button
-              type="button"
-              onClick={() =>
-                openAccountFlow(
-                  "recovery"
-                )
-              }
-              className="flex min-h-[58px] w-full items-center gap-3 text-left"
-            >
-              <Mail
-                size={17}
-                className="text-[var(--app-muted)]"
-              />
-              <span className="min-w-0 flex-1 text-sm font-bold text-[var(--app-text-soft)]">
-                Correo de recuperación
-              </span>
-              <ChevronRight
-                size={17}
-                className="text-[var(--app-muted-2)]"
-              />
-            </button>
+        <div className="mt-1 divide-y divide-[var(--app-border)] border-t border-[var(--app-border)]">
+          <button
+            type="button"
+            onClick={() =>
+              openAccountFlow(
+                "recovery"
+              )
+            }
+            className="flex min-h-[58px] w-full items-center gap-3 text-left"
+          >
+            <Mail
+              size={17}
+              className="text-[var(--app-muted)]"
+            />
+            <span className="min-w-0 flex-1 text-sm font-bold text-[var(--app-text-soft)]">
+              Correo de recuperación
+            </span>
+            <ChevronRight
+              size={17}
+              className="text-[var(--app-muted-2)]"
+            />
+          </button>
 
-            <button
-              type="button"
-              onClick={() =>
-                openAccountFlow(
-                  "password"
-                )
-              }
-              className="flex min-h-[58px] w-full items-center gap-3 text-left"
-            >
-              <KeyRound
-                size={17}
-                className="text-[var(--app-muted)]"
-              />
-              <span className="min-w-0 flex-1 text-sm font-bold text-[var(--app-text-soft)]">
-                Cambiar contraseña
-              </span>
-              <ChevronRight
-                size={17}
-                className="text-[var(--app-muted-2)]"
-              />
-            </button>
-          </div>
-        )}
+          <button
+            type="button"
+            onClick={() =>
+              openAccountFlow(
+                "password"
+              )
+            }
+            className="flex min-h-[58px] w-full items-center gap-3 text-left"
+          >
+            <KeyRound
+              size={17}
+              className="text-[var(--app-muted)]"
+            />
+            <span className="min-w-0 flex-1 text-sm font-bold text-[var(--app-text-soft)]">
+              Cambiar contraseña
+            </span>
+            <ChevronRight
+              size={17}
+              className="text-[var(--app-muted-2)]"
+            />
+          </button>
+        </div>
       </Panel>
 
 
@@ -1017,5 +990,3 @@ export default function AccountTrustPanel({
 /* ALUMNI_3_1_2A_SAFE_PRODUCT_FLOWS */
 
 /* ALUMNI_SETTINGS_2_0_INTERIORES_LIMPIOS */
-
-/* ALUMNI_SETTINGS_2_3_VISIBILITY_ELIGIBILITY */
