@@ -388,3 +388,713 @@
 }
 
 /* ALUMNI_ABOUT_1_0_APP_STORE */
+
+/* =========================================================
+   ALUMNI Developer Showcase 1.1
+   ========================================================= */
+
+.alumni-dev-showcase {
+  --dev-accent-wash:
+    color-mix(
+      in srgb,
+      var(--app-accent) 10%,
+      transparent
+    );
+  --dev-accent-line:
+    color-mix(
+      in srgb,
+      var(--app-accent) 32%,
+      var(--app-border)
+    );
+  overflow: visible;
+}
+
+.alumni-dev-scroll-progress {
+  position: fixed;
+  z-index: 120;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 3px;
+  transform-origin: 0 50%;
+  background: var(--app-accent);
+  pointer-events: none;
+}
+
+.alumni-dev-topbar {
+  position: relative;
+  z-index: 4;
+}
+
+.alumni-dev-hero {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  min-height: 610px;
+  padding: 38px 24px 30px;
+  border: 1px solid var(--app-border);
+  border-radius: 28px;
+  background: var(--app-surface);
+  text-align: center;
+}
+
+.alumni-dev-hero::before,
+.alumni-dev-hero::after {
+  content: "";
+  position: absolute;
+  z-index: -2;
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.alumni-dev-hero::before {
+  width: 270px;
+  height: 270px;
+  top: -132px;
+  right: -118px;
+  border: 1px solid var(--dev-accent-line);
+}
+
+.alumni-dev-hero::after {
+  width: 180px;
+  height: 180px;
+  left: -104px;
+  bottom: 54px;
+  border: 1px solid var(--app-border);
+}
+
+.alumni-dev-orbit {
+  position: absolute;
+  z-index: -1;
+  border: 1px solid var(--app-border);
+  border-radius: 50%;
+  opacity: 0.65;
+  pointer-events: none;
+}
+
+.alumni-dev-orbit::after {
+  content: "";
+  position: absolute;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--app-accent);
+  box-shadow:
+    0 0 0 5px var(--dev-accent-wash);
+}
+
+.alumni-dev-orbit-one {
+  width: 118px;
+  height: 118px;
+  top: 96px;
+  left: -60px;
+}
+
+.alumni-dev-orbit-one::after {
+  top: 16px;
+  right: 10px;
+}
+
+.alumni-dev-orbit-two {
+  width: 148px;
+  height: 148px;
+  right: -82px;
+  bottom: 130px;
+}
+
+.alumni-dev-orbit-two::after {
+  bottom: 25px;
+  left: 12px;
+}
+
+.alumni-dev-build-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 28px;
+  margin: 0 auto 22px;
+  padding: 0 10px;
+  border: 1px solid var(--dev-accent-line);
+  border-radius: 999px;
+  background: var(--dev-accent-wash);
+  color: var(--app-accent);
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.alumni-dev-avatar-shell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 94px;
+  height: 94px;
+  margin: 0 auto 17px;
+  border: 1px solid var(--dev-accent-line);
+  border-radius: 29px;
+  background: var(--app-bg);
+  box-shadow:
+    0 14px 36px
+    color-mix(
+      in srgb,
+      var(--app-text) 8%,
+      transparent
+    );
+}
+
+.alumni-dev-avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 72px;
+  height: 72px;
+  border-radius: 22px;
+  background: var(--app-accent-fill);
+  color: var(--app-on-accent);
+}
+
+.alumni-dev-kicker {
+  margin: 0 0 6px;
+  color: var(--app-accent);
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.17em;
+  text-transform: uppercase;
+}
+
+.alumni-dev-hero > h2 {
+  margin: 0;
+  color: var(--app-text);
+  font-size: clamp(28px, 8vw, 38px);
+  line-height: 1;
+  font-weight: 950;
+  letter-spacing: -0.05em;
+}
+
+.alumni-dev-role {
+  margin: 7px 0 0;
+  color: var(--app-muted);
+  font-size: 12px;
+  font-weight: 750;
+}
+
+.alumni-dev-hero-statement {
+  max-width: 520px;
+  margin: 33px auto 0;
+  color: var(--app-text);
+  font-size: clamp(31px, 9vw, 48px);
+  line-height: 0.98;
+  font-weight: 950;
+  letter-spacing: -0.058em;
+}
+
+.alumni-dev-hero-statement span {
+  color: var(--app-accent);
+}
+
+.alumni-dev-hero-copy {
+  max-width: 500px;
+  margin: 22px auto 0;
+  color: var(--app-text-soft);
+  font-size: 13px;
+  line-height: 1.72;
+}
+
+.alumni-dev-tech-row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 7px;
+  max-width: 500px;
+  margin: 24px auto 0;
+}
+
+.alumni-dev-tech-row span {
+  display: inline-flex;
+  align-items: center;
+  min-height: 29px;
+  padding: 0 10px;
+  border: 1px solid var(--app-border);
+  border-radius: 9px;
+  background: var(--app-bg);
+  color: var(--app-muted);
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.alumni-dev-scroll-cue {
+  display: flex;
+  justify-content: center;
+  margin: 26px auto 0;
+}
+
+.alumni-dev-scroll-cue i {
+  position: relative;
+  display: block;
+  width: 20px;
+  height: 32px;
+  border: 1px solid var(--app-border);
+  border-radius: 999px;
+}
+
+.alumni-dev-scroll-cue i::after {
+  content: "";
+  position: absolute;
+  top: 7px;
+  left: 50%;
+  width: 3px;
+  height: 6px;
+  transform: translateX(-50%);
+  border-radius: 99px;
+  background: var(--app-accent);
+}
+
+.alumni-dev-manifesto {
+  margin: 54px 0 12px;
+  padding: 0 8px;
+  text-align: center;
+}
+
+.alumni-dev-manifesto > span {
+  color: var(--app-accent);
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+}
+
+.alumni-dev-manifesto blockquote {
+  max-width: 610px;
+  margin: 14px auto 0;
+  color: var(--app-text);
+  font-size: clamp(23px, 6.5vw, 34px);
+  line-height: 1.18;
+  font-weight: 850;
+  letter-spacing: -0.04em;
+}
+
+.alumni-dev-section {
+  padding-top: 66px;
+}
+
+.alumni-dev-section-heading {
+  max-width: 570px;
+  margin-bottom: 25px;
+}
+
+.alumni-dev-section-heading small,
+.alumni-dev-stack-header small {
+  display: block;
+  margin-bottom: 7px;
+  color: var(--app-accent);
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+}
+
+.alumni-dev-section-heading h2,
+.alumni-dev-stack-header h2 {
+  margin: 0;
+  color: var(--app-text);
+  font-size: clamp(25px, 7vw, 34px);
+  line-height: 1.05;
+  font-weight: 950;
+  letter-spacing: -0.045em;
+}
+
+.alumni-dev-section-heading p {
+  margin: 12px 0 0;
+  color: var(--app-muted);
+  font-size: 13px;
+  line-height: 1.65;
+}
+
+.alumni-dev-capability-grid {
+  display: grid;
+  grid-template-columns:
+    repeat(
+      2,
+      minmax(0, 1fr)
+    );
+  gap: 10px;
+}
+
+.alumni-dev-capability-card {
+  min-height: 210px;
+  padding: 17px;
+  border: 1px solid var(--app-border);
+  border-radius: 20px;
+  background: var(--app-surface);
+}
+
+.alumni-dev-capability-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.alumni-dev-capability-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 11px;
+  background: var(--dev-accent-wash);
+  color: var(--app-accent);
+}
+
+.alumni-dev-capability-index {
+  color: var(--app-muted-3);
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.09em;
+}
+
+.alumni-dev-capability-card h3 {
+  margin: 24px 0 8px;
+  color: var(--app-text);
+  font-size: 17px;
+  font-weight: 900;
+  letter-spacing: -0.025em;
+}
+
+.alumni-dev-capability-card p {
+  margin: 0;
+  color: var(--app-muted);
+  font-size: 11px;
+  line-height: 1.62;
+}
+
+.alumni-dev-journey-section {
+  padding-top: 76px;
+}
+
+.alumni-dev-timeline-v2 {
+  margin-top: 35px;
+}
+
+.alumni-dev-timeline-item {
+  display: grid;
+  grid-template-columns: 39px minmax(0, 1fr);
+  gap: 15px;
+}
+
+.alumni-dev-timeline-rail {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.alumni-dev-timeline-node {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 39px;
+  height: 39px;
+  flex: 0 0 39px;
+  border: 1px solid var(--dev-accent-line);
+  border-radius: 13px;
+  background: var(--app-surface);
+  color: var(--app-accent);
+}
+
+.alumni-dev-timeline-rail i {
+  width: 1px;
+  min-height: 60px;
+  flex: 1;
+  transform-origin: 50% 0;
+  background: var(--dev-accent-line);
+}
+
+.alumni-dev-timeline-copy {
+  padding: 3px 0 40px;
+}
+
+.alumni-dev-timeline-copy small {
+  color: var(--app-accent);
+  font-size: 9px;
+  font-weight: 900;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+}
+
+.alumni-dev-timeline-copy h3 {
+  margin: 7px 0 11px;
+  color: var(--app-text);
+  font-size: 19px;
+  line-height: 1.15;
+  font-weight: 900;
+  letter-spacing: -0.03em;
+}
+
+.alumni-dev-timeline-copy p {
+  margin: 0;
+  color: var(--app-text-soft);
+  font-size: 12px;
+  line-height: 1.72;
+}
+
+.alumni-dev-stack-showcase {
+  margin-top: 42px;
+  padding: 22px;
+  border: 1px solid var(--app-border);
+  border-radius: 24px;
+  background: var(--app-surface);
+}
+
+.alumni-dev-stack-header {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+}
+
+.alumni-dev-stack-symbol {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  flex: 0 0 44px;
+  border-radius: 14px;
+  background: var(--app-accent-fill);
+  color: var(--app-on-accent);
+}
+
+.alumni-dev-stack-intro {
+  margin: 20px 0;
+  color: var(--app-text-soft);
+  font-size: 12px;
+  line-height: 1.7;
+}
+
+.alumni-dev-platform-grid {
+  display: grid;
+  gap: 8px;
+}
+
+.alumni-dev-platform-card {
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr);
+  align-items: start;
+  column-gap: 9px;
+  padding: 13px 0;
+  border-top: 1px solid var(--app-border);
+}
+
+.alumni-dev-platform-card > svg {
+  grid-row: 1 / span 2;
+  margin-top: 1px;
+  color: var(--app-accent);
+}
+
+.alumni-dev-platform-card strong {
+  color: var(--app-text);
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.alumni-dev-platform-card span {
+  margin-top: 3px;
+  color: var(--app-muted);
+  font-size: 10px;
+  line-height: 1.5;
+}
+
+.alumni-dev-code-line {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  overflow: hidden;
+  margin-top: 16px;
+  padding: 12px 13px;
+  border-radius: 12px;
+  background: var(--app-bg);
+  color: var(--app-muted);
+}
+
+.alumni-dev-code-line > span {
+  color: var(--app-accent);
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.alumni-dev-code-line code {
+  overflow: hidden;
+  flex: 1;
+  font-size: 9px;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.alumni-dev-code-line i {
+  width: 5px;
+  height: 13px;
+  flex: 0 0 5px;
+  background: var(--app-accent);
+  animation:
+    alumniDevCursor
+    1.05s
+    steps(1)
+    infinite;
+}
+
+.alumni-dev-closing-v2 {
+  margin-top: 70px;
+  padding: 31px 24px;
+  border: 1px solid var(--dev-accent-line);
+  border-radius: 28px;
+  background: var(--dev-accent-wash);
+  text-align: center;
+}
+
+.alumni-dev-closing-mark {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 46px;
+  height: 46px;
+  margin: 0 auto 17px;
+  border-radius: 15px;
+  background: var(--app-accent-fill);
+  color: var(--app-on-accent);
+}
+
+.alumni-dev-closing-v2 > small {
+  color: var(--app-accent);
+  font-size: 9px;
+  font-weight: 900;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.alumni-dev-closing-v2 > h2 {
+  max-width: 520px;
+  margin: 10px auto 0;
+  color: var(--app-text);
+  font-size: clamp(26px, 7.5vw, 38px);
+  line-height: 1.06;
+  font-weight: 950;
+  letter-spacing: -0.048em;
+}
+
+.alumni-dev-closing-v2 > p {
+  max-width: 500px;
+  margin: 17px auto 0;
+  color: var(--app-text-soft);
+  font-size: 12px;
+  line-height: 1.7;
+}
+
+.alumni-dev-signature {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 25px;
+  text-align: left;
+}
+
+.alumni-dev-signature > span {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 37px;
+  height: 37px;
+  border-radius: 50%;
+  background: var(--app-text);
+  color: var(--app-bg);
+  font-size: 13px;
+  font-weight: 950;
+}
+
+.alumni-dev-signature div {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.alumni-dev-signature strong {
+  color: var(--app-text);
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.alumni-dev-signature small {
+  color: var(--app-muted);
+  font-size: 9px;
+  font-weight: 650;
+}
+
+@keyframes alumniDevCursor {
+  0%,
+  45% {
+    opacity: 1;
+  }
+
+  46%,
+  100% {
+    opacity: 0;
+  }
+}
+
+@media (max-width: 480px) {
+  .alumni-dev-hero {
+    min-height: 0;
+    padding:
+      30px
+      17px
+      26px;
+    border-radius: 24px;
+  }
+
+  .alumni-dev-hero-statement {
+    margin-top: 28px;
+  }
+
+  .alumni-dev-tech-row {
+    gap: 6px;
+  }
+
+  .alumni-dev-tech-row span {
+    padding:
+      0
+      8px;
+  }
+
+  .alumni-dev-capability-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .alumni-dev-capability-card {
+    min-height: 0;
+  }
+
+  .alumni-dev-section {
+    padding-top: 58px;
+  }
+
+  .alumni-dev-stack-showcase {
+    padding:
+      20px
+      17px;
+  }
+
+  .alumni-dev-closing-v2 {
+    margin-top: 58px;
+    padding:
+      28px
+      18px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .alumni-dev-code-line i {
+    animation: none;
+    opacity: 1;
+  }
+}
+
+/* ALUMNI_DEVELOPER_SHOWCASE_1_1 */

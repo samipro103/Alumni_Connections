@@ -1,0 +1,59 @@
+ALUMNI — DEVELOPER SHOWCASE 1.1
+
+OBJETIVO
+Convertir la pantalla Desarrollador en una de las piezas visuales
+más fuertes de ALUMNI.
+
+INCLUYE
+- Entrada animada del hero.
+- Barra de progreso al hacer scroll.
+- Hero tipo showcase.
+- Frase central grande.
+- Tecnologías reales:
+  Next.js
+  React
+  TypeScript
+  Supabase
+  PostgreSQL
+  Capacitor
+- Cards de capacidades:
+  Producto
+  Experiencia
+  Infraestructura
+  Seguridad
+- Timeline animado del camino de ALUMNI.
+- Sección "No es una maqueta".
+- Web + Android.
+- Full-stack.
+- Seguridad / producción.
+- Cierre editorial animado.
+- Microinteracciones.
+- Soporte prefers-reduced-motion.
+- Dark / Light usando tokens existentes.
+
+NO AGREGA DEPENDENCIAS.
+Usa framer-motion, que ya existe en ALUMNI.
+
+IMPORTANTE
+"Sami" y los textos siguen siendo provisionales.
+Luego podemos agregar:
+- foto real
+- nombre completo
+- edad
+- carrera
+- LinkedIn
+- GitHub
+- fechas reales
+- hitos exactos
+- capturas de las primeras versiones
+
+EJECUTAR
+
+node .\aplicar_alumni_developer_showcase_1_1.js
+npm run build
+
+SI BUILD PASA
+
+git add .
+git commit -m "Upgrade Alumni developer showcase"
+git push origin main
