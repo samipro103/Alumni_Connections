@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  Crop,
   Globe2,
   GripVertical,
   ImagePlus,
@@ -688,6 +689,11 @@ export default function PostComposer({
     }
   }
 
+  function editFile(file: File) {
+    if (!file.type.startsWith("image/")) return;
+    setCropQueue([file]);
+  }
+
   function applyCrop(croppedFile: File) {
     const sourceFile = cropQueue[0];
     if (!sourceFile) return;
@@ -697,6 +703,10 @@ export default function PostComposer({
         file === sourceFile ? croppedFile : file
       )
     );
+    setCropQueue((currentQueue) => currentQueue.slice(1));
+  }
+
+  function skipCrop() {
     setCropQueue((currentQueue) => currentQueue.slice(1));
   }
 
@@ -887,10 +897,22 @@ export default function PostComposer({
                           </span>
                         </>
                       ) : (
-                        <img
-                          src={preview.url}
-                          alt=""
-                        />
+                        <>
+                          <img
+                            src={preview.url}
+                            alt=""
+                          />
+
+                          <button
+                            type="button"
+                            className="alumni-feed-preview-crop"
+                            onClick={() => editFile(preview.file)}
+                            aria-label={`Ajustar foto ${index + 1}`}
+                          >
+                            <Crop size={14} />
+                            <span>Ajustar</span>
+                          </button>
+                        </>
                       )}
 
                       {previews.length > 1 && (
@@ -1007,16 +1029,22 @@ export default function PostComposer({
         </div>
       </section>
 
-      {currentCropFile && (
+      {currentCropFile && currentCropIndex >= 0 && (
         <ImageCropEditor
           file={currentCropFile}
+          position={Math.max(
+            1,
+            previews
+              .filter((item) => item.file.type.startsWith("image/"))
+              .findIndex((item) => item.file === currentCropFile) + 1
+          )}
+          total={
+            previews.filter((item) => item.file.type.startsWith("image/"))
+              .length
+          }
           onApply={applyCrop}
-          onAddMore={() =>
-            inputRef.current?.click()
-          }
-          onClose={() =>
-            setCropQueue([])
-          }
+          onSkip={skipCrop}
+          onClose={() => setCropQueue([])}
         />
       )}
     </>
@@ -1030,5 +1058,3 @@ export default function PostComposer({
 /* ALUMNI_3_6_0_CREATION_SOCIAL_POLISH */
 
 /* ALUMNI_FEED_1_1_COMPOSER_STRUCTURE */
-
-/* ALUMNI_FEED_PHOTO_SELECT_1_0_LIMPIO */

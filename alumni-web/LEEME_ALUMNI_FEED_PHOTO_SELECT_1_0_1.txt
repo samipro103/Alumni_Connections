@@ -1,0 +1,68 @@
+ALUMNI FEED PHOTO SELECT 1.0.1
+DUPLICATE COMPOSER HOTFIX
+
+ERROR QUE CORRIGE
+
+./files/src/components/feed/PostComposer.tsx
+
+Property 'position' does not exist on type Props.
+
+CAUSA
+
+El proyecto local tiene más de una copia de PostComposer.tsx.
+
+La copia principal quedó actualizada con Feed Photo Select 1.0,
+pero otra copia bajo:
+
+files/src/components/feed/PostComposer.tsx
+
+seguía llamando ImageCropEditor con la interfaz anterior:
+
+- position
+- total
+- onSkip
+
+Mientras ImageCropEditor ya usa la interfaz nueva:
+
+- file
+- onApply
+- onAddMore
+- onClose
+
+QUÉ HACE ESTE HOTFIX
+
+Busca TODAS las copias de:
+
+PostComposer.tsx
+
+dentro del proyecto, excluyendo:
+- node_modules
+- .next
+- .git
+- .turbo
+- dist
+- build
+
+Y corrige cualquier copia que todavía tenga el contrato antiguo.
+
+NO TOCA
+
+- diseño de foto
+- cuadrícula
+- zoom (ya eliminado)
+- Supabase
+- Storage
+- upload pipeline
+- Media Rendering
+- Feed posts
+
+EJECUCIÓN
+
+node .\aplicar_alumni_feed_photo_select_1_0_1_duplicate_composer_hotfix.js
+npm run build
+
+SI BUILD PASA
+
+git add .
+git commit -m "Feed Photo Select 1.0.1 - sync duplicate composer"
+git push origin main

@@ -134,6 +134,9 @@ export default function PostComposer({
   }, [mediaFiles]);
 
   const currentCropFile = cropQueue[0] || null;
+  const currentCropIndex = currentCropFile
+    ? mediaFiles.indexOf(currentCropFile)
+    : -1;
 
   function openComposer() {
     if (!user) {
@@ -414,16 +417,19 @@ export default function PostComposer({
         </div>
       </section>
 
-      {currentCropFile && (
+      {currentCropFile && currentCropIndex >= 0 && (
         <ImageCropEditor
           file={currentCropFile}
+          position={Math.max(
+            1,
+            previews
+              .filter((item) => item.file.type.startsWith("image/"))
+              .findIndex((item) => item.file === currentCropFile) + 1
+          )}
+          total={previews.filter((item) => item.file.type.startsWith("image/")).length}
           onApply={applyCrop}
-          onAddMore={() =>
-            inputRef.current?.click()
-          }
-          onClose={() =>
-            setCropQueue([])
-          }
+          onSkip={skipCrop}
+          onClose={() => setCropQueue([])}
         />
       )}
     </>
@@ -431,5 +437,3 @@ export default function PostComposer({
 }
 
 /* ALUMNI_2_4_0_FEED_VISUAL_COMPOSER */
-
-/* ALUMNI_FEED_PHOTO_SELECT_1_0_1_DUPLICATE_COMPOSER_HOTFIX */

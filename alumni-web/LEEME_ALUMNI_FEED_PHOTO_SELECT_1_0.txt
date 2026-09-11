@@ -1,0 +1,82 @@
+ALUMNI FEED PHOTO SELECT 1.0 — LIMPIO
+
+OBJETIVO
+Simplificar por completo la pantalla que aparece al seleccionar una foto
+para una publicación.
+
+ANTES
+- Ajustar foto
+- Formato 4:5
+- texto de instrucciones
+- pellizcar para zoom
+- slider Zoom
+- Restablecer
+- Omitir
+- Usar recorte
+- botón "Ajustar" encima del preview
+
+AHORA
+Solo se ve:
+
+[X]                         [+] [Confirmar]
+
+                    FOTO
+              + cuadrícula 3x3
+                siempre visible
+
+FUNCIONAMIENTO
+
+X
+- sale del editor de fotos.
+
++
+- abre nuevamente el selector del dispositivo.
+- permite agregar otra foto o video.
+- máximo global sigue siendo 10 archivos.
+
+CONFIRMAR
+- confirma esa fotografía.
+- mantiene salida 4:5 de alta calidad.
+- si hay más fotos pendientes, pasa automáticamente a la siguiente.
+
+CUADRÍCULA
+- nunca se elimina.
+- permanece encima de la foto todo el tiempo.
+
+MOVIMIENTO
+- se puede arrastrar la foto dentro del encuadre.
+- NO existe zoom.
+- NO existe pinch-to-zoom.
+
+COMPOSITOR
+- se elimina el botón con texto "Ajustar" encima de la miniatura.
+- reorder, eliminar archivo y publicación siguen funcionando.
+
+NO TOCA
+- Supabase
+- Storage
+- RLS
+- pipeline de subida
+- Media Rendering del Feed
+- calidad final del upload
+- videos
+- máximo de 10 archivos
+
+ARCHIVO NUEVO
+src/app/feed/feed-photo-confirm-1-0.css
+
+ARCHIVOS MODIFICADOS
+src/components/feed/PostComposer.tsx
+src/components/feed/ImageCropEditor.tsx
+src/app/feed/page.tsx
+
+EJECUCIÓN
+
+node .\aplicar_alumni_feed_photo_select_1_0_limpio.js
+npm run build
+
+SI BUILD PASA
+
+git add .
+git commit -m "Feed Photo Select 1.0 - clean photo confirmation"
+git push origin main

@@ -221,11 +221,9 @@ export default function ImageCropEditor({
       return;
     }
 
-    const stage = node;
-
     function measure() {
       const rect =
-        stage.getBoundingClientRect();
+        node.getBoundingClientRect();
 
       setViewport({
         width:
@@ -249,7 +247,7 @@ export default function ImageCropEditor({
       );
 
     observer.observe(
-      stage
+      node
     );
 
     return () =>
@@ -732,5 +730,3 @@ export default function ImageCropEditor({
 }
 
 /* ALUMNI_FEED_PHOTO_SELECT_1_0_LIMPIO */
-
-/* ALUMNI_FEED_PHOTO_SELECT_1_0_2_NULL_STAGE_HOTFIX */

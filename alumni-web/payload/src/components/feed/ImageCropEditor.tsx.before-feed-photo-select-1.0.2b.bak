@@ -108,10 +108,8 @@ export default function ImageCropEditor({
     const node = stageRef.current;
     if (!node) return;
 
-    
-    const stage = node;
-function measure() {
-      const rect = stage.getBoundingClientRect();
+    function measure() {
+      const rect = node.getBoundingClientRect();
       setViewport({
         width: Math.max(1, rect.width),
         height: Math.max(1, rect.height),
@@ -121,7 +119,7 @@ function measure() {
     measure();
 
     const observer = new ResizeObserver(measure);
-    observer.observe(stage);
+    observer.observe(node);
 
     return () => observer.disconnect();
   }, []);
@@ -385,5 +383,3 @@ function measure() {
 }
 
 /* ALUMNI_2_4_0_IMAGE_CROP_EDITOR */
-
-/* ALUMNI_FEED_PHOTO_SELECT_1_0_2B_NULL_STAGE_ROBUST */

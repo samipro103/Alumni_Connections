@@ -18,7 +18,6 @@ import "./feed-comments-messaging-font.css";
 import "./stories-visual-1-0.css";
 import "./stories-visual-1-1.css";
 import "../media-rendering-1-0.css";
-import "./feed-photo-confirm-1-0.css";
 import { supabase } from "@/lib/supabase";
 import AppShell from "@/components/layout/AppShell";
 import { FeedLoadingSkeleton, AlumniEmptyState } from "@/components/ui/AlumniLoading";
@@ -2529,5 +2528,3 @@ export default function FeedPage() {
 /* ALUMNI_1_7_0_STORIES_HIDDEN_COMMENTS_GEIST */
 
 /* ALUMNI_MEDIA_RENDERING_1_0_INSTAGRAM_LEVEL */
-
-/* ALUMNI_FEED_PHOTO_SELECT_1_0_LIMPIO */
