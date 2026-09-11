@@ -1,0 +1,43 @@
+ALUMNI — MÁS CLEAN 2.1
+
+CAMBIO SOLICITADO
+
+La pantalla Más ahora queda mucho más limpia.
+
+ARRIBA
+- Eventos
+- Comunidades
+
+ABAJO — AJUSTES
+- Configuración
+- Notificaciones
+- Guardados
+- Pasaporte Alumni
+- Ayuda y feedback
+- Acerca de ALUMNI
+
+SE QUITA
+- Buscar
+- Mensajes
+- hero con demasiada explicación
+- subtítulos largos
+- texto innecesario
+- múltiples encabezados editoriales
+
+SE CONSERVA
+- motion
+- microinteracciones
+- dark/light
+- estilo premium
+- claridad visual
+
+EJECUTAR
+
+node .\aplicar_alumni_more_clean_2_1.js
+npm run build
+
+SI PASA
+
+git add .
+git commit -m "Simplify More screen"
+git push origin main
