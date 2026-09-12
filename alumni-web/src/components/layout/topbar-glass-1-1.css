@@ -996,3 +996,205 @@ and (
 }
 
 /* ALUMNI_PULL_REFRESH_FLUID_LIGHT_6_3:TOPBAR_CSS */
+
+/* =========================================================
+   ALUMNI_PULL_REFRESH_FULL_TRAVEL_6_4
+   Beam travels across the full topbar instead of scaling
+   from the middle.
+   ========================================================= */
+
+@media (max-width: 1023px) {
+  html[
+    data-alumni-pull-refresh
+  ]
+  [data-alumni-topbar="true"] {
+    overflow: hidden !important;
+  }
+
+  [data-alumni-topbar="true"]::before {
+    left: 0 !important;
+    right: auto !important;
+
+    width: 36% !important;
+    height: 2px !important;
+
+    opacity: 0 !important;
+
+    background:
+      linear-gradient(
+        90deg,
+        transparent 0%,
+        color-mix(
+          in srgb,
+          var(--app-accent) 20%,
+          transparent
+        ) 18%,
+        color-mix(
+          in srgb,
+          var(--app-accent) 78%,
+          white 22%
+        ) 46%,
+        white 50%,
+        color-mix(
+          in srgb,
+          var(--app-accent) 78%,
+          white 22%
+        ) 54%,
+        color-mix(
+          in srgb,
+          var(--app-accent) 20%,
+          transparent
+        ) 82%,
+        transparent 100%
+      ) !important;
+
+    background-size: 100% 100% !important;
+    background-repeat: no-repeat !important;
+
+    transform:
+      translate3d(
+        -100%,
+        0,
+        0
+      ) !important;
+
+    transform-origin: center !important;
+
+    filter:
+      drop-shadow(
+        0 0 5px
+        color-mix(
+          in srgb,
+          var(--app-accent) 46%,
+          transparent
+        )
+      ) !important;
+
+    box-shadow:
+      0 0 10px
+      color-mix(
+        in srgb,
+        var(--app-accent) 18%,
+        transparent
+      );
+
+    will-change:
+      transform,
+      opacity;
+  }
+
+  html[
+    data-alumni-pull-refresh
+  ]
+  [data-alumni-topbar="true"]::before {
+    opacity:
+      var(
+        --alumni-pull-light-opacity,
+        .12
+      ) !important;
+
+    transform:
+      translate3d(
+        var(
+          --alumni-pull-light-x,
+          -100%
+        ),
+        0,
+        0
+      ) !important;
+
+    animation:
+      none !important;
+
+    transition:
+      none !important;
+  }
+
+  html[
+    data-alumni-pull-refresh="ready"
+  ]
+  [data-alumni-topbar="true"]::before {
+    opacity: .96 !important;
+  }
+
+  html[
+    data-alumni-pull-refresh="refreshing"
+  ]
+  [data-alumni-topbar="true"]::before {
+    opacity: 1 !important;
+
+    transform:
+      translate3d(
+        -100%,
+        0,
+        0
+      ) !important;
+
+    animation:
+      alumniPullRefreshFullTravel
+      .78s
+      cubic-bezier(.42,0,.58,1)
+      infinite !important;
+  }
+
+  @keyframes
+    alumniPullRefreshFullTravel {
+    0% {
+      transform:
+        translate3d(
+          -100%,
+          0,
+          0
+        );
+      opacity: 0;
+    }
+
+    12% {
+      opacity: .92;
+    }
+
+    50% {
+      opacity: 1;
+    }
+
+    88% {
+      opacity: .92;
+    }
+
+    100% {
+      transform:
+        translate3d(
+          278%,
+          0,
+          0
+        );
+      opacity: 0;
+    }
+  }
+}
+
+@media (
+  max-width: 1023px
+)
+and (
+  prefers-reduced-motion:
+  reduce
+) {
+  html[
+    data-alumni-pull-refresh="refreshing"
+  ]
+  [data-alumni-topbar="true"]::before {
+    animation: none !important;
+
+    transform:
+      translate3d(
+        89%,
+        0,
+        0
+      ) !important;
+
+    opacity: .8 !important;
+  }
+}
+
+/* ALUMNI_PULL_REFRESH_FULL_TRAVEL_6_4:CSS */

@@ -147,6 +147,7 @@ function clearVisual() {
     "--alumni-pull-side-scale",
     "--alumni-pull-light-opacity",
     "--alumni-pull-light-scale",
+    "--alumni-pull-light-x",
   ].forEach(
     (name) => {
       html.style.removeProperty(
@@ -214,6 +215,14 @@ function writeVisual(
       0.18 +
         p * 0.82
     )
+  );
+
+  html.style.setProperty(
+    "--alumni-pull-light-x",
+    `${(
+      -100 +
+      p * 378
+    ).toFixed(3)}%`
   );
 }
 
@@ -808,3 +817,5 @@ export default function GlobalPullToRefresh() {
 }
 
 /* ALUMNI_PULL_REFRESH_FLUID_LIGHT_6_3 */
+
+/* ALUMNI_PULL_REFRESH_FULL_TRAVEL_6_4 */
