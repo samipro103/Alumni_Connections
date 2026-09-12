@@ -23,7 +23,7 @@ import AppShell from "@/components/layout/AppShell";
 import { ListLoadingSkeleton } from "@/components/ui/AlumniLoading";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { supabase } from "@/lib/supabase";
-import "./events-2.css";
+import "./events-core-4-1.css";
 import "../interior-ui-1-0.css";
 import "./events-mobile-pro-4-0.css";
 
@@ -678,3 +678,5 @@ export default function EventsPage() {
 /* ALUMNI_MICRO_IMPROVEMENTS_BLOCK_4:EVENTS_HOME */
 
 /* ALUMNI_EVENTS_MOBILE_PRO_4_0 */
+
+/* ALUMNI_EVENTS_COMMUNITIES_STYLE_CONSOLIDATION_4_1:EVENTS:MAIN */

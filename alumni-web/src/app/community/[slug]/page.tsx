@@ -23,8 +23,7 @@ import AppShell from "@/components/layout/AppShell";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { supabase } from "@/lib/supabase";
 import SocialInvitePicker from "@/components/social/SocialInvitePicker";
-import "../community-2.css";
-import "./community-detail.css";
+import "../community-core-4-1.css";
 import "../../interior-ui-1-0.css";
 import "../community-motion-3-0.css";
 
@@ -510,3 +509,5 @@ export default function CommunityDetailPage() {
 /* ALUMNI_2_1_2_COMMUNITY_INVITES */
 
 /* ALUMNI_MICRO_IMPROVEMENTS_BLOCK_5:COMMUNITY_DETAIL */
+
+/* ALUMNI_EVENTS_COMMUNITIES_STYLE_CONSOLIDATION_4_1:COMMUNITY:DETAIL */

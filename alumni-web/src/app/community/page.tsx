@@ -20,7 +20,7 @@ import AppShell from "@/components/layout/AppShell";
 import { ListLoadingSkeleton } from "@/components/ui/AlumniLoading";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { supabase } from "@/lib/supabase";
-import "./community-2.css";
+import "./community-core-4-1.css";
 import "../interior-ui-1-0.css";
 import "./community-mobile-pro-4-0.css";
 
@@ -628,3 +628,5 @@ export default function CommunityPage() {
 /* ALUMNI_MICRO_IMPROVEMENTS_BLOCK_5:COMMUNITY_HOME */
 
 /* ALUMNI_COMMUNITIES_MOBILE_PRO_4_0 */
+
+/* ALUMNI_EVENTS_COMMUNITIES_STYLE_CONSOLIDATION_4_1:COMMUNITY:MAIN */
