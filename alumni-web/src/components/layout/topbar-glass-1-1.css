@@ -47,3 +47,107 @@ html[data-theme="light"]
 }
 
 /* ALUMNI_TOPBAR_GLASS_1_1 */
+
+/* =========================================================
+   ALUMNI_GLASS_NAVIGATION_MOBILE_6_0 — ADAPTIVE GLASS TOPBAR
+   ========================================================= */
+
+[data-alumni-topbar="true"] {
+  border-bottom-color:
+    color-mix(
+      in srgb,
+      var(--app-border) 44%,
+      transparent
+    ) !important;
+
+  background:
+    color-mix(
+      in srgb,
+      var(--app-bg) 58%,
+      transparent
+    ) !important;
+
+  -webkit-backdrop-filter:
+    blur(19px)
+    saturate(1.12) !important;
+
+  backdrop-filter:
+    blur(19px)
+    saturate(1.12) !important;
+
+  box-shadow:
+    0 1px 0
+      color-mix(
+        in srgb,
+        var(--app-text) 1.5%,
+        transparent
+      ) !important;
+
+  transition:
+    transform 200ms ease-out,
+    background-color 180ms ease,
+    border-color 180ms ease !important;
+}
+
+[data-alumni-topbar="true"][
+  data-glass-scrolled="true"
+] {
+  border-bottom-color:
+    color-mix(
+      in srgb,
+      var(--app-border) 62%,
+      transparent
+    ) !important;
+
+  background:
+    color-mix(
+      in srgb,
+      var(--app-bg) 72%,
+      transparent
+    ) !important;
+}
+
+html[data-theme="light"]
+[data-alumni-topbar="true"] {
+  background:
+    color-mix(
+      in srgb,
+      var(--app-bg) 64%,
+      transparent
+    ) !important;
+}
+
+html[data-theme="light"]
+[data-alumni-topbar="true"][
+  data-glass-scrolled="true"
+] {
+  background:
+    color-mix(
+      in srgb,
+      var(--app-bg) 78%,
+      transparent
+    ) !important;
+}
+
+@supports not (
+  backdrop-filter:
+    blur(1px)
+) {
+  [data-alumni-topbar="true"] {
+    background:
+      color-mix(
+        in srgb,
+        var(--app-bg) 92%,
+        transparent
+      ) !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-alumni-topbar="true"] {
+    transition:
+      none !important;
+  }
+}
+
+/* ALUMNI_GLASS_NAVIGATION_MOBILE_6_0:TOPBAR_CSS */

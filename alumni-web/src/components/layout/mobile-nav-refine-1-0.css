@@ -162,3 +162,120 @@
 }
 
 /* ALUMNI_NAVBAR_REFINE_1_1 */
+
+/* =========================================================
+   ALUMNI_GLASS_NAVIGATION_MOBILE_6_0 — FLOATING GLASS MOBILE NAV
+   ========================================================= */
+
+.alumni-mobile-nav-clean {
+  overflow: hidden;
+
+  border:
+    1px solid
+    color-mix(
+      in srgb,
+      var(--app-border) 52%,
+      transparent
+    ) !important;
+
+  background:
+    color-mix(
+      in srgb,
+      var(--app-surface) 64%,
+      transparent
+    ) !important;
+
+  -webkit-backdrop-filter:
+    blur(20px)
+    saturate(1.14) !important;
+
+  backdrop-filter:
+    blur(20px)
+    saturate(1.14) !important;
+
+  box-shadow:
+    0 8px 26px
+      color-mix(
+        in srgb,
+        var(--app-shadow) 34%,
+        transparent
+      ),
+    inset 0 1px 0
+      color-mix(
+        in srgb,
+        var(--app-text) 4%,
+        transparent
+      ) !important;
+
+  transform-origin:
+    center bottom;
+
+  will-change:
+    transform,
+    opacity;
+
+  animation:
+    none !important;
+}
+
+.alumni-mobile-nav-clean::before {
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(
+        in srgb,
+        var(--app-text) 1.7%,
+        transparent
+      ),
+      transparent 58%
+    ) !important;
+}
+
+html[data-theme="light"]
+.alumni-mobile-nav-clean {
+  background:
+    color-mix(
+      in srgb,
+      var(--app-surface) 70%,
+      transparent
+    ) !important;
+
+  border-color:
+    color-mix(
+      in srgb,
+      var(--app-border) 62%,
+      transparent
+    ) !important;
+}
+
+.alumni-mobile-nav-clean
+.alumni-mobile-nav-item[
+  data-active="true"
+]
+.alumni-mobile-nav-icon {
+  background:
+    color-mix(
+      in srgb,
+      var(--app-accent) 9%,
+      transparent
+    ) !important;
+
+  box-shadow:
+    none !important;
+}
+
+@supports not (
+  backdrop-filter:
+    blur(1px)
+) {
+  .alumni-mobile-nav-clean {
+    background:
+      color-mix(
+        in srgb,
+        var(--app-surface) 92%,
+        transparent
+      ) !important;
+  }
+}
+
+/* ALUMNI_GLASS_NAVIGATION_MOBILE_6_0:MOBILE_NAV_CSS */

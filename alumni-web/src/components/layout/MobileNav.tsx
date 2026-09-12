@@ -5,6 +5,11 @@ import {
   useState,
 } from "react";
 import {
+  AnimatePresence,
+  motion,
+  useReducedMotion,
+} from "framer-motion";
+import {
   createPortal,
 } from "react-dom";
 import Link from "next/link";
@@ -58,29 +63,32 @@ const navItems = [
 function isMoreSection(
   pathname: string
 ) {
+  return pathname === "/more";
+}
+
+function showPrimaryMobileNav(
+  pathname: string
+) {
   return (
+    pathname === "/feed" ||
+    pathname === "/messages" ||
+    pathname === "/explore" ||
     pathname === "/more" ||
-    pathname.startsWith("/more/") ||
-    pathname === "/community" ||
-    pathname.startsWith("/community/") ||
-    pathname === "/events" ||
-    pathname.startsWith("/events/") ||
-    pathname === "/passport" ||
-    pathname.startsWith("/passport/") ||
-    pathname === "/notifications" ||
-    pathname.startsWith("/notifications/") ||
-    pathname === "/settings" ||
-    pathname.startsWith("/settings/") ||
-    pathname === "/feedback" ||
-    pathname.startsWith("/feedback/") ||
-    pathname === "/about" ||
-    pathname.startsWith("/about/")
+    pathname === "/profile"
   );
 }
 
 export default function MobileNav() {
   const pathname =
     usePathname();
+
+  const reduceMotion =
+    useReducedMotion();
+
+  const visible =
+    showPrimaryMobileNav(
+      pathname
+    );
 
   const { user } =
     useAuth();
@@ -271,14 +279,49 @@ export default function MobileNav() {
   }
 
   return createPortal(
-    <nav
-      data-alumni-mobile-nav="true"
-      data-nav-design="clean-four"
-      style={{
-        bottom: "max(14px, calc(env(safe-area-inset-bottom) + 8px))",
-      }}
-      className="alumni-mobile-nav-clean fixed inset-x-4 z-[2147482000] mx-auto w-auto max-w-[398px] rounded-[18px] border px-1.5 py-1 [backface-visibility:hidden] lg:hidden"
+    <AnimatePresence
+      initial={false}
     >
+      {visible && (
+        <motion.nav
+          key="alumni-primary-mobile-nav"
+          data-alumni-mobile-nav="true"
+          data-nav-design="glass-primary"
+          style={{
+            bottom: "max(14px, calc(env(safe-area-inset-bottom) + 8px))",
+          }}
+          className="alumni-mobile-nav-clean fixed inset-x-4 z-[2147482000] mx-auto w-auto max-w-[398px] rounded-[18px] border px-1.5 py-1 [backface-visibility:hidden] lg:hidden"
+          initial={
+            reduceMotion
+              ? { opacity: 0 }
+              : {
+                  opacity: 0,
+                  y: 12,
+                  scale: 0.985,
+                }
+          }
+          animate={{
+            opacity: 1,
+            y: 0,
+            scale: 1,
+          }}
+          exit={
+            reduceMotion
+              ? { opacity: 0 }
+              : {
+                  opacity: 0,
+                  y: 12,
+                  scale: 0.985,
+                }
+          }
+          transition={{
+            duration:
+              reduceMotion
+                ? 0.08
+                : 0.2,
+            ease: [0.2, 0.8, 0.2, 1],
+          }}
+        >
       <div className="grid w-full grid-cols-4">
         {navItems.map(
           ({
@@ -359,7 +402,9 @@ export default function MobileNav() {
           }
         )}
       </div>
-    </nav>,
+        </motion.nav>
+      )}
+    </AnimatePresence>,
     document.body
   );
 }
@@ -373,3 +418,5 @@ export default function MobileNav() {
 /* ALUMNI_FEEDBACK_PRO_NAV_COMPACT_3_0 */
 
 /* ALUMNI_NAVBAR_REFINE_1_0 */
+
+/* ALUMNI_GLASS_NAVIGATION_MOBILE_6_0:MOBILE_NAV */

@@ -1,6 +1,7 @@
 "use client";
 
 import { ReactNode } from "react";
+import { usePathname } from "next/navigation";
 import LeftSidebar from "./LeftSidebar";
 import RightSidebar from "./RightSidebar";
 import TopBar from "./TopBar";
@@ -26,6 +27,15 @@ export default function AppShell({
   children,
   immersiveMobile = false,
 }: Props) {
+  const pathname = usePathname();
+
+  const showPrimaryMobileNav =
+    pathname === "/feed" ||
+    pathname === "/messages" ||
+    pathname === "/explore" ||
+    pathname === "/more" ||
+    pathname === "/profile";
+
   return (
     <>
       <EventReminderBootstrap />
@@ -49,7 +59,9 @@ export default function AppShell({
           className={
             immersiveMobile
               ? "mx-auto w-full max-w-[1500px] px-0 pb-0 pt-0 lg:px-8 lg:pb-10 lg:pt-[84px]"
-              : "mx-auto w-full max-w-[1500px] px-4 pb-24 pt-[calc(84px+env(safe-area-inset-top))] sm:px-6 lg:px-8 lg:pb-10 lg:pt-[84px]"
+              : showPrimaryMobileNav
+              ? "mx-auto w-full max-w-[1500px] px-4 pb-24 pt-[calc(84px+env(safe-area-inset-top))] sm:px-6 lg:px-8 lg:pb-10 lg:pt-[84px]"
+              : "mx-auto w-full max-w-[1500px] px-4 pb-[calc(24px+env(safe-area-inset-bottom))] pt-[calc(84px+env(safe-area-inset-top))] sm:px-6 lg:px-8 lg:pb-10 lg:pt-[84px]"
           }
         >
           <div
@@ -102,3 +114,5 @@ export default function AppShell({
 /* ALUMNI_MOTION_SYSTEM_1_0 */
 
 /* ALUMNI_MOTION_PASS_2_0_FULL_APP */
+
+/* ALUMNI_GLASS_NAVIGATION_MOBILE_6_0:APP_SHELL */

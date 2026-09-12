@@ -95,6 +95,11 @@ export default function TopBar() {
     setHiddenByScroll,
   ] = useState(false);
 
+  const [
+    glassScrolled,
+    setGlassScrolled,
+  ] = useState(false);
+
   useEffect(() => {
     if (!user) {
       setProfile(null);
@@ -362,6 +367,48 @@ export default function TopBar() {
     keepProfileNavVisible,
   ]);
 
+  useEffect(() => {
+    if (
+      typeof window ===
+      "undefined"
+    ) {
+      return;
+    }
+
+    let ticking = false;
+
+    function syncGlass() {
+      setGlassScrolled(
+        window.scrollY > 10
+      );
+      ticking = false;
+    }
+
+    function onGlassScroll() {
+      if (ticking) return;
+
+      ticking = true;
+      window.requestAnimationFrame(
+        syncGlass
+      );
+    }
+
+    syncGlass();
+
+    window.addEventListener(
+      "scroll",
+      onGlassScroll,
+      { passive: true }
+    );
+
+    return () => {
+      window.removeEventListener(
+        "scroll",
+        onGlassScroll
+      );
+    };
+  }, []);
+
   function submitSearch(
     event:
       React.FormEvent
@@ -385,6 +432,11 @@ export default function TopBar() {
       data-alumni-topbar="true"
       data-scroll-hidden={
         hiddenByScroll
+          ? "true"
+          : "false"
+      }
+      data-glass-scrolled={
+        glassScrolled
           ? "true"
           : "false"
       }
@@ -503,3 +555,5 @@ export default function TopBar() {
 /* ALUMNI_STABILITY_PASS_1_0:TOPBAR */
 
 /* ALUMNI_UI_FIXES_1_1:TOPBAR */
+
+/* ALUMNI_GLASS_NAVIGATION_MOBILE_6_0:TOPBAR */
