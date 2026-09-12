@@ -1024,3 +1024,573 @@
 }
 
 /* ALUMNI_EVENTS_MOBILE_PRO_4_0 */
+
+/* =========================================================
+   ALUMNI_CREATE_EXPERIENCE_PRO_5_0 — EVENT CREATOR
+   ========================================================= */
+
+.alumni-events-mobile-pro .events2-wizard-backdrop,
+.alumni-events-mobile-pro .events2-wizard {
+  animation: none !important;
+}
+
+.alumni-events-mobile-pro .events2-wizard {
+  --wizard-line:
+    color-mix(
+      in srgb,
+      var(--app-border) 84%,
+      transparent
+    );
+}
+
+.alumni-events-mobile-pro .events2-wizard-header {
+  grid-template-columns:
+    42px
+    minmax(0, 1fr)
+    auto !important;
+  min-height:
+    calc(
+      68px +
+      env(safe-area-inset-top)
+    ) !important;
+  padding:
+    max(10px, env(safe-area-inset-top))
+    15px
+    10px !important;
+}
+
+.alumni-events-mobile-pro
+.events2-wizard-header > div {
+  display: grid;
+  gap: 2px;
+}
+
+.alumni-events-mobile-pro
+.events2-wizard-header > div > small {
+  overflow: hidden;
+  color: var(--app-muted-2);
+  font-size: 9px;
+  font-weight: 720;
+  line-height: 1.15;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.alumni-events-mobile-pro
+.events2-wizard-progress {
+  display: grid;
+  grid-template-columns:
+    repeat(3, minmax(0, 1fr));
+  gap: 5px;
+  padding: 0 15px 8px;
+  background: var(--app-bg);
+}
+
+.alumni-events-mobile-pro
+.events2-wizard-progress > span {
+  height: 3px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--app-soft-strong);
+  transition:
+    background-color 180ms ease,
+    transform 180ms cubic-bezier(.2,.8,.2,1);
+}
+
+.alumni-events-mobile-pro
+.events2-wizard-progress
+> span[data-active="true"] {
+  background: var(--app-accent);
+}
+
+.alumni-events-mobile-pro
+.events2-wizard-body {
+  display: flex;
+  min-height: 0;
+  padding: 0 !important;
+}
+
+.alumni-events-mobile-pro
+.events2-wizard-step {
+  width: 100%;
+  max-width: 540px;
+  margin: 0 auto;
+  padding:
+    24px 16px
+    34px;
+}
+
+.alumni-events-mobile-pro
+.events2-wizard-intro {
+  display: grid;
+  grid-template-columns:
+    42px
+    minmax(0, 1fr);
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 26px;
+}
+
+.alumni-events-mobile-pro
+.events2-wizard-intro-icon {
+  display: inline-flex;
+  width: 42px;
+  height: 42px;
+  align-items: center;
+  justify-content: center;
+  border:
+    1px solid
+    color-mix(
+      in srgb,
+      var(--app-accent) 15%,
+      var(--app-border)
+    );
+  border-radius: 14px;
+  background:
+    color-mix(
+      in srgb,
+      var(--app-accent) 8%,
+      transparent
+    );
+  color: var(--app-accent);
+}
+
+.alumni-events-mobile-pro
+.events2-wizard-intro strong,
+.alumni-events-mobile-pro
+.events2-wizard-intro small {
+  display: block;
+}
+
+.alumni-events-mobile-pro
+.events2-wizard-intro strong {
+  color: var(--app-text);
+  font-size: 15px;
+  font-weight: 920;
+  line-height: 1.2;
+  letter-spacing: -.025em;
+}
+
+.alumni-events-mobile-pro
+.events2-wizard-intro small {
+  margin-top: 4px;
+  color: var(--app-muted-2);
+  font-size: 10px;
+  line-height: 1.45;
+}
+
+.alumni-events-mobile-pro
+.events2-wizard-fields {
+  gap: 22px !important;
+}
+
+.alumni-events-mobile-pro
+.events2-wizard .events2-field {
+  padding: 13px 14px 10px;
+  border:
+    1px solid
+    var(--wizard-line);
+  border-radius: 16px;
+  background: var(--app-surface);
+  transition:
+    border-color 160ms ease,
+    box-shadow 160ms ease,
+    transform 160ms cubic-bezier(.2,.8,.2,1);
+}
+
+.alumni-events-mobile-pro
+.events2-wizard .events2-field:focus-within {
+  border-color:
+    color-mix(
+      in srgb,
+      var(--app-accent) 45%,
+      var(--app-border)
+    );
+  box-shadow:
+    0 0 0 3px
+    color-mix(
+      in srgb,
+      var(--app-accent) 7%,
+      transparent
+    );
+}
+
+.alumni-events-mobile-pro
+.events2-wizard .events2-field input,
+.alumni-events-mobile-pro
+.events2-wizard .events2-field textarea,
+.alumni-events-mobile-pro
+.events2-wizard .events2-field select {
+  margin-top: 4px !important;
+  border: 0 !important;
+}
+
+.alumni-events-mobile-pro
+.events2-wizard .events2-field textarea {
+  min-height: 96px !important;
+}
+
+.alumni-events-mobile-pro
+.events2-wizard .events2-field > small {
+  right: 13px !important;
+  bottom: 12px !important;
+}
+
+.alumni-events-mobile-pro
+.events2-wizard .events2-field-icon > div,
+.alumni-events-mobile-pro
+.events2-wizard .events2-capacity > div {
+  margin-top: 4px !important;
+  border: 0 !important;
+}
+
+.alumni-events-mobile-pro
+.events2-wizard-choice-grid {
+  display: grid !important;
+  grid-template-columns:
+    repeat(2, minmax(0, 1fr));
+  gap: 8px !important;
+  margin-top: 10px !important;
+}
+
+.alumni-events-mobile-pro
+.events2-wizard-choice-grid button {
+  position: relative;
+  justify-content: flex-start;
+  min-width: 0;
+  min-height: 48px !important;
+  padding: 0 12px !important;
+  border-radius: 14px !important;
+  background: var(--app-surface) !important;
+}
+
+.alumni-events-mobile-pro
+.events2-wizard-choice-grid
+button[data-active="true"] {
+  border-color:
+    color-mix(
+      in srgb,
+      var(--app-accent) 38%,
+      var(--app-border)
+    ) !important;
+  background:
+    color-mix(
+      in srgb,
+      var(--app-accent) 7%,
+      var(--app-surface)
+    ) !important;
+}
+
+.alumni-events-mobile-pro
+.events2-wizard-choice-grid
+button > span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.alumni-events-mobile-pro
+.events2-wizard-choice-check {
+  margin-left: auto;
+}
+
+.alumni-events-mobile-pro
+.events2-wizard-visibility {
+  display: grid;
+  gap: 8px;
+  border: 0 !important;
+}
+
+.alumni-events-mobile-pro
+.events2-wizard-visibility button {
+  min-height: 76px !important;
+  grid-template-columns:
+    28px
+    minmax(0, 1fr)
+    13px !important;
+  padding: 12px 14px !important;
+  border:
+    1px solid
+    var(--wizard-line) !important;
+  border-radius: 16px;
+  background: var(--app-surface) !important;
+}
+
+.alumni-events-mobile-pro
+.events2-wizard-visibility
+button[data-active="true"] {
+  border-color:
+    color-mix(
+      in srgb,
+      var(--app-accent) 42%,
+      var(--app-border)
+    ) !important;
+  background:
+    color-mix(
+      in srgb,
+      var(--app-accent) 6%,
+      var(--app-surface)
+    ) !important;
+}
+
+.alumni-events-mobile-pro
+.events2-wizard-visibility
+button::after {
+  width: 9px;
+  height: 9px;
+}
+
+.alumni-events-mobile-pro
+.events2-wizard-community-select {
+  overflow: hidden;
+}
+
+.alumni-events-mobile-pro
+.events2-wizard-preview {
+  display: grid;
+  grid-template-columns:
+    42px
+    minmax(0, 1fr)
+    20px;
+  align-items: center;
+  gap: 11px;
+  min-height: 76px;
+  padding: 12px;
+  border:
+    1px solid
+    var(--wizard-line);
+  border-radius: 17px;
+  background:
+    color-mix(
+      in srgb,
+      var(--app-soft) 58%,
+      transparent
+    );
+}
+
+.alumni-events-mobile-pro
+.events2-wizard-preview-icon {
+  display: inline-flex;
+  width: 42px;
+  height: 42px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 13px;
+  background: var(--app-surface);
+  color: var(--app-accent);
+}
+
+.alumni-events-mobile-pro
+.events2-wizard-preview-copy {
+  min-width: 0;
+}
+
+.alumni-events-mobile-pro
+.events2-wizard-preview-copy
+> small,
+.alumni-events-mobile-pro
+.events2-wizard-preview-copy
+> strong,
+.alumni-events-mobile-pro
+.events2-wizard-preview-copy
+> span {
+  display: block;
+}
+
+.alumni-events-mobile-pro
+.events2-wizard-preview-copy > small {
+  color: var(--app-muted-3);
+  font-size: 8px;
+  font-weight: 850;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.alumni-events-mobile-pro
+.events2-wizard-preview-copy > strong {
+  margin-top: 2px;
+  overflow: hidden;
+  color: var(--app-text);
+  font-size: 12px;
+  font-weight: 900;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.alumni-events-mobile-pro
+.events2-wizard-preview-copy > span {
+  margin-top: 3px;
+  overflow: hidden;
+  color: var(--app-muted-2);
+  font-size: 9px;
+  line-height: 1.3;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.alumni-events-mobile-pro
+.events2-wizard-preview > svg {
+  color: var(--app-accent);
+}
+
+.alumni-events-mobile-pro
+.events2-wizard-footer {
+  display: grid !important;
+  grid-template-columns:
+    minmax(0, 1fr)
+    auto !important;
+  min-height:
+    calc(
+      76px +
+      env(safe-area-inset-bottom)
+    ) !important;
+  gap: 12px !important;
+  padding:
+    10px 14px
+    max(
+      10px,
+      env(safe-area-inset-bottom)
+    ) !important;
+}
+
+.alumni-events-mobile-pro
+.events2-wizard-footer-state {
+  min-width: 0;
+}
+
+.alumni-events-mobile-pro
+.events2-wizard-footer-state
+> span,
+.alumni-events-mobile-pro
+.events2-wizard-footer-state
+> strong {
+  display: block;
+}
+
+.alumni-events-mobile-pro
+.events2-wizard-footer-state > span {
+  color: var(--app-muted-3);
+  font-size: 8px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.alumni-events-mobile-pro
+.events2-wizard-footer-state > strong {
+  margin-top: 3px;
+  overflow: hidden;
+  color: var(--app-text-soft);
+  font-size: 10px;
+  font-weight: 850;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.alumni-events-mobile-pro
+.events2-wizard-actions {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.alumni-events-mobile-pro
+.events2-wizard-actions button {
+  display: inline-flex;
+  min-height: 44px !important;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 0 15px !important;
+  border-radius: 14px !important;
+  box-shadow: none !important;
+}
+
+.alumni-events-mobile-pro
+.events2-wizard-secondary {
+  border:
+    1px solid
+    var(--app-border) !important;
+  background: var(--app-surface) !important;
+  color: var(--app-text) !important;
+}
+
+.alumni-events-mobile-pro
+.events2-wizard-primary {
+  min-width: 112px;
+  border: 0 !important;
+  background: var(--app-accent-fill) !important;
+  color: var(--app-on-accent) !important;
+}
+
+.alumni-events-mobile-pro
+.events2-wizard-actions
+button:disabled {
+  opacity: .38;
+}
+
+.alumni-events-mobile-pro
+.events2-wizard-spinner {
+  width: 14px;
+  height: 14px;
+  border:
+    2px solid
+    color-mix(
+      in srgb,
+      currentColor 35%,
+      transparent
+    );
+  border-top-color: currentColor;
+  border-radius: 999px;
+  animation:
+    alumniWizardSpin
+    .7s linear infinite;
+}
+
+@media (max-width: 374px) {
+  .alumni-events-mobile-pro
+  .events2-wizard-step {
+    padding-inline: 13px;
+  }
+
+  .alumni-events-mobile-pro
+  .events2-wizard-choice-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .alumni-events-mobile-pro
+  .events2-wizard-footer-state {
+    display: none;
+  }
+
+  .alumni-events-mobile-pro
+  .events2-wizard-footer {
+    grid-template-columns: 1fr !important;
+  }
+
+  .alumni-events-mobile-pro
+  .events2-wizard-actions {
+    width: 100%;
+  }
+
+  .alumni-events-mobile-pro
+  .events2-wizard-actions button {
+    flex: 1;
+  }
+}
+
+@keyframes alumniWizardSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .alumni-events-mobile-pro
+  .events2-wizard-spinner {
+    animation: none !important;
+  }
+}
+
+/* ALUMNI_CREATE_EXPERIENCE_PRO_5_0:EVENTS_CSS */
+
