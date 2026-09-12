@@ -151,3 +151,465 @@ html[data-theme="light"]
 }
 
 /* ALUMNI_GLASS_NAVIGATION_MOBILE_6_0:TOPBAR_CSS */
+
+/* =========================================================
+   ALUMNI_PULL_REFRESH_UNIFIED_TOPBAR_6_2
+   One unified pull-to-refresh animation.
+   The topbar itself becomes the refresh indicator.
+   ========================================================= */
+
+@media (max-width: 1023px) {
+  html[
+    data-alumni-pull-refresh
+  ]
+  [data-alumni-topbar="true"] {
+    overflow: visible !important;
+
+    background:
+      color-mix(
+        in srgb,
+        var(--app-bg) 72%,
+        transparent
+      ) !important;
+
+    border-bottom-color:
+      color-mix(
+        in srgb,
+        var(--app-accent) 12%,
+        var(--app-border)
+      ) !important;
+  }
+
+  html[
+    data-alumni-pull-refresh
+  ]
+  [data-alumni-topbar="true"]
+  > div {
+    transform:
+      translate3d(
+        0,
+        var(
+          --alumni-pull-row-y,
+          0px
+        ),
+        0
+      );
+
+    transition:
+      transform
+      70ms linear;
+  }
+
+  html[
+    data-alumni-pull-refresh
+  ]
+  [data-alumni-topbar="true"]
+  > div
+  > a[
+    aria-label="Alumni."
+  ] {
+    transform:
+      translate3d(
+        var(
+          --alumni-pull-brand-x,
+          0px
+        ),
+        0,
+        0
+      )
+      scale(
+        var(
+          --alumni-pull-brand-scale,
+          1
+        )
+      );
+
+    transform-origin:
+      left center;
+
+    transition:
+      transform
+      70ms linear;
+  }
+
+  html[
+    data-alumni-pull-refresh
+  ]
+  [data-alumni-topbar="true"]
+  a[
+    aria-label="Notificaciones"
+  ] {
+    transform:
+      translate3d(
+        0,
+        var(
+          --alumni-pull-bell-y,
+          0px
+        ),
+        0
+      )
+      rotate(
+        var(
+          --alumni-pull-bell-rotate,
+          0deg
+        )
+      );
+
+    transform-origin:
+      center top;
+
+    transition:
+      transform
+      70ms linear;
+  }
+
+  html[
+    data-alumni-pull-refresh
+  ]
+  [data-alumni-topbar="true"]
+  .alumni-topbar-profile-avatar {
+    transform:
+      translate3d(
+        0,
+        var(
+          --alumni-pull-avatar-y,
+          0px
+        ),
+        0
+      )
+      scale(
+        var(
+          --alumni-pull-avatar-scale,
+          1
+        )
+      );
+
+    transform-origin:
+      center;
+
+    transition:
+      transform
+      70ms linear;
+  }
+
+  [data-alumni-topbar="true"]::before {
+    content: "";
+    position: absolute;
+    left: 24%;
+    right: 24%;
+    bottom: -1px;
+    z-index: 4;
+    height: 2px;
+    border-radius: 999px;
+    background:
+      linear-gradient(
+        90deg,
+        transparent,
+        var(--app-accent),
+        transparent
+      );
+    opacity: 0;
+    transform:
+      scaleX(
+        var(
+          --alumni-pull-progress,
+          0
+        )
+      );
+    transform-origin:
+      center;
+    pointer-events: none;
+  }
+
+  html[
+    data-alumni-pull-refresh
+  ]
+  [data-alumni-topbar="true"]::before {
+    opacity:
+      calc(
+        .18 +
+        var(
+          --alumni-pull-progress,
+          0
+        ) * .64
+      );
+  }
+
+  [data-alumni-topbar="true"]::after {
+    position: absolute;
+    left: 50%;
+    bottom: -26px;
+    z-index: 5;
+
+    display: block;
+    width: max-content;
+    max-width:
+      calc(100vw - 40px);
+
+    padding:
+      5px
+      9px;
+
+    border:
+      1px solid
+      color-mix(
+        in srgb,
+        var(--app-border) 58%,
+        transparent
+      );
+
+    border-radius: 10px;
+
+    background:
+      color-mix(
+        in srgb,
+        var(--app-surface) 68%,
+        transparent
+      );
+
+    -webkit-backdrop-filter:
+      blur(16px)
+      saturate(1.1);
+
+    backdrop-filter:
+      blur(16px)
+      saturate(1.1);
+
+    color:
+      var(--app-text-soft);
+
+    box-shadow:
+      0 6px 18px
+      color-mix(
+        in srgb,
+        var(--app-shadow) 24%,
+        transparent
+      );
+
+    font-size: 9px;
+    font-weight: 760;
+    line-height: 1;
+    letter-spacing: -.01em;
+    white-space: nowrap;
+
+    opacity: 0;
+
+    transform:
+      translate3d(
+        -50%,
+        -5px,
+        0
+      )
+      scale(.97);
+
+    pointer-events: none;
+
+    transition:
+      opacity
+      90ms linear,
+      transform
+      90ms
+      cubic-bezier(.2,.8,.2,1);
+  }
+
+  html[
+    data-alumni-pull-refresh="pulling"
+  ]
+  [data-alumni-topbar="true"]::after {
+    content:
+      "Desliza para actualizar";
+
+    opacity:
+      var(
+        --alumni-pull-label-opacity,
+        0
+      );
+
+    transform:
+      translate3d(
+        -50%,
+        0,
+        0
+      )
+      scale(1);
+  }
+
+  html[
+    data-alumni-pull-refresh="ready"
+  ]
+  [data-alumni-topbar="true"]::after {
+    content:
+      "Suelta para actualizar";
+
+    opacity: 1;
+
+    color:
+      var(--app-accent);
+
+    border-color:
+      color-mix(
+        in srgb,
+        var(--app-accent) 20%,
+        var(--app-border)
+      );
+
+    transform:
+      translate3d(
+        -50%,
+        0,
+        0
+      )
+      scale(1);
+  }
+
+  html[
+    data-alumni-pull-refresh="refreshing"
+  ]
+  [data-alumni-topbar="true"]::after {
+    content:
+      "Actualizando";
+
+    opacity: 1;
+
+    color:
+      var(--app-accent);
+
+    transform:
+      translate3d(
+        -50%,
+        0,
+        0
+      )
+      scale(1);
+
+    animation:
+      alumniTopbarRefreshLabel
+      .9s
+      ease-in-out
+      infinite alternate;
+  }
+
+  html[
+    data-alumni-pull-refresh="refreshing"
+  ]
+  [data-alumni-topbar="true"]::before {
+    opacity: .88;
+
+    animation:
+      alumniTopbarRefreshLine
+      .8s
+      ease-in-out
+      infinite alternate;
+  }
+
+  html[
+    data-alumni-pull-refresh="refreshing"
+  ]
+  [data-alumni-topbar="true"]
+  > div
+  > a[
+    aria-label="Alumni."
+  ] {
+    animation:
+      alumniTopbarBrandBreathe
+      .8s
+      ease-in-out
+      infinite alternate;
+  }
+
+  @keyframes
+    alumniTopbarRefreshLabel {
+    from {
+      opacity: .6;
+    }
+
+    to {
+      opacity: 1;
+    }
+  }
+
+  @keyframes
+    alumniTopbarRefreshLine {
+    from {
+      transform:
+        scaleX(.58);
+    }
+
+    to {
+      transform:
+        scaleX(1);
+    }
+  }
+
+  @keyframes
+    alumniTopbarBrandBreathe {
+    from {
+      filter:
+        brightness(1);
+    }
+
+    to {
+      filter:
+        brightness(1.12);
+    }
+  }
+}
+
+@media (
+  max-width: 1023px
+)
+and (
+  prefers-reduced-motion:
+  reduce
+) {
+  html[
+    data-alumni-pull-refresh
+  ]
+  [data-alumni-topbar="true"]
+  > div,
+  html[
+    data-alumni-pull-refresh
+  ]
+  [data-alumni-topbar="true"]
+  > div
+  > a[
+    aria-label="Alumni."
+  ],
+  html[
+    data-alumni-pull-refresh
+  ]
+  [data-alumni-topbar="true"]
+  a[
+    aria-label="Notificaciones"
+  ],
+  html[
+    data-alumni-pull-refresh
+  ]
+  [data-alumni-topbar="true"]
+  .alumni-topbar-profile-avatar,
+  [data-alumni-topbar="true"]::after {
+    transition: none !important;
+  }
+
+  html[
+    data-alumni-pull-refresh="refreshing"
+  ]
+  [data-alumni-topbar="true"]::before,
+  html[
+    data-alumni-pull-refresh="refreshing"
+  ]
+  [data-alumni-topbar="true"]::after,
+  html[
+    data-alumni-pull-refresh="refreshing"
+  ]
+  [data-alumni-topbar="true"]
+  > div
+  > a[
+    aria-label="Alumni."
+  ] {
+    animation:
+      none !important;
+  }
+}
+
+/* ALUMNI_PULL_REFRESH_UNIFIED_TOPBAR_6_2:TOPBAR_CSS */

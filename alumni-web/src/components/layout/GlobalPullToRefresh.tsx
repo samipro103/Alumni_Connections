@@ -5,22 +5,14 @@ import {
   useRef,
   useState,
 } from "react";
+
 import {
   usePathname,
 } from "next/navigation";
-import {
-  ArrowDown,
-  RefreshCw,
-} from "lucide-react";
-import {
-  AnimatePresence,
-  motion,
-  useReducedMotion,
-} from "framer-motion";
 
-const TRIGGER_DISTANCE = 80;
-const MAX_PULL = 122;
-const HOLD_OFFSET = 76;
+const TRIGGER_DISTANCE = 72;
+const MAX_PULL = 92;
+const HOLD_OFFSET = 58;
 
 function clamp(
   value: number,
@@ -96,7 +88,13 @@ function setContentOffset(
   if (!target) return;
 
   const next =
-    Math.max(0, value);
+    Math.max(
+      0,
+      Math.min(
+        38,
+        value * 0.64
+      )
+    );
 
   if (
     next === 0 &&
@@ -110,7 +108,7 @@ function setContentOffset(
 
   target.style.transition =
     animate
-      ? "transform 245ms cubic-bezier(.22,.8,.24,1)"
+      ? "transform 230ms cubic-bezier(.2,.8,.2,1)"
       : "none";
 
   target.style.transform =
@@ -131,468 +129,143 @@ function setContentOffset(
           );
         }
       },
-      270
+      250
     );
   }
 }
 
-function PullRefreshIndicator({
-  progress,
-  refreshing,
-}: {
-  progress: number;
-  refreshing: boolean;
-}) {
-  const reduceMotion =
-    useReducedMotion();
+function setTopbarRefreshVisual(
+  distance: number,
+  refreshing = false
+) {
+  const html =
+    document.documentElement;
 
-  const ready =
-    progress >= 1 &&
-    !refreshing;
-
-  const safeProgress =
-    clamp(progress);
-
-  const circumference =
-    2 * Math.PI * 15;
-
-  const dashOffset =
-    circumference *
-    (1 - safeProgress);
-
-  const label =
+  const progress =
     refreshing
-      ? "Actualizando"
-      : ready
-      ? "Suelta para actualizar"
-      : "Desliza para actualizar";
+      ? 1
+      : clamp(
+          distance /
+            TRIGGER_DISTANCE
+        );
 
-  return (
-    <motion.div
-      className="alumni-refresh-glass"
-      initial={
-        reduceMotion
-          ? { opacity: 0 }
-          : {
-              opacity: 0,
-              y: -10,
-              scale: 0.96,
-            }
-      }
-      animate={{
-        opacity:
-          refreshing
-            ? 1
-            : 0.28 +
-              safeProgress * 0.72,
-        y:
-          refreshing
-            ? 0
-            : -5 +
-              safeProgress * 5,
-        scale:
-          refreshing
-            ? 1
-            : 0.97 +
-              safeProgress * 0.03,
-      }}
-      exit={
-        reduceMotion
-          ? { opacity: 0 }
-          : {
-              opacity: 0,
-              y: -8,
-              scale: 0.97,
-            }
-      }
-      transition={{
-        duration:
-          reduceMotion
-            ? 0.08
-            : 0.16,
-        ease: [0.2, 0.8, 0.2, 1],
-      }}
-      data-ready={
-        ready
-          ? "true"
-          : "false"
-      }
-      data-refreshing={
-        refreshing
-          ? "true"
-          : "false"
-      }
-    >
-      <span
-        className="alumni-refresh-glass-icon"
-        aria-hidden="true"
-      >
-        <svg
-          className="alumni-refresh-progress"
-          viewBox="0 0 36 36"
-        >
-          <circle
-            cx="18"
-            cy="18"
-            r="15"
-            className="alumni-refresh-progress-track"
-          />
+  if (
+    distance <= 0 &&
+    !refreshing
+  ) {
+    delete html.dataset
+      .alumniPullRefresh;
 
-          <circle
-            cx="18"
-            cy="18"
-            r="15"
-            className="alumni-refresh-progress-value"
-            strokeDasharray={circumference}
-            strokeDashoffset={
-              refreshing
-                ? 0
-                : dashOffset
-            }
-          />
-        </svg>
+    html.style.removeProperty(
+      "--alumni-pull-progress"
+    );
 
-        <AnimatePresence
-          mode="wait"
-          initial={false}
-        >
-          {refreshing ? (
-            <motion.span
-              key="refreshing"
-              className="alumni-refresh-symbol alumni-refresh-symbol-spin"
-              initial={
-                reduceMotion
-                  ? false
-                  : {
-                      opacity: 0,
-                      scale: 0.72,
-                    }
-              }
-              animate={{
-                opacity: 1,
-                scale: 1,
-              }}
-              exit={{
-                opacity: 0,
-                scale: 0.8,
-              }}
-              transition={{
-                duration: 0.14,
-              }}
-            >
-              <RefreshCw
-                size={15}
-                strokeWidth={2.15}
-              />
-            </motion.span>
-          ) : (
-            <motion.span
-              key="arrow"
-              className="alumni-refresh-symbol"
-              initial={false}
-              animate={{
-                rotate:
-                  ready
-                    ? 180
-                    : safeProgress * 35,
-                scale:
-                  ready
-                    ? 1.06
-                    : 1,
-              }}
-              transition={{
-                duration:
-                  reduceMotion
-                    ? 0
-                    : 0.16,
-              }}
-            >
-              <ArrowDown
-                size={16}
-                strokeWidth={2.2}
-              />
-            </motion.span>
-          )}
-        </AnimatePresence>
-      </span>
+    html.style.removeProperty(
+      "--alumni-pull-row-y"
+    );
 
-      <span className="alumni-refresh-glass-copy">
-        <strong>
-          {label}
-        </strong>
+    html.style.removeProperty(
+      "--alumni-pull-brand-x"
+    );
 
-        <span>
-          {refreshing
-            ? "Un momento"
-            : ready
-            ? "Listo"
-            : "Actualiza ALUMNI"}
-        </span>
-      </span>
+    html.style.removeProperty(
+      "--alumni-pull-brand-scale"
+    );
 
-      <span
-        className="alumni-refresh-glass-dot"
-        aria-hidden="true"
-      />
+    html.style.removeProperty(
+      "--alumni-pull-bell-y"
+    );
 
-      <style jsx>{`
-        .alumni-refresh-glass {
-          pointer-events: none;
-          position: relative;
-          display: grid;
-          min-width: 198px;
-          max-width: calc(100vw - 32px);
-          min-height: 54px;
-          grid-template-columns:
-            38px
-            minmax(0, 1fr)
-            8px;
-          align-items: center;
-          gap: 10px;
-          padding: 7px 12px 7px 8px;
-          overflow: hidden;
-          border:
-            1px solid
-            color-mix(
-              in srgb,
-              var(--app-border) 58%,
-              transparent
-            );
-          border-radius: 18px;
-          background:
-            color-mix(
-              in srgb,
-              var(--app-surface) 66%,
-              transparent
-            );
-          -webkit-backdrop-filter:
-            blur(20px)
-            saturate(1.14);
-          backdrop-filter:
-            blur(20px)
-            saturate(1.14);
-          box-shadow:
-            0 10px 28px
-              color-mix(
-                in srgb,
-                var(--app-shadow) 34%,
-                transparent
-              ),
-            inset 0 1px 0
-              color-mix(
-                in srgb,
-                var(--app-text) 4%,
-                transparent
-              );
-          transform-origin: center top;
-        }
+    html.style.removeProperty(
+      "--alumni-pull-bell-rotate"
+    );
 
-        .alumni-refresh-glass::before {
-          content: "";
-          position: absolute;
-          inset: 0;
-          pointer-events: none;
-          background:
-            linear-gradient(
-              180deg,
-              color-mix(
-                in srgb,
-                var(--app-text) 2.4%,
-                transparent
-              ),
-              transparent 56%
-            );
-        }
+    html.style.removeProperty(
+      "--alumni-pull-avatar-y"
+    );
 
-        .alumni-refresh-glass-icon {
-          position: relative;
-          z-index: 1;
-          display: inline-flex;
-          width: 38px;
-          height: 38px;
-          align-items: center;
-          justify-content: center;
-          border-radius: 13px;
-          background:
-            color-mix(
-              in srgb,
-              var(--app-soft-strong) 74%,
-              transparent
-            );
-          color: var(--app-text-soft);
-        }
+    html.style.removeProperty(
+      "--alumni-pull-avatar-scale"
+    );
 
-        .alumni-refresh-progress {
-          position: absolute;
-          inset: 2px;
-          width: 34px;
-          height: 34px;
-          transform: rotate(-90deg);
-        }
+    html.style.removeProperty(
+      "--alumni-pull-label-opacity"
+    );
 
-        .alumni-refresh-progress-track,
-        .alumni-refresh-progress-value {
-          fill: none;
-          stroke-width: 1.6;
-        }
+    return;
+  }
 
-        .alumni-refresh-progress-track {
-          stroke:
-            color-mix(
-              in srgb,
-              var(--app-border) 80%,
-              transparent
-            );
-        }
+  html.dataset.alumniPullRefresh =
+    refreshing
+      ? "refreshing"
+      : progress >= 1
+      ? "ready"
+      : "pulling";
 
-        .alumni-refresh-progress-value {
-          stroke: var(--app-accent);
-          stroke-linecap: round;
-          transition:
-            stroke-dashoffset
-            70ms linear;
-        }
+  html.style.setProperty(
+    "--alumni-pull-progress",
+    String(progress)
+  );
 
-        .alumni-refresh-symbol {
-          position: relative;
-          z-index: 2;
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          color: var(--app-text-soft);
-        }
+  html.style.setProperty(
+    "--alumni-pull-row-y",
+    `${(
+      progress * 4.5
+    ).toFixed(2)}px`
+  );
 
-        .alumni-refresh-symbol-spin {
-          color: var(--app-accent);
-          animation:
-            alumni-refresh-glass-spin
-            .82s linear infinite;
-        }
+  html.style.setProperty(
+    "--alumni-pull-brand-x",
+    `${(
+      progress * 2.5
+    ).toFixed(2)}px`
+  );
 
-        .alumni-refresh-glass-copy {
-          position: relative;
-          z-index: 1;
-          display: block;
-          min-width: 0;
-        }
+  html.style.setProperty(
+    "--alumni-pull-brand-scale",
+    String(
+      1 +
+        progress * 0.045
+    )
+  );
 
-        .alumni-refresh-glass-copy strong,
-        .alumni-refresh-glass-copy > span {
-          display: block;
-        }
+  html.style.setProperty(
+    "--alumni-pull-bell-y",
+    `${(
+      progress * 2
+    ).toFixed(2)}px`
+  );
 
-        .alumni-refresh-glass-copy strong {
-          overflow: hidden;
-          color: var(--app-text);
-          font-size: 11px;
-          font-weight: 870;
-          line-height: 1.2;
-          letter-spacing: -.012em;
-          text-overflow: ellipsis;
-          white-space: nowrap;
-        }
+  html.style.setProperty(
+    "--alumni-pull-bell-rotate",
+    `${(
+      progress * 9
+    ).toFixed(2)}deg`
+  );
 
-        .alumni-refresh-glass-copy > span {
-          margin-top: 2px;
-          color: var(--app-muted-2);
-          font-size: 8.5px;
-          font-weight: 650;
-          line-height: 1.2;
-        }
+  html.style.setProperty(
+    "--alumni-pull-avatar-y",
+    `${(
+      progress * 2.5
+    ).toFixed(2)}px`
+  );
 
-        .alumni-refresh-glass-dot {
-          position: relative;
-          z-index: 1;
-          display: block;
-          width: 6px;
-          height: 6px;
-          border-radius: 999px;
-          background: var(--app-muted-3);
-          transition:
-            background-color 150ms ease,
-            box-shadow 150ms ease,
-            transform 150ms
-              cubic-bezier(.2,.8,.2,1);
-        }
+  html.style.setProperty(
+    "--alumni-pull-avatar-scale",
+    String(
+      1 -
+        progress * 0.035
+    )
+  );
 
-        .alumni-refresh-glass[
-          data-ready="true"
-        ]
-        .alumni-refresh-glass-dot,
-        .alumni-refresh-glass[
-          data-refreshing="true"
-        ]
-        .alumni-refresh-glass-dot {
-          background: var(--app-accent);
-          box-shadow:
-            0 0 10px
-              color-mix(
-                in srgb,
-                var(--app-accent) 28%,
-                transparent
-              );
-          transform: scale(1.08);
-        }
-
-        .alumni-refresh-glass[
-          data-ready="true"
-        ]
-        .alumni-refresh-glass-icon {
-          background:
-            color-mix(
-              in srgb,
-              var(--app-accent) 9%,
-              var(--app-soft)
-            );
-          color: var(--app-accent);
-        }
-
-        @keyframes alumni-refresh-glass-spin {
-          to {
-            transform: rotate(360deg);
-          }
-        }
-
-        html[data-theme="light"]
-        .alumni-refresh-glass {
-          background:
-            color-mix(
-              in srgb,
-              var(--app-surface) 74%,
-              transparent
-            );
-        }
-
-        @supports not (
-          backdrop-filter: blur(1px)
-        ) {
-          .alumni-refresh-glass {
-            background:
-              color-mix(
-                in srgb,
-                var(--app-surface) 94%,
-                transparent
-              );
-          }
-        }
-
-        @media (
-          prefers-reduced-motion: reduce
-        ) {
-          .alumni-refresh-progress-value {
-            transition: none;
-          }
-
-          .alumni-refresh-symbol-spin {
-            animation-duration: 1.6s;
-          }
-
-          .alumni-refresh-glass-dot {
-            transition: none;
-          }
-        }
-      `}</style>
-    </motion.div>
+  html.style.setProperty(
+    "--alumni-pull-label-opacity",
+    String(
+      clamp(
+        (progress - 0.12) /
+          0.88
+      )
+    )
   );
 }
 
@@ -600,19 +273,6 @@ export default function GlobalPullToRefresh() {
   const pathname =
     usePathname();
 
-  const reduceMotion =
-    useReducedMotion();
-
-  /*
-   * Chats own their vertical gesture.
-   * Pull-to-refresh is disabled ONLY
-   * inside an actual conversation:
-   * /messages/[username]
-   * /messages/group/[id]
-   *
-   * /messages inbox and the rest of Alumni
-   * keep the global refresh.
-   */
   const chatRefreshDisabled =
     Boolean(
       pathname &&
@@ -645,7 +305,9 @@ export default function GlobalPullToRefresh() {
 
   const gestureRef =
     useRef<
-      "pending" | "pull" | "scroll"
+      "pending" |
+      "pull" |
+      "scroll"
     >("pending");
 
   const pullRef =
@@ -660,10 +322,23 @@ export default function GlobalPullToRefresh() {
   }, [refreshing]);
 
   useEffect(() => {
+    setTopbarRefreshVisual(
+      pull,
+      refreshing
+    );
+  }, [
+    pull,
+    refreshing,
+  ]);
+
+  useEffect(() => {
     if (
       chatRefreshDisabled
     ) {
       activeRef.current =
+        false;
+
+      candidateRef.current =
         false;
 
       pullRef.current = 0;
@@ -673,6 +348,11 @@ export default function GlobalPullToRefresh() {
 
       setPull(0);
       setRefreshing(false);
+
+      setTopbarRefreshVisual(
+        0,
+        false
+      );
 
       const target =
         refreshTarget();
@@ -722,7 +402,13 @@ export default function GlobalPullToRefresh() {
         false;
 
       pullRef.current = 0;
+
       setPull(0);
+
+      setTopbarRefreshVisual(
+        0,
+        false
+      );
 
       setContentOffset(
         0,
@@ -746,8 +432,10 @@ export default function GlobalPullToRefresh() {
       ) {
         candidateRef.current =
           false;
+
         activeRef.current =
           false;
+
         return;
       }
 
@@ -793,10 +481,14 @@ export default function GlobalPullToRefresh() {
         startXRef.current;
 
       const absY =
-        Math.abs(deltaY);
+        Math.abs(
+          deltaY
+        );
 
       const absX =
-        Math.abs(deltaX);
+        Math.abs(
+          deltaX
+        );
 
       if (
         candidateRef.current &&
@@ -817,7 +509,9 @@ export default function GlobalPullToRefresh() {
             absX * 1.2 &&
           window.scrollY <= 1;
 
-        if (!verticalPull) {
+        if (
+          !verticalPull
+        ) {
           candidateRef.current =
             false;
 
@@ -869,17 +563,27 @@ export default function GlobalPullToRefresh() {
       const distance =
         Math.min(
           MAX_PULL,
-          effectiveDelta * 0.5
+          effectiveDelta *
+            0.47
         );
 
-      if (distance < 1) {
+      if (
+        distance < 1
+      ) {
         return;
       }
 
       pullRef.current =
         distance;
 
-      setPull(distance);
+      setPull(
+        distance
+      );
+
+      setTopbarRefreshVisual(
+        distance,
+        false
+      );
 
       setContentOffset(
         distance,
@@ -896,6 +600,7 @@ export default function GlobalPullToRefresh() {
       ) {
         gestureRef.current =
           "pending";
+
         return;
       }
 
@@ -918,6 +623,11 @@ export default function GlobalPullToRefresh() {
           HOLD_OFFSET
         );
 
+        setTopbarRefreshVisual(
+          TRIGGER_DISTANCE,
+          true
+        );
+
         setContentOffset(
           HOLD_OFFSET,
           true
@@ -927,7 +637,7 @@ export default function GlobalPullToRefresh() {
           () => {
             window.location.reload();
           },
-          900
+          820
         );
 
         return;
@@ -977,11 +687,18 @@ export default function GlobalPullToRefresh() {
     );
 
     return () => {
-      html.style.overscrollBehaviorY =
-        previousHtml;
+      html.style
+        .overscrollBehaviorY =
+          previousHtml;
 
-      body.style.overscrollBehaviorY =
-        previousBody;
+      body.style
+        .overscrollBehaviorY =
+          previousBody;
+
+      setTopbarRefreshVisual(
+        0,
+        false
+      );
 
       const target =
         refreshTarget();
@@ -1020,81 +737,7 @@ export default function GlobalPullToRefresh() {
     chatRefreshDisabled,
   ]);
 
-  const progress =
-    clamp(
-      pull /
-        TRIGGER_DISTANCE
-    );
-
-  const visible =
-    !chatRefreshDisabled &&
-    (
-      refreshing ||
-      pull > 2
-    );
-
-  /*
-   * El componente permanece montado para que
-   * AnimatePresence cierre el indicador suavemente
-   * cuando termina el gesto.
-   */
-  return (
-    <AnimatePresence
-      initial={false}
-    >
-      {visible && (
-        <motion.div
-          key="alumni-pull-refresh-glass"
-          aria-live="polite"
-          className="pointer-events-none fixed inset-x-0 z-[68] flex justify-center px-4 lg:hidden"
-          style={{
-            top:
-              "calc(env(safe-area-inset-top) + 72px)",
-          }}
-          initial={
-            reduceMotion
-              ? { opacity: 0 }
-              : {
-                  opacity: 0,
-                  y: -10,
-                }
-          }
-          animate={{
-            opacity: 1,
-            y: 0,
-          }}
-          exit={
-            reduceMotion
-              ? { opacity: 0 }
-              : {
-                  opacity: 0,
-                  y: -8,
-                }
-          }
-          transition={{
-            duration:
-              reduceMotion
-                ? 0.08
-                : 0.16,
-            ease: [0.2, 0.8, 0.2, 1],
-          }}
-        >
-          <PullRefreshIndicator
-            progress={progress}
-            refreshing={refreshing}
-          />
-        </motion.div>
-      )}
-    </AnimatePresence>
-  );
+  return null;
 }
 
-/* ALUMNI_1_2_3_SCROLL_MESSAGES_STABILITY:PULL_REFRESH */
-
-/* ALUMNI_1_3_6_1_CHAT_NO_PULL_REFRESH */
-
-/* ALUMNI_1_3_7_MESSAGING_GLOBAL_STABILITY:REFRESH_LAYER */
-
-/* ALUMNI_PERFORMANCE_HARDENING_HYDRATION_PULL_REFRESH_V8 */
-
-/* ALUMNI_PULL_TO_REFRESH_GLASS_6_1 */
+/* ALUMNI_PULL_REFRESH_UNIFIED_TOPBAR_6_2 */
