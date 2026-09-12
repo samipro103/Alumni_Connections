@@ -16,6 +16,8 @@ import {
   MessageCircle,
   Pencil,
   Settings,
+  Share2,
+  ArrowLeft,
   BadgeCheck,
   BookOpen,
   Camera,
@@ -51,7 +53,6 @@ import "../media-rendering-1-0.css";
 import "./profile-option-3-launch.css";
 import "./profile-launch-final-polish-1-3-0.css";
 import "./profile-option-3-selected-2-0.css";
-import "./profile-micro-polish-1-0.css";
 
 
 type ProfileTab = "posts" | "saved" | "activity";
@@ -507,6 +508,23 @@ export default function ProfilePage() {
 
               <div className="alumni-profile-launch-cover-overlay" />
 
+              <button
+                type="button"
+                onClick={() => router.back()}
+                className="alumni-profile-launch-cover-action is-back"
+                aria-label="Volver"
+              >
+                <ArrowLeft size={19} />
+              </button>
+
+              <button
+                type="button"
+                onClick={shareProfile}
+                className="alumni-profile-launch-cover-action is-share"
+                aria-label="Compartir perfil"
+              >
+                <Share2 size={18} />
+              </button>
             </div>
 
             <div className="alumni-profile-launch-header">
@@ -1037,5 +1055,3 @@ function Detail({
 /* ALUMNI_PROFILE_2_0_OPTION_3_ACTIVITY_SELECTED */
 
 /* ALUMNI_PROFILE_ACTIVITY_EVENTS_1_0 */
-
-/* ALUMNI_MICRO_IMPROVEMENTS_BLOCK_1:OWNER_PROFILE */

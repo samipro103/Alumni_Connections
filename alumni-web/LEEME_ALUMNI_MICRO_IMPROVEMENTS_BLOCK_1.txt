@@ -1,0 +1,30 @@
+ALUMNI — MICRO IMPROVEMENTS · BLOCK 1
+
+BASADO EN “COSAS A MEJORAR.docx”
+
+INCLUYE
+- Perfil propio: quita botones encima del banner.
+- Perfil público: quita flecha/compartir encima del banner.
+- Actividad: elimina Formación.
+- Deja ubicación/país en formato limpio.
+- Mejora Acerca de sin caja pesada.
+- Mensajes: composer más profesional.
+- Send/paper plane -> ArrowUp.
+- Adjuntar -> +.
+- Motion sutil y reduced-motion.
+
+NO TOCA TODAVÍA
+- Notificaciones
+- Preferencias de notificaciones
+- Feedback
+- Eventos
+- Comunidades
+
+EJECUTAR
+node .\aplicar_alumni_micro_improvements_block_1.js
+npm run build
+
+SI PASA
+git add .
+git commit -m "Polish profile and message composer"
+git push origin main

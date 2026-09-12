@@ -1,6 +1,7 @@
 "use client";
 
-import { GraduationCap, MapPin } from "lucide-react";
+import { motion, useReducedMotion } from "framer-motion";
+import { MapPin } from "lucide-react";
 
 type Props = {
   profile: any;
@@ -17,65 +18,34 @@ function first(...values: unknown[]) {
 }
 
 export default function ProfessionalProfileOverview({ profile }: Props) {
-  const institution = first(
-    profile?.education_institution_name,
-    profile?.university
-  );
-  const program = first(profile?.education_program_name);
-  const career = first(profile?.career);
+  const reduceMotion = useReducedMotion();
   const city = first(profile?.residence_city, profile?.city);
-  const country = first(profile?.residence_country_name, profile?.country);
-  const nationality = first(profile?.nationality_name, profile?.nationality);
+  const country = first(
+    profile?.residence_country_name,
+    profile?.country,
+    profile?.nationality_name,
+    profile?.nationality
+  );
+  const location = [city, country].filter(Boolean).join(", ");
+
+  if (!location) return null;
 
   return (
-    <section className="pt-3">
-      <div className="border-b border-[var(--app-border)] pb-4">
-        <div className="flex items-center gap-2 text-[var(--app-accent)]">
-          <GraduationCap size={16} />
-          <h2 className="text-[11px] font-black uppercase tracking-[0.16em]">
-            Formación
-          </h2>
-        </div>
+    <motion.section
+      className="alumni-profile-location"
+      initial={reduceMotion ? false : { opacity: 0, y: 7 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.38, ease: [0.2, 0.8, 0.2, 1] }}
+    >
+      <span className="alumni-profile-location-icon" aria-hidden="true">
+        <MapPin size={16} strokeWidth={1.9} />
+      </span>
+      <div className="alumni-profile-location-copy">
+        <span>Ubicación</span>
+        <strong>{location}</strong>
       </div>
-
-      <div className="grid gap-0 md:grid-cols-2">
-        <div className="py-5 md:border-r md:border-[var(--app-border)] md:pr-8">
-          <Line label="Carrera" value={career || "No especificada"} />
-          <Line label="Institución" value={institution || "No especificada"} />
-          {program && <Line label="Programa" value={program} />}
-        </div>
-
-        <div className="py-5 md:pl-8">
-          <Line
-            label="Ubicación"
-            value={[city, country].filter(Boolean).join(", ") || "No especificada"}
-            icon
-          />
-          <Line label="Nacionalidad" value={nationality || "No especificada"} />
-        </div>
-      </div>
-    </section>
+    </motion.section>
   );
 }
 
-function Line({
-  label,
-  value,
-  icon = false,
-}: {
-  label: string;
-  value: string;
-  icon?: boolean;
-}) {
-  return (
-    <div className="mb-4 last:mb-0">
-      <p className="flex items-center gap-1.5 text-[8px] font-black uppercase tracking-[0.14em] text-[var(--app-muted-3)]">
-        {icon && <MapPin size={11} />}
-        {label}
-      </p>
-      <p className="mt-1 text-sm font-semibold text-[var(--app-text-soft)]">
-        {value}
-      </p>
-    </div>
-  );
-}
+/* ALUMNI_MICRO_IMPROVEMENTS_BLOCK_1 */

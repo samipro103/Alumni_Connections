@@ -13,12 +13,12 @@ import {
   CheckCheck,
   ChevronDown,
   Clock3,
-  Plus,
+  ImagePlus,
   Images,
   Loader2,
   MoreHorizontal,
   Search,
-  ArrowUp,
+  Send,
   UserRound,
   X,
 } from "lucide-react";
@@ -44,7 +44,6 @@ import {
   SwipeToReply,
 } from "@/components/messages/MessageReplyExperience";
 import "../messages-design-1-6.css";
-import "../chat-composer-pro-1-0.css";
 import "../../interior-ui-1-0.css";
 
 const BUCKET = "message-media";
@@ -3721,9 +3720,8 @@ setMessages(
               className="alumni-chat-attach flex h-[38px] w-[38px] shrink-0 items-center justify-center rounded-full transition disabled:opacity-40"
               aria-label="Adjuntar foto o video"
             >
-              <Plus
+              <ImagePlus
                 size={19}
-                strokeWidth={2.1}
               />
             </button>
 
@@ -3809,9 +3807,8 @@ setMessages(
                   className="animate-spin"
                 />
               ) : (
-                <ArrowUp
-                  size={18}
-                  strokeWidth={2.3}
+                <Send
+                  size={17}
                 />
               )}
             </button>
@@ -3948,5 +3945,3 @@ setMessages(
 /* ALUMNI_PERFORMANCE_HARDENING_MESSAGING_DIRECT_V9 */
 
 /* ALUMNI_MESSAGES_1_6_0B_INBOX1_CHAT2_CRLF_FIX */
-
-/* ALUMNI_MICRO_IMPROVEMENTS_BLOCK_1:DIRECT_CHAT */

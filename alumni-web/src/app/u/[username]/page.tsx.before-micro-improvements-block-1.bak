@@ -7,6 +7,7 @@ import {
 import { useParams,
   useRouter } from "next/navigation";
 import {
+  ArrowLeft,
   Briefcase,
   Clock3,
   GraduationCap,
@@ -51,7 +52,6 @@ import "@/components/profile/ProfilePostOwnerMenu.css";
 import "./profile-option-3-exact.css";
 import "../../media-rendering-1-0.css";
 import "../../profile/profile-option-3-selected-2-0.css";
-import "../../profile/profile-micro-polish-1-0.css";
 
 type ProfileTab = "posts" | "secondary" | "activity";
 
@@ -585,6 +585,23 @@ export default function UserProfilePage() {
 
             <div className="alumni-profile-v3-cover-shade" />
 
+            <button
+              type="button"
+              onClick={() => router.back()}
+              className="alumni-profile-v3-top-button is-left"
+              aria-label="Volver"
+            >
+              <ArrowLeft size={19} />
+            </button>
+
+            <button
+              type="button"
+              onClick={shareProfile}
+              className="alumni-profile-v3-top-button is-right"
+              aria-label="Compartir perfil"
+            >
+              <Share2 size={18} />
+            </button>
           </div>
 
           <div className="alumni-profile-v3-main">
@@ -1318,5 +1335,3 @@ function Detail({
 /* ALUMNI_MEDIA_RENDERING_1_0_INSTAGRAM_LEVEL */
 
 /* ALUMNI_PROFILE_2_0_OPTION_3_ACTIVITY_SELECTED */
-
-/* ALUMNI_MICRO_IMPROVEMENTS_BLOCK_1:PUBLIC_PROFILE */
