@@ -1,0 +1,52 @@
+{
+  "version": "4.3",
+  "approvedStacks": {
+    "src/app/community/page.tsx": [
+      "./community-core-4-1.css",
+      "../interior-ui-1-0.css",
+      "./community-mobile-pro-4-0.css"
+    ],
+    "src/app/community/[slug]/page.tsx": [
+      "../community-core-4-1.css",
+      "../../interior-ui-1-0.css",
+      "../community-motion-3-0.css"
+    ],
+    "src/app/events/page.tsx": [
+      "./events-core-4-1.css",
+      "../interior-ui-1-0.css",
+      "./events-mobile-pro-4-0.css"
+    ],
+    "src/app/events/[id]/page.tsx": [
+      "../events-core-4-1.css",
+      "../../interior-ui-1-0.css",
+      "../events-motion-3-0.css"
+    ],
+    "src/app/feed/page.tsx": [
+      "./feed-consolidated-base-4-0.css",
+      "../media-rendering-1-0.css",
+      "./feed-consolidated-final-4-0.css"
+    ],
+    "src/app/messages/[username]/page.tsx": [
+      "../messages-design-1-6.css",
+      "../chat-composer-pro-1-0.css",
+      "../../interior-ui-1-0.css"
+    ],
+    "src/app/notifications/page.tsx": [
+      "./notifications-pro.css",
+      "../interior-ui-1-0.css",
+      "./notifications-clean-motion-3-0.css"
+    ],
+    "src/app/profile/page.tsx": [
+      "@/components/profile/ProfilePostOwnerMenu.css",
+      "../media-rendering-1-0.css",
+      "./profile-own-preselected-4-0.css",
+      "./profile-shared-final-4-0.css"
+    ],
+    "src/app/u/[username]/page.tsx": [
+      "@/components/profile/ProfilePostOwnerMenu.css",
+      "./profile-option-3-exact.css",
+      "../../media-rendering-1-0.css",
+      "../../profile/profile-shared-final-4-0.css"
+    ]
+  }
+}

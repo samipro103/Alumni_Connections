@@ -7,6 +7,20 @@ const ROOT =
 const SRC =
   path.join(ROOT, "src");
 
+const ARCHITECTURE_FILE =
+  path.join(
+    ROOT,
+    "scripts",
+    "qa-design",
+    "style_architecture.json"
+  );
+
+const VERBOSE =
+  process.argv.includes("--verbose");
+
+const STRICT =
+  process.argv.includes("--strict");
+
 const CSS_IMPORT_RE =
   /import\s+["']([^"']+\.css)["'];?/g;
 
@@ -45,6 +59,52 @@ function relative(file) {
     .relative(ROOT, file)
     .replace(/\\/g, "/");
 }
+
+function sameArray(a, b) {
+  return (
+    Array.isArray(a) &&
+    Array.isArray(b) &&
+    a.length === b.length &&
+    a.every(
+      (value, index) =>
+        value === b[index]
+    )
+  );
+}
+
+function loadArchitecture() {
+  if (
+    !fs.existsSync(
+      ARCHITECTURE_FILE
+    )
+  ) {
+    return {
+      approvedStacks: {},
+    };
+  }
+
+  try {
+    return JSON.parse(
+      fs.readFileSync(
+        ARCHITECTURE_FILE,
+        "utf8"
+      )
+    );
+  } catch (error) {
+    console.error(
+      "❌ style_architecture.json inválido:",
+      error?.message || error
+    );
+    process.exit(1);
+  }
+}
+
+const architecture =
+  loadArchitecture();
+
+const approvedStacks =
+  architecture.approvedStacks ||
+  {};
 
 const files =
   walk(SRC);
@@ -101,7 +161,39 @@ for (
   }
 }
 
-const multiStyleRoutes = [];
+const approved = [];
+const debt = [];
+const drift = [];
+
+for (
+  const [
+    file,
+    expected,
+  ] of Object.entries(
+    approvedStacks
+  )
+) {
+  const actual =
+    imports.get(file) || [];
+
+  if (
+    sameArray(
+      actual,
+      expected
+    )
+  ) {
+    approved.push({
+      file,
+      imports: actual,
+    });
+  } else {
+    drift.push({
+      file,
+      expected,
+      actual,
+    });
+  }
+}
 
 for (
   const [
@@ -113,9 +205,13 @@ for (
     list.length >= 3 &&
     file.startsWith(
       "src/app/"
+    ) &&
+    !Object.prototype.hasOwnProperty.call(
+      approvedStacks,
+      file
     )
   ) {
-    multiStyleRoutes.push({
+    debt.push({
       file,
       imports: list,
     });
@@ -175,10 +271,10 @@ const versioned =
 
 console.log("");
 console.log(
-  "ALUMNI — STYLE AUDIT"
+  "ALUMNI — STYLE AUDIT 4.3"
 );
 console.log(
-  "===================="
+  "========================"
 );
 console.log(
   `CSS files: ${cssFiles.length}`
@@ -190,27 +286,38 @@ console.log(
   `Backup files inside src: ${backups.length}`
 );
 console.log(
-  `Routes/components with 3+ CSS imports: ${multiStyleRoutes.length}`
+  `Approved intentional stacks: ${approved.length}`
+);
+console.log(
+  `Real multi-layer debt: ${debt.length}`
+);
+console.log(
+  `Architecture drift: ${drift.length}`
 );
 console.log(
   `Possible version groups: ${versioned.length}`
 );
 
 if (
-  multiStyleRoutes.length
+  debt.length === 0
 ) {
   console.log("");
   console.log(
-    "Pantallas con muchas capas:"
+    "✅ Deuda real de capas CSS: 0"
+  );
+} else {
+  console.log("");
+  console.log(
+    "⚠️ Pantallas con deuda real:"
   );
 
   for (
-    const item of
-      multiStyleRoutes
+    const item of debt
   ) {
     console.log(
       `- ${item.file}`
     );
+
     for (
       const css of item.imports
     ) {
@@ -221,7 +328,73 @@ if (
   }
 }
 
-if (versioned.length) {
+if (
+  drift.length
+) {
+  console.log("");
+  console.log(
+    "⚠️ Arquitecturas aprobadas que cambiaron:"
+  );
+
+  for (
+    const item of drift
+  ) {
+    console.log(
+      `- ${item.file}`
+    );
+    console.log(
+      "    Esperado:"
+    );
+    for (
+      const css of item.expected
+    ) {
+      console.log(
+        `      ${css}`
+      );
+    }
+
+    console.log(
+      "    Actual:"
+    );
+    for (
+      const css of item.actual
+    ) {
+      console.log(
+        `      ${css}`
+      );
+    }
+  }
+}
+
+if (
+  VERBOSE &&
+  approved.length
+) {
+  console.log("");
+  console.log(
+    "Capas intencionales aprobadas:"
+  );
+
+  for (
+    const item of approved
+  ) {
+    console.log(
+      `- ${item.file}`
+    );
+
+    for (
+      const css of item.imports
+    ) {
+      console.log(
+        `    ${css}`
+      );
+    }
+  }
+}
+
+if (
+  versioned.length
+) {
   console.log("");
   console.log(
     "Posibles generaciones de CSS:"
@@ -236,6 +409,29 @@ if (versioned.length) {
       group.join(", ")
     );
   }
+}
+
+if (
+  STRICT &&
+  (
+    backups.length > 0 ||
+    debt.length > 0 ||
+    drift.length > 0 ||
+    versioned.length > 0
+  )
+) {
+  console.log("");
+  console.error(
+    "❌ Design audit estricto falló."
+  );
+  process.exit(1);
+}
+
+if (STRICT) {
+  console.log("");
+  console.log(
+    "✅ Design audit estricto aprobado."
+  );
 }
 
 console.log("");
