@@ -1,7 +1,6 @@
 "use client";
 
 import {
-  ArrowLeft,
   AtSign,
   Bell,
   CalendarDays,
@@ -13,6 +12,7 @@ import {
   Settings2,
   UserPlus,
   Users,
+  X,
 } from "lucide-react";
 import {
   useEffect,
@@ -34,7 +34,6 @@ import { hydratePostMediaItems } from "@/lib/feedMedia";
 import InvitationNotificationActions from "@/components/social/InvitationNotificationActions";
 import "./notifications-pro.css";
 import "../interior-ui-1-0.css";
-import "./notifications-clean-motion-3-0.css";
 
 type FilterType =
   | "all"
@@ -977,7 +976,7 @@ export default function NotificationsPage() {
 
   return (
     <AppShell>
-      <main className="alumni-notifications-pro mx-auto w-full max-w-[860px]" data-alumni-motion-ignore="true">
+      <main className="alumni-notifications-pro mx-auto w-full max-w-[860px]">
         <header className="alumni-notifications-header">
           <div className="min-w-0">
             <p className="alumni-notifications-eyebrow">
@@ -1233,21 +1232,18 @@ export default function NotificationsPage() {
               aria-label="Preferencias de notificaciones"
             >
               <header>
+                <div>
+                  <p>Preferencias</p>
+                  <h2>Qué quieres recibir</h2>
+                </div>
+
                 <button
                   type="button"
                   onClick={() => closePreferences()}
-                  aria-label="Volver"
+                  aria-label="Cerrar"
                 >
-                  <ArrowLeft
-                    size={19}
-                    strokeWidth={2}
-                  />
+                  <X size={18} />
                 </button>
-
-                <div>
-                  <p>Notificaciones</p>
-                  <h2>Qué quieres recibir</h2>
-                </div>
               </header>
 
               <div className="alumni-notification-preferences-list">
@@ -1342,5 +1338,3 @@ export default function NotificationsPage() {
 /* ALUMNI_COMMENT_THREADS_1_0 */
 
 /* ALUMNI_NOTIFICATIONS_2_0 */
-
-/* ALUMNI_MICRO_IMPROVEMENTS_BLOCK_2 */
