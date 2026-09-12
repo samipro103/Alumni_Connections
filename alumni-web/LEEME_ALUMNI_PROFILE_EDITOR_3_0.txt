@@ -1,0 +1,56 @@
+ALUMNI — PROFILE EDITOR 3.0
+
+PANTALLA:
+Perfil → Editar perfil
+Configuración → Perfil → Editar perfil
+
+OBJETIVO
+Rediseño profesional, limpio, mobile-first y con motion intencional.
+
+CAMBIA VISUALMENTE
+- header sticky con blur
+- botón volver refinado
+- Guardar como CTA principal
+- portada más limpia
+- avatar superpuesto y cámara refinada
+- identidad, académica y ubicación con jerarquía clara
+- filas sin cajas pesadas
+- solo separadores inferiores
+- estados focus más finos
+- pickers rediseñados
+- sheet/picker con motion
+- entrada de pantalla con Framer Motion
+- entrada de media y campos con Framer Motion
+- microinteracciones en botones
+- soporte 360–430 px
+- prefers-reduced-motion
+
+NO CAMBIA
+- Supabase
+- carga del perfil
+- guardado
+- validación de username
+- bio
+- pipeline de imágenes
+- subida de avatar
+- subida de banner
+- catálogo académico
+- países
+- nacionalidades
+- rutas
+
+IMPORTANTE
+La pantalla queda con data-alumni-motion-ignore=true.
+Eso evita que el motion automático/global mueva su estructura.
+Solo corre el motion diseñado específicamente para el editor.
+
+EJECUTAR
+
+node .\aplicar_alumni_profile_editor_3_0.js
+npm run build
+
+SI PASA
+
+git add .
+git commit -m "Redesign profile editor with clean professional motion"
+git push origin main

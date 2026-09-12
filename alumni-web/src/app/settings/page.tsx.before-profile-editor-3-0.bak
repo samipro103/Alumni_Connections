@@ -45,7 +45,6 @@ import "./settings-edit-profile-option-1.css";
 import "./settings-edit-profile-repair-1-1.css";
 import "./settings-edit-profile-pro-2-0.css";
 import "./settings-stability-3-0.css";
-import "./settings-edit-profile-pro-3-0.css";
 
 type SettingsSectionId =
   | "appearance"
