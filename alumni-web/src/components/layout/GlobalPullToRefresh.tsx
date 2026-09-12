@@ -3,16 +3,15 @@
 import {
   useEffect,
   useRef,
-  useState,
 } from "react";
 
 import {
   usePathname,
 } from "next/navigation";
 
-const TRIGGER_DISTANCE = 72;
-const MAX_PULL = 92;
-const HOLD_OFFSET = 58;
+const TRIGGER_DISTANCE = 68;
+const MAX_PULL = 86;
+const HOLD_OFFSET = 44;
 
 function clamp(
   value: number,
@@ -91,8 +90,8 @@ function setContentOffset(
     Math.max(
       0,
       Math.min(
-        38,
-        value * 0.64
+        24,
+        value * 0.4
       )
     );
 
@@ -108,7 +107,7 @@ function setContentOffset(
 
   target.style.transition =
     animate
-      ? "transform 230ms cubic-bezier(.2,.8,.2,1)"
+      ? "transform 260ms cubic-bezier(.16,.84,.26,1)"
       : "none";
 
   target.style.transform =
@@ -129,142 +128,91 @@ function setContentOffset(
           );
         }
       },
-      250
+      290
     );
   }
 }
 
-function setTopbarRefreshVisual(
-  distance: number,
-  refreshing = false
+function clearVisual() {
+  const html =
+    document.documentElement;
+
+  delete html.dataset
+    .alumniPullRefresh;
+
+  [
+    "--alumni-pull-progress",
+    "--alumni-pull-group-y",
+    "--alumni-pull-brand-scale",
+    "--alumni-pull-side-scale",
+    "--alumni-pull-light-opacity",
+    "--alumni-pull-light-scale",
+  ].forEach(
+    (name) => {
+      html.style.removeProperty(
+        name
+      );
+    }
+  );
+}
+
+function writeVisual(
+  progress: number,
+  state:
+    | "pulling"
+    | "ready"
+    | "refreshing"
 ) {
   const html =
     document.documentElement;
 
-  const progress =
-    refreshing
-      ? 1
-      : clamp(
-          distance /
-            TRIGGER_DISTANCE
-        );
-
-  if (
-    distance <= 0 &&
-    !refreshing
-  ) {
-    delete html.dataset
-      .alumniPullRefresh;
-
-    html.style.removeProperty(
-      "--alumni-pull-progress"
-    );
-
-    html.style.removeProperty(
-      "--alumni-pull-row-y"
-    );
-
-    html.style.removeProperty(
-      "--alumni-pull-brand-x"
-    );
-
-    html.style.removeProperty(
-      "--alumni-pull-brand-scale"
-    );
-
-    html.style.removeProperty(
-      "--alumni-pull-bell-y"
-    );
-
-    html.style.removeProperty(
-      "--alumni-pull-bell-rotate"
-    );
-
-    html.style.removeProperty(
-      "--alumni-pull-avatar-y"
-    );
-
-    html.style.removeProperty(
-      "--alumni-pull-avatar-scale"
-    );
-
-    html.style.removeProperty(
-      "--alumni-pull-label-opacity"
-    );
-
-    return;
-  }
+  const p =
+    clamp(progress);
 
   html.dataset.alumniPullRefresh =
-    refreshing
-      ? "refreshing"
-      : progress >= 1
-      ? "ready"
-      : "pulling";
+    state;
 
   html.style.setProperty(
     "--alumni-pull-progress",
-    String(progress)
+    String(p)
   );
 
   html.style.setProperty(
-    "--alumni-pull-row-y",
+    "--alumni-pull-group-y",
     `${(
-      progress * 4.5
-    ).toFixed(2)}px`
-  );
-
-  html.style.setProperty(
-    "--alumni-pull-brand-x",
-    `${(
-      progress * 2.5
-    ).toFixed(2)}px`
+      p * 2.4
+    ).toFixed(3)}px`
   );
 
   html.style.setProperty(
     "--alumni-pull-brand-scale",
     String(
       1 +
-        progress * 0.045
+        p * 0.022
     )
   );
 
   html.style.setProperty(
-    "--alumni-pull-bell-y",
-    `${(
-      progress * 2
-    ).toFixed(2)}px`
-  );
-
-  html.style.setProperty(
-    "--alumni-pull-bell-rotate",
-    `${(
-      progress * 9
-    ).toFixed(2)}deg`
-  );
-
-  html.style.setProperty(
-    "--alumni-pull-avatar-y",
-    `${(
-      progress * 2.5
-    ).toFixed(2)}px`
-  );
-
-  html.style.setProperty(
-    "--alumni-pull-avatar-scale",
+    "--alumni-pull-side-scale",
     String(
       1 -
-        progress * 0.035
+        p * 0.018
     )
   );
 
   html.style.setProperty(
-    "--alumni-pull-label-opacity",
+    "--alumni-pull-light-opacity",
     String(
-      clamp(
-        (progress - 0.12) /
-          0.88
-      )
+      0.12 +
+        p * 0.76
+    )
+  );
+
+  html.style.setProperty(
+    "--alumni-pull-light-scale",
+    String(
+      0.18 +
+        p * 0.82
     )
   );
 }
@@ -280,16 +228,6 @@ export default function GlobalPullToRefresh() {
         "/messages/"
       )
     );
-
-  const [
-    pull,
-    setPull,
-  ] = useState(0);
-
-  const [
-    refreshing,
-    setRefreshing,
-  ] = useState(false);
 
   const startYRef =
     useRef(0);
@@ -316,20 +254,149 @@ export default function GlobalPullToRefresh() {
   const refreshingRef =
     useRef(false);
 
-  useEffect(() => {
-    refreshingRef.current =
-      refreshing;
-  }, [refreshing]);
+  const visualCurrentRef =
+    useRef(0);
 
-  useEffect(() => {
-    setTopbarRefreshVisual(
-      pull,
-      refreshing
+  const visualTargetRef =
+    useRef(0);
+
+  const visualStateRef =
+    useRef<
+      | "idle"
+      | "pulling"
+      | "ready"
+      | "refreshing"
+    >("idle");
+
+  const visualFrameRef =
+    useRef<number | null>(
+      null
     );
-  }, [
-    pull,
-    refreshing,
-  ]);
+
+  function stopVisualFrame() {
+    if (
+      visualFrameRef.current !==
+      null
+    ) {
+      window.cancelAnimationFrame(
+        visualFrameRef.current
+      );
+
+      visualFrameRef.current =
+        null;
+    }
+  }
+
+  function runVisualFrame() {
+    stopVisualFrame();
+
+    const tick = () => {
+      const current =
+        visualCurrentRef.current;
+
+      const target =
+        visualTargetRef.current;
+
+      const delta =
+        target - current;
+
+      const next =
+        Math.abs(delta) < 0.002
+          ? target
+          : current +
+            delta * 0.24;
+
+      visualCurrentRef.current =
+        next;
+
+      const state =
+        visualStateRef.current;
+
+      if (
+        state === "idle" &&
+        next <= 0.002
+      ) {
+        visualCurrentRef.current =
+          0;
+
+        clearVisual();
+
+        visualFrameRef.current =
+          null;
+
+        return;
+      }
+
+      if (
+        state !== "idle"
+      ) {
+        writeVisual(
+          next,
+          state ===
+            "refreshing"
+            ? "refreshing"
+            : next >= 0.985
+            ? "ready"
+            : "pulling"
+        );
+      }
+
+      if (
+        Math.abs(
+          target - next
+        ) >= 0.002 ||
+        state ===
+          "refreshing"
+      ) {
+        visualFrameRef.current =
+          window.requestAnimationFrame(
+            tick
+          );
+
+        return;
+      }
+
+      visualFrameRef.current =
+        null;
+    };
+
+    visualFrameRef.current =
+      window.requestAnimationFrame(
+        tick
+      );
+  }
+
+  function setVisualTarget(
+    distance: number,
+    refreshing = false
+  ) {
+    visualTargetRef.current =
+      refreshing
+        ? 1
+        : clamp(
+            distance /
+              TRIGGER_DISTANCE
+          );
+
+    visualStateRef.current =
+      refreshing
+        ? "refreshing"
+        : visualTargetRef.current >= 1
+        ? "ready"
+        : visualTargetRef.current > 0
+        ? "pulling"
+        : "idle";
+
+    runVisualFrame();
+  }
+
+  function resetVisual() {
+    visualTargetRef.current = 0;
+    visualStateRef.current =
+      "idle";
+
+    runVisualFrame();
+  }
 
   useEffect(() => {
     if (
@@ -341,18 +408,23 @@ export default function GlobalPullToRefresh() {
       candidateRef.current =
         false;
 
-      pullRef.current = 0;
+      pullRef.current =
+        0;
 
       refreshingRef.current =
         false;
 
-      setPull(0);
-      setRefreshing(false);
+      visualCurrentRef.current =
+        0;
 
-      setTopbarRefreshVisual(
-        0,
-        false
-      );
+      visualTargetRef.current =
+        0;
+
+      visualStateRef.current =
+        "idle";
+
+      stopVisualFrame();
+      clearVisual();
 
       const target =
         refreshTarget();
@@ -401,14 +473,10 @@ export default function GlobalPullToRefresh() {
       activeRef.current =
         false;
 
-      pullRef.current = 0;
+      pullRef.current =
+        0;
 
-      setPull(0);
-
-      setTopbarRefreshVisual(
-        0,
-        false
-      );
+      resetVisual();
 
       setContentOffset(
         0,
@@ -457,7 +525,8 @@ export default function GlobalPullToRefresh() {
       activeRef.current =
         false;
 
-      pullRef.current = 0;
+      pullRef.current =
+        0;
     }
 
     function onTouchMove(
@@ -498,15 +567,15 @@ export default function GlobalPullToRefresh() {
           Math.max(
             absX,
             absY
-          ) < 10
+          ) < 8
         ) {
           return;
         }
 
         const verticalPull =
-          deltaY > 10 &&
+          deltaY > 8 &&
           absY >
-            absX * 1.2 &&
+            absX * 1.18 &&
           window.scrollY <= 1;
 
         if (
@@ -538,7 +607,7 @@ export default function GlobalPullToRefresh() {
 
       if (
         absX >
-        absY * 0.8
+        absY * 0.82
       ) {
         reset(false);
         return;
@@ -557,18 +626,18 @@ export default function GlobalPullToRefresh() {
       const effectiveDelta =
         Math.max(
           0,
-          deltaY - 8
+          deltaY - 6
         );
 
       const distance =
         Math.min(
           MAX_PULL,
           effectiveDelta *
-            0.47
+            0.46
         );
 
       if (
-        distance < 1
+        distance < 0.5
       ) {
         return;
       }
@@ -576,11 +645,7 @@ export default function GlobalPullToRefresh() {
       pullRef.current =
         distance;
 
-      setPull(
-        distance
-      );
-
-      setTopbarRefreshVisual(
+      setVisualTarget(
         distance,
         false
       );
@@ -614,16 +679,10 @@ export default function GlobalPullToRefresh() {
         refreshingRef.current =
           true;
 
-        setRefreshing(true);
-
         pullRef.current =
           HOLD_OFFSET;
 
-        setPull(
-          HOLD_OFFSET
-        );
-
-        setTopbarRefreshVisual(
+        setVisualTarget(
           TRIGGER_DISTANCE,
           true
         );
@@ -637,7 +696,7 @@ export default function GlobalPullToRefresh() {
           () => {
             window.location.reload();
           },
-          820
+          760
         );
 
         return;
@@ -695,10 +754,18 @@ export default function GlobalPullToRefresh() {
         .overscrollBehaviorY =
           previousBody;
 
-      setTopbarRefreshVisual(
-        0,
-        false
-      );
+      stopVisualFrame();
+
+      visualCurrentRef.current =
+        0;
+
+      visualTargetRef.current =
+        0;
+
+      visualStateRef.current =
+        "idle";
+
+      clearVisual();
 
       const target =
         refreshTarget();
@@ -740,4 +807,4 @@ export default function GlobalPullToRefresh() {
   return null;
 }
 
-/* ALUMNI_PULL_REFRESH_UNIFIED_TOPBAR_6_2 */
+/* ALUMNI_PULL_REFRESH_FLUID_LIGHT_6_3 */
