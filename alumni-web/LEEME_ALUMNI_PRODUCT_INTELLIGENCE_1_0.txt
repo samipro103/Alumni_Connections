@@ -1,0 +1,45 @@
+ALUMNI — PRODUCT INTELLIGENCE 1.0
+
+SUPABASE
+La migración alumni_product_intelligence_1_0 YA ESTÁ APLICADA en producción.
+
+AGREGA
+- tracking autenticado de page_view
+- session_start
+- session_id por pestaña
+- rutas normalizadas
+- no registra query strings
+- no registra texto de posts, mensajes ni contenido privado
+
+ADMIN → PRODUCTO
+- DAU
+- WAU
+- MAU
+- % usuarios que publican
+- tiempo promedio hasta primera conexión
+- funnel:
+  registro
+  perfil completo
+  primera conexión
+  primer mensaje
+  primera publicación
+- retención D1 / D7 / D30
+- usuarios activos por día
+- pantallas más usadas
+- última pantalla de las sesiones
+
+IMPORTANTE
+Las métricas históricas basadas en tablas reales (registro/follow/mensaje/post)
+pueden aparecer inmediatamente.
+DAU/WAU/MAU, rutas y retención empiezan a acumular desde la instalación del tracker.
+
+EJECUTAR
+
+node .\aplicar_alumni_product_intelligence_1_0.js
+npm run build
+
+SI PASA
+
+git add .
+git commit -m "Add Alumni Product Intelligence"
+git push origin main

@@ -5,6 +5,7 @@ import {
   usePathname,
 } from "next/navigation";
 import {
+  Activity,
   BarChart3,
   BadgeCheck,
   CalendarDays,
@@ -111,6 +112,9 @@ function permissionForPath(
 
   if (
     pathname.startsWith(
+      "/admin/intelligence"
+    ) ||
+    pathname.startsWith(
       "/admin/stats"
     )
   ) {
@@ -213,6 +217,12 @@ export default function AdminShell({
         can("view_stats"),
     },
     {
+      href: "/admin/intelligence",
+      label: "Producto",
+      icon: Activity,
+      visible: can("view_stats"),
+    },
+    {
       href: "/admin/stats",
       label: "Estadísticas",
       icon: BarChart3,
@@ -289,3 +299,5 @@ export default function AdminShell({
 /* ALUMNI_ADMIN_CONTROL_CENTER_1_0 */
 
 /* ALUMNI_ANTI_SPAM_1_0 */
+
+/* ALUMNI_PRODUCT_INTELLIGENCE_1_0:ADMIN_SHELL */

@@ -8,6 +8,7 @@ import { AuthProvider } from "@/components/auth/AuthProvider";
 import { ThemeProvider } from "@/components/theme/ThemeProvider";
 import GlobalPullToRefresh from "@/components/layout/GlobalPullToRefresh";
 import PWAProBootstrap from "@/components/pwa/PWAProBootstrap";
+import ProductAnalyticsTracker from "@/components/analytics/ProductAnalyticsTracker";
 import { AlumniUXProvider } from "@/components/ui/AlumniUXProvider";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
@@ -137,6 +138,7 @@ export default function RootLayout({
             <AuthProvider>
             <GlobalPullToRefresh />
             <PWAProBootstrap />
+            <ProductAnalyticsTracker />
 
             <div
               id="alumni-root-content"
@@ -164,3 +166,5 @@ export default function RootLayout({
 /* ALUMNI_2_9_5_OFFICIAL_DOMAIN */
 
 /* ALUMNI_INTERNAL_UI_1_0_DARK_LIGHT_CLEAN */
+
+/* ALUMNI_PRODUCT_INTELLIGENCE_1_0:ROOT */
