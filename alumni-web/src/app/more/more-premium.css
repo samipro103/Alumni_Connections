@@ -396,3 +396,33 @@ strong {
 }
 
 /* ALUMNI_MORE_FEATURED_TEXT_FINAL_1_0 */
+
+/* =========================================================
+   ALUMNI_MORE_INFORMATION_REORDER_1_0
+   Reorden lógico inferior: sin encabezados nuevos.
+   ========================================================= */
+
+.alumni-more-clean-list-information {
+  margin-top: 12px;
+}
+
+.alumni-more-clean-row.is-accent
+.alumni-more-clean-row-icon {
+  background:
+    color-mix(
+      in srgb,
+      var(--app-accent) 10%,
+      transparent
+    );
+  color:
+    var(--app-accent);
+}
+
+.alumni-more-clean-row.is-information
+.alumni-more-clean-row-icon {
+  background:
+    var(--app-soft-strong);
+  color:
+    var(--app-muted);
+}
+

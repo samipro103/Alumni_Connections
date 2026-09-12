@@ -6,9 +6,12 @@ import {
   ChevronRight,
   Code2,
   ExternalLink,
+  FileText,
   Heart,
   Info,
   Mail,
+  ShieldCheck,
+  UsersRound,
 } from "lucide-react";
 import AppShell from "@/components/layout/AppShell";
 import "./about.css";
@@ -66,6 +69,66 @@ export default function AboutPage() {
               <small>Desarrollador</small>
               <strong>Sami</strong>
               <span>Fundador &amp; desarrollador</span>
+            </span>
+
+            <ChevronRight
+              size={17}
+              className="alumni-about-chevron"
+            />
+          </Link>
+
+          <Link
+            href="/legal/terms"
+            className="alumni-about-store-row"
+          >
+            <span className="alumni-about-store-icon">
+              <FileText size={18} />
+            </span>
+
+            <span className="alumni-about-store-copy">
+              <small>Legal</small>
+              <strong>Términos de uso</strong>
+              <span>Condiciones para usar ALUMNI</span>
+            </span>
+
+            <ChevronRight
+              size={17}
+              className="alumni-about-chevron"
+            />
+          </Link>
+
+          <Link
+            href="/legal/privacy"
+            className="alumni-about-store-row"
+          >
+            <span className="alumni-about-store-icon">
+              <ShieldCheck size={18} />
+            </span>
+
+            <span className="alumni-about-store-copy">
+              <small>Privacidad</small>
+              <strong>Política de privacidad</strong>
+              <span>Cómo protegemos y usamos tus datos</span>
+            </span>
+
+            <ChevronRight
+              size={17}
+              className="alumni-about-chevron"
+            />
+          </Link>
+
+          <Link
+            href="/legal/community"
+            className="alumni-about-store-row"
+          >
+            <span className="alumni-about-store-icon">
+              <UsersRound size={18} />
+            </span>
+
+            <span className="alumni-about-store-copy">
+              <small>Comunidad</small>
+              <strong>Normas de la comunidad</strong>
+              <span>Reglas para convivir dentro de ALUMNI</span>
             </span>
 
             <ChevronRight
@@ -141,3 +204,5 @@ export default function AboutPage() {
 /* ALUMNI_ABOUT_1_0_APP_STORE */
 
 /* ALUMNI_FEEDBACK_PRO_NAV_COMPACT_3_0 */
+
+/* ALUMNI_MORE_INFORMATION_REORDER_1_0 */

@@ -6,9 +6,6 @@ import {
   useReducedMotion,
 } from "framer-motion";
 import {
-  Bell,
-  Bookmark,
-  BookOpen,
   CalendarDays,
   ChevronRight,
   Info,
@@ -19,33 +16,21 @@ import {
 import AppShell from "@/components/layout/AppShell";
 import "./more-premium.css";
 
-const settingsItems = [
+const actionItems = [
   {
     href: "/settings",
-    label: "Configuración",
+    label: "Ajustes",
     icon: Settings2,
   },
   {
-    href: "/notifications",
-    label: "Notificaciones",
-    icon: Bell,
-  },
-  {
-    href:
-      "/settings?section=profile&view=saved",
-    label: "Guardados",
-    icon: Bookmark,
-  },
-  {
-    href: "/passport",
-    label: "Pasaporte Alumni",
-    icon: BookOpen,
-  },
-  {
     href: "/feedback",
-    label: "Ayuda y feedback",
+    label: "Enviar feedback",
     icon: MessageCircleMore,
+    tone: "accent",
   },
+];
+
+const informationItems = [
   {
     href: "/about",
     label: "Acerca de ALUMNI",
@@ -205,10 +190,40 @@ export default function MorePage() {
             duration: 0.42,
           }}
         >
-          <h2>Ajustes</h2>
-
           <div className="alumni-more-clean-list">
-            {settingsItems.map(
+            {actionItems.map(
+              ({
+                href,
+                label,
+                icon: Icon,
+                tone,
+              }) => (
+                <Link
+                  key={href}
+                  href={href}
+                  className={`alumni-more-clean-row${tone === "accent" ? " is-accent" : ""}`}
+                >
+                  <span className="alumni-more-clean-row-icon">
+                    <Icon
+                      size={18}
+                      strokeWidth={1.9}
+                    />
+                  </span>
+
+                  <strong>
+                    {label}
+                  </strong>
+
+                  <ChevronRight
+                    size={17}
+                  />
+                </Link>
+              )
+            )}
+          </div>
+
+          <div className="alumni-more-clean-list alumni-more-clean-list-information">
+            {informationItems.map(
               ({
                 href,
                 label,
@@ -217,7 +232,7 @@ export default function MorePage() {
                 <Link
                   key={href}
                   href={href}
-                  className="alumni-more-clean-row"
+                  className="alumni-more-clean-row is-information"
                 >
                   <span className="alumni-more-clean-row-icon">
                     <Icon
@@ -245,3 +260,5 @@ export default function MorePage() {
 
 /* ALUMNI_MORE_CLEAN_2_1 */
 /* ALUMNI_STABILITY_PASS_1_0 */
+
+/* ALUMNI_MORE_INFORMATION_REORDER_1_0 */
