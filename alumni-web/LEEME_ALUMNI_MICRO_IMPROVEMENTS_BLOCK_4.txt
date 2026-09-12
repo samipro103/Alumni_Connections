@@ -1,0 +1,51 @@
+ALUMNI — MICRO IMPROVEMENTS · BLOCK 4
+
+BASADO EN LA PÁGINA 8 DE "COSAS A MEJORAR.docx"
+
+EVENTOS — PRINCIPAL
+- hero más premium
+- ambient motion sutil
+- Crear evento refinado
+- tabs con motion
+- búsqueda con focus animado
+- eventos entran escalonados
+- microinteracciones en cada fila
+- sin desbordes en 360–430px
+
+CREAR EVENTO
+- apertura animada
+- header/footer glass
+- pasos con entrada escalonada
+- tipos y visibilidad con microinteracciones
+- botón final más premium
+
+INTERIOR DEL EVENTO
+- entrada hero mejorada
+- mejor jerarquía del título
+- metadata más clara
+- ambient glow sutil
+- RSVP refinado
+- motion en opciones
+- asistentes con stagger
+- compartir/invitar conservados
+
+NO CAMBIA
+- consultas Supabase
+- filtros
+- RSVPs
+- creación del evento
+- invitaciones
+- compartir
+- permisos
+- lógica de comunidades
+
+EJECUTAR
+
+node .\aplicar_alumni_micro_improvements_block_4.js
+npm run build
+
+SI PASA
+
+git add .
+git commit -m "Polish events experience with motion"
+git push origin main

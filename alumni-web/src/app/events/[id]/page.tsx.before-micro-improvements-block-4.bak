@@ -20,7 +20,6 @@ import SocialInvitePicker from "@/components/social/SocialInvitePicker";
 import "../events-2.css";
 import "./event-detail.css";
 import "../../interior-ui-1-0.css";
-import "../events-motion-3-0.css";
 
 export default function EventDetailPage() {
   const params = useParams<{ id: string }>();
@@ -185,7 +184,7 @@ export default function EventDetailPage() {
 
   return (
     <AppShell>
-      <main className="event-detail mx-auto w-full max-w-[920px]" data-alumni-motion-ignore="true">
+      <main className="event-detail mx-auto w-full max-w-[920px]">
         <Link href="/events" className="event-detail-back">
           <ArrowLeft size={15} />
           Eventos
@@ -350,5 +349,3 @@ export default function EventDetailPage() {
 
 /* ALUMNI_2_1_EVENT_DETAIL */
 /* ALUMNI_2_1_2_EVENT_CONTROLS_INVITES */
-
-/* ALUMNI_MICRO_IMPROVEMENTS_BLOCK_4:EVENT_DETAIL */
