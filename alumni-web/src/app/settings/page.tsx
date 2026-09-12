@@ -38,14 +38,8 @@ import SavedPostsPanel from "@/components/settings/SavedPostsPanel";
 import ProfileEditorPro from "@/components/settings/ProfileEditorPro";
 import SpotifyPremiumMusicGate from "@/components/music/SpotifyPremiumMusicGate";
 import AccountTrustPanel from "@/components/settings/AccountTrustPanel";
-import "./settings-classic-1-0.css";
 import "../interior-ui-1-0.css";
-import "./settings-clean-2-0.css";
-import "./settings-edit-profile-option-1.css";
-import "./settings-edit-profile-repair-1-1.css";
-import "./settings-edit-profile-pro-2-0.css";
-import "./settings-stability-3-0.css";
-import "./settings-edit-profile-pro-3-0.css";
+import "./settings-consolidated-4-0.css";
 
 type SettingsSectionId =
   | "appearance"
@@ -1795,3 +1789,5 @@ function SocialField({
 /* ALUMNI_STABILITY_PASS_1_0:SETTINGS */
 
 /* ALUMNI_PROFILE_EDITOR_2_0_PRO_MOTION */
+
+/* ALUMNI_SETTINGS_STYLE_CONSOLIDATION_4_0:PAGE */

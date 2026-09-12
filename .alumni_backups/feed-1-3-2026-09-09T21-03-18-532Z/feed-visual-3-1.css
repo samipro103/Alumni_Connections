@@ -1,0 +1,726 @@
+/*
+ * ALUMNI - FEED 1.1
+ * OpciÃ³n 1: profesional, limpio, moderno y minimalista.
+ */
+
+.alumni-feed-page {
+  width: min(100%, 720px) !important;
+  max-width: 720px !important;
+  overflow: hidden;
+  border: 1px solid var(--app-border);
+  border-radius: 22px;
+  background: var(--app-surface);
+  box-shadow:
+    0 1px 2px rgba(15, 23, 42, .025),
+    0 14px 42px rgba(15, 23, 42, .035);
+}
+
+.alumni-feed-page .alumni-pro-feed-list {
+  background: var(--app-surface);
+}
+
+.alumni-feed-page .alumni-pro-feed-list > div + div {
+  border-top-color: var(--app-border);
+}
+
+.alumni-feed-page .alumni-feed-post-viewport {
+  padding-inline: 16px;
+}
+
+/* Stories compactas */
+.alumni-feed-page .alumni-stories-section {
+  margin: 0 !important;
+  padding: 16px 16px 14px;
+  border-bottom: 1px solid var(--app-border);
+  background: var(--app-surface);
+}
+
+.alumni-feed-page .alumni-stories-rail {
+  display: flex;
+  gap: 14px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 2px 1px 4px;
+  scrollbar-width: none;
+  overscroll-behavior-x: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+.alumni-feed-page .alumni-stories-rail::-webkit-scrollbar {
+  display: none;
+}
+
+.alumni-feed-page .alumni-story-compact-item {
+  display: flex;
+  width: 66px;
+  flex: 0 0 66px;
+  min-width: 0;
+  flex-direction: column;
+  align-items: center;
+  gap: 7px;
+}
+
+.alumni-feed-page .alumni-story-compact-button {
+  position: relative;
+  display: grid;
+  width: 62px;
+  height: 62px;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: inherit;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.alumni-feed-page .alumni-story-compact-button:focus-visible {
+  outline: 2px solid var(--app-accent);
+  outline-offset: 3px;
+}
+
+.alumni-feed-page .alumni-story-compact-ring {
+  display: grid;
+  width: 62px;
+  height: 62px;
+  place-items: center;
+  padding: 3px;
+  border-radius: 999px;
+  transition:
+    border-color .18s ease,
+    transform .18s ease,
+    opacity .18s ease;
+}
+
+.alumni-feed-page .alumni-story-compact-button:active .alumni-story-compact-ring {
+  transform: scale(.965);
+}
+
+.alumni-feed-page .alumni-story-compact-ring-unseen {
+  border: 2px solid var(--app-accent);
+  background: var(--app-surface);
+}
+
+.alumni-feed-page .alumni-story-compact-ring-viewed,
+.alumni-feed-page .alumni-story-compact-ring-empty {
+  border: 1.5px solid var(--app-border);
+  background: var(--app-surface);
+}
+
+.alumni-feed-page .alumni-story-compact-ring-viewed {
+  opacity: .78;
+}
+
+.alumni-feed-page .alumni-story-compact-avatar {
+  display: grid;
+  width: 52px;
+  height: 52px;
+  overflow: hidden;
+  place-items: center;
+  border-radius: 999px;
+  background: var(--app-surface-2);
+  color: var(--app-text-soft);
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.alumni-feed-page .alumni-story-compact-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.alumni-feed-page .alumni-story-compact-add {
+  position: absolute;
+  right: -1px;
+  bottom: -1px;
+  display: grid;
+  width: 22px;
+  height: 22px;
+  place-items: center;
+  border: 2px solid var(--app-surface);
+  border-radius: 999px;
+  background: var(--app-accent);
+  color: var(--app-on-accent);
+  box-shadow: 0 2px 7px rgba(15, 23, 42, .12);
+}
+
+.alumni-feed-page .alumni-story-compact-label {
+  display: block;
+  width: 100%;
+  overflow: hidden;
+  color: var(--app-text-soft);
+  font-size: 10.5px;
+  font-weight: 650;
+  line-height: 1.2;
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.alumni-feed-page .alumni-story-compact-skeleton {
+  width: 62px;
+  height: 62px;
+  border-radius: 999px;
+  background: var(--app-soft);
+  animation: alumni-feed-1-1-pulse 1.25s ease-in-out infinite;
+}
+
+.alumni-feed-page .alumni-story-compact-label-skeleton {
+  width: 42px;
+  height: 8px;
+  border-radius: 999px;
+  background: var(--app-soft);
+  animation: alumni-feed-1-1-pulse 1.25s ease-in-out infinite;
+}
+
+@keyframes alumni-feed-1-1-pulse {
+  50% { opacity: .55; }
+}
+
+/* Composer */
+.alumni-feed-page .alumni-pro-composer {
+  margin: 0 !important;
+  padding: 14px 16px !important;
+  border-bottom: 1px solid var(--app-border) !important;
+  background: var(--app-surface) !important;
+}
+
+.alumni-feed-page .alumni-pro-composer[data-expanded="false"] .alumni-pro-composer-row {
+  align-items: center;
+  gap: 10px;
+}
+
+.alumni-feed-page .alumni-pro-composer[data-expanded="false"] .alumni-pro-composer-avatar {
+  width: 40px;
+  height: 40px;
+  flex-basis: 40px;
+  border: 1px solid var(--app-border);
+  background: var(--app-surface-2);
+  font-size: 12px;
+}
+
+.alumni-feed-page .alumni-pro-composer[data-expanded="false"] .alumni-pro-composer-open {
+  min-height: 42px;
+  padding: 0 15px;
+  border: 1px solid var(--app-border);
+  border-radius: 999px;
+  background: var(--app-bg);
+  color: var(--app-muted);
+  font-size: 13px;
+  font-weight: 520;
+  transition:
+    border-color .16s ease,
+    background .16s ease,
+    color .16s ease;
+}
+
+.alumni-feed-page .alumni-pro-composer[data-expanded="false"] .alumni-pro-composer-open:hover {
+  background: var(--app-surface-2);
+  color: var(--app-text-soft);
+}
+
+.alumni-feed-page .alumni-pro-composer[data-expanded="false"] .alumni-pro-composer-media-shortcut {
+  width: 40px;
+  height: 40px;
+  flex-basis: 40px;
+  border: 0;
+  background: transparent;
+  color: var(--app-accent);
+}
+
+.alumni-feed-page .alumni-pro-composer[data-expanded="false"] .alumni-pro-composer-media-shortcut:hover {
+  background: var(--app-accent-soft);
+}
+
+.alumni-feed-page .alumni-pro-composer[data-expanded="true"] {
+  padding-top: 17px !important;
+  padding-bottom: 16px !important;
+}
+
+.alumni-feed-page .alumni-pro-composer[data-expanded="true"] .alumni-pro-composer-row {
+  gap: 12px;
+}
+
+.alumni-feed-page .alumni-pro-composer[data-expanded="true"] .alumni-pro-composer-main textarea {
+  font-size: 15px;
+  line-height: 1.55;
+}
+
+/* Tabs */
+.alumni-feed-page .alumni-pro-feed-tabs {
+  gap: 24px;
+  margin: 0 !important;
+  padding: 0 16px;
+  border-bottom: 1px solid var(--app-border);
+  background: var(--app-surface);
+}
+
+.alumni-feed-page .alumni-pro-feed-tabs button {
+  min-height: 48px;
+  color: var(--app-muted-2);
+  font-size: 12px;
+  font-weight: 720;
+  letter-spacing: -.01em;
+}
+
+.alumni-feed-page .alumni-pro-feed-tabs button[data-active="true"] {
+  color: var(--app-text);
+}
+
+.alumni-feed-page .alumni-pro-feed-tabs button[data-active="true"]::after {
+  height: 2px;
+  background: var(--app-accent);
+}
+
+/* Ritmo de posts */
+.alumni-feed-page .alumni-pro-post {
+  padding-top: 18px;
+  padding-bottom: 20px;
+}
+
+.alumni-feed-page .alumni-pro-media-shell {
+  margin-right: -16px;
+  margin-left: -16px;
+}
+
+@media (max-width: 767px) {
+  .alumni-feed-page {
+    width: calc(100% + 32px) !important;
+    max-width: none !important;
+    margin-right: -16px !important;
+    margin-left: -16px !important;
+    border-right: 0;
+    border-left: 0;
+    border-radius: 0;
+    box-shadow: none;
+  }
+
+  .alumni-feed-page .alumni-stories-section {
+    padding-right: 14px;
+    padding-left: 14px;
+  }
+
+  .alumni-feed-page .alumni-stories-rail {
+    gap: 12px;
+  }
+
+  .alumni-feed-page .alumni-pro-composer {
+    padding-right: 14px !important;
+    padding-left: 14px !important;
+  }
+
+  .alumni-feed-page .alumni-pro-feed-tabs {
+    padding-right: 14px;
+    padding-left: 14px;
+  }
+
+  .alumni-feed-page .alumni-feed-post-viewport {
+    padding-right: 14px;
+    padding-left: 14px;
+  }
+
+  .alumni-feed-page .alumni-pro-media-shell {
+    margin-right: -14px;
+    margin-left: -14px;
+  }
+}
+
+@media (max-width: 390px) {
+  .alumni-feed-page .alumni-story-compact-item {
+    width: 62px;
+    flex-basis: 62px;
+  }
+
+  .alumni-feed-page .alumni-story-compact-button,
+  .alumni-feed-page .alumni-story-compact-ring {
+    width: 58px;
+    height: 58px;
+  }
+
+  .alumni-feed-page .alumni-story-compact-avatar {
+    width: 48px;
+    height: 48px;
+  }
+
+  .alumni-feed-page .alumni-pro-composer[data-expanded="false"] .alumni-pro-composer-open {
+    padding-inline: 12px;
+    font-size: 12.5px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .alumni-feed-page .alumni-story-compact-ring,
+  .alumni-feed-page .alumni-pro-composer-open {
+    transition: none;
+  }
+
+  .alumni-feed-page .alumni-story-compact-skeleton,
+  .alumni-feed-page .alumni-story-compact-label-skeleton {
+    animation: none;
+  }
+}
+
+/* ALUMNI_FEED_1_1_PROFESSIONAL_MINIMAL */
+
+/* =========================================================
+   ALUMNI FEED 1.2 — PUBLICACIONES
+   Profesional / limpio / editorial
+   ========================================================= */
+
+/* Separación y respiración del post */
+.alumni-feed-page .alumni-pro-post {
+  padding-top: 20px;
+  padding-bottom: 22px;
+}
+
+.alumni-feed-page .alumni-pro-post-header {
+  gap: 11px;
+  align-items: flex-start;
+}
+
+.alumni-feed-page .alumni-pro-avatar {
+  width: 42px;
+  height: 42px;
+  flex: 0 0 42px;
+  border: 1px solid var(--app-border);
+  background: var(--app-surface-2);
+  box-shadow: none !important;
+}
+
+.alumni-feed-page .alumni-pro-author {
+  padding-top: 1px;
+}
+
+.alumni-feed-page .alumni-pro-author > div {
+  gap: 5px;
+  min-height: 20px;
+}
+
+.alumni-feed-page .alumni-pro-author a {
+  font-size: 13.5px;
+  font-weight: 760;
+  letter-spacing: -.012em;
+}
+
+.alumni-feed-page .alumni-pro-author > div > span,
+.alumni-feed-page .alumni-pro-author time {
+  color: var(--app-muted-2);
+  font-size: 11.5px;
+  font-weight: 520;
+}
+
+.alumni-feed-page .alumni-pro-author > p {
+  margin-top: 1px;
+  color: var(--app-muted-2);
+  font-size: 11.5px;
+  font-weight: 520;
+  line-height: 1.35;
+}
+
+.alumni-feed-page .alumni-pro-repost-label {
+  margin: 0 0 9px 53px;
+  color: var(--app-muted-2);
+  font-size: 11px;
+  font-weight: 650;
+}
+
+/* Menú más discreto */
+.alumni-feed-page .alumni-pro-menu-trigger {
+  width: 34px;
+  height: 34px;
+  color: var(--app-muted-2);
+}
+
+.alumni-feed-page .alumni-pro-menu-trigger svg {
+  width: 19px;
+  height: 19px;
+}
+
+.alumni-feed-page .alumni-pro-menu-trigger:hover {
+  background: var(--app-soft);
+  color: var(--app-text-soft);
+}
+
+/* Texto: lectura tranquila y menos peso visual */
+.alumni-feed-page .alumni-pro-caption-wrap {
+  margin-top: 11px;
+  margin-bottom: 11px;
+}
+
+.alumni-feed-page .alumni-pro-caption {
+  color: var(--app-text-soft);
+  font-size: 14.5px;
+  font-weight: 430;
+  line-height: 1.58;
+  letter-spacing: -.006em;
+}
+
+.alumni-feed-page .alumni-pro-caption-more {
+  margin-top: 4px;
+  color: var(--app-muted);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.alumni-feed-page .alumni-pro-repeated-links {
+  color: var(--app-muted-3);
+  font-size: 11px;
+}
+
+/* Vista previa de enlace */
+.alumni-feed-page .alumni-link-preview {
+  margin-top: 12px;
+  margin-bottom: 12px;
+  border-color: var(--app-border);
+  border-radius: 15px;
+  background: var(--app-bg);
+  box-shadow: none;
+}
+
+.alumni-feed-page .alumni-link-preview:hover {
+  background: var(--app-surface-2);
+}
+
+.alumni-feed-page .alumni-link-preview-copy {
+  padding: 11px 13px 13px;
+}
+
+.alumni-feed-page .alumni-link-preview-domain {
+  color: var(--app-muted-2);
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.alumni-feed-page .alumni-link-preview-copy strong {
+  font-size: 13.5px;
+  font-weight: 720;
+}
+
+.alumni-feed-page .alumni-link-preview-copy p {
+  color: var(--app-muted);
+  font-size: 12px;
+}
+
+/* Media: protagonista, pero refinada.
+   Deja de sentirse como bloque negro pegado al borde. */
+.alumni-feed-page .alumni-pro-media-shell {
+  margin: 13px 0 2px !important;
+  overflow: hidden;
+  border: 1px solid var(--app-border);
+  border-radius: 16px;
+  background: #05070b;
+  box-shadow: none;
+}
+
+.alumni-feed-page .alumni-pro-carousel,
+.alumni-feed-page .alumni-pro-media-slide,
+.alumni-feed-page .alumni-pro-image-button,
+.alumni-feed-page .alumni-feed-video-wrap {
+  border-radius: inherit;
+}
+
+.alumni-feed-page .alumni-pro-image-button img,
+.alumni-feed-page .alumni-feed-video {
+  max-height: 720px;
+}
+
+.alumni-feed-page .alumni-pro-media-menu {
+  top: 9px;
+  right: 9px;
+}
+
+.alumni-feed-page .alumni-pro-media-menu .alumni-pro-menu-trigger,
+.alumni-feed-page .alumni-feed-video-mute,
+.alumni-feed-page .alumni-pro-carousel-count,
+.alumni-feed-page .alumni-pro-carousel-arrow {
+  background: rgba(5, 7, 11, .58);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+/* Acciones: iconos pequeños, blancos, consistentes.
+   El área táctil sigue siendo amplia. */
+.alumni-feed-page .alumni-pro-actions {
+  min-height: 46px;
+  gap: 2px;
+  margin-top: 5px;
+  padding-top: 2px;
+}
+
+.alumni-feed-page .alumni-pro-actions > button {
+  width: 40px !important;
+  min-width: 40px !important;
+  max-width: 40px !important;
+  height: 40px !important;
+  flex-basis: 40px !important;
+  color: var(--app-muted);
+}
+
+.alumni-feed-page .alumni-pro-actions > button svg {
+  width: 21px !important;
+  height: 21px !important;
+  stroke-width: 1.9;
+}
+
+.alumni-feed-page .alumni-pro-actions > button.is-repost svg {
+  width: 22px !important;
+  height: 22px !important;
+}
+
+.alumni-feed-page .alumni-pro-actions > button:hover {
+  background: var(--app-soft) !important;
+}
+
+.alumni-feed-page
+.alumni-pro-actions
+> button.is-like[data-active="true"] {
+  color: #ee536b !important;
+}
+
+.alumni-feed-page
+.alumni-pro-actions
+> button.is-repost[data-active="true"] {
+  color: #24a873 !important;
+}
+
+/* Métricas: una sola línea y bajo contraste */
+.alumni-feed-page .alumni-pro-stats {
+  min-height: 19px;
+  gap: 10px;
+  color: var(--app-muted-2);
+  font-size: 11.5px;
+  line-height: 1.35;
+}
+
+.alumni-feed-page .alumni-pro-stats button {
+  font-weight: 520;
+}
+
+.alumni-feed-page .alumni-pro-stats strong {
+  color: var(--app-text-soft);
+  font-weight: 720;
+}
+
+/* Conversación previa */
+.alumni-feed-page .alumni-pro-comment-preview {
+  gap: 6px;
+  margin-top: 8px;
+  line-height: 1.4;
+}
+
+.alumni-feed-page .alumni-pro-comment-preview strong {
+  color: var(--app-text-soft);
+  font-size: 11.5px;
+  font-weight: 720;
+}
+
+.alumni-feed-page .alumni-pro-comment-preview span {
+  color: var(--app-muted);
+  font-size: 11.5px;
+}
+
+.alumni-feed-page .alumni-pro-view-comments {
+  margin-top: 5px;
+  color: var(--app-muted-2);
+  font-size: 11.5px;
+  font-weight: 560;
+}
+
+/* Popover sobrio */
+.alumni-feed-page .alumni-pro-menu-popover {
+  width: 218px;
+  border-radius: 14px;
+  background: color-mix(
+    in srgb,
+    var(--app-surface) 98%,
+    transparent
+  );
+  box-shadow: 0 14px 38px rgba(0, 0, 0, .18);
+}
+
+.alumni-feed-page .alumni-pro-menu-popover > button {
+  min-height: 43px;
+  gap: 10px;
+  padding-inline: 13px;
+  font-size: 12px;
+  font-weight: 650;
+}
+
+/* Desktop: flechas aparecen solo donde realmente ayudan */
+@media (hover: hover) and (pointer: fine) {
+  .alumni-feed-page .alumni-pro-carousel-arrow {
+    opacity: .88;
+  }
+
+  .alumni-feed-page .alumni-pro-carousel-arrow:hover {
+    opacity: 1;
+  }
+}
+
+/* Móvil: lectura y tacto primero */
+@media (max-width: 767px) {
+  .alumni-feed-page .alumni-pro-post {
+    padding-top: 18px;
+    padding-bottom: 20px;
+  }
+
+  .alumni-feed-page .alumni-pro-caption {
+    font-size: 14px;
+    line-height: 1.56;
+  }
+
+  .alumni-feed-page .alumni-pro-media-shell {
+    margin-top: 12px !important;
+    border-radius: 14px;
+  }
+
+  .alumni-feed-page .alumni-pro-carousel-arrow {
+    display: none;
+  }
+
+  .alumni-feed-page .alumni-pro-actions {
+    min-height: 44px;
+    margin-top: 4px;
+  }
+}
+
+@media (max-width: 390px) {
+  .alumni-feed-page .alumni-pro-avatar {
+    width: 40px;
+    height: 40px;
+    flex-basis: 40px;
+  }
+
+  .alumni-feed-page .alumni-pro-author a {
+    font-size: 13px;
+  }
+
+  .alumni-feed-page .alumni-pro-author > div > span,
+  .alumni-feed-page .alumni-pro-author time,
+  .alumni-feed-page .alumni-pro-author > p {
+    font-size: 11px;
+  }
+
+  .alumni-feed-page .alumni-pro-caption {
+    font-size: 13.75px;
+  }
+
+  .alumni-feed-page .alumni-pro-actions > button {
+    width: 38px !important;
+    min-width: 38px !important;
+    max-width: 38px !important;
+    height: 38px !important;
+    flex-basis: 38px !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .alumni-feed-page .alumni-pro-actions > button,
+  .alumni-feed-page .alumni-pro-menu-trigger {
+    transition: none !important;
+  }
+}
+
+/* ALUMNI_FEED_1_2_POST_POLISH */
+

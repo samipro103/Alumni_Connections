@@ -1,0 +1,4709 @@
+/*
+ * ALUMNI_SETTINGS_STYLE_CONSOLIDATION_4_0
+ * Fuente única de estilos de /settings y Editar perfil.
+ *
+ * IMPORTANTE:
+ * El contenido de las generaciones anteriores se conserva
+ * EN EL MISMO ORDEN DE CASCADA que tenía page.tsx.
+ * Esta fase consolida fuentes sin rediseñar.
+ */
+
+/* =========================================================
+   SOURCE: settings-classic-1-0.css
+   ========================================================= */
+
+/*
+ * ALUMNI_SETTINGS_1_0_OPTION_1_CLASSIC_LIST
+ * Opción 1 — Lista clásica
+ * Referencia principal: teléfono 360–430 px.
+ */
+
+.alumni-settings-classic {
+  width: 100%;
+  max-width: 520px;
+  min-height: 100%;
+  margin: 0 auto;
+  padding: 0 0 34px;
+  color: var(--app-text);
+}
+
+.alumni-settings-classic-header,
+.alumni-settings-detail-header {
+  display: grid;
+  grid-template-columns: 42px minmax(0, 1fr) 42px;
+  min-height: 54px;
+  align-items: center;
+  border-bottom: 1px solid var(--app-border);
+}
+
+.alumni-settings-classic-header h1,
+.alumni-settings-detail-header h1 {
+  margin: 0;
+  color: var(--app-text);
+  font-size: 15px;
+  font-weight: 900;
+  line-height: 1;
+  text-align: center;
+  letter-spacing: -0.025em;
+}
+
+.alumni-settings-classic-back,
+.alumni-settings-detail-header button {
+  display: inline-flex;
+  width: 40px;
+  height: 40px;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--app-text);
+}
+
+.alumni-settings-classic-back:active,
+.alumni-settings-detail-header button:active {
+  background: var(--app-soft);
+}
+
+.alumni-settings-profile-row {
+  display: flex;
+  width: 100%;
+  min-height: 100px;
+  align-items: center;
+  gap: 13px;
+  padding: 17px 4px;
+  border: 0;
+  border-bottom: 1px solid var(--app-border);
+  background: transparent;
+  color: inherit;
+  text-align: left;
+}
+
+.alumni-settings-profile-avatar {
+  display: inline-flex;
+  width: 58px;
+  height: 58px;
+  flex: 0 0 58px;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border: 1px solid var(--app-border);
+  border-radius: 999px;
+  background: var(--app-surface-2);
+  color: var(--app-text);
+  font-size: 18px;
+  font-weight: 900;
+}
+
+.alumni-settings-profile-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.alumni-settings-profile-copy,
+.alumni-settings-row-copy {
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.alumni-settings-profile-copy strong {
+  display: block;
+  overflow: hidden;
+  color: var(--app-text);
+  font-size: 14px;
+  font-weight: 900;
+  line-height: 1.2;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.alumni-settings-profile-copy small {
+  display: block;
+  overflow: hidden;
+  margin-top: 3px;
+  color: var(--app-muted);
+  font-size: 10.5px;
+  font-weight: 500;
+  line-height: 1.15;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.alumni-settings-classic-list {
+  display: block;
+}
+
+.alumni-settings-classic-row,
+.alumni-settings-logout {
+  display: flex;
+  width: 100%;
+  min-height: 66px;
+  align-items: center;
+  gap: 13px;
+  padding: 10px 4px;
+  border: 0;
+  border-bottom: 1px solid var(--app-border);
+  background: transparent;
+  color: inherit;
+  text-align: left;
+}
+
+.alumni-settings-classic-row:active {
+  background: var(--app-soft);
+}
+
+.alumni-settings-row-icon {
+  display: inline-flex;
+  width: 32px;
+  height: 32px;
+  flex: 0 0 32px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  color: var(--app-text-soft);
+}
+
+.alumni-settings-row-copy strong {
+  display: block;
+  color: var(--app-text);
+  font-size: 13px;
+  font-weight: 820;
+  line-height: 1.15;
+}
+
+.alumni-settings-row-copy small {
+  display: block;
+  margin-top: 4px;
+  color: var(--app-muted-2);
+  font-size: 10px;
+  font-weight: 500;
+  line-height: 1.25;
+}
+
+.alumni-settings-row-chevron {
+  flex: 0 0 auto;
+  color: var(--app-muted-3);
+}
+
+.alumni-settings-logout {
+  margin-top: 10px;
+  border-bottom: 0;
+}
+
+.alumni-settings-logout .alumni-settings-row-icon,
+.alumni-settings-logout .alumni-settings-row-copy strong {
+  color: #e44f5f;
+}
+
+.alumni-settings-logout .alumni-settings-row-copy small {
+  color: color-mix(in srgb, #e44f5f 62%, var(--app-muted));
+}
+
+/* Detail views preserve existing functionality but no desktop sidebar. */
+.alumni-settings-classic-detail {
+  min-width: 0;
+  width: 100%;
+}
+
+.alumni-settings-detail-header {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  background: color-mix(in srgb, var(--app-bg) 94%, transparent);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+}
+
+.alumni-settings-detail-content {
+  min-width: 0;
+  padding-top: 14px;
+}
+
+/* Existing settings panels become flat/mobile-first. */
+.alumni-settings-classic .alumni-settings-panel,
+.alumni-settings-classic .alumni-profile-settings-hub {
+  overflow: hidden;
+  border: 1px solid var(--app-border) !important;
+  border-radius: 18px !important;
+  background: var(--app-surface) !important;
+  box-shadow: none !important;
+}
+
+.alumni-settings-classic .alumni-setting-row {
+  padding: 14px !important;
+}
+
+.alumni-settings-classic .alumni-settings-panel {
+  padding: 15px !important;
+}
+
+.alumni-settings-classic .alumni-settings-panel [class*="text-zinc-"],
+.alumni-settings-classic .alumni-profile-settings-hub [class*="text-zinc-"] {
+  color: inherit;
+}
+
+/* Appearance stays simple and list-like. */
+.alumni-settings-classic .alumni-settings-panel button {
+  touch-action: manipulation;
+}
+
+/* Light */
+html[data-theme="light"] .alumni-settings-classic {
+  background: #ffffff;
+}
+
+html[data-theme="light"] .alumni-settings-detail-header {
+  background: rgba(255,255,255,.94);
+}
+
+/* Dark */
+html[data-theme="dark"] .alumni-settings-classic {
+  background: var(--app-bg);
+}
+
+html[data-theme="dark"] .alumni-settings-detail-header {
+  background: rgba(9,11,15,.94);
+}
+
+/* Small phones */
+@media (max-width: 374px) {
+  .alumni-settings-profile-row {
+    min-height: 92px;
+  }
+
+  .alumni-settings-profile-avatar {
+    width: 54px;
+    height: 54px;
+    flex-basis: 54px;
+  }
+
+  .alumni-settings-classic-row,
+  .alumni-settings-logout {
+    min-height: 62px;
+  }
+
+  .alumni-settings-row-copy strong {
+    font-size: 12.5px;
+  }
+
+  .alumni-settings-row-copy small {
+    font-size: 9.5px;
+  }
+}
+
+/* Desktop: same phone-oriented structure, simply centered. */
+@media (min-width: 700px) {
+  .alumni-settings-classic {
+    max-width: 540px;
+    padding-top: 14px;
+    padding-bottom: 50px;
+  }
+
+  .alumni-settings-classic-header,
+  .alumni-settings-detail-header {
+    border: 1px solid var(--app-border);
+    border-radius: 16px 16px 0 0;
+  }
+
+  .alumni-settings-classic.is-home
+    .alumni-settings-profile-row {
+    padding-inline: 14px;
+    border-right: 1px solid var(--app-border);
+    border-left: 1px solid var(--app-border);
+  }
+
+  .alumni-settings-classic.is-home
+    .alumni-settings-classic-list,
+  .alumni-settings-classic.is-home
+    .alumni-settings-logout {
+    padding-inline: 14px;
+  }
+}
+
+
+/* =========================================================
+   SOURCE: settings-clean-2-0.css
+   ========================================================= */
+
+/*
+ * ALUMNI_SETTINGS_2_0_INTERIORES_LIMPIOS
+ *
+ * ALUMNI Settings 2.0
+ * Interiores limpios y coherentes con Feed, Buscar, Mensajes y Más.
+ * Mobile-first 360–430px.
+ */
+
+/* ======================================================
+   PAGE / HOME
+   ====================================================== */
+
+.alumni-settings-classic {
+  background:
+    transparent !important;
+}
+
+html[data-theme="light"]
+  .alumni-settings-classic,
+html[data-theme="dark"]
+  .alumni-settings-classic {
+  background:
+    transparent !important;
+}
+
+.alumni-settings-loading {
+  color:
+    var(--app-muted-2) !important;
+}
+
+.alumni-settings-classic-header,
+.alumni-settings-detail-header {
+  background:
+    color-mix(
+      in srgb,
+      var(--app-bg) 96%,
+      transparent
+    ) !important;
+  border-color:
+    var(--app-border) !important;
+  box-shadow: none !important;
+}
+
+.alumni-settings-classic-row,
+.alumni-settings-profile-row,
+.alumni-settings-logout {
+  transition:
+    background-color .12s ease;
+}
+
+.alumni-settings-classic-row:active,
+.alumni-settings-profile-row:active,
+.alumni-settings-logout:active {
+  background:
+    var(--app-soft) !important;
+}
+
+.alumni-settings-row-icon {
+  background:
+    transparent !important;
+  color:
+    var(--app-text-soft) !important;
+}
+
+/* ======================================================
+   DETAIL LANGUAGE
+   Flat, not cards inside cards.
+   ====================================================== */
+
+.alumni-settings-detail-content {
+  padding-top:
+    0 !important;
+}
+
+.alumni-settings-classic
+  .alumni-settings-panel,
+.alumni-settings-classic
+  .alumni-profile-settings-hub {
+  overflow:
+    visible !important;
+
+  border:
+    0 !important;
+  border-radius:
+    0 !important;
+
+  background:
+    transparent !important;
+
+  box-shadow:
+    none !important;
+}
+
+.alumni-settings-classic
+  .alumni-settings-panel {
+  padding:
+    0 !important;
+}
+
+.alumni-settings-classic
+  .alumni-setting-row {
+  min-height:
+    68px;
+  padding:
+    13px 2px !important;
+  border-bottom:
+    1px solid
+    var(--app-border);
+}
+
+.alumni-settings-classic
+  .alumni-setting-row:first-child {
+  border-top:
+    0;
+}
+
+/* ======================================================
+   APPEARANCE 2.0
+   ====================================================== */
+
+.alumni-settings-appearance-v2 {
+  padding:
+    18px 0 6px;
+}
+
+.alumni-settings-section-intro {
+  padding:
+    0 2px 16px;
+  border-bottom:
+    1px solid
+    var(--app-border);
+}
+
+.alumni-settings-section-intro
+  > strong {
+  display:
+    block;
+  color:
+    var(--app-text);
+  font-size:
+    14px;
+  font-weight:
+    900;
+  line-height:
+    1.2;
+}
+
+.alumni-settings-section-intro
+  > p {
+  margin-top:
+    5px;
+  color:
+    var(--app-muted-2);
+  font-size:
+    10.5px;
+  line-height:
+    1.45;
+}
+
+.alumni-settings-choice-list {
+  display:
+    block;
+}
+
+.alumni-settings-theme-row {
+  display:
+    grid;
+  width:
+    100%;
+
+  grid-template-columns:
+    50px minmax(0, 1fr) 26px;
+
+  min-height:
+    72px;
+  align-items:
+    center;
+  gap:
+    12px;
+
+  padding:
+    10px 2px;
+
+  border:
+    0;
+  border-bottom:
+    1px solid
+    var(--app-border);
+
+  background:
+    transparent;
+
+  color:
+    inherit;
+  text-align:
+    left;
+}
+
+.alumni-settings-theme-row:active {
+  background:
+    var(--app-soft);
+}
+
+.alumni-settings-theme-preview {
+  position:
+    relative;
+  display:
+    flex;
+  width:
+    46px;
+  height:
+    36px;
+  align-items:
+    center;
+  justify-content:
+    center;
+}
+
+.alumni-settings-theme-preview
+  i {
+  display:
+    block;
+  width:
+    30px;
+  height:
+    30px;
+  border:
+    1px solid
+    var(--app-border);
+  border-radius:
+    999px;
+  box-shadow:
+    0 0 0 2px
+    var(--app-bg);
+}
+
+.alumni-settings-theme-preview
+  i + i {
+  margin-left:
+    -13px;
+}
+
+.alumni-settings-theme-copy {
+  min-width:
+    0;
+}
+
+.alumni-settings-theme-copy
+  strong {
+  display:
+    block;
+  color:
+    var(--app-text);
+  font-size:
+    13px;
+  font-weight:
+    850;
+}
+
+.alumni-settings-theme-copy
+  small {
+  display:
+    block;
+  margin-top:
+    4px;
+  color:
+    var(--app-muted-2);
+  font-size:
+    10px;
+  line-height:
+    1.3;
+}
+
+.alumni-settings-theme-check {
+  display:
+    flex;
+  width:
+    22px;
+  height:
+    22px;
+  align-items:
+    center;
+  justify-content:
+    center;
+
+  border:
+    1.5px solid
+    var(--app-border);
+  border-radius:
+    999px;
+
+  color:
+    transparent;
+}
+
+.alumni-settings-theme-check[
+  data-selected="true"
+] {
+  border-color:
+    var(--app-accent);
+  background:
+    var(--app-accent-fill);
+  color:
+    var(--app-on-accent);
+}
+
+/* ======================================================
+   PRIVACY
+   ====================================================== */
+
+.alumni-profile-settings-hub
+  .alumni-privacy-switch {
+  width:
+    46px !important;
+  height:
+    26px !important;
+  flex:
+    0 0 46px;
+
+  border:
+    0 !important;
+  border-radius:
+    999px;
+
+  background:
+    var(--app-soft-strong) !important;
+
+  transition:
+    background-color .15s ease;
+}
+
+.alumni-profile-settings-hub
+  .alumni-privacy-switch
+  > span {
+  top:
+    3px !important;
+  left:
+    3px !important;
+
+  width:
+    20px !important;
+  height:
+    20px !important;
+
+  background:
+    var(--app-surface) !important;
+
+  box-shadow:
+    0 1px 4px
+    var(--app-shadow);
+}
+
+.alumni-profile-settings-hub
+  .alumni-privacy-switch.is-on {
+  background:
+    var(--app-accent-fill) !important;
+}
+
+.alumni-profile-settings-hub
+  .alumni-privacy-switch.is-on
+  > span {
+  transform:
+    translateX(
+      20px
+    ) !important;
+}
+
+.alumni-settings-privacy-backdrop,
+.alumni-account-flow-backdrop,
+.alumni-settings-picker-backdrop {
+  background:
+    rgba(
+      0,
+      0,
+      0,
+      .48
+    ) !important;
+
+  backdrop-filter:
+    blur(8px);
+  -webkit-backdrop-filter:
+    blur(8px);
+}
+
+.alumni-settings-privacy-modal,
+.alumni-account-flow-sheet,
+.alumni-settings-picker-sheet {
+  border:
+    1px solid
+    var(--app-border);
+
+  background:
+    var(--app-surface);
+
+  color:
+    var(--app-text);
+
+  box-shadow:
+    0 -18px 70px
+    color-mix(
+      in srgb,
+      var(--app-shadow) 88%,
+      transparent
+    );
+}
+
+.alumni-settings-privacy-modal {
+  border-radius:
+    22px 22px 0 0;
+}
+
+.alumni-settings-privacy-modal
+  > div:nth-last-child(1)
+  button {
+  min-height:
+    46px;
+  border-radius:
+    12px;
+}
+
+/* ======================================================
+   SECURITY / ACCOUNT TRUST
+   ====================================================== */
+
+.alumni-account-trust {
+  display:
+    block;
+  padding:
+    2px 0 18px;
+}
+
+.alumni-account-trust-section {
+  padding:
+    18px 2px;
+
+  border:
+    0;
+  border-bottom:
+    1px solid
+    var(--app-border);
+
+  background:
+    transparent;
+
+  color:
+    var(--app-text);
+}
+
+.alumni-account-trust-section:last-of-type {
+  border-bottom:
+    0;
+}
+
+.alumni-account-trust-section
+  > p:first-child {
+  color:
+    var(--app-text) !important;
+  font-size:
+    13px !important;
+  font-weight:
+    900 !important;
+}
+
+.alumni-account-trust-section
+  button {
+  -webkit-tap-highlight-color:
+    transparent;
+}
+
+.alumni-account-trust-section
+  button:active {
+  opacity:
+    .72;
+}
+
+.alumni-account-trust
+  [class~="text-zinc-200"] {
+  color:
+    var(--app-text) !important;
+}
+
+.alumni-account-trust
+  [class~="text-zinc-300"] {
+  color:
+    var(--app-text-soft) !important;
+}
+
+.alumni-account-trust
+  [class~="text-zinc-400"],
+.alumni-account-trust
+  [class~="text-zinc-500"] {
+  color:
+    var(--app-muted) !important;
+}
+
+.alumni-account-trust
+  [class~="text-zinc-600"] {
+  color:
+    var(--app-muted-2) !important;
+}
+
+.alumni-account-trust
+  [class~="text-zinc-700"] {
+  color:
+    var(--app-muted-3) !important;
+}
+
+.alumni-account-trust
+  [class~="text-[#8d98ff]"] {
+  color:
+    var(--app-accent) !important;
+}
+
+.alumni-account-flow-sheet {
+  max-height:
+    min(
+      88dvh,
+      720px
+    );
+
+  border-radius:
+    22px 22px 0 0;
+}
+
+.alumni-account-flow-sheet
+  > header {
+  background:
+    color-mix(
+      in srgb,
+      var(--app-surface) 97%,
+      transparent
+    );
+}
+
+.alumni-account-flow-sheet
+  input {
+  border-color:
+    var(--app-border) !important;
+
+  background:
+    var(--app-surface-2) !important;
+
+  color:
+    var(--app-text) !important;
+
+  box-shadow:
+    none !important;
+}
+
+.alumni-account-flow-sheet
+  input:focus {
+  border-color:
+    var(--app-accent) !important;
+
+  box-shadow:
+    0 0 0 3px
+    var(--app-accent-soft) !important;
+}
+
+/* ======================================================
+   PROFILE EDITOR INSIDE SETTINGS
+   ====================================================== */
+
+.alumni-profile-editor {
+  padding-bottom:
+    24px;
+
+  color:
+    var(--app-text);
+}
+
+.alumni-profile-editor-top {
+  min-height:
+    56px !important;
+
+  margin:
+    0 !important;
+  padding:
+    7px 0 !important;
+
+  border-bottom:
+    1px solid
+    var(--app-border) !important;
+
+  background:
+    color-mix(
+      in srgb,
+      var(--app-bg) 96%,
+      transparent
+    ) !important;
+
+  backdrop-filter:
+    blur(18px);
+}
+
+.alumni-profile-editor-save {
+  min-height:
+    38px !important;
+
+  padding:
+    0 12px !important;
+
+  border:
+    0 !important;
+  border-radius:
+    11px !important;
+
+  background:
+    var(--app-accent-fill) !important;
+
+  color:
+    var(--app-on-accent) !important;
+
+  font-size:
+    10.5px !important;
+  font-weight:
+    900 !important;
+}
+
+.alumni-profile-editor-save:disabled {
+  opacity:
+    .45;
+}
+
+.alumni-profile-editor-media {
+  margin-top:
+    16px !important;
+}
+
+.alumni-profile-editor-banner {
+  overflow:
+    hidden;
+
+  border:
+    1px solid
+    var(--app-border);
+
+  border-radius:
+    18px !important;
+
+  background:
+    var(--app-surface-2);
+
+  box-shadow:
+    none !important;
+}
+
+.alumni-profile-editor-photo-row {
+  padding:
+    13px 2px 0 !important;
+}
+
+.alumni-profile-editor-avatar {
+  width:
+    76px !important;
+  height:
+    76px !important;
+  flex-basis:
+    76px !important;
+
+  border:
+    3px solid
+    var(--app-bg) !important;
+
+  background:
+    var(--app-surface-2);
+
+  box-shadow:
+    0 0 0 1px
+    var(--app-border) !important;
+}
+
+.alumni-profile-editor-camera {
+  border:
+    2px solid
+    var(--app-bg) !important;
+
+  background:
+    var(--app-surface) !important;
+
+  color:
+    var(--app-text) !important;
+
+  box-shadow:
+    0 2px 8px
+    var(--app-shadow) !important;
+}
+
+.alumni-profile-editor-fields {
+  margin-top:
+    20px !important;
+}
+
+.alumni-editor-section {
+  padding:
+    18px 0 20px !important;
+
+  border-bottom:
+    1px solid
+    var(--app-border) !important;
+}
+
+.alumni-editor-section:last-child {
+  border-bottom:
+    0 !important;
+}
+
+.alumni-editor-section-head {
+  padding:
+    0 2px 8px;
+}
+
+.alumni-editor-section-head
+  h3 {
+  color:
+    var(--app-muted-2) !important;
+
+  font-size:
+    9.5px !important;
+  font-weight:
+    900 !important;
+
+  letter-spacing:
+    .12em;
+  text-transform:
+    uppercase;
+}
+
+.alumni-profile-editor
+  .alumni-edit-row {
+  min-height:
+    58px !important;
+
+  padding:
+    11px 2px !important;
+
+  border-bottom:
+    1px solid
+    var(--app-border) !important;
+
+  background:
+    transparent !important;
+}
+
+.alumni-profile-editor
+  .alumni-edit-row
+  input,
+.alumni-profile-editor
+  .alumni-edit-row
+  textarea {
+  color:
+    var(--app-text) !important;
+
+  caret-color:
+    var(--app-accent);
+}
+
+.alumni-profile-editor
+  .alumni-edit-row
+  input::placeholder,
+.alumni-profile-editor
+  .alumni-edit-row
+  textarea::placeholder {
+  color:
+    var(--app-muted-3) !important;
+}
+
+/* Pickers */
+.alumni-settings-picker-sheet {
+  border-radius:
+    22px 22px 0 0;
+}
+
+.alumni-settings-picker-search {
+  min-height:
+    44px;
+
+  padding:
+    0 12px;
+
+  border:
+    1px solid
+    var(--app-border);
+
+  border-radius:
+    12px;
+
+  background:
+    var(--app-surface-2);
+}
+
+.alumni-settings-picker-search
+  input {
+  color:
+    var(--app-text) !important;
+}
+
+.alumni-settings-picker-search
+  input::placeholder {
+  color:
+    var(--app-muted-3) !important;
+}
+
+/* ======================================================
+   SAVED POSTS
+   ====================================================== */
+
+.alumni-saved-posts-panel {
+  padding:
+    0 0 20px;
+}
+
+.alumni-saved-posts-panel
+  > div:first-child {
+  min-height:
+    54px;
+
+  margin-bottom:
+    0 !important;
+
+  padding-bottom:
+    0 !important;
+
+  border-bottom:
+    1px solid
+    var(--app-border);
+}
+
+.alumni-saved-posts-panel
+  article {
+  padding:
+    18px 2px !important;
+}
+
+.alumni-saved-posts-panel
+  article:first-child {
+  padding-top:
+    14px !important;
+}
+
+.alumni-saved-posts-panel
+  article
+  > a,
+.alumni-saved-posts-panel
+  article
+  video,
+.alumni-saved-posts-panel
+  article
+  img {
+  max-width:
+    100%;
+}
+
+/* ======================================================
+   LEGACY / DEEP SETTINGS: THEME SAFETY
+   including Links, Academic and Spotify if reached by URL
+   ====================================================== */
+
+.alumni-settings-classic
+  .alumni-settings-detail-content
+  [class~="text-zinc-200"] {
+  color:
+    var(--app-text) !important;
+}
+
+.alumni-settings-classic
+  .alumni-settings-detail-content
+  [class~="text-zinc-300"] {
+  color:
+    var(--app-text-soft) !important;
+}
+
+.alumni-settings-classic
+  .alumni-settings-detail-content
+  [class~="text-zinc-400"],
+.alumni-settings-classic
+  .alumni-settings-detail-content
+  [class~="text-zinc-500"] {
+  color:
+    var(--app-muted) !important;
+}
+
+.alumni-settings-classic
+  .alumni-settings-detail-content
+  [class~="text-zinc-600"] {
+  color:
+    var(--app-muted-2) !important;
+}
+
+.alumni-settings-classic
+  .alumni-settings-detail-content
+  [class~="text-zinc-700"] {
+  color:
+    var(--app-muted-3) !important;
+}
+
+.alumni-settings-classic
+  .alumni-settings-detail-content
+  [class~="border-white/[0.06]"],
+.alumni-settings-classic
+  .alumni-settings-detail-content
+  [class~="border-white/[0.07]"],
+.alumni-settings-classic
+  .alumni-settings-detail-content
+  [class~="border-white/[0.08]"] {
+  border-color:
+    var(--app-border) !important;
+}
+
+.alumni-settings-classic
+  .alumni-settings-detail-content
+  [class~="bg-[#101318]/95"] {
+  background:
+    var(--app-surface) !important;
+}
+
+/* ======================================================
+   MOBILE CANONICAL
+   ====================================================== */
+
+@media (
+  max-width:
+    699px
+) {
+  .alumni-settings-classic {
+    max-width:
+      none !important;
+
+    padding-bottom:
+      26px;
+  }
+
+  .alumni-settings-detail-header {
+    position:
+      sticky;
+    top:
+      0;
+
+    min-height:
+      52px;
+
+    margin:
+      0;
+
+    backdrop-filter:
+      blur(18px);
+    -webkit-backdrop-filter:
+      blur(18px);
+  }
+
+  .alumni-settings-detail-header
+    h1 {
+    font-size:
+      14px;
+  }
+
+  .alumni-settings-detail-content {
+    padding-inline:
+      0;
+  }
+
+  .alumni-settings-privacy-modal,
+  .alumni-account-flow-sheet,
+  .alumni-settings-picker-sheet {
+    width:
+      100%;
+    max-width:
+      none;
+
+    border-right:
+      0;
+    border-bottom:
+      0;
+    border-left:
+      0;
+  }
+
+  .alumni-settings-picker-sheet {
+    height:
+      86dvh !important;
+    max-height:
+      86dvh;
+  }
+
+  .alumni-account-flow-sheet {
+    max-height:
+      88dvh;
+    overflow-y:
+      auto;
+  }
+
+  .alumni-editor-grid-2 {
+    grid-template-columns:
+      1fr !important;
+    gap:
+      0 !important;
+  }
+
+  .alumni-profile-editor
+    .alumni-edit-row {
+    display:
+      grid !important;
+
+    grid-template-columns:
+      minmax(
+        92px,
+        108px
+      )
+      minmax(
+        0,
+        1fr
+      );
+
+    gap:
+      9px;
+  }
+
+  .alumni-profile-editor
+    .alumni-edit-row
+    > span:first-child {
+    width:
+      auto !important;
+  }
+
+  .alumni-profile-editor-save
+    span {
+    display:
+      none;
+  }
+
+  .alumni-profile-editor-save {
+    width:
+      40px;
+    padding:
+      0 !important;
+  }
+}
+
+/* ======================================================
+   DESKTOP SECONDARY
+   ====================================================== */
+
+@media (
+  min-width:
+    700px
+) {
+  .alumni-settings-classic {
+    max-width:
+      560px !important;
+  }
+
+  .alumni-settings-detail-content {
+    padding:
+      0 14px 24px;
+  }
+
+  .alumni-settings-privacy-modal,
+  .alumni-account-flow-sheet,
+  .alumni-settings-picker-sheet {
+    border-radius:
+      20px !important;
+  }
+
+  .alumni-account-trust-section {
+    padding-inline:
+      0;
+  }
+}
+
+/* ALUMNI_SETTINGS_2_0_INTERIORES_LIMPIOS */
+
+
+/* =========================================================
+   SOURCE: settings-edit-profile-option-1.css
+   ========================================================= */
+
+/*
+ * ALUMNI_NAV_PROFILE_EDITOR_1_0_FLOATING_OPTION1
+ * Navbar flotante + Editar perfil Opción 1.
+ * Mobile-first.
+ */
+
+/* ======================================================
+   FLOATING BOTTOM NAV
+   ====================================================== */
+
+.alumni-mobile-nav-clean {
+  border-color: var(--app-border) !important;
+  background: color-mix(in srgb, var(--app-surface) 97%, transparent) !important;
+  box-shadow:
+    0 18px 42px color-mix(in srgb, var(--app-shadow) 42%, transparent),
+    0 0 0 1px color-mix(in srgb, var(--app-border) 78%, transparent) !important;
+  overflow: hidden;
+}
+
+.alumni-mobile-nav-clean .alumni-mobile-nav-item {
+  color: var(--app-muted-2);
+  transition: background-color .14s ease, color .14s ease, transform .12s ease;
+}
+
+.alumni-mobile-nav-clean .alumni-mobile-nav-item[data-active="true"] {
+  color: var(--app-accent);
+}
+
+.alumni-mobile-nav-clean .alumni-mobile-nav-item[data-active="true"] .alumni-mobile-nav-icon {
+  background: color-mix(in srgb, var(--app-accent-soft) 78%, transparent);
+  color: var(--app-accent);
+}
+
+.alumni-mobile-nav-clean .alumni-mobile-nav-icon {
+  width: 42px;
+  height: 30px;
+  border-radius: 999px;
+  transition: background-color .15s ease, color .15s ease, transform .12s ease;
+}
+
+.alumni-mobile-nav-clean .alumni-mobile-nav-item:active {
+  transform: scale(.98);
+}
+
+.alumni-mobile-nav-clean .alumni-mobile-nav-item:active .alumni-mobile-nav-icon {
+  transform: scale(.96);
+}
+
+.alumni-mobile-nav-clean .alumni-mobile-nav-label {
+  font-size: 10px;
+  font-weight: 650;
+}
+
+@media (max-width: 374px) {
+  .alumni-mobile-nav-clean {
+    max-width: calc(100vw - 12px) !important;
+  }
+}
+
+/* ======================================================
+   EDIT PROFILE — OPTION 1 / CLEAN CLASSIC
+   ====================================================== */
+
+.alumni-profile-editor {
+  padding-bottom: 28px;
+  color: var(--app-text);
+}
+
+.alumni-profile-editor-top {
+  position: sticky;
+  top: 0;
+  z-index: 28;
+  min-height: 58px !important;
+  margin: 0 !important;
+  padding: 8px 2px !important;
+  border-bottom: 1px solid var(--app-border) !important;
+  background: color-mix(in srgb, var(--app-bg) 96%, transparent) !important;
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+}
+
+.alumni-profile-editor-top h1,
+.alumni-profile-editor-top h2,
+.alumni-profile-editor-top [data-title] {
+  color: var(--app-text) !important;
+  font-size: 16px !important;
+  font-weight: 900 !important;
+  letter-spacing: -.025em;
+}
+
+.alumni-profile-editor-top > button:first-child,
+.alumni-profile-editor-top a:first-child {
+  display: inline-flex;
+  width: 36px;
+  height: 36px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  color: var(--app-text) !important;
+}
+
+.alumni-profile-editor-save {
+  width: auto !important;
+  min-width: 82px !important;
+  min-height: 34px !important;
+  padding: 0 14px !important;
+  border-radius: 999px !important;
+  background: var(--app-accent-fill) !important;
+  color: var(--app-on-accent) !important;
+  font-size: 11px !important;
+  font-weight: 900 !important;
+  box-shadow: none !important;
+}
+
+.alumni-profile-editor-save svg {
+  display: none !important;
+}
+
+.alumni-profile-editor-save span {
+  display: inline !important;
+}
+
+.alumni-profile-editor-media {
+  margin-top: 12px !important;
+}
+
+.alumni-profile-editor-banner {
+  position: relative;
+  overflow: hidden;
+  min-height: 148px;
+  border: 1px solid var(--app-border) !important;
+  border-radius: 20px !important;
+  background: var(--app-surface-2);
+  box-shadow: none !important;
+}
+
+.alumni-profile-editor-banner::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(0,0,0,.16), rgba(0,0,0,.02) 42%, transparent 70%);
+  pointer-events: none;
+}
+
+.alumni-profile-editor-banner button,
+.alumni-profile-editor-banner [role="button"] {
+  position: absolute;
+  right: 14px;
+  bottom: 14px;
+  z-index: 2;
+  min-height: 32px;
+  padding: 0 12px;
+  border: 1px solid rgba(255,255,255,.22) !important;
+  border-radius: 999px;
+  background: rgba(17, 20, 27, .68) !important;
+  color: #fff !important;
+  box-shadow: none !important;
+}
+
+.alumni-profile-editor-photo-row {
+  position: relative;
+  z-index: 3;
+  margin-top: -34px;
+  padding: 0 10px 0 !important;
+  align-items: flex-end !important;
+}
+
+.alumni-profile-editor-avatar {
+  width: 92px !important;
+  height: 92px !important;
+  flex-basis: 92px !important;
+  border: 4px solid var(--app-bg) !important;
+  border-radius: 999px !important;
+  background: var(--app-surface-2);
+  box-shadow: 0 0 0 1px var(--app-border) !important;
+}
+
+.alumni-profile-editor-camera {
+  width: 30px !important;
+  height: 30px !important;
+  border: 1px solid var(--app-border) !important;
+  border-radius: 999px !important;
+  background: var(--app-surface) !important;
+  color: var(--app-text) !important;
+  box-shadow: 0 4px 12px color-mix(in srgb, var(--app-shadow) 28%, transparent) !important;
+}
+
+.alumni-profile-editor-fields {
+  margin-top: 14px !important;
+}
+
+.alumni-editor-section {
+  margin-top: 18px;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+}
+
+.alumni-editor-section:first-child {
+  margin-top: 14px;
+}
+
+.alumni-editor-section-head {
+  padding: 0 4px 8px !important;
+}
+
+.alumni-editor-section-head h3 {
+  color: var(--app-muted-2) !important;
+  font-size: 10px !important;
+  font-weight: 900 !important;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+}
+
+.alumni-editor-section > .alumni-edit-row:first-of-type {
+  border-top: 1px solid var(--app-border) !important;
+}
+
+.alumni-profile-editor .alumni-edit-row {
+  position: relative;
+  display: grid !important;
+  grid-template-columns: minmax(104px, 118px) minmax(0, 1fr) 16px;
+  align-items: center;
+  gap: 10px;
+  min-height: 62px !important;
+  margin: 0 !important;
+  padding: 10px 4px !important;
+  border-bottom: 1px solid var(--app-border) !important;
+  background: transparent !important;
+}
+
+.alumni-profile-editor .alumni-edit-row::after {
+  content: "›";
+  position: static;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--app-muted-3);
+  font-size: 18px;
+  line-height: 1;
+}
+
+.alumni-profile-editor .alumni-edit-row > span:first-child,
+.alumni-profile-editor .alumni-edit-row > label:first-child,
+.alumni-profile-editor .alumni-edit-row > div:first-child > span:first-child {
+  color: var(--app-muted-2) !important;
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  line-height: 1.25;
+}
+
+.alumni-profile-editor .alumni-edit-row input,
+.alumni-profile-editor .alumni-edit-row textarea,
+.alumni-profile-editor .alumni-edit-row select {
+  width: 100%;
+  border: 0 !important;
+  outline: 0 !important;
+  background: transparent !important;
+  color: var(--app-text) !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  font-size: 14px !important;
+  font-weight: 600 !important;
+  line-height: 1.38 !important;
+}
+
+.alumni-profile-editor .alumni-edit-row input::placeholder,
+.alumni-profile-editor .alumni-edit-row textarea::placeholder {
+  color: var(--app-muted-3) !important;
+}
+
+.alumni-profile-editor .alumni-edit-row textarea {
+  min-height: 42px !important;
+  resize: none;
+}
+
+.alumni-profile-editor .alumni-edit-row:focus-within {
+  background: var(--app-soft) !important;
+}
+
+.alumni-profile-editor .alumni-edit-row:focus-within::after {
+  color: var(--app-accent);
+}
+
+.alumni-profile-editor .alumni-edit-row > :nth-child(2) {
+  min-width: 0;
+}
+
+.alumni-profile-editor .alumni-edit-row > :nth-child(2) > * {
+  min-width: 0;
+}
+
+.alumni-profile-editor .alumni-edit-row [data-value],
+.alumni-profile-editor .alumni-edit-row .alumni-edit-value,
+.alumni-profile-editor .alumni-edit-row p,
+.alumni-profile-editor .alumni-edit-row small {
+  color: var(--app-text) !important;
+}
+
+.alumni-settings-picker-sheet {
+  border-radius: 24px 24px 0 0 !important;
+}
+
+.alumni-settings-picker-search {
+  min-height: 46px;
+  border-radius: 14px;
+}
+
+/* Tight mobile */
+@media (max-width: 699px) {
+  .alumni-profile-editor {
+    padding-bottom: 24px;
+  }
+
+  .alumni-profile-editor-top {
+    min-height: 56px !important;
+  }
+
+  .alumni-profile-editor-photo-row {
+    padding-inline: 8px !important;
+  }
+
+  .alumni-profile-editor .alumni-edit-row {
+    grid-template-columns: 96px minmax(0, 1fr) 16px;
+    gap: 8px;
+  }
+
+  .alumni-profile-editor-save {
+    min-width: 78px !important;
+    padding-inline: 12px !important;
+  }
+}
+
+@media (max-width: 374px) {
+  .alumni-profile-editor-banner {
+    min-height: 136px;
+  }
+
+  .alumni-profile-editor-avatar {
+    width: 86px !important;
+    height: 86px !important;
+    flex-basis: 86px !important;
+  }
+
+  .alumni-profile-editor .alumni-edit-row {
+    grid-template-columns: 88px minmax(0, 1fr) 14px;
+  }
+
+  .alumni-profile-editor .alumni-edit-row input,
+  .alumni-profile-editor .alumni-edit-row textarea,
+  .alumni-profile-editor .alumni-edit-row select {
+    font-size: 13.5px !important;
+  }
+}
+
+/* Desktop keeps same language, centered */
+@media (min-width: 700px) {
+  .alumni-profile-editor-top {
+    border-radius: 18px 18px 0 0;
+  }
+
+  .alumni-profile-editor .alumni-edit-row {
+    padding-inline: 6px !important;
+  }
+}
+
+/* ALUMNI_NAV_PROFILE_EDITOR_1_0_FLOATING_OPTION1 */
+
+
+/* =========================================================
+   SOURCE: settings-edit-profile-repair-1-1.css
+   ========================================================= */
+
+/*
+ * ALUMNI_PROFILE_EDITOR_1_1_REPAIR
+ *
+ * Editar Perfil 1.1 — repair.
+ * Fixes real layout/responsive conflicts from Option 1.
+ */
+
+/* ======================================================
+   ROOT + MOBILE NAV CLEARANCE
+   ====================================================== */
+
+.alumni-profile-editor {
+  width: 100%;
+  min-width: 0;
+  padding-bottom:
+    calc(
+      112px +
+      env(safe-area-inset-bottom)
+    ) !important;
+  overflow-x: clip;
+}
+
+/* ======================================================
+   TOP BAR
+   ====================================================== */
+
+.alumni-profile-editor-top {
+  display: grid !important;
+  grid-template-columns:
+    44px minmax(0, 1fr) auto !important;
+  align-items: center !important;
+  gap: 8px !important;
+
+  min-height: 58px !important;
+  padding:
+    7px 2px !important;
+}
+
+.alumni-profile-editor-top-copy {
+  min-width: 0;
+  text-align: center;
+}
+
+.alumni-profile-editor-top-copy p {
+  margin: 0;
+  overflow: hidden;
+  color:
+    var(--app-text) !important;
+  font-size: 15px !important;
+  font-weight: 900 !important;
+  line-height: 1.1;
+  letter-spacing: -.025em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.alumni-profile-editor-save {
+  display: inline-flex !important;
+  width: auto !important;
+  min-width: 72px !important;
+  min-height: 36px !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 6px !important;
+
+  padding:
+    0 12px !important;
+
+  border-radius:
+    999px !important;
+
+  white-space: nowrap;
+}
+
+.alumni-profile-editor-save span {
+  display: inline !important;
+  font-size: 10.5px !important;
+}
+
+.alumni-profile-editor-save svg {
+  display: block !important;
+  flex: 0 0 auto;
+}
+
+/* ======================================================
+   BANNER
+   Critical fix: the whole image remains the whole button.
+   ====================================================== */
+
+.alumni-profile-editor-media {
+  margin-top:
+    10px !important;
+}
+
+.alumni-profile-editor-banner {
+  position: relative !important;
+  width: 100%;
+  min-height: 0 !important;
+  overflow: hidden !important;
+
+  border:
+    1px solid
+    var(--app-border) !important;
+  border-radius:
+    18px !important;
+
+  background:
+    var(--app-surface-2) !important;
+}
+
+.alumni-profile-editor-banner-button {
+  position: relative !important;
+  inset: auto !important;
+
+  display: block !important;
+  width: 100% !important;
+  height: 154px !important;
+  min-height: 154px !important;
+
+  padding: 0 !important;
+
+  border: 0 !important;
+  border-radius: 0 !important;
+
+  background:
+    var(--app-surface-2) !important;
+  color: inherit !important;
+
+  overflow: hidden !important;
+  box-shadow: none !important;
+}
+
+.alumni-profile-editor-banner-button > img,
+.alumni-profile-editor-banner-button
+  > .profile-banner-fallback {
+  display: block;
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+}
+
+.alumni-profile-editor-banner-action {
+  position: absolute !important;
+  right: 11px !important;
+  bottom: 11px !important;
+  left: auto !important;
+  top: auto !important;
+  z-index: 5 !important;
+
+  display: inline-flex !important;
+  width: auto !important;
+  height: 32px !important;
+  min-height: 32px !important;
+  align-items: center !important;
+  gap: 6px !important;
+
+  padding:
+    0 10px !important;
+
+  border:
+    1px solid
+    rgba(255,255,255,.18) !important;
+  border-radius:
+    999px !important;
+
+  background:
+    rgba(5,7,11,.66) !important;
+  color: #fff !important;
+
+  font-size: 9.5px !important;
+  font-weight: 850 !important;
+
+  pointer-events: none;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+/* Neutralize the broken broad selector from Option 1. */
+.alumni-profile-editor-banner
+  > button.alumni-profile-editor-banner-button {
+  position: relative !important;
+  right: auto !important;
+  bottom: auto !important;
+  min-height: 154px !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background:
+    var(--app-surface-2) !important;
+}
+
+/* ======================================================
+   AVATAR
+   ====================================================== */
+
+.alumni-profile-editor-photo-row {
+  display: flex !important;
+  min-height: 64px;
+  align-items: flex-end !important;
+
+  margin-top:
+    -38px !important;
+
+  padding:
+    0 10px !important;
+}
+
+.alumni-profile-editor-avatar-cluster {
+  position: relative;
+  flex: 0 0 auto;
+}
+
+.alumni-profile-editor-avatar {
+  display: flex !important;
+  width: 90px !important;
+  height: 90px !important;
+  flex: 0 0 90px !important;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+
+  border:
+    4px solid
+    var(--app-bg) !important;
+  border-radius:
+    999px !important;
+}
+
+.alumni-profile-editor-avatar
+  img {
+  display: block;
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+}
+
+.alumni-profile-editor-camera {
+  position: absolute !important;
+  right: 0 !important;
+  bottom: 2px !important;
+  z-index: 4;
+
+  display: inline-flex !important;
+  width: 30px !important;
+  height: 30px !important;
+  align-items: center !important;
+  justify-content: center !important;
+
+  padding: 0 !important;
+}
+
+.alumni-profile-editor-photo-copy {
+  display: none !important;
+}
+
+/* ======================================================
+   SECTIONS
+   ====================================================== */
+
+.alumni-profile-editor-fields {
+  margin-top:
+    12px !important;
+}
+
+.alumni-editor-section {
+  margin: 0 !important;
+  padding:
+    18px 0 0 !important;
+  border: 0 !important;
+  background:
+    transparent !important;
+}
+
+.alumni-editor-section + .alumni-editor-section {
+  margin-top:
+    2px !important;
+}
+
+.alumni-editor-section-head {
+  padding:
+    0 3px 8px !important;
+}
+
+.alumni-editor-section-head h3 {
+  margin: 0;
+  color:
+    var(--app-muted-2) !important;
+  font-size:
+    9.5px !important;
+  font-weight:
+    900 !important;
+  letter-spacing:
+    .12em;
+  text-transform:
+    uppercase;
+}
+
+/* Remove the fake universal chevron added by Option 1. */
+.alumni-profile-editor
+  .alumni-edit-row::after {
+  content: none !important;
+  display: none !important;
+}
+
+/* ======================================================
+   TEXT ROWS — exactly 2 columns, no chevron
+   ====================================================== */
+
+.alumni-profile-editor
+  .alumni-edit-row-text {
+  display: grid !important;
+  grid-template-columns:
+    104px minmax(0, 1fr) !important;
+  align-items: center !important;
+  gap: 10px !important;
+
+  min-height:
+    60px !important;
+
+  padding:
+    10px 3px !important;
+
+  border-top: 0 !important;
+  border-bottom:
+    1px solid
+    var(--app-border) !important;
+}
+
+.alumni-editor-section
+  .alumni-edit-row-text:first-of-type,
+.alumni-editor-section
+  .alumni-edit-row-picker:first-of-type {
+  border-top:
+    1px solid
+    var(--app-border) !important;
+}
+
+.alumni-profile-editor
+  .alumni-edit-row-text
+  > span:first-child {
+  width: auto !important;
+  color:
+    var(--app-muted-2) !important;
+  font-size:
+    10.5px !important;
+  font-weight:
+    700 !important;
+  line-height:
+    1.25;
+}
+
+.alumni-profile-editor
+  .alumni-edit-row-text
+  > span:nth-child(2) {
+  min-width: 0;
+}
+
+.alumni-profile-editor
+  .alumni-edit-row-text
+  input,
+.alumni-profile-editor
+  .alumni-edit-row-text
+  textarea {
+  min-width: 0;
+  width: 100%;
+  padding: 0 !important;
+
+  border: 0 !important;
+  outline: 0 !important;
+
+  background:
+    transparent !important;
+  color:
+    var(--app-text) !important;
+
+  font-size:
+    14px !important;
+  font-weight:
+    600 !important;
+
+  box-shadow:
+    none !important;
+}
+
+.alumni-profile-editor
+  .alumni-edit-row-textarea {
+  align-items:
+    start !important;
+  min-height:
+    90px !important;
+}
+
+.alumni-profile-editor
+  .alumni-edit-row-textarea
+  > span:first-child {
+  padding-top:
+    3px !important;
+}
+
+.alumni-profile-editor
+  .alumni-edit-row-textarea
+  textarea {
+  min-height:
+    68px !important;
+  line-height:
+    1.45 !important;
+}
+
+/* ======================================================
+   PICKER ROWS — component already has its own chevron
+   ====================================================== */
+
+.alumni-profile-editor
+  .alumni-edit-row-picker {
+  display: grid !important;
+  grid-template-columns:
+    104px minmax(0, 1fr) auto !important;
+  align-items: center !important;
+  gap: 9px !important;
+
+  min-height:
+    64px !important;
+
+  padding:
+    10px 3px !important;
+
+  border-bottom:
+    1px solid
+    var(--app-border) !important;
+}
+
+.alumni-profile-editor
+  .alumni-edit-row-picker
+  > span:first-child {
+  width: auto !important;
+  color:
+    var(--app-muted-2) !important;
+  font-size:
+    10.5px !important;
+  font-weight:
+    700 !important;
+  line-height:
+    1.25;
+}
+
+.alumni-profile-editor
+  .alumni-edit-row-picker
+  > button:nth-of-type(1) {
+  min-width: 0;
+  width: 100%;
+}
+
+.alumni-profile-editor
+  .alumni-edit-row-picker
+  > button:nth-of-type(1)
+  > span {
+  min-width: 0;
+}
+
+.alumni-profile-editor
+  .alumni-edit-row-picker
+  > button:nth-of-type(1)
+  svg {
+  flex: 0 0 auto;
+}
+
+.alumni-profile-editor
+  .alumni-edit-row-picker
+  > button:last-child:not(:first-of-type) {
+  width: 32px;
+  height: 32px;
+  padding: 0;
+}
+
+/* ======================================================
+   PICKERS — must overlay floating nav
+   ====================================================== */
+
+.alumni-settings-picker-backdrop-profile {
+  z-index:
+    2147483300 !important;
+
+  padding: 0 !important;
+
+  background:
+    rgba(0,0,0,.54) !important;
+
+  backdrop-filter:
+    blur(8px);
+  -webkit-backdrop-filter:
+    blur(8px);
+}
+
+.alumni-settings-picker-backdrop-profile
+  .alumni-settings-picker-sheet {
+  position: relative;
+  z-index: 1;
+
+  width: 100% !important;
+  max-width:
+    520px !important;
+
+  height:
+    min(
+      84dvh,
+      760px
+    ) !important;
+  max-height:
+    min(
+      84dvh,
+      760px
+    ) !important;
+
+  padding:
+    16px 14px
+    max(
+      16px,
+      env(safe-area-inset-bottom)
+    ) !important;
+
+  border:
+    1px solid
+    var(--app-border) !important;
+  border-bottom:
+    0 !important;
+  border-radius:
+    22px 22px 0 0 !important;
+
+  background:
+    var(--app-surface) !important;
+
+  overflow: hidden !important;
+}
+
+.alumni-settings-picker-backdrop-profile
+  .alumni-settings-picker-sheet
+  > div:first-child {
+  flex: 0 0 auto;
+}
+
+.alumni-settings-picker-backdrop-profile
+  .alumni-settings-picker-search {
+  flex: 0 0 auto;
+  min-height:
+    44px !important;
+}
+
+.alumni-settings-picker-backdrop-profile
+  .alumni-settings-picker-sheet
+  button {
+  -webkit-tap-highlight-color:
+    transparent;
+}
+
+/* ======================================================
+   MOBILE CANONICAL 360–430
+   ====================================================== */
+
+@media (max-width: 699px) {
+  .alumni-profile-editor-top {
+    grid-template-columns:
+      42px minmax(0, 1fr) auto !important;
+    gap: 6px !important;
+  }
+
+  .alumni-profile-editor-save {
+    min-width:
+      68px !important;
+    padding-inline:
+      10px !important;
+  }
+
+  .alumni-profile-editor-save span {
+    font-size:
+      10px !important;
+  }
+
+  .alumni-profile-editor-banner-button,
+  .alumni-profile-editor-banner
+    > button.alumni-profile-editor-banner-button {
+    height:
+      148px !important;
+    min-height:
+      148px !important;
+  }
+
+  .alumni-profile-editor
+    .alumni-edit-row-text,
+  .alumni-profile-editor
+    .alumni-edit-row-picker {
+    grid-template-columns:
+      94px minmax(0, 1fr) auto !important;
+    gap:
+      8px !important;
+  }
+
+  .alumni-profile-editor
+    .alumni-edit-row-text {
+    grid-template-columns:
+      94px minmax(0, 1fr) !important;
+  }
+
+  .alumni-settings-picker-backdrop-profile
+    .alumni-settings-picker-sheet {
+    max-width:
+      none !important;
+  }
+}
+
+@media (max-width: 374px) {
+  .alumni-profile-editor-save {
+    min-width:
+      64px !important;
+    padding-inline:
+      9px !important;
+  }
+
+  .alumni-profile-editor-banner-button,
+  .alumni-profile-editor-banner
+    > button.alumni-profile-editor-banner-button {
+    height:
+      136px !important;
+    min-height:
+      136px !important;
+  }
+
+  .alumni-profile-editor-avatar {
+    width:
+      84px !important;
+    height:
+      84px !important;
+    flex-basis:
+      84px !important;
+  }
+
+  .alumni-profile-editor-photo-row {
+    margin-top:
+      -35px !important;
+  }
+
+  .alumni-profile-editor
+    .alumni-edit-row-text {
+    grid-template-columns:
+      86px minmax(0, 1fr) !important;
+  }
+
+  .alumni-profile-editor
+    .alumni-edit-row-picker {
+    grid-template-columns:
+      86px minmax(0, 1fr) auto !important;
+  }
+}
+
+/* ======================================================
+   DESKTOP SECONDARY
+   ====================================================== */
+
+@media (min-width: 700px) {
+  .alumni-profile-editor {
+    padding-bottom:
+      36px !important;
+  }
+
+  .alumni-profile-editor-banner-button,
+  .alumni-profile-editor-banner
+    > button.alumni-profile-editor-banner-button {
+    height:
+      184px !important;
+    min-height:
+      184px !important;
+  }
+
+  .alumni-profile-editor
+    .alumni-edit-row-text,
+  .alumni-profile-editor
+    .alumni-edit-row-picker {
+    grid-template-columns:
+      130px minmax(0, 1fr) auto !important;
+  }
+
+  .alumni-profile-editor
+    .alumni-edit-row-text {
+    grid-template-columns:
+      130px minmax(0, 1fr) !important;
+  }
+
+  .alumni-settings-picker-backdrop-profile
+    .alumni-settings-picker-sheet {
+    border-bottom:
+      1px solid
+      var(--app-border) !important;
+    border-radius:
+      20px !important;
+  }
+}
+
+/* ALUMNI_PROFILE_EDITOR_1_1_REPAIR */
+
+
+/* =========================================================
+   SOURCE: settings-edit-profile-pro-2-0.css
+   ========================================================= */
+
+/*
+ * ALUMNI_PROFILE_EDITOR_2_0_PRO_MOTION
+ *
+ * Editar perfil — visual polish pro, mobile-first,
+ * con motion y menos texto.
+ */
+
+.alumni-profile-editor {
+  --editor-radius: 24px;
+  --editor-radius-sm: 18px;
+  --editor-chip-bg:
+    color-mix(
+      in srgb,
+      var(--app-surface) 88%,
+      transparent
+    );
+  --editor-glow:
+    color-mix(
+      in srgb,
+      var(--app-accent) 16%,
+      transparent
+    );
+
+  width: 100%;
+  min-width: 0;
+  overflow-x: clip;
+  padding-bottom:
+    calc(
+      116px +
+      env(safe-area-inset-bottom)
+    );
+}
+
+/* ======================================================
+   TOP BAR — cleaner, premium, sticky glass
+   ====================================================== */
+
+.alumni-profile-editor-top {
+  position: sticky;
+  top: 0;
+  z-index: 35;
+
+  display: grid !important;
+  grid-template-columns:
+    42px minmax(0, 1fr) auto !important;
+  align-items: center;
+  gap: 10px;
+
+  min-height: 58px;
+  padding:
+    6px 2px 10px !important;
+
+  background:
+    color-mix(
+      in srgb,
+      var(--app-bg) 82%,
+      transparent
+    );
+
+  -webkit-backdrop-filter:
+    blur(16px)
+    saturate(1.06);
+  backdrop-filter:
+    blur(16px)
+    saturate(1.06);
+}
+
+html[data-theme="light"]
+.alumni-profile-editor-top {
+  background:
+    color-mix(
+      in srgb,
+      var(--app-bg) 87%,
+      transparent
+    );
+}
+
+.alumni-profile-editor-top::after {
+  content: "";
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  height: 1px;
+  background:
+    color-mix(
+      in srgb,
+      var(--app-border) 76%,
+      transparent
+    );
+}
+
+.alumni-profile-editor-top > button:first-child,
+.alumni-profile-editor-top
+a:first-child {
+  display: inline-flex;
+  width: 40px;
+  height: 40px;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border:
+    1px solid
+    color-mix(
+      in srgb,
+      var(--app-text) 6%,
+      var(--app-border)
+    );
+  border-radius: 14px;
+  background:
+    color-mix(
+      in srgb,
+      var(--app-surface) 76%,
+      transparent
+    );
+  color:
+    var(--app-text);
+  box-shadow:
+    0 8px 22px
+    color-mix(
+      in srgb,
+      var(--app-shadow) 26%,
+      transparent
+    );
+  transition:
+    transform 150ms cubic-bezier(.2,.8,.2,1),
+    background-color 160ms ease,
+    border-color 160ms ease;
+}
+
+.alumni-profile-editor-top > button:first-child:active,
+.alumni-profile-editor-top a:first-child:active {
+  transform: scale(.94);
+}
+
+.alumni-profile-editor-top-copy {
+  min-width: 0;
+  text-align: center;
+}
+
+.alumni-profile-editor-top-copy p {
+  margin: 0;
+  overflow: hidden;
+  color:
+    var(--app-text);
+  font-size: 17px !important;
+  font-weight: 950 !important;
+  line-height: 1.08;
+  letter-spacing: -.035em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.alumni-profile-editor-top-copy small,
+.alumni-profile-editor-top-copy span:not(:first-child) {
+  display: none !important;
+}
+
+.alumni-profile-editor-save {
+  display: inline-flex !important;
+  min-width: 80px !important;
+  min-height: 40px !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 6px !important;
+  padding:
+    0 14px !important;
+  border:
+    1px solid
+    color-mix(
+      in srgb,
+      var(--app-accent) 14%,
+      transparent
+    ) !important;
+  border-radius:
+    999px !important;
+  background:
+    color-mix(
+      in srgb,
+      var(--app-accent) 13%,
+      transparent
+    ) !important;
+  color:
+    var(--app-accent) !important;
+  box-shadow:
+    0 10px 28px
+    color-mix(
+      in srgb,
+      var(--app-accent) 10%,
+      transparent
+    );
+  transition:
+    transform 150ms cubic-bezier(.2,.8,.2,1),
+    background-color 160ms ease,
+    border-color 160ms ease,
+    box-shadow 180ms ease;
+}
+
+.alumni-profile-editor-save:hover {
+  box-shadow:
+    0 14px 34px
+    color-mix(
+      in srgb,
+      var(--app-accent) 12%,
+      transparent
+    );
+}
+
+.alumni-profile-editor-save:active {
+  transform: scale(.96);
+}
+
+.alumni-profile-editor-save span {
+  font-size: 11px !important;
+  font-weight: 900;
+  letter-spacing: -.01em;
+}
+
+/* ======================================================
+   HERO MEDIA
+   ====================================================== */
+
+.alumni-profile-editor-media {
+  position: relative;
+  margin-top: 10px !important;
+  padding-top: 2px;
+  animation:
+    alumniEditorFadeUp
+    .46s
+    cubic-bezier(.2,.8,.2,1)
+    both;
+}
+
+.alumni-profile-editor-banner {
+  position: relative;
+  overflow: hidden;
+  border:
+    1px solid
+    color-mix(
+      in srgb,
+      var(--app-text) 6%,
+      var(--app-border)
+    );
+  border-radius:
+    26px !important;
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(
+        in srgb,
+        var(--app-surface-2) 88%,
+        transparent
+      ),
+      color-mix(
+        in srgb,
+        var(--app-surface) 92%,
+        transparent
+      )
+    );
+  box-shadow:
+    0 20px 54px
+    color-mix(
+      in srgb,
+      var(--app-shadow) 16%,
+      transparent
+    );
+}
+
+.alumni-profile-editor-banner::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(
+      180deg,
+      rgba(255,255,255,.08),
+      transparent 28%,
+      rgba(0,0,0,.06)
+    );
+}
+
+.alumni-profile-editor-banner-button,
+.alumni-profile-editor-banner > button.alumni-profile-editor-banner-button {
+  height: 168px !important;
+  min-height: 168px !important;
+  transition:
+    transform 240ms cubic-bezier(.2,.8,.2,1);
+}
+
+.alumni-profile-editor-banner-button:active {
+  transform: scale(.995);
+}
+
+.alumni-profile-editor-banner-action {
+  right: 12px !important;
+  bottom: 12px !important;
+  height: 34px !important;
+  min-height: 34px !important;
+  padding:
+    0 11px !important;
+  border:
+    1px solid
+    rgba(255,255,255,.18) !important;
+  border-radius:
+    999px !important;
+  background:
+    rgba(8,10,16,.54) !important;
+  color: #fff !important;
+  font-size: 9.5px !important;
+  letter-spacing: .01em;
+  backdrop-filter:
+    blur(14px);
+  -webkit-backdrop-filter:
+    blur(14px);
+}
+
+.alumni-profile-editor-photo-row {
+  position: relative;
+  display: flex !important;
+  align-items: flex-end !important;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: -42px !important;
+  padding:
+    0 12px !important;
+  animation:
+    alumniEditorFadeUp
+    .52s
+    cubic-bezier(.2,.8,.2,1)
+    both;
+  animation-delay:
+    .05s;
+}
+
+.alumni-profile-editor-avatar-cluster {
+  position: relative;
+  flex: 0 0 auto;
+}
+
+.alumni-profile-editor-avatar {
+  width: 94px !important;
+  height: 94px !important;
+  flex: 0 0 94px !important;
+  overflow: hidden;
+  border:
+    4px solid
+    var(--app-bg) !important;
+  border-radius:
+    999px !important;
+  box-shadow:
+    0 16px 40px
+    color-mix(
+      in srgb,
+      var(--app-shadow) 22%,
+      transparent
+    );
+  background:
+    var(--app-surface);
+}
+
+.alumni-profile-editor-camera {
+  right: 1px !important;
+  bottom: 3px !important;
+  width: 32px !important;
+  height: 32px !important;
+  border:
+    1px solid
+    color-mix(
+      in srgb,
+      var(--app-text) 6%,
+      var(--app-border)
+    );
+  border-radius:
+    999px !important;
+  background:
+    var(--editor-chip-bg) !important;
+  color:
+    var(--app-text) !important;
+  box-shadow:
+    0 8px 20px
+    color-mix(
+      in srgb,
+      var(--app-shadow) 18%,
+      transparent
+    );
+  backdrop-filter:
+    blur(12px);
+  -webkit-backdrop-filter:
+    blur(12px);
+}
+
+.alumni-profile-editor-photo-copy {
+  display: none !important;
+}
+
+/* ======================================================
+   FIELDS
+   ====================================================== */
+
+.alumni-profile-editor-fields {
+  margin-top: 16px !important;
+  animation:
+    alumniEditorFadeUp
+    .58s
+    cubic-bezier(.2,.8,.2,1)
+    both;
+  animation-delay:
+    .09s;
+}
+
+.alumni-editor-section {
+  margin: 0 !important;
+  padding:
+    18px 0 0 !important;
+  border: 0 !important;
+  background:
+    transparent !important;
+}
+
+.alumni-editor-section + .alumni-editor-section {
+  margin-top: 4px !important;
+}
+
+.alumni-editor-section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding:
+    0 2px 10px !important;
+}
+
+.alumni-editor-section-head h3 {
+  margin: 0;
+  color:
+    var(--app-muted-2) !important;
+  font-size:
+    10px !important;
+  font-weight:
+    950 !important;
+  letter-spacing:
+    .18em;
+  text-transform:
+    uppercase;
+}
+
+.alumni-editor-section-head p,
+.alumni-editor-section-head small {
+  display: none !important;
+}
+
+.alumni-profile-editor .alumni-edit-row-text,
+.alumni-profile-editor .alumni-edit-row-picker {
+  position: relative;
+  overflow: hidden;
+  border-top:
+    1px solid
+    var(--app-border) !important;
+  border-bottom:
+    0 !important;
+  transition:
+    background-color 160ms ease,
+    border-color 160ms ease,
+    transform 170ms cubic-bezier(.2,.8,.2,1);
+}
+
+.alumni-profile-editor .alumni-edit-row-text:last-child,
+.alumni-profile-editor .alumni-edit-row-picker:last-child {
+  border-bottom:
+    1px solid
+    var(--app-border) !important;
+}
+
+.alumni-profile-editor .alumni-edit-row-text::before,
+.alumni-profile-editor .alumni-edit-row-picker::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 0;
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(
+        in srgb,
+        var(--app-accent) 42%,
+        transparent
+      ),
+      color-mix(
+        in srgb,
+        var(--app-accent) 14%,
+        transparent
+      )
+    );
+  transition: width 160ms ease;
+}
+
+.alumni-profile-editor .alumni-edit-row-text:focus-within,
+.alumni-profile-editor .alumni-edit-row-picker:focus-within {
+  background:
+    color-mix(
+      in srgb,
+      var(--app-accent) 3%,
+      transparent
+    ) !important;
+}
+
+.alumni-profile-editor .alumni-edit-row-text:focus-within::before,
+.alumni-profile-editor .alumni-edit-row-picker:focus-within::before {
+  width: 3px;
+}
+
+.alumni-profile-editor .alumni-edit-row-text > span:first-child,
+.alumni-profile-editor .alumni-edit-row-picker > span:first-child {
+  color:
+    var(--app-muted-2) !important;
+  font-size:
+    10px !important;
+  font-weight:
+    800 !important;
+  letter-spacing: .01em;
+}
+
+.alumni-profile-editor .alumni-edit-row-text input,
+.alumni-profile-editor .alumni-edit-row-text textarea,
+.alumni-profile-editor .alumni-edit-row-picker button:nth-of-type(1) {
+  color:
+    var(--app-text) !important;
+  font-size:
+    15px !important;
+  font-weight:
+    720 !important;
+  line-height:
+    1.35 !important;
+}
+
+.alumni-profile-editor .alumni-edit-row-text input::placeholder,
+.alumni-profile-editor .alumni-edit-row-text textarea::placeholder {
+  color:
+    var(--app-muted-3) !important;
+}
+
+.alumni-profile-editor .alumni-edit-row-textarea {
+  min-height: 98px !important;
+}
+
+.alumni-profile-editor .alumni-edit-row-textarea textarea {
+  min-height: 74px !important;
+}
+
+.alumni-profile-editor .alumni-edit-row-picker button:nth-of-type(1) {
+  justify-content: flex-start !important;
+}
+
+.alumni-profile-editor .alumni-edit-row-picker button:nth-of-type(1) svg {
+  transition:
+    transform 150ms cubic-bezier(.2,.8,.2,1),
+    color 150ms ease;
+}
+
+.alumni-profile-editor .alumni-edit-row-picker button:nth-of-type(1):active svg {
+  transform: translateX(2px);
+}
+
+.alumni-profile-editor .alumni-edit-row-picker > button:last-child:not(:first-of-type) {
+  border-radius: 12px !important;
+  background:
+    color-mix(
+      in srgb,
+      var(--app-surface) 84%,
+      transparent
+    );
+}
+
+/* subtle stagger */
+.alumni-editor-section:nth-of-type(1) .alumni-edit-row-text,
+.alumni-editor-section:nth-of-type(1) .alumni-edit-row-picker,
+.alumni-editor-section:nth-of-type(2) .alumni-edit-row-text,
+.alumni-editor-section:nth-of-type(2) .alumni-edit-row-picker,
+.alumni-editor-section:nth-of-type(3) .alumni-edit-row-text,
+.alumni-editor-section:nth-of-type(3) .alumni-edit-row-picker {
+  animation:
+    alumniEditorFadeUp
+    .44s
+    cubic-bezier(.2,.8,.2,1)
+    both;
+}
+
+.alumni-editor-section:nth-of-type(1) .alumni-edit-row-text:nth-child(2),
+.alumni-editor-section:nth-of-type(1) .alumni-edit-row-picker:nth-child(2) {
+  animation-delay: .04s;
+}
+.alumni-editor-section:nth-of-type(1) .alumni-edit-row-text:nth-child(3),
+.alumni-editor-section:nth-of-type(1) .alumni-edit-row-picker:nth-child(3) {
+  animation-delay: .07s;
+}
+.alumni-editor-section:nth-of-type(1) .alumni-edit-row-text:nth-child(4),
+.alumni-editor-section:nth-of-type(1) .alumni-edit-row-picker:nth-child(4) {
+  animation-delay: .10s;
+}
+.alumni-editor-section:nth-of-type(2) .alumni-edit-row-text:nth-child(2),
+.alumni-editor-section:nth-of-type(2) .alumni-edit-row-picker:nth-child(2) {
+  animation-delay: .12s;
+}
+.alumni-editor-section:nth-of-type(2) .alumni-edit-row-text:nth-child(3),
+.alumni-editor-section:nth-of-type(2) .alumni-edit-row-picker:nth-child(3) {
+  animation-delay: .15s;
+}
+.alumni-editor-section:nth-of-type(2) .alumni-edit-row-text:nth-child(4),
+.alumni-editor-section:nth-of-type(2) .alumni-edit-row-picker:nth-child(4) {
+  animation-delay: .18s;
+}
+.alumni-editor-section:nth-of-type(3) .alumni-edit-row-text:nth-child(2),
+.alumni-editor-section:nth-of-type(3) .alumni-edit-row-picker:nth-child(2) {
+  animation-delay: .20s;
+}
+.alumni-editor-section:nth-of-type(3) .alumni-edit-row-text:nth-child(3),
+.alumni-editor-section:nth-of-type(3) .alumni-edit-row-picker:nth-child(3) {
+  animation-delay: .23s;
+}
+
+/* pickers modal */
+.alumni-settings-picker-backdrop-profile {
+  background:
+    rgba(0,0,0,.46) !important;
+  backdrop-filter:
+    blur(12px);
+  -webkit-backdrop-filter:
+    blur(12px);
+}
+
+.alumni-settings-picker-backdrop-profile .alumni-settings-picker-sheet {
+  border:
+    1px solid
+    color-mix(
+      in srgb,
+      var(--app-text) 6%,
+      var(--app-border)
+    ) !important;
+  border-bottom:
+    0 !important;
+  border-radius:
+    28px 28px 0 0 !important;
+  box-shadow:
+    0 30px 90px
+    color-mix(
+      in srgb,
+      var(--app-shadow) 32%,
+      transparent
+    );
+}
+
+.alumni-settings-picker-backdrop-profile .alumni-settings-picker-search {
+  border-radius:
+    16px !important;
+}
+
+/* ======================================================
+   MOTION REDUCE
+   ====================================================== */
+
+@keyframes alumniEditorFadeUp {
+  from {
+    opacity: 0;
+    transform:
+      translate3d(0, 12px, 0)
+      scale(.992);
+  }
+
+  to {
+    opacity: 1;
+    transform:
+      translate3d(0, 0, 0)
+      scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .alumni-profile-editor-media,
+  .alumni-profile-editor-photo-row,
+  .alumni-profile-editor-fields,
+  .alumni-editor-section .alumni-edit-row-text,
+  .alumni-editor-section .alumni-edit-row-picker {
+    animation: none !important;
+  }
+
+  .alumni-profile-editor-top > button:first-child,
+  .alumni-profile-editor-top a:first-child,
+  .alumni-profile-editor-save,
+  .alumni-profile-editor-banner-button,
+  .alumni-profile-editor .alumni-edit-row-text,
+  .alumni-profile-editor .alumni-edit-row-picker,
+  .alumni-profile-editor .alumni-edit-row-picker button:nth-of-type(1) svg {
+    transition: none !important;
+  }
+}
+
+/* ======================================================
+   360–430px
+   ====================================================== */
+
+@media (max-width: 430px) {
+  .alumni-profile-editor-top-copy p {
+    font-size: 16px !important;
+  }
+
+  .alumni-profile-editor-save {
+    min-width: 72px !important;
+    min-height: 38px !important;
+    padding-inline: 12px !important;
+  }
+
+  .alumni-profile-editor-banner-button,
+  .alumni-profile-editor-banner > button.alumni-profile-editor-banner-button {
+    height: 160px !important;
+    min-height: 160px !important;
+  }
+
+  .alumni-profile-editor-avatar {
+    width: 88px !important;
+    height: 88px !important;
+    flex-basis: 88px !important;
+  }
+}
+
+@media (max-width: 374px) {
+  .alumni-profile-editor .alumni-edit-row-text {
+    grid-template-columns:
+      90px minmax(0, 1fr) !important;
+  }
+
+  .alumni-profile-editor .alumni-edit-row-picker {
+    grid-template-columns:
+      90px minmax(0, 1fr) auto !important;
+  }
+
+  .alumni-profile-editor .alumni-edit-row-text input,
+  .alumni-profile-editor .alumni-edit-row-text textarea,
+  .alumni-profile-editor .alumni-edit-row-picker button:nth-of-type(1) {
+    font-size: 14px !important;
+  }
+}
+
+/* =========================================================
+   ALUMNI Profile Editor — remove top separator lines only
+   ========================================================= */
+
+.alumni-profile-editor
+.alumni-edit-row-text,
+.alumni-profile-editor
+.alumni-edit-row-picker {
+  border-top:
+    0 !important;
+}
+
+/*
+ * Keep only the lower separator so fields remain readable.
+ */
+.alumni-profile-editor
+.alumni-edit-row-text,
+.alumni-profile-editor
+.alumni-edit-row-picker {
+  border-bottom:
+    1px solid
+    var(--app-border) !important;
+}
+
+/* ALUMNI_PROFILE_EDITOR_NO_TOP_LINES_1_0 */
+
+
+/* =========================================================
+   SOURCE: settings-stability-3-0.css
+   ========================================================= */
+
+/*
+ * ALUMNI Settings Stability 3.0
+ * Stable geometry + clean hierarchy.
+ */
+
+.alumni-settings-classic {
+  width: 100% !important;
+  max-width: 580px !important;
+  margin:
+    0 auto !important;
+  padding-bottom:
+    30px !important;
+}
+
+.alumni-settings-classic-header,
+.alumni-settings-detail-header {
+  position:
+    relative !important;
+  top:
+    auto !important;
+  z-index:
+    2 !important;
+  grid-template-columns:
+    40px
+    minmax(0, 1fr)
+    40px !important;
+  min-height:
+    50px !important;
+  margin-bottom:
+    12px;
+  border-bottom:
+    0 !important;
+  background:
+    transparent !important;
+  backdrop-filter:
+    none !important;
+  -webkit-backdrop-filter:
+    none !important;
+  box-shadow:
+    none !important;
+}
+
+.alumni-settings-classic-header h1,
+.alumni-settings-detail-header h1 {
+  font-size:
+    15px !important;
+  font-weight:
+    900 !important;
+  letter-spacing:
+    -.025em !important;
+}
+
+.alumni-settings-classic-back,
+.alumni-settings-detail-header
+button {
+  width:
+    38px !important;
+  height:
+    38px !important;
+  border:
+    0 !important;
+  border-radius:
+    12px !important;
+  background:
+    transparent !important;
+  color:
+    var(--app-text) !important;
+  transition:
+    background-color 150ms ease,
+    transform 130ms
+      cubic-bezier(.2,.8,.2,1);
+}
+
+.alumni-settings-classic-back:active,
+.alumni-settings-detail-header
+button:active {
+  transform:
+    scale(.93);
+  background:
+    var(--app-soft) !important;
+}
+
+.alumni-settings-profile-row {
+  min-height:
+    82px !important;
+  margin:
+    0 0 12px !important;
+  padding:
+    12px !important;
+  border:
+    1px solid
+    var(--app-border) !important;
+  border-radius:
+    18px !important;
+  background:
+    var(--app-surface) !important;
+}
+
+.alumni-settings-profile-avatar {
+  width:
+    54px !important;
+  height:
+    54px !important;
+  flex:
+    0 0 54px !important;
+  border:
+    2px solid
+    var(--app-bg) !important;
+  box-shadow:
+    0 0 0 1px
+    var(--app-border);
+}
+
+.alumni-settings-classic-list {
+  overflow:
+    hidden;
+  border:
+    1px solid
+    var(--app-border);
+  border-radius:
+    18px;
+  background:
+    var(--app-surface);
+}
+
+.alumni-settings-classic-row {
+  min-height:
+    62px !important;
+  padding:
+    9px 12px !important;
+  border-bottom:
+    1px solid
+    var(--app-border) !important;
+  background:
+    transparent !important;
+}
+
+.alumni-settings-classic-row:last-child {
+  border-bottom:
+    0 !important;
+}
+
+.alumni-settings-row-icon {
+  width:
+    34px !important;
+  height:
+    34px !important;
+  flex:
+    0 0 34px !important;
+  border-radius:
+    11px !important;
+  background:
+    var(--app-soft) !important;
+  color:
+    var(--app-text-soft) !important;
+}
+
+.alumni-settings-row-copy
+strong {
+  font-size:
+    12px !important;
+  font-weight:
+    850 !important;
+}
+
+.alumni-settings-row-copy
+small {
+  margin-top:
+    3px !important;
+  color:
+    var(--app-muted) !important;
+  font-size:
+    9.5px !important;
+  line-height:
+    1.35 !important;
+}
+
+.alumni-settings-logout {
+  min-height:
+    60px !important;
+  margin-top:
+    12px !important;
+  padding:
+    9px 12px !important;
+  border:
+    1px solid
+    color-mix(
+      in srgb,
+      var(--app-danger) 18%,
+      var(--app-border)
+    ) !important;
+  border-radius:
+    16px !important;
+  background:
+    transparent !important;
+}
+
+.alumni-settings-detail-content {
+  width:
+    100%;
+  min-width:
+    0;
+  padding-top:
+    0 !important;
+}
+
+.alumni-settings-classic
+.alumni-settings-panel,
+.alumni-settings-classic
+.alumni-profile-settings-hub {
+  width:
+    100% !important;
+  max-width:
+    100% !important;
+  margin:
+    0 !important;
+}
+
+.alumni-settings-section-intro {
+  padding-top:
+    4px !important;
+}
+
+.alumni-profile-editor-top {
+  position:
+    relative !important;
+  top:
+    auto !important;
+  z-index:
+    2 !important;
+}
+
+.alumni-settings-privacy-backdrop,
+.alumni-account-flow-backdrop,
+.alumni-settings-picker-backdrop {
+  transform:
+    none !important;
+}
+
+.alumni-settings-privacy-modal,
+.alumni-account-flow-sheet,
+.alumni-settings-picker-sheet {
+  width:
+    100%;
+  max-width:
+    520px;
+  margin:
+    0 auto;
+}
+
+@media (min-width: 640px) {
+  .alumni-settings-privacy-modal,
+  .alumni-account-flow-sheet,
+  .alumni-settings-picker-sheet {
+    border-radius:
+      22px !important;
+  }
+}
+
+/* ALUMNI_STABILITY_PASS_1_0 */
+
+
+/* =========================================================
+   SOURCE: settings-edit-profile-pro-3-0.css
+   ========================================================= */
+
+/*
+ * ALUMNI_PROFILE_EDITOR_3_0_PRO_CLEAN_MOTION
+ * Editar perfil — diseño final profesional, limpio y mobile-first.
+ * Motion explícito; sin movimiento estructural global.
+ */
+
+.alumni-profile-editor {
+  --profile-editor-max: 700px;
+  --profile-editor-radius: 22px;
+
+  width: 100%;
+  max-width: var(--profile-editor-max);
+  min-width: 0;
+  margin: 0 auto;
+  overflow-x: clip;
+  padding:
+    0 0
+    calc(
+      110px +
+      env(safe-area-inset-bottom)
+    );
+  color: var(--app-text);
+}
+
+/* =========================================================
+   TOP BAR
+   ========================================================= */
+
+.alumni-profile-editor-top {
+  position: sticky !important;
+  top: 0;
+  z-index: 40;
+  display: grid !important;
+  grid-template-columns:
+    42px
+    minmax(0, 1fr)
+    auto !important;
+  min-height: 62px !important;
+  align-items: center !important;
+  gap: 9px !important;
+  padding:
+    7px 0 9px !important;
+  border: 0 !important;
+  background:
+    color-mix(
+      in srgb,
+      var(--app-bg) 84%,
+      transparent
+    ) !important;
+  backdrop-filter:
+    blur(18px)
+    saturate(1.08);
+  -webkit-backdrop-filter:
+    blur(18px)
+    saturate(1.08);
+  animation:
+    alumniProfileEditorTopIn
+    .34s
+    cubic-bezier(.2,.8,.2,1)
+    both;
+}
+
+.alumni-profile-editor-top::after {
+  content: "";
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  height: 1px;
+  background:
+    color-mix(
+      in srgb,
+      var(--app-border) 70%,
+      transparent
+    );
+}
+
+.alumni-profile-editor-top
+> button:first-child {
+  display: inline-flex !important;
+  width: 40px !important;
+  height: 40px !important;
+  align-items: center;
+  justify-content: center;
+  padding: 0 !important;
+  border:
+    1px solid
+    color-mix(
+      in srgb,
+      var(--app-text) 5%,
+      var(--app-border)
+    ) !important;
+  border-radius: 14px !important;
+  background:
+    color-mix(
+      in srgb,
+      var(--app-surface) 76%,
+      transparent
+    ) !important;
+  color:
+    var(--app-text) !important;
+  box-shadow:
+    0 7px 22px
+    color-mix(
+      in srgb,
+      var(--app-shadow) 14%,
+      transparent
+    );
+  transition:
+    transform 150ms
+      cubic-bezier(.2,.8,.2,1),
+    background-color 160ms ease,
+    border-color 160ms ease !important;
+}
+
+.alumni-profile-editor-top
+> button:first-child:active {
+  transform:
+    translateX(-1px)
+    scale(.93);
+  background:
+    var(--app-soft) !important;
+}
+
+.alumni-profile-editor-top-copy {
+  min-width: 0;
+  text-align: center;
+}
+
+.alumni-profile-editor-top-copy p {
+  margin: 0 !important;
+  color:
+    var(--app-text) !important;
+  font-size:
+    16px !important;
+  font-weight:
+    930 !important;
+  line-height:
+    1.1 !important;
+  letter-spacing:
+    -.035em !important;
+}
+
+.alumni-profile-editor-save {
+  display: inline-flex !important;
+  min-width: 88px !important;
+  min-height: 40px !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 6px !important;
+  padding:
+    0 14px !important;
+  border:
+    1px solid
+    color-mix(
+      in srgb,
+      var(--app-accent) 22%,
+      transparent
+    ) !important;
+  border-radius:
+    999px !important;
+  background:
+    var(--app-accent-fill) !important;
+  color:
+    var(--app-on-accent) !important;
+  box-shadow:
+    0 8px 24px
+    color-mix(
+      in srgb,
+      var(--app-accent) 16%,
+      transparent
+    ) !important;
+  transition:
+    transform 150ms
+      cubic-bezier(.2,.8,.2,1),
+    box-shadow 170ms ease,
+    opacity 150ms ease !important;
+}
+
+.alumni-profile-editor-save
+span {
+  font-size:
+    10.5px !important;
+  font-weight:
+    900 !important;
+}
+
+.alumni-profile-editor-save:not(:disabled):active {
+  transform:
+    scale(.95);
+  box-shadow:
+    0 4px 14px
+    color-mix(
+      in srgb,
+      var(--app-accent) 12%,
+      transparent
+    ) !important;
+}
+
+.alumni-profile-editor-save:disabled {
+  opacity: .5;
+  box-shadow: none !important;
+}
+
+/* =========================================================
+   PROFILE MEDIA
+   ========================================================= */
+
+.alumni-profile-editor-media {
+  position: relative;
+  margin-top:
+    14px !important;
+  padding:
+    0 0 8px !important;
+}
+
+.alumni-profile-editor-banner {
+  position: relative;
+  overflow: hidden;
+  border:
+    1px solid
+    color-mix(
+      in srgb,
+      var(--app-text) 5%,
+      var(--app-border)
+    ) !important;
+  border-radius:
+    24px !important;
+  background:
+    var(--app-surface-2) !important;
+  box-shadow:
+    0 16px 40px
+    color-mix(
+      in srgb,
+      var(--app-shadow) 15%,
+      transparent
+    ) !important;
+}
+
+.alumni-profile-editor-banner::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  background:
+    linear-gradient(
+      180deg,
+      rgba(255,255,255,.035),
+      transparent 44%,
+      rgba(0,0,0,.09)
+    );
+}
+
+.alumni-profile-editor-banner-button {
+  position: relative;
+  display: block !important;
+  width: 100%;
+  height:
+    clamp(
+      146px,
+      42vw,
+      184px
+    ) !important;
+  min-height:
+    146px !important;
+  max-height:
+    184px !important;
+  overflow: hidden;
+  border: 0 !important;
+  background:
+    var(--app-soft-strong) !important;
+  transition:
+    transform 220ms
+      cubic-bezier(.2,.8,.2,1),
+    filter 180ms ease !important;
+}
+
+.alumni-profile-editor-banner-button
+img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition:
+    transform 360ms
+      cubic-bezier(.2,.8,.2,1);
+}
+
+.alumni-profile-editor-banner-button:active
+img {
+  transform:
+    scale(1.012);
+}
+
+.alumni-profile-editor-banner-action {
+  z-index: 4;
+  right: 11px !important;
+  bottom: 11px !important;
+  display: inline-flex !important;
+  height: 34px !important;
+  min-height: 34px !important;
+  align-items: center;
+  gap: 6px !important;
+  padding:
+    0 11px !important;
+  border:
+    1px solid
+    rgba(255,255,255,.16) !important;
+  border-radius:
+    999px !important;
+  background:
+    rgba(5,8,12,.56) !important;
+  color:
+    #fff !important;
+  font-size:
+    9px !important;
+  font-weight:
+    850 !important;
+  backdrop-filter:
+    blur(14px);
+  -webkit-backdrop-filter:
+    blur(14px);
+  transition:
+    transform 150ms
+      cubic-bezier(.2,.8,.2,1),
+    background-color 160ms ease !important;
+}
+
+.alumni-profile-editor-banner-button:active
+.alumni-profile-editor-banner-action {
+  transform:
+    scale(.95);
+}
+
+.alumni-profile-editor-photo-row {
+  position: relative;
+  z-index: 5;
+  display: flex !important;
+  align-items: flex-end !important;
+  justify-content: flex-start !important;
+  min-height: 54px;
+  gap: 10px !important;
+  margin-top:
+    -39px !important;
+  padding:
+    0 14px !important;
+}
+
+.alumni-profile-editor-avatar-cluster {
+  position: relative;
+  width: 92px;
+  height: 92px;
+  flex:
+    0 0 92px;
+}
+
+.alumni-profile-editor-avatar {
+  display: flex;
+  width:
+    92px !important;
+  height:
+    92px !important;
+  flex:
+    0 0 92px !important;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border:
+    4px solid
+    var(--app-bg) !important;
+  border-radius:
+    999px !important;
+  background:
+    var(--app-surface) !important;
+  box-shadow:
+    0 13px 34px
+    color-mix(
+      in srgb,
+      var(--app-shadow) 20%,
+      transparent
+    ) !important;
+  transition:
+    transform 180ms
+      cubic-bezier(.2,.8,.2,1);
+}
+
+.alumni-profile-editor-avatar
+img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.alumni-profile-editor-avatar-cluster:active
+.alumni-profile-editor-avatar {
+  transform:
+    scale(.985);
+}
+
+.alumni-profile-editor-camera {
+  position: absolute !important;
+  right:
+    -1px !important;
+  bottom:
+    2px !important;
+  display: inline-flex !important;
+  width:
+    32px !important;
+  height:
+    32px !important;
+  align-items: center;
+  justify-content: center;
+  padding: 0 !important;
+  border:
+    2px solid
+    var(--app-bg) !important;
+  border-radius:
+    999px !important;
+  background:
+    var(--app-accent-fill) !important;
+  color:
+    var(--app-on-accent) !important;
+  box-shadow:
+    0 6px 16px
+    color-mix(
+      in srgb,
+      var(--app-accent) 18%,
+      transparent
+    ) !important;
+  transition:
+    transform 150ms
+      cubic-bezier(.2,.8,.2,1) !important;
+}
+
+.alumni-profile-editor-camera:active {
+  transform:
+    scale(.9);
+}
+
+.alumni-profile-editor-photo-copy {
+  display:
+    none !important;
+}
+
+/* =========================================================
+   SECTIONS
+   ========================================================= */
+
+.alumni-profile-editor-fields {
+  margin-top:
+    8px !important;
+}
+
+.alumni-editor-section {
+  position: relative;
+  margin:
+    0 !important;
+  padding:
+    22px 0 5px !important;
+  border:
+    0 !important;
+  background:
+    transparent !important;
+}
+
+.alumni-editor-section +
+.alumni-editor-section {
+  margin-top:
+    6px !important;
+}
+
+.alumni-editor-section-head {
+  display: flex;
+  min-height: 28px;
+  align-items: center;
+  justify-content: space-between;
+  padding:
+    0 2px 9px !important;
+  border: 0 !important;
+}
+
+.alumni-editor-section-head
+h3 {
+  margin: 0 !important;
+  color:
+    var(--app-muted-2) !important;
+  font-size:
+    9px !important;
+  font-weight:
+    900 !important;
+  line-height:
+    1 !important;
+  letter-spacing:
+    .16em !important;
+  text-transform:
+    uppercase;
+}
+
+.alumni-editor-section-head
+p,
+.alumni-editor-section-head
+small {
+  display:
+    none !important;
+}
+
+.alumni-editor-grid-2 {
+  display: grid !important;
+  grid-template-columns:
+    repeat(
+      2,
+      minmax(0,1fr)
+    ) !important;
+  gap:
+    0 18px !important;
+}
+
+/* =========================================================
+   TEXT / PICKER ROWS — NO HEAVY BOXES
+   ========================================================= */
+
+.alumni-profile-editor
+.alumni-edit-row {
+  min-width: 0;
+}
+
+.alumni-profile-editor
+.alumni-edit-row-text,
+.alumni-profile-editor
+.alumni-edit-row-picker {
+  position: relative;
+  display: flex !important;
+  min-height:
+    68px !important;
+  align-items:
+    center !important;
+  gap:
+    12px !important;
+  overflow:
+    visible !important;
+  padding:
+    9px 1px !important;
+  border-top:
+    0 !important;
+  border-right:
+    0 !important;
+  border-bottom:
+    1px solid
+    color-mix(
+      in srgb,
+      var(--app-border) 82%,
+      transparent
+    ) !important;
+  border-left:
+    0 !important;
+  border-radius:
+    0 !important;
+  background:
+    transparent !important;
+  box-shadow:
+    none !important;
+  transition:
+    border-color 170ms ease,
+    background-color 170ms ease,
+    transform 150ms
+      cubic-bezier(.2,.8,.2,1) !important;
+}
+
+.alumni-profile-editor
+.alumni-edit-row-text::before,
+.alumni-profile-editor
+.alumni-edit-row-picker::before {
+  display:
+    none !important;
+}
+
+.alumni-profile-editor
+.alumni-edit-row-text:focus-within,
+.alumni-profile-editor
+.alumni-edit-row-picker:focus-within {
+  border-bottom-color:
+    color-mix(
+      in srgb,
+      var(--app-accent) 54%,
+      var(--app-border)
+    ) !important;
+  background:
+    linear-gradient(
+      180deg,
+      transparent,
+      color-mix(
+        in srgb,
+        var(--app-accent) 3%,
+        transparent
+      )
+    ) !important;
+}
+
+.alumni-profile-editor
+.alumni-edit-row-text
+> span:first-child,
+.alumni-profile-editor
+.alumni-edit-row-picker
+> span:first-child {
+  width:
+    108px !important;
+  flex:
+    0 0 108px !important;
+  color:
+    var(--app-muted-2) !important;
+  font-size:
+    9.5px !important;
+  font-weight:
+    820 !important;
+  line-height:
+    1.2 !important;
+  letter-spacing:
+    .01em !important;
+}
+
+.alumni-profile-editor
+.alumni-edit-row-text
+> span:nth-child(2),
+.alumni-profile-editor
+.alumni-edit-row-picker
+> button:first-of-type {
+  min-width: 0 !important;
+}
+
+.alumni-profile-editor
+.alumni-edit-row-text input,
+.alumni-profile-editor
+.alumni-edit-row-text textarea {
+  width: 100%;
+  min-width: 0;
+  border: 0 !important;
+  outline: 0 !important;
+  background:
+    transparent !important;
+  color:
+    var(--app-text) !important;
+  font-size:
+    14px !important;
+  font-weight:
+    650 !important;
+  line-height:
+    1.4 !important;
+  caret-color:
+    var(--app-accent);
+}
+
+.alumni-profile-editor
+.alumni-edit-row-text
+input::placeholder,
+.alumni-profile-editor
+.alumni-edit-row-text
+textarea::placeholder {
+  color:
+    var(--app-muted-3) !important;
+}
+
+.alumni-profile-editor
+.alumni-edit-row-textarea {
+  min-height:
+    100px !important;
+  align-items:
+    flex-start !important;
+  padding-top:
+    13px !important;
+  padding-bottom:
+    12px !important;
+}
+
+.alumni-profile-editor
+.alumni-edit-row-textarea
+> span:first-child {
+  padding-top:
+    3px !important;
+}
+
+.alumni-profile-editor
+.alumni-edit-row-textarea
+textarea {
+  min-height:
+    72px !important;
+  resize: none;
+}
+
+.alumni-profile-editor
+.alumni-edit-row-picker
+> button:first-of-type {
+  display: flex !important;
+  min-height:
+    46px;
+  flex:
+    1 1 auto;
+  align-items:
+    center;
+  justify-content:
+    flex-start !important;
+  gap:
+    9px !important;
+  padding:
+    0 !important;
+  border:
+    0 !important;
+  background:
+    transparent !important;
+  color:
+    var(--app-text) !important;
+  text-align:
+    left;
+  transition:
+    transform 150ms
+      cubic-bezier(.2,.8,.2,1) !important;
+}
+
+.alumni-profile-editor
+.alumni-edit-row-picker
+> button:first-of-type:active {
+  transform:
+    translateX(2px);
+}
+
+.alumni-profile-editor
+.alumni-edit-row-picker
+> button:first-of-type
+> span:last-of-type {
+  font-size:
+    13.5px !important;
+  font-weight:
+    680 !important;
+}
+
+.alumni-profile-editor
+.alumni-edit-row-picker
+> button:first-of-type
+> svg:last-child {
+  color:
+    var(--app-muted-3) !important;
+  transition:
+    transform 160ms
+      cubic-bezier(.2,.8,.2,1),
+    color 160ms ease !important;
+}
+
+.alumni-profile-editor
+.alumni-edit-row-picker
+> button:first-of-type:active
+> svg:last-child {
+  color:
+    var(--app-accent) !important;
+  transform:
+    translateX(2px);
+}
+
+.alumni-profile-editor
+.alumni-edit-row-picker
+> button:last-child:not(:first-of-type) {
+  display: inline-flex;
+  width:
+    32px !important;
+  height:
+    32px !important;
+  flex:
+    0 0 32px;
+  align-items: center;
+  justify-content: center;
+  padding:
+    0 !important;
+  border:
+    0 !important;
+  border-radius:
+    999px !important;
+  background:
+    transparent !important;
+  color:
+    var(--app-muted-3) !important;
+  transition:
+    transform 150ms
+      cubic-bezier(.2,.8,.2,1),
+    background-color 160ms ease !important;
+}
+
+.alumni-profile-editor
+.alumni-edit-row-picker
+> button:last-child:not(:first-of-type):active {
+  transform:
+    scale(.9);
+  background:
+    var(--app-soft) !important;
+}
+
+/* =========================================================
+   PICKERS
+   ========================================================= */
+
+.alumni-settings-picker-backdrop-profile {
+  z-index:
+    2147483200 !important;
+  background:
+    rgba(0,0,0,.42) !important;
+  backdrop-filter:
+    blur(8px);
+  -webkit-backdrop-filter:
+    blur(8px);
+}
+
+.alumni-settings-picker-backdrop-profile
+.alumni-settings-picker-sheet {
+  width: 100% !important;
+  max-width:
+    540px !important;
+  overflow: hidden;
+  border:
+    1px solid
+    color-mix(
+      in srgb,
+      var(--app-text) 5%,
+      var(--app-border)
+    ) !important;
+  border-radius:
+    26px 26px 0 0 !important;
+  background:
+    var(--app-bg) !important;
+  box-shadow:
+    0 -20px 70px
+    color-mix(
+      in srgb,
+      black 34%,
+      transparent
+    ) !important;
+}
+
+.alumni-settings-picker-backdrop-profile
+.alumni-settings-picker-sheet
+> div:first-child {
+  min-height:
+    48px;
+}
+
+.alumni-settings-picker-backdrop-profile
+.alumni-settings-picker-sheet
+> div:first-child
+h3 {
+  font-size:
+    16px !important;
+  font-weight:
+    930 !important;
+  letter-spacing:
+    -.025em !important;
+}
+
+.alumni-settings-picker-backdrop-profile
+.alumni-settings-picker-sheet
+> div:first-child
+button {
+  border:
+    1px solid
+    var(--app-border) !important;
+  background:
+    var(--app-soft) !important;
+  transition:
+    transform 150ms
+      cubic-bezier(.2,.8,.2,1) !important;
+}
+
+.alumni-settings-picker-backdrop-profile
+.alumni-settings-picker-sheet
+> div:first-child
+button:active {
+  transform:
+    scale(.92);
+}
+
+.alumni-settings-picker-search {
+  position: relative;
+  min-height:
+    46px !important;
+  margin-top:
+    12px !important;
+  padding:
+    0 2px;
+  border:
+    0 !important;
+  border-bottom:
+    1px solid
+    var(--app-border) !important;
+  border-radius:
+    0 !important;
+  background:
+    transparent !important;
+  transition:
+    border-color 160ms ease;
+}
+
+.alumni-settings-picker-search:focus-within {
+  border-bottom-color:
+    var(--app-accent) !important;
+}
+
+.alumni-settings-picker-search
+input {
+  font-size:
+    16px !important;
+}
+
+/* rows inside pickers */
+.alumni-settings-picker-sheet
+button.border-b {
+  min-height:
+    58px;
+  border-color:
+    color-mix(
+      in srgb,
+      var(--app-border) 80%,
+      transparent
+    ) !important;
+  transition:
+    background-color 160ms ease,
+    transform 150ms
+      cubic-bezier(.2,.8,.2,1);
+}
+
+.alumni-settings-picker-sheet
+button.border-b:active {
+  transform:
+    translateX(2px);
+  background:
+    color-mix(
+      in srgb,
+      var(--app-accent) 4%,
+      transparent
+    );
+}
+
+/* =========================================================
+   MOBILE 360–430
+   ========================================================= */
+
+@media (max-width: 560px) {
+  .alumni-profile-editor {
+    max-width: none;
+  }
+
+  .alumni-profile-editor-top {
+    min-height:
+      58px !important;
+  }
+
+  .alumni-profile-editor-media {
+    margin-top:
+      9px !important;
+  }
+
+  .alumni-profile-editor-banner {
+    border-radius:
+      20px !important;
+  }
+
+  .alumni-profile-editor-banner-button {
+    height:
+      154px !important;
+    min-height:
+      154px !important;
+  }
+
+  .alumni-profile-editor-photo-row {
+    margin-top:
+      -37px !important;
+    padding-inline:
+      12px !important;
+  }
+
+  .alumni-profile-editor-avatar-cluster,
+  .alumni-profile-editor-avatar {
+    width:
+      88px !important;
+    height:
+      88px !important;
+    flex-basis:
+      88px !important;
+  }
+
+  .alumni-profile-editor-fields {
+    margin-top:
+      5px !important;
+  }
+
+  .alumni-editor-grid-2 {
+    grid-template-columns:
+      1fr !important;
+    gap:
+      0 !important;
+  }
+
+  .alumni-editor-section {
+    padding-top:
+      21px !important;
+  }
+
+  .alumni-profile-editor
+  .alumni-edit-row-text,
+  .alumni-profile-editor
+  .alumni-edit-row-picker {
+    min-height:
+      66px !important;
+  }
+
+  .alumni-profile-editor
+  .alumni-edit-row-text
+  > span:first-child,
+  .alumni-profile-editor
+  .alumni-edit-row-picker
+  > span:first-child {
+    width:
+      104px !important;
+    flex-basis:
+      104px !important;
+  }
+
+  .alumni-settings-picker-backdrop-profile
+  .alumni-settings-picker-sheet {
+    height:
+      min(
+        86dvh,
+        760px
+      ) !important;
+    max-height:
+      86dvh !important;
+  }
+}
+
+@media (max-width: 374px) {
+  .alumni-profile-editor-save {
+    min-width:
+      42px !important;
+    width:
+      42px !important;
+    padding:
+      0 !important;
+  }
+
+  .alumni-profile-editor-save
+  span {
+    display:
+      none !important;
+  }
+
+  .alumni-profile-editor-banner-button {
+    height:
+      146px !important;
+    min-height:
+      146px !important;
+  }
+
+  .alumni-profile-editor-banner-action {
+    width:
+      34px !important;
+    padding:
+      0 !important;
+    justify-content:
+      center;
+    font-size:
+      0 !important;
+  }
+
+  .alumni-profile-editor
+  .alumni-edit-row-text,
+  .alumni-profile-editor
+  .alumni-edit-row-picker {
+    gap:
+      9px !important;
+  }
+
+  .alumni-profile-editor
+  .alumni-edit-row-text
+  > span:first-child,
+  .alumni-profile-editor
+  .alumni-edit-row-picker
+  > span:first-child {
+    width:
+      92px !important;
+    flex-basis:
+      92px !important;
+    font-size:
+      9px !important;
+  }
+
+  .alumni-profile-editor
+  .alumni-edit-row-text
+  input,
+  .alumni-profile-editor
+  .alumni-edit-row-text
+  textarea,
+  .alumni-profile-editor
+  .alumni-edit-row-picker
+  > button:first-of-type
+  > span:last-of-type {
+    font-size:
+      13px !important;
+  }
+}
+
+/* =========================================================
+   EXPLICIT MOTION
+   ========================================================= */
+
+@keyframes alumniProfileEditorTopIn {
+  from {
+    opacity: 0;
+    transform:
+      translate3d(0,-5px,0);
+  }
+  to {
+    opacity: 1;
+    transform:
+      translate3d(0,0,0);
+  }
+}
+
+@keyframes alumniProfileEditorSectionIn {
+  from {
+    opacity: 0;
+    transform:
+      translate3d(0,7px,0);
+  }
+  to {
+    opacity: 1;
+    transform:
+      translate3d(0,0,0);
+  }
+}
+
+.alumni-editor-section {
+  animation:
+    alumniProfileEditorSectionIn
+    .40s
+    cubic-bezier(.2,.8,.2,1)
+    both;
+}
+
+.alumni-editor-section:nth-child(2) {
+  animation-delay: .04s;
+}
+
+.alumni-editor-section:nth-child(3) {
+  animation-delay: .08s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .alumni-profile-editor-top,
+  .alumni-editor-section {
+    animation:
+      none !important;
+  }
+
+  .alumni-profile-editor-top
+  > button:first-child,
+  .alumni-profile-editor-save,
+  .alumni-profile-editor-banner-button,
+  .alumni-profile-editor-banner-button
+  img,
+  .alumni-profile-editor-banner-action,
+  .alumni-profile-editor-avatar,
+  .alumni-profile-editor-camera,
+  .alumni-profile-editor
+  .alumni-edit-row-text,
+  .alumni-profile-editor
+  .alumni-edit-row-picker,
+  .alumni-profile-editor
+  .alumni-edit-row-picker
+  > button:first-of-type,
+  .alumni-profile-editor
+  .alumni-edit-row-picker
+  > button:last-child,
+  .alumni-settings-picker-backdrop-profile
+  .alumni-settings-picker-sheet
+  button {
+    transition:
+      none !important;
+  }
+}
+
+/* ALUMNI_PROFILE_EDITOR_3_0_PRO_CLEAN_MOTION */
+
+
+/* ALUMNI_SETTINGS_STYLE_CONSOLIDATION_4_0:END */
