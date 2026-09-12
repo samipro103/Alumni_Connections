@@ -50,8 +50,7 @@ import ProfilePostOwnerMenu from "@/components/profile/ProfilePostOwnerMenu";
 import "@/components/profile/ProfilePostOwnerMenu.css";
 import "./profile-option-3-exact.css";
 import "../../media-rendering-1-0.css";
-import "../../profile/profile-option-3-selected-2-0.css";
-import "../../profile/profile-micro-polish-1-0.css";
+import "../../profile/profile-shared-final-4-0.css";
 
 type ProfileTab = "posts" | "secondary" | "activity";
 
@@ -1320,3 +1319,5 @@ function Detail({
 /* ALUMNI_PROFILE_2_0_OPTION_3_ACTIVITY_SELECTED */
 
 /* ALUMNI_MICRO_IMPROVEMENTS_BLOCK_1:PUBLIC_PROFILE */
+
+/* ALUMNI_PROFILE_STYLE_CONSOLIDATION_4_0:PUBLIC_PAGE */

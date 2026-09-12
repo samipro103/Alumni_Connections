@@ -1,4 +1,16 @@
 /*
+ * ALUMNI_PROFILE_STYLE_CONSOLIDATION_4_0
+ * SHARED_FINAL
+ *
+ * Reglas preservadas EN EL MISMO ORDEN DE CASCADA.
+ * Esta fase consolida fuentes; no rediseña.
+ */
+
+/* =========================================================
+   SOURCE: profile-option-3-selected-2-0.css
+   ========================================================= */
+
+/*
  * ALUMNI_PROFILE_2_0_OPTION_3_ACTIVITY_SELECTED
  *
  * Selected board: Option 3 — Activity focused.
@@ -1283,3 +1295,33 @@
 }
 
 /* ALUMNI_PROFILE_2_2_PROFESSIONAL_TYPE_SCALE */
+
+
+/* =========================================================
+   SOURCE: profile-micro-polish-1-0.css
+   ========================================================= */
+
+/* ALUMNI_MICRO_IMPROVEMENTS_BLOCK_1 */
+.alumni-profile-launch-cover-action,
+.alumni-profile-v3-top-button{display:none!important}
+.alumni-profile-launch-cover,.alumni-profile-v3-cover{isolation:isolate}
+.alumni-profile-launch-cover-overlay{background:linear-gradient(180deg,rgba(3,6,10,0) 0%,rgba(3,6,10,.04) 55%,rgba(3,6,10,.26) 100%)!important}
+.alumni-profile-v3-cover-shade{background:linear-gradient(180deg,rgba(3,6,10,0) 0%,rgba(3,6,10,.03) 56%,rgba(3,6,10,.25) 100%)!important}
+.alumni-profile-launch-cover-image,.alumni-profile-v3-cover-image,.alumni-profile-launch-cover-fallback,.alumni-profile-v3-cover-fallback{animation:alumniProfileBannerReveal .52s cubic-bezier(.2,.8,.2,1) both}
+.alumni-profile-v3-activity{gap:18px!important;padding-top:20px!important}
+.alumni-profile-v3-activity-card{position:relative;overflow:visible;padding:3px 2px 15px 15px!important;border:0!important;border-radius:0!important;background:transparent!important;box-shadow:none!important;animation:alumniProfileSoftReveal .42s cubic-bezier(.2,.8,.2,1) both}
+.alumni-profile-v3-activity-card::before{content:"";position:absolute;top:2px;bottom:15px;left:0;width:2px;border-radius:99px;background:color-mix(in srgb,var(--app-accent) 68%,transparent)}
+.alumni-profile-v3-activity-card span{color:var(--app-muted-2)!important;font-size:9px!important;font-weight:900!important;letter-spacing:.14em!important}
+.alumni-profile-v3-activity-card p{margin-top:9px!important;max-width:46ch;color:var(--app-text-soft)!important;font-size:13.5px!important;font-weight:520;line-height:1.55!important}
+.alumni-profile-location{display:flex;min-width:0;align-items:center;gap:11px;padding:3px 2px 17px;border-bottom:1px solid var(--app-border)}
+.alumni-profile-location-icon{display:inline-flex;width:35px;height:35px;flex:0 0 35px;align-items:center;justify-content:center;border-radius:12px;background:color-mix(in srgb,var(--app-accent) 9%,transparent);color:var(--app-accent)}
+.alumni-profile-location-copy{min-width:0}
+.alumni-profile-location-copy span{display:block;color:var(--app-muted-3);font-size:8.5px;font-weight:900;letter-spacing:.13em;text-transform:uppercase}
+.alumni-profile-location-copy strong{display:block;margin-top:4px;overflow:hidden;color:var(--app-text-soft);font-size:13px;font-weight:760;line-height:1.3;text-overflow:ellipsis;white-space:nowrap}
+@keyframes alumniProfileBannerReveal{from{opacity:.45;transform:scale(1.018)}to{opacity:1;transform:scale(1)}}
+@keyframes alumniProfileSoftReveal{from{opacity:0;transform:translate3d(0,7px,0)}to{opacity:1;transform:translate3d(0,0,0)}}
+@media(prefers-reduced-motion:reduce){.alumni-profile-launch-cover-image,.alumni-profile-v3-cover-image,.alumni-profile-launch-cover-fallback,.alumni-profile-v3-cover-fallback,.alumni-profile-v3-activity-card{animation:none!important}}
+@media(max-width:374px){.alumni-profile-location-copy strong{font-size:12.5px}.alumni-profile-v3-activity-card p{font-size:13px!important}}
+
+
+/* ALUMNI_PROFILE_STYLE_CONSOLIDATION_4_0:SHARED_FINAL:END */

@@ -48,10 +48,8 @@ import { toPublicImageCdnUrl } from "@/lib/imageCdn";
 import ProfilePostOwnerMenu from "@/components/profile/ProfilePostOwnerMenu";
 import "@/components/profile/ProfilePostOwnerMenu.css";
 import "../media-rendering-1-0.css";
-import "./profile-option-3-launch.css";
-import "./profile-launch-final-polish-1-3-0.css";
-import "./profile-option-3-selected-2-0.css";
-import "./profile-micro-polish-1-0.css";
+import "./profile-own-preselected-4-0.css";
+import "./profile-shared-final-4-0.css";
 
 
 type ProfileTab = "posts" | "saved" | "activity";
@@ -1039,3 +1037,5 @@ function Detail({
 /* ALUMNI_PROFILE_ACTIVITY_EVENTS_1_0 */
 
 /* ALUMNI_MICRO_IMPROVEMENTS_BLOCK_1:OWNER_PROFILE */
+
+/* ALUMNI_PROFILE_STYLE_CONSOLIDATION_4_0:OWN_PAGE */
