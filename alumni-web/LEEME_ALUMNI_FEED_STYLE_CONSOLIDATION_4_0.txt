@@ -1,0 +1,50 @@
+ALUMNI — FEED STYLE CONSOLIDATION 4.0
+
+OBJETIVO
+Reducir la deuda CSS del Feed SIN modificar el diseño.
+
+ANTES
+/feed cargaba 9 CSS:
+- feed-pro.css
+- feed-visual-2-4.css
+- feed-visual-2-5.css
+- feed-visual-3-1.css
+- feed-comments-messaging-font.css
+- stories-visual-1-0.css
+- stories-visual-1-1.css
+- ../media-rendering-1-0.css
+- feed-photo-confirm-1-0.css
+
+DESPUÉS
+/feed cargará 3 capas INTENCIONALES:
+1. feed-consolidated-base-4-0.css
+2. ../media-rendering-1-0.css
+3. feed-consolidated-final-4-0.css
+
+¿POR QUÉ NO 1 SOLO?
+Porque media-rendering-1-0.css es compartido con otras pantallas
+y actualmente está entre las reglas base del Feed y el override final
+de selección/confirmación de fotos.
+
+Moverlo cambiaría la cascada.
+Por eso se conserva exactamente:
+BASE → SHARED MEDIA → FINAL.
+
+SEGURIDAD
+Antes de borrar cualquier archivo legacy el instalador:
+- revisa referencias en TS/TSX/JS/JSX/CSS;
+- crea los consolidados;
+- guarda backups privados;
+- valida page.tsx;
+- recién entonces elimina los archivos anteriores.
+
+Stories sigue preservado aunque STORIES_UI_ENABLED=false.
+
+EJECUTAR
+
+node .\aplicar_alumni_feed_style_consolidation_4_0.js
+npm run design:audit
+npm run build
+
+NO HACER COMMIT TODAVÍA.
+Mandar audit + build.

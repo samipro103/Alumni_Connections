@@ -10,15 +10,9 @@ import {
 } from "react";
 import { useSearchParams } from "next/navigation";
 import dynamic from "next/dynamic";
-import "./feed-pro.css";
-import "./feed-visual-2-4.css";
-import "./feed-visual-2-5.css";
-import "./feed-visual-3-1.css";
-import "./feed-comments-messaging-font.css";
-import "./stories-visual-1-0.css";
-import "./stories-visual-1-1.css";
+import "./feed-consolidated-base-4-0.css";
 import "../media-rendering-1-0.css";
-import "./feed-photo-confirm-1-0.css";
+import "./feed-consolidated-final-4-0.css";
 import { supabase } from "@/lib/supabase";
 import AppShell from "@/components/layout/AppShell";
 import { FeedLoadingSkeleton, AlumniEmptyState } from "@/components/ui/AlumniLoading";
@@ -2515,3 +2509,5 @@ export default function FeedPage() {
 /* ALUMNI_VERIFIED_BADGE_FEED_1_0 */
 
 /* ALUMNI_UI_FIXES_1_1:FEED */
+
+/* ALUMNI_FEED_STYLE_CONSOLIDATION_4_0_1:PAGE */

@@ -1,4 +1,16 @@
 /*
+ * ALUMNI_FEED_STYLE_CONSOLIDATION_4_0_1
+ * FINAL
+ *
+ * Contenido legado preservado EN EL MISMO ORDEN DE CASCADA.
+ * Esta fase consolida fuentes sin rediseñar.
+ */
+
+/* =========================================================
+   SOURCE: feed-photo-confirm-1-0.css
+   ========================================================= */
+
+/*
  * ALUMNI_FEED_PHOTO_SELECT_1_0_LIMPIO
  * Selector / confirmación de foto limpio.
  * Mobile-first.
@@ -685,3 +697,6 @@ html[data-theme="light"]
 }
 
 /* ALUMNI_FEED_PHOTO_SELECT_1_0_5_MOBILE_OVERLAY_CONTROLS */
+
+
+/* ALUMNI_FEED_STYLE_CONSOLIDATION_4_0_1:FINAL:END */
