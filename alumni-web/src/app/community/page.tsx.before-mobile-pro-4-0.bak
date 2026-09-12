@@ -22,7 +22,7 @@ import { useAuth } from "@/components/auth/AuthProvider";
 import { supabase } from "@/lib/supabase";
 import "./community-2.css";
 import "../interior-ui-1-0.css";
-import "./community-mobile-pro-4-0.css";
+import "./community-motion-3-0.css";
 
 const CATEGORIES = [
   {
@@ -220,7 +220,7 @@ export default function CommunityPage() {
 
   return (
     <AppShell>
-      <main className="alumni-community-2 alumni-community-mobile-pro mx-auto w-full max-w-[920px]" data-alumni-motion-ignore="true">
+      <main className="alumni-community-2 mx-auto w-full max-w-[920px]" data-alumni-motion-ignore="true">
         <header className="community2-hero">
           <div>
             <h1>Comunidades</h1>
@@ -626,5 +626,3 @@ export default function CommunityPage() {
 /* ALUMNI_3_1_1_PRODUCT_COPY_CLEANUP */
 
 /* ALUMNI_MICRO_IMPROVEMENTS_BLOCK_5:COMMUNITY_HOME */
-
-/* ALUMNI_COMMUNITIES_MOBILE_PRO_4_0 */

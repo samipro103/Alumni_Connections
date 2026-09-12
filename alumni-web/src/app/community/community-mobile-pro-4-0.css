@@ -1,0 +1,1007 @@
+/*
+ * ALUMNI_COMMUNITIES_MOBILE_PRO_4_0
+ * /community — phone-first, clean, professional.
+ * Only the main Communities page is affected.
+ */
+
+.alumni-community-mobile-pro {
+  width: 100%;
+  max-width: 680px !important;
+  min-width: 0;
+  margin-inline: auto;
+  overflow-x: clip;
+  padding-top: 0 !important;
+  padding-bottom:
+    calc(
+      104px +
+      env(safe-area-inset-bottom)
+    ) !important;
+}
+
+/* ===== Header ===== */
+
+.alumni-community-mobile-pro .community2-hero {
+  display: flex !important;
+  min-height: 66px !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  flex-direction: row !important;
+  gap: 12px !important;
+  padding: 8px 1px 10px !important;
+  overflow: visible !important;
+  border: 0 !important;
+  background: transparent !important;
+  animation:
+    alumniCommunitiesMobileEnter
+    .34s
+    cubic-bezier(.2,.8,.2,1)
+    both;
+}
+
+.alumni-community-mobile-pro .community2-hero::before,
+.alumni-community-mobile-pro .community2-hero::after {
+  display: none !important;
+  content: none !important;
+}
+
+.alumni-community-mobile-pro .community2-hero > div {
+  min-width: 0;
+}
+
+.alumni-community-mobile-pro .community2-hero h1 {
+  margin: 0 !important;
+  color: var(--app-text) !important;
+  font-size: 29px !important;
+  font-weight: 950 !important;
+  line-height: 1 !important;
+  letter-spacing: -.048em !important;
+}
+
+.alumni-community-mobile-pro .community2-primary-action {
+  display: inline-flex !important;
+  width: 40px !important;
+  min-width: 40px !important;
+  height: 40px !important;
+  min-height: 40px !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 0 !important;
+  padding: 0 !important;
+  overflow: hidden;
+  border:
+    1px solid
+    color-mix(
+      in srgb,
+      var(--app-text) 6%,
+      var(--app-border)
+    ) !important;
+  border-radius: 14px !important;
+  background:
+    color-mix(
+      in srgb,
+      var(--app-surface) 82%,
+      transparent
+    ) !important;
+  color: var(--app-accent) !important;
+  box-shadow:
+    0 7px 20px
+    color-mix(
+      in srgb,
+      var(--app-shadow) 12%,
+      transparent
+    ) !important;
+  font-size: 0 !important;
+  transition:
+    transform 140ms cubic-bezier(.2,.8,.2,1),
+    background-color 150ms ease,
+    border-color 150ms ease !important;
+}
+
+.alumni-community-mobile-pro .community2-primary-action svg {
+  width: 18px;
+  height: 18px;
+  transform: none !important;
+  transition:
+    transform 160ms cubic-bezier(.2,.8,.2,1) !important;
+}
+
+.alumni-community-mobile-pro .community2-primary-action:active {
+  transform: scale(.92);
+  background: var(--app-soft) !important;
+}
+
+.alumni-community-mobile-pro
+.community2-primary-action:active svg {
+  transform: rotate(90deg) !important;
+}
+
+/* ===== Tabs + search ===== */
+
+.alumni-community-mobile-pro .community2-navigation {
+  display: block !important;
+  width: 100% !important;
+  min-width: 0;
+  min-height: 0 !important;
+  padding: 0 0 10px !important;
+  border: 0 !important;
+  background: transparent !important;
+  animation:
+    alumniCommunitiesMobileEnter
+    .36s
+    .035s
+    cubic-bezier(.2,.8,.2,1)
+    both;
+}
+
+.alumni-community-mobile-pro .community2-tabs {
+  display: grid !important;
+  width: 100%;
+  grid-template-columns: repeat(2,minmax(0,1fr));
+  gap: 0 !important;
+  padding: 3px !important;
+  overflow: hidden;
+  border:
+    1px solid
+    color-mix(
+      in srgb,
+      var(--app-text) 4%,
+      var(--app-border)
+    );
+  border-radius: 15px;
+  background:
+    color-mix(
+      in srgb,
+      var(--app-soft) 72%,
+      transparent
+    );
+}
+
+.alumni-community-mobile-pro .community2-tabs button {
+  position: relative;
+  min-width: 0;
+  min-height: 39px !important;
+  padding: 0 7px !important;
+  border: 0 !important;
+  border-radius: 12px !important;
+  background: transparent !important;
+  color: var(--app-muted-2) !important;
+  font-size: 10.5px !important;
+  font-weight: 820 !important;
+  line-height: 1 !important;
+  white-space: nowrap;
+  transition:
+    color 150ms ease,
+    background-color 150ms ease,
+    transform 140ms cubic-bezier(.2,.8,.2,1) !important;
+}
+
+.alumni-community-mobile-pro
+.community2-tabs button::after {
+  display: none !important;
+  content: none !important;
+}
+
+.alumni-community-mobile-pro
+.community2-tabs button[data-active="true"] {
+  background: var(--app-surface) !important;
+  color: var(--app-text) !important;
+  box-shadow:
+    0 3px 10px
+    color-mix(
+      in srgb,
+      var(--app-shadow) 10%,
+      transparent
+    );
+}
+
+.alumni-community-mobile-pro
+.community2-tabs button:active {
+  transform: scale(.97);
+}
+
+.alumni-community-mobile-pro .community2-search {
+  position: relative;
+  display: flex !important;
+  width: 100% !important;
+  max-width: none !important;
+  min-height: 47px !important;
+  align-items: center !important;
+  gap: 9px !important;
+  margin-top: 7px;
+  padding: 0 3px !important;
+  border: 0 !important;
+  border-bottom:
+    1px solid
+    var(--app-border) !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  color: var(--app-muted-2) !important;
+  transition:
+    border-color 150ms ease,
+    color 150ms ease !important;
+}
+
+.alumni-community-mobile-pro .community2-search::after {
+  display: none !important;
+  content: none !important;
+}
+
+.alumni-community-mobile-pro .community2-search:focus-within {
+  border-bottom-color:
+    color-mix(
+      in srgb,
+      var(--app-accent) 55%,
+      var(--app-border)
+    ) !important;
+  color: var(--app-accent) !important;
+}
+
+.alumni-community-mobile-pro .community2-search input {
+  width: 100%;
+  min-width: 0;
+  height: 45px;
+  border: 0;
+  outline: 0;
+  background: transparent !important;
+  color: var(--app-text) !important;
+  font-size: 16px !important;
+  font-weight: 560;
+}
+
+.alumni-community-mobile-pro .community2-search input::placeholder {
+  color: var(--app-muted-3);
+}
+
+/* ===== Community list ===== */
+
+.alumni-community-mobile-pro .community2-list {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  margin-top: 2px;
+  border: 0 !important;
+}
+
+.alumni-community-mobile-pro .community2-row {
+  position: relative;
+  display: grid !important;
+  width: 100%;
+  min-width: 0;
+  min-height: 82px !important;
+  grid-template-columns:
+    43px
+    minmax(0,1fr)
+    17px !important;
+  align-items: center !important;
+  gap: 11px !important;
+  padding: 9px 1px !important;
+  overflow: hidden;
+  border: 0 !important;
+  border-bottom:
+    1px solid
+    color-mix(
+      in srgb,
+      var(--app-border) 78%,
+      transparent
+    ) !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  animation:
+    alumniCommunitiesMobileRowIn
+    .34s
+    cubic-bezier(.2,.8,.2,1)
+    both;
+  transition:
+    background-color 140ms ease,
+    transform 140ms cubic-bezier(.2,.8,.2,1) !important;
+}
+
+.alumni-community-mobile-pro .community2-row:nth-child(1) { animation-delay: .03s; }
+.alumni-community-mobile-pro .community2-row:nth-child(2) { animation-delay: .055s; }
+.alumni-community-mobile-pro .community2-row:nth-child(3) { animation-delay: .08s; }
+.alumni-community-mobile-pro .community2-row:nth-child(4) { animation-delay: .105s; }
+.alumni-community-mobile-pro .community2-row:nth-child(5) { animation-delay: .13s; }
+.alumni-community-mobile-pro .community2-row:nth-child(6) { animation-delay: .155s; }
+
+.alumni-community-mobile-pro .community2-row::before,
+.alumni-community-mobile-pro .community2-row::after {
+  display: none !important;
+  content: none !important;
+}
+
+.alumni-community-mobile-pro .community2-row:active {
+  transform: scale(.994);
+  background:
+    color-mix(
+      in srgb,
+      var(--app-soft) 52%,
+      transparent
+    ) !important;
+}
+
+.alumni-community-mobile-pro .community2-mark {
+  display: flex !important;
+  width: 40px !important;
+  height: 40px !important;
+  align-items: center;
+  justify-content: center;
+  border:
+    1px solid
+    color-mix(
+      in srgb,
+      var(--app-accent) 13%,
+      var(--app-border)
+    ) !important;
+  border-radius: 13px !important;
+  background:
+    color-mix(
+      in srgb,
+      var(--app-accent) 6%,
+      var(--app-soft)
+    ) !important;
+  color: var(--app-text) !important;
+  box-shadow: none !important;
+  font-size: 12px !important;
+  font-weight: 950 !important;
+  transition:
+    transform 150ms cubic-bezier(.2,.8,.2,1),
+    border-color 150ms ease !important;
+}
+
+.alumni-community-mobile-pro .community2-row:active
+.community2-mark {
+  transform: scale(.96);
+  border-color:
+    color-mix(
+      in srgb,
+      var(--app-accent) 32%,
+      var(--app-border)
+    ) !important;
+}
+
+.alumni-community-mobile-pro .community2-row-main {
+  display: block;
+  min-width: 0 !important;
+  overflow: hidden;
+}
+
+.alumni-community-mobile-pro .community2-row-kicker {
+  display: flex !important;
+  max-width: 100%;
+  align-items: center;
+  gap: 3px !important;
+  overflow: hidden;
+  color: var(--app-muted-2) !important;
+  font-size: 8px !important;
+  font-weight: 830 !important;
+  line-height: 1.25;
+  letter-spacing: .07em !important;
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.alumni-community-mobile-pro
+.community2-row-main > strong {
+  display: block;
+  max-width: 100%;
+  margin-top: 4px !important;
+  overflow: hidden;
+  color: var(--app-text) !important;
+  font-size: 14px !important;
+  font-weight: 880 !important;
+  line-height: 1.25;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.alumni-community-mobile-pro
+.community2-row-main > small {
+  display: block;
+  max-width: 100%;
+  margin-top: 4px !important;
+  overflow: hidden;
+  color: var(--app-muted-2) !important;
+  font-size: 9px !important;
+  line-height: 1.25;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.alumni-community-mobile-pro .community2-row > svg {
+  width: 16px;
+  height: 16px;
+  color: var(--app-muted-3) !important;
+  transition:
+    transform 150ms cubic-bezier(.2,.8,.2,1),
+    color 150ms ease !important;
+}
+
+.alumni-community-mobile-pro .community2-row:active > svg {
+  transform: translateX(2px);
+  color: var(--app-accent) !important;
+}
+
+/* ===== Empty ===== */
+
+.alumni-community-mobile-pro .community2-empty {
+  display: grid;
+  justify-items: center;
+  gap: 7px;
+  min-height: 240px;
+  place-content: center;
+  padding: 42px 12px !important;
+  color: var(--app-muted-2) !important;
+  text-align: center;
+  animation:
+    alumniCommunitiesMobileEnter
+    .34s
+    cubic-bezier(.2,.8,.2,1)
+    both;
+}
+
+.alumni-community-mobile-pro .community2-empty svg {
+  margin: 0 !important;
+  color: var(--app-muted-3) !important;
+  filter: none !important;
+  animation: none !important;
+}
+
+.alumni-community-mobile-pro .community2-empty strong {
+  color: var(--app-text-soft) !important;
+  font-size: 12px !important;
+  font-weight: 820 !important;
+}
+
+/* ===== Create editor ===== */
+
+.alumni-community-mobile-pro .community2-editor-backdrop {
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 2147482800 !important;
+  display: block !important;
+  padding: 0 !important;
+  overflow: hidden;
+  background: var(--app-bg) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  animation:
+    alumniCommunitiesEditorBackdropIn
+    .18s ease-out both;
+}
+
+.alumni-community-mobile-pro .community2-editor {
+  display: flex !important;
+  width: 100% !important;
+  height: 100dvh !important;
+  max-width: none !important;
+  max-height: 100dvh !important;
+  flex-direction: column;
+  overflow: hidden;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: var(--app-bg) !important;
+  box-shadow: none !important;
+  animation:
+    alumniCommunitiesEditorIn
+    .28s
+    cubic-bezier(.2,.8,.2,1)
+    both;
+}
+
+.alumni-community-mobile-pro .community2-editor-header {
+  position: sticky !important;
+  top: 0;
+  z-index: 6;
+  display: grid !important;
+  grid-template-columns:
+    40px
+    minmax(0,1fr)
+    auto !important;
+  min-height: 62px;
+  align-items: center !important;
+  gap: 8px !important;
+  padding:
+    max(8px,env(safe-area-inset-top))
+    14px
+    8px !important;
+  border: 0 !important;
+  border-bottom:
+    1px solid
+    color-mix(
+      in srgb,
+      var(--app-border) 74%,
+      transparent
+    ) !important;
+  background:
+    color-mix(
+      in srgb,
+      var(--app-bg) 87%,
+      transparent
+    ) !important;
+  backdrop-filter:
+    blur(16px);
+  -webkit-backdrop-filter:
+    blur(16px);
+}
+
+.alumni-community-mobile-pro .community2-editor-back {
+  grid-column: auto !important;
+  display: inline-flex !important;
+  width: 38px !important;
+  height: 38px !important;
+  min-height: 38px !important;
+  align-items: center;
+  justify-content: center;
+  gap: 0 !important;
+  padding: 0 !important;
+  border:
+    1px solid
+    var(--app-border) !important;
+  border-radius: 13px !important;
+  background: var(--app-soft) !important;
+  color: var(--app-text) !important;
+  font-size: 0 !important;
+  transition:
+    transform 140ms cubic-bezier(.2,.8,.2,1) !important;
+}
+
+.alumni-community-mobile-pro .community2-editor-back:active {
+  transform: scale(.92);
+}
+
+.alumni-community-mobile-pro .community2-editor-header > div {
+  min-width: 0;
+}
+
+.alumni-community-mobile-pro .community2-editor-header h2 {
+  margin: 0 !important;
+  overflow: hidden;
+  color: var(--app-text) !important;
+  font-size: 16px !important;
+  font-weight: 930 !important;
+  line-height: 1.1;
+  letter-spacing: -.025em !important;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.alumni-community-mobile-pro .community2-editor-progress {
+  margin: 0 !important;
+  color: var(--app-muted-3) !important;
+  font-size: 8px !important;
+  font-weight: 820 !important;
+  letter-spacing: .08em !important;
+  white-space: nowrap;
+}
+
+.alumni-community-mobile-pro .community2-editor-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto !important;
+  overscroll-behavior: contain;
+  padding:
+    0 15px 30px !important;
+  -webkit-overflow-scrolling: touch;
+}
+
+.alumni-community-mobile-pro .community2-editor-section {
+  display: block !important;
+  width: 100%;
+  max-width: none !important;
+  margin: 0 !important;
+  padding: 23px 0 25px !important;
+  border: 0 !important;
+  border-bottom:
+    1px solid
+    var(--app-border) !important;
+  animation:
+    alumniCommunitiesEditorSectionIn
+    .31s
+    cubic-bezier(.2,.8,.2,1)
+    both;
+}
+
+.alumni-community-mobile-pro .community2-editor-section:last-child {
+  border-bottom: 0 !important;
+}
+
+.alumni-community-mobile-pro .community2-step {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  margin-bottom: 17px;
+  padding: 0 !important;
+  border: 0 !important;
+}
+
+.alumni-community-mobile-pro .community2-step > strong {
+  display: inline-flex;
+  min-width: 25px;
+  height: 25px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9px;
+  background:
+    color-mix(
+      in srgb,
+      var(--app-accent) 9%,
+      transparent
+    );
+  color: var(--app-accent) !important;
+  font-family: inherit !important;
+  font-size: 8px !important;
+  font-weight: 900 !important;
+  text-shadow: none !important;
+}
+
+.alumni-community-mobile-pro .community2-step b {
+  color: var(--app-text) !important;
+  font-size: 12px !important;
+  font-weight: 900 !important;
+}
+
+.alumni-community-mobile-pro .community2-fields {
+  display: grid !important;
+  gap: 18px !important;
+}
+
+.alumni-community-mobile-pro .community2-field > span {
+  color: var(--app-muted-2) !important;
+  font-size: 8.5px !important;
+  font-weight: 880 !important;
+  letter-spacing: .10em !important;
+  text-transform: uppercase;
+}
+
+.alumni-community-mobile-pro .community2-field input,
+.alumni-community-mobile-pro .community2-field textarea {
+  width: 100%;
+  min-width: 0;
+  margin-top: 6px !important;
+  border: 0 !important;
+  border-bottom:
+    1px solid
+    var(--app-border) !important;
+  border-radius: 0 !important;
+  outline: 0;
+  background: transparent !important;
+  color: var(--app-text) !important;
+  font-size: 16px !important;
+  font-weight: 570;
+  transition:
+    border-color 150ms ease !important;
+}
+
+.alumni-community-mobile-pro .community2-field input {
+  min-height: 44px !important;
+}
+
+.alumni-community-mobile-pro .community2-field textarea {
+  min-height: 88px !important;
+  padding: 10px 0 !important;
+  resize: none !important;
+  line-height: 1.45;
+}
+
+.alumni-community-mobile-pro .community2-field input:focus,
+.alumni-community-mobile-pro .community2-field textarea:focus {
+  border-bottom-color: var(--app-accent) !important;
+}
+
+.alumni-community-mobile-pro .community2-field-large input {
+  font-size: 17px !important;
+  font-weight: 700 !important;
+}
+
+.alumni-community-mobile-pro .community2-field > small {
+  right: 0 !important;
+  bottom: 9px !important;
+  color: var(--app-muted-3) !important;
+  font-size: 8px !important;
+}
+
+.alumni-community-mobile-pro .community2-category-list {
+  display: grid !important;
+  grid-template-columns:
+    repeat(2,minmax(0,1fr));
+  gap: 7px !important;
+  border: 0 !important;
+}
+
+.alumni-community-mobile-pro .community2-category-list button {
+  display: grid !important;
+  width: 100%;
+  min-width: 0;
+  grid-template-columns:
+    24px
+    minmax(0,1fr)
+    8px !important;
+  min-height: 50px !important;
+  gap: 6px !important;
+  padding: 0 9px !important;
+  border:
+    1px solid
+    var(--app-border) !important;
+  border-radius: 13px !important;
+  background: transparent !important;
+  color: var(--app-muted-2) !important;
+  transition:
+    transform 140ms cubic-bezier(.2,.8,.2,1),
+    border-color 150ms ease,
+    background-color 150ms ease !important;
+}
+
+.alumni-community-mobile-pro
+.community2-category-list button[data-active="true"] {
+  border-color:
+    color-mix(
+      in srgb,
+      var(--app-accent) 34%,
+      var(--app-border)
+    ) !important;
+  background:
+    color-mix(
+      in srgb,
+      var(--app-accent) 7%,
+      transparent
+    ) !important;
+  color: var(--app-accent) !important;
+}
+
+.alumni-community-mobile-pro
+.community2-category-list button:active {
+  transform: scale(.97);
+}
+
+.alumni-community-mobile-pro
+.community2-category-list button::after {
+  width: 6px !important;
+  height: 6px !important;
+}
+
+.alumni-community-mobile-pro
+.community2-category-list strong {
+  overflow: hidden;
+  color: var(--app-text) !important;
+  font-size: 9.5px !important;
+  font-weight: 830 !important;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.alumni-community-mobile-pro .community2-context-fields {
+  display: grid !important;
+  grid-template-columns: 1fr !important;
+  gap: 17px !important;
+}
+
+.alumni-community-mobile-pro .community2-access-list {
+  display: grid !important;
+  grid-template-columns: 1fr !important;
+  border-top:
+    1px solid
+    var(--app-border) !important;
+}
+
+.alumni-community-mobile-pro .community2-access-list button {
+  min-height: 65px !important;
+  padding: 0 2px !important;
+  background: transparent !important;
+  transition:
+    background-color 150ms ease,
+    transform 140ms cubic-bezier(.2,.8,.2,1) !important;
+}
+
+.alumni-community-mobile-pro
+.community2-access-list button[data-active="true"] {
+  background:
+    linear-gradient(
+      90deg,
+      color-mix(
+        in srgb,
+        var(--app-accent) 4%,
+        transparent
+      ),
+      transparent 70%
+    ) !important;
+}
+
+.alumni-community-mobile-pro
+.community2-access-list button:active {
+  transform: scale(.995);
+}
+
+.alumni-community-mobile-pro .community2-editor-footer {
+  position: sticky;
+  bottom: 0;
+  z-index: 6;
+  min-height: 67px !important;
+  padding:
+    9px 14px
+    max(9px,env(safe-area-inset-bottom))
+    !important;
+  border-top:
+    1px solid
+    var(--app-border) !important;
+  background:
+    color-mix(
+      in srgb,
+      var(--app-bg) 88%,
+      transparent
+    ) !important;
+  backdrop-filter:
+    blur(16px);
+  -webkit-backdrop-filter:
+    blur(16px);
+}
+
+.alumni-community-mobile-pro
+.community2-editor-footer > span {
+  max-width: 48%;
+  color: var(--app-muted-2) !important;
+  font-size: 8px !important;
+  line-height: 1.3;
+}
+
+.alumni-community-mobile-pro
+.community2-editor-footer button {
+  min-height: 41px !important;
+  padding: 0 15px !important;
+  border: 0 !important;
+  border-radius: 999px !important;
+  background: var(--app-accent-fill) !important;
+  color: var(--app-on-accent) !important;
+  font-size: 10px !important;
+  font-weight: 900 !important;
+  box-shadow:
+    0 7px 20px
+    color-mix(
+      in srgb,
+      var(--app-accent) 13%,
+      transparent
+    );
+  transition:
+    transform 140ms cubic-bezier(.2,.8,.2,1),
+    opacity 150ms ease !important;
+}
+
+.alumni-community-mobile-pro
+.community2-editor-footer button:not(:disabled):active {
+  transform: scale(.95);
+}
+
+/* ===== Small phone ===== */
+
+@media (max-width: 374px) {
+  .alumni-community-mobile-pro .community2-hero h1 {
+    font-size: 26px !important;
+  }
+
+  .alumni-community-mobile-pro .community2-tabs button {
+    font-size: 10px !important;
+  }
+
+  .alumni-community-mobile-pro .community2-row {
+    grid-template-columns:
+      40px
+      minmax(0,1fr)
+      15px !important;
+    gap: 9px !important;
+  }
+
+  .alumni-community-mobile-pro .community2-mark {
+    width: 37px !important;
+    height: 37px !important;
+  }
+
+  .alumni-community-mobile-pro .community2-category-list {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* ===== Desktop secondary ===== */
+
+@media (min-width: 700px) {
+  .alumni-community-mobile-pro {
+    max-width: 760px !important;
+  }
+
+  .alumni-community-mobile-pro .community2-primary-action {
+    width: auto !important;
+    min-width: 0 !important;
+    padding: 0 14px !important;
+    gap: 7px !important;
+    font-size: 10px !important;
+  }
+
+  .alumni-community-mobile-pro .community2-navigation {
+    display: grid !important;
+    grid-template-columns: minmax(0,1fr) 220px;
+    align-items: end;
+    gap: 20px !important;
+  }
+
+  .alumni-community-mobile-pro .community2-search {
+    margin-top: 0;
+  }
+
+  .alumni-community-mobile-pro .community2-editor {
+    max-width: 720px !important;
+    margin: 0 auto;
+  }
+}
+
+/* ===== Motion ===== */
+
+@keyframes alumniCommunitiesMobileEnter {
+  from {
+    opacity: 0;
+    transform: translate3d(0,6px,0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0,0,0);
+  }
+}
+
+@keyframes alumniCommunitiesMobileRowIn {
+  from {
+    opacity: 0;
+    transform: translate3d(6px,0,0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0,0,0);
+  }
+}
+
+@keyframes alumniCommunitiesEditorBackdropIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes alumniCommunitiesEditorIn {
+  from {
+    opacity: 0;
+    transform: translate3d(0,10px,0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0,0,0);
+  }
+}
+
+@keyframes alumniCommunitiesEditorSectionIn {
+  from {
+    opacity: 0;
+    transform: translate3d(0,6px,0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0,0,0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .alumni-community-mobile-pro .community2-hero,
+  .alumni-community-mobile-pro .community2-navigation,
+  .alumni-community-mobile-pro .community2-row,
+  .alumni-community-mobile-pro .community2-empty,
+  .alumni-community-mobile-pro .community2-editor-backdrop,
+  .alumni-community-mobile-pro .community2-editor,
+  .alumni-community-mobile-pro .community2-editor-section {
+    animation: none !important;
+  }
+
+  .alumni-community-mobile-pro button,
+  .alumni-community-mobile-pro input,
+  .alumni-community-mobile-pro textarea,
+  .alumni-community-mobile-pro svg {
+    transition: none !important;
+  }
+}
+
+/* ALUMNI_COMMUNITIES_MOBILE_PRO_4_0 */

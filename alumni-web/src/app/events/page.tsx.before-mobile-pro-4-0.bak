@@ -25,7 +25,7 @@ import { useAuth } from "@/components/auth/AuthProvider";
 import { supabase } from "@/lib/supabase";
 import "./events-2.css";
 import "../interior-ui-1-0.css";
-import "./events-mobile-pro-4-0.css";
+import "./events-motion-3-0.css";
 
 type Filter = "upcoming" | "mine" | "past";
 
@@ -236,7 +236,7 @@ export default function EventsPage() {
 
   return (
     <AppShell>
-      <main className="alumni-events-2 alumni-events-mobile-pro mx-auto w-full max-w-[920px]" data-alumni-motion-ignore="true">
+      <main className="alumni-events-2 mx-auto w-full max-w-[920px]" data-alumni-motion-ignore="true">
         <header className="events2-hero">
           <div>
             <h1>Eventos</h1>
@@ -676,5 +676,3 @@ export default function EventsPage() {
 /* ALUMNI_3_1_1_PRODUCT_COPY_CLEANUP */
 
 /* ALUMNI_MICRO_IMPROVEMENTS_BLOCK_4:EVENTS_HOME */
-
-/* ALUMNI_EVENTS_MOBILE_PRO_4_0 */

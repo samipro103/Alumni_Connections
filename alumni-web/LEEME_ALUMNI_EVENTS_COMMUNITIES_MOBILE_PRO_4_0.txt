@@ -1,0 +1,66 @@
+ALUMNI — EVENTS + COMMUNITIES MOBILE PRO 4.0
+
+OBJETIVO
+Rehacer las páginas PRINCIPALES:
+- /events
+- /community
+
+DISEÑO BASE
+TELÉFONO primero: 360–430 px.
+
+IMPORTANTE
+Este parche NO rediseña:
+- /events/[id]
+- /community/[slug]
+
+EVENTOS
+- elimina el hero/glow anterior que se veía raro
+- título compacto
+- botón + limpio
+- tabs mobile reales
+- buscador plano
+- filas contenidas
+- mini fecha legible
+- textos sin overflow
+- editor Crear evento full-screen en teléfono
+- fields y selects limpios
+- tipos como chips
+- footer sticky
+- motion corto
+
+COMUNIDADES
+- elimina el hero/glow anterior
+- título compacto
+- botón + limpio
+- tabs mobile
+- buscador plano
+- filas contenidas
+- marca de comunidad limpia
+- textos sin overflow
+- editor Crear comunidad full-screen
+- categorías responsive
+- acceso público/privado limpio
+- footer sticky
+- motion corto
+
+NO CAMBIA
+- Supabase
+- consultas
+- filtros
+- RSVPs
+- creación de eventos
+- creación de comunidades
+- permisos
+- rutas
+- interiores de eventos/comunidades
+
+EJECUTAR
+
+node .\aplicar_alumni_events_communities_mobile_pro_4_0.js
+npm run build
+
+SI PASA
+
+git add .
+git commit -m "Redo events and communities mobile first"
+git push origin main
