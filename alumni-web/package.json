@@ -17,7 +17,10 @@
     "test:e2e:headed": "playwright test --headed",
     "test:e2e:install": "playwright install chromium",
     "qa": "npm run test && npm run typecheck && npm run build",
-    "qa:full": "npm run qa && npm run test:security && npm run test:e2e"
+    "qa:full": "npm run qa && npm run test:security && npm run test:e2e",
+    "design:audit": "node scripts/qa-design/audit_styles.js",
+    "test:visual": "playwright test -c playwright.visual.config.ts",
+    "test:visual:update": "playwright test -c playwright.visual.config.ts --update-snapshots"
   },
   "dependencies": {
     "@capacitor/android": "^8.5.0",
