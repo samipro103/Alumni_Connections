@@ -26,7 +26,6 @@ import SocialInvitePicker from "@/components/social/SocialInvitePicker";
 import "../community-2.css";
 import "./community-detail.css";
 import "../../interior-ui-1-0.css";
-import "../community-motion-3-0.css";
 
 export default function CommunityDetailPage() {
   const params = useParams<{ slug: string }>();
@@ -240,7 +239,7 @@ export default function CommunityDetailPage() {
 
   return (
     <AppShell>
-      <main className="community-detail mx-auto w-full max-w-[920px]" data-alumni-motion-ignore="true">
+      <main className="community-detail mx-auto w-full max-w-[920px]">
         <Link href="/community" className="community-detail-back">
           <ArrowLeft size={15} />
           Comunidades
@@ -508,5 +507,3 @@ export default function CommunityDetailPage() {
 
 /* ALUMNI_2_1_COMMUNITY_DETAIL */
 /* ALUMNI_2_1_2_COMMUNITY_INVITES */
-
-/* ALUMNI_MICRO_IMPROVEMENTS_BLOCK_5:COMMUNITY_DETAIL */

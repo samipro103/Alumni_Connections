@@ -1,0 +1,1711 @@
+/*
+ * ALUMNI_MICRO_IMPROVEMENTS_BLOCK_5
+ * Comunidades — discovery, detail y create.
+ * Mobile-first, limpio, premium, motion explícito.
+ */
+
+.alumni-community-2,
+.community-detail {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  overflow-x: clip;
+}
+
+/* =========================================================
+   COMMUNITY HOME — HERO
+   ========================================================= */
+
+.community2-hero {
+  position: relative;
+  isolation: isolate;
+  align-items: center !important;
+  min-height: 104px;
+  gap: 16px !important;
+  padding:
+    17px 1px 22px !important;
+  overflow: hidden;
+  border-bottom:
+    1px solid
+    color-mix(
+      in srgb,
+      var(--app-border) 78%,
+      transparent
+    ) !important;
+  animation:
+    alumniCommunityHeroIn
+    .48s
+    cubic-bezier(.2,.8,.2,1)
+    both;
+}
+
+.community2-hero::before,
+.community2-hero::after {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  pointer-events: none;
+}
+
+.community2-hero::before {
+  top: -78px;
+  right: -66px;
+  width: 196px;
+  height: 196px;
+  border-radius: 999px;
+  background:
+    radial-gradient(
+      circle,
+      color-mix(
+        in srgb,
+        var(--app-accent) 13%,
+        transparent
+      ) 0%,
+      color-mix(
+        in srgb,
+        var(--app-accent) 4%,
+        transparent
+      ) 42%,
+      transparent 72%
+    );
+  animation:
+    alumniCommunityGlowFloat
+    7.4s
+    ease-in-out
+    infinite;
+}
+
+.community2-hero::after {
+  right: 64px;
+  bottom: 18px;
+  width: 56px;
+  height: 20px;
+  background:
+    radial-gradient(
+      circle at 6px 10px,
+      color-mix(
+        in srgb,
+        var(--app-accent) 68%,
+        transparent
+      ) 0 2px,
+      transparent 2.5px
+    ),
+    radial-gradient(
+      circle at 28px 4px,
+      color-mix(
+        in srgb,
+        var(--app-accent) 44%,
+        transparent
+      ) 0 2px,
+      transparent 2.5px
+    ),
+    radial-gradient(
+      circle at 50px 15px,
+      color-mix(
+        in srgb,
+        var(--app-accent) 58%,
+        transparent
+      ) 0 2px,
+      transparent 2.5px
+    ),
+    linear-gradient(
+      25deg,
+      transparent 0 28%,
+      color-mix(
+        in srgb,
+        var(--app-accent) 20%,
+        transparent
+      ) 29% 31%,
+      transparent 32% 100%
+    );
+  opacity: .8;
+  animation:
+    alumniCommunityNodesPulse
+    3.6s
+    ease-in-out
+    infinite;
+}
+
+.community2-hero h1 {
+  margin: 0 !important;
+  color: var(--app-text);
+  font-size:
+    clamp(
+      34px,
+      10vw,
+      48px
+    ) !important;
+  font-weight:
+    950 !important;
+  line-height:
+    .98 !important;
+  letter-spacing:
+    -.055em !important;
+}
+
+.community2-primary-action {
+  display: inline-flex !important;
+  min-height: 42px !important;
+  align-items: center;
+  justify-content: center;
+  gap: 7px !important;
+  padding:
+    0 14px !important;
+  border:
+    1px solid
+    color-mix(
+      in srgb,
+      var(--app-accent) 24%,
+      transparent
+    ) !important;
+  border-bottom:
+    1px solid
+    color-mix(
+      in srgb,
+      var(--app-accent) 24%,
+      transparent
+    ) !important;
+  border-radius:
+    999px !important;
+  background:
+    color-mix(
+      in srgb,
+      var(--app-accent) 11%,
+      var(--app-surface)
+    ) !important;
+  color:
+    var(--app-text) !important;
+  box-shadow:
+    0 9px 25px
+    color-mix(
+      in srgb,
+      var(--app-accent) 9%,
+      transparent
+    );
+  transition:
+    transform 150ms cubic-bezier(.2,.8,.2,1),
+    border-color 160ms ease,
+    background-color 160ms ease,
+    box-shadow 180ms ease !important;
+}
+
+.community2-primary-action svg {
+  color:
+    var(--app-accent);
+  transition:
+    transform 200ms
+    cubic-bezier(.2,.8,.2,1);
+}
+
+.community2-primary-action:hover svg {
+  transform:
+    rotate(90deg);
+}
+
+.community2-primary-action:active {
+  transform:
+    scale(.95);
+  box-shadow:
+    0 5px 15px
+    color-mix(
+      in srgb,
+      var(--app-accent) 7%,
+      transparent
+    );
+}
+
+/* =========================================================
+   NAV / SEARCH
+   ========================================================= */
+
+.community2-navigation {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  gap:
+    15px !important;
+  border-bottom:
+    1px solid
+    var(--app-border) !important;
+  animation:
+    alumniCommunitySoftUp
+    .46s
+    cubic-bezier(.2,.8,.2,1)
+    both;
+  animation-delay:
+    .05s;
+}
+
+.community2-tabs {
+  min-width: 0;
+}
+
+.community2-tabs button {
+  transition:
+    color 160ms ease,
+    transform 150ms
+    cubic-bezier(.2,.8,.2,1);
+}
+
+.community2-tabs button:active {
+  transform:
+    scale(.96);
+}
+
+.community2-tabs
+button[data-active="true"]::after {
+  border-radius:
+    999px;
+  box-shadow:
+    0 0 12px
+    color-mix(
+      in srgb,
+      var(--app-accent) 25%,
+      transparent
+    );
+  animation:
+    alumniCommunityTabIn
+    .28s
+    cubic-bezier(.2,.8,.2,1)
+    both;
+}
+
+.community2-search {
+  position: relative;
+  min-width: 0;
+  transition:
+    color 160ms ease;
+}
+
+.community2-search::after {
+  content: "";
+  position: absolute;
+  right: 0;
+  bottom: 4px;
+  left: 0;
+  height: 1px;
+  background:
+    var(--app-border);
+  transform-origin:
+    center;
+  transition:
+    background-color 160ms ease,
+    transform 180ms
+    cubic-bezier(.2,.8,.2,1);
+}
+
+.community2-search:focus-within {
+  color:
+    var(--app-accent);
+}
+
+.community2-search:focus-within::after {
+  background:
+    color-mix(
+      in srgb,
+      var(--app-accent) 58%,
+      var(--app-border)
+    );
+  transform:
+    scaleX(1.03);
+}
+
+.community2-search svg {
+  transition:
+    transform 180ms
+    cubic-bezier(.2,.8,.2,1);
+}
+
+.community2-search:focus-within svg {
+  transform:
+    scale(1.08);
+}
+
+/* =========================================================
+   COMMUNITY LIST
+   ========================================================= */
+
+.community2-list {
+  min-width: 0;
+}
+
+.community2-row {
+  position: relative;
+  min-width: 0;
+  overflow: hidden;
+  transition:
+    background-color 160ms ease,
+    transform 160ms
+    cubic-bezier(.2,.8,.2,1) !important;
+  animation:
+    alumniCommunityRowIn
+    .42s
+    cubic-bezier(.2,.8,.2,1)
+    both;
+}
+
+.community2-row:nth-child(1) { animation-delay: .03s; }
+.community2-row:nth-child(2) { animation-delay: .06s; }
+.community2-row:nth-child(3) { animation-delay: .09s; }
+.community2-row:nth-child(4) { animation-delay: .12s; }
+.community2-row:nth-child(5) { animation-delay: .15s; }
+.community2-row:nth-child(6) { animation-delay: .18s; }
+.community2-row:nth-child(7) { animation-delay: .21s; }
+.community2-row:nth-child(8) { animation-delay: .24s; }
+
+.community2-row::before {
+  content: "";
+  position: absolute;
+  top: 14px;
+  bottom: 14px;
+  left: 0;
+  width: 2px;
+  border-radius: 99px;
+  background:
+    var(--app-accent);
+  opacity: 0;
+  transform:
+    scaleY(.35);
+  transition:
+    opacity 160ms ease,
+    transform 180ms
+    cubic-bezier(.2,.8,.2,1);
+}
+
+.community2-row:hover::before,
+.community2-row:active::before {
+  opacity: .8;
+  transform:
+    scaleY(1);
+}
+
+.community2-row:active {
+  transform:
+    translate3d(2px,0,0);
+}
+
+.community2-mark {
+  position: relative;
+  border:
+    1px solid
+    color-mix(
+      in srgb,
+      var(--app-accent) 18%,
+      var(--app-border)
+    ) !important;
+  background:
+    color-mix(
+      in srgb,
+      var(--app-accent) 6%,
+      var(--app-surface)
+    );
+  box-shadow:
+    0 6px 18px
+    color-mix(
+      in srgb,
+      var(--app-shadow) 12%,
+      transparent
+    );
+  transition:
+    transform 180ms
+    cubic-bezier(.2,.8,.2,1),
+    border-color 160ms ease;
+}
+
+.community2-row:hover
+.community2-mark,
+.community2-row:active
+.community2-mark {
+  transform:
+    scale(1.04)
+    rotate(-2deg);
+  border-color:
+    color-mix(
+      in srgb,
+      var(--app-accent) 38%,
+      var(--app-border)
+    ) !important;
+}
+
+.community2-row-main > strong {
+  max-width: 100%;
+}
+
+.community2-row > svg {
+  transition:
+    transform 170ms
+    cubic-bezier(.2,.8,.2,1),
+    color 160ms ease;
+}
+
+.community2-row:hover > svg,
+.community2-row:active > svg {
+  color:
+    var(--app-accent);
+  transform:
+    translateX(2px);
+}
+
+/* =========================================================
+   EMPTY
+   ========================================================= */
+
+.community2-empty {
+  animation:
+    alumniCommunitySoftUp
+    .42s
+    cubic-bezier(.2,.8,.2,1)
+    both;
+}
+
+.community2-empty svg {
+  color:
+    var(--app-accent);
+  filter:
+    drop-shadow(
+      0 5px 14px
+      color-mix(
+        in srgb,
+        var(--app-accent) 18%,
+        transparent
+      )
+    );
+  animation:
+    alumniCommunityEmptyFloat
+    3.8s
+    ease-in-out
+    infinite;
+}
+
+/* =========================================================
+   CREATE COMMUNITY
+   ========================================================= */
+
+.community2-editor-backdrop {
+  animation:
+    alumniCommunityBackdropIn
+    .20s
+    ease-out
+    both;
+}
+
+.community2-editor {
+  animation:
+    alumniCommunityEditorIn
+    .38s
+    cubic-bezier(.2,.8,.2,1)
+    both;
+}
+
+.community2-editor-header {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  background:
+    color-mix(
+      in srgb,
+      var(--app-bg) 84%,
+      transparent
+    ) !important;
+  backdrop-filter:
+    blur(18px)
+    saturate(1.07) !important;
+  -webkit-backdrop-filter:
+    blur(18px)
+    saturate(1.07) !important;
+}
+
+.community2-editor-back {
+  border-radius:
+    999px !important;
+  transition:
+    transform 150ms
+    cubic-bezier(.2,.8,.2,1),
+    color 160ms ease;
+}
+
+.community2-editor-back:active {
+  transform:
+    translateX(-2px)
+    scale(.97);
+  color:
+    var(--app-text);
+}
+
+.community2-editor-section {
+  animation:
+    alumniCommunityEditorSectionIn
+    .44s
+    cubic-bezier(.2,.8,.2,1)
+    both;
+}
+
+.community2-editor-section:nth-child(2) {
+  animation-delay: .06s;
+}
+
+.community2-editor-section:nth-child(3) {
+  animation-delay: .12s;
+}
+
+.community2-step > strong {
+  text-shadow:
+    0 0 14px
+    color-mix(
+      in srgb,
+      var(--app-accent) 24%,
+      transparent
+    );
+}
+
+.community2-field input,
+.community2-field textarea {
+  transition:
+    border-color 180ms ease,
+    color 180ms ease !important;
+}
+
+.community2-category-list button,
+.community2-access-list button {
+  transition:
+    background-color 160ms ease,
+    color 160ms ease,
+    transform 150ms
+    cubic-bezier(.2,.8,.2,1);
+}
+
+.community2-category-list button:active,
+.community2-access-list button:active {
+  transform:
+    scale(.992);
+}
+
+.community2-category-list
+button[data-active="true"],
+.community2-access-list
+button[data-active="true"] {
+  background:
+    linear-gradient(
+      90deg,
+      color-mix(
+        in srgb,
+        var(--app-accent) 5%,
+        transparent
+      ),
+      transparent 74%
+    ) !important;
+}
+
+.community2-category-list
+button[data-active="true"] svg,
+.community2-access-list
+button[data-active="true"] svg {
+  filter:
+    drop-shadow(
+      0 0 8px
+      color-mix(
+        in srgb,
+        var(--app-accent) 28%,
+        transparent
+      )
+    );
+}
+
+.community2-category-list
+button[data-active="true"]::after,
+.community2-access-list
+button[data-active="true"]::after {
+  box-shadow:
+    0 0 0 4px
+    color-mix(
+      in srgb,
+      var(--app-accent) 9%,
+      transparent
+    );
+  animation:
+    alumniCommunityChoicePop
+    .24s
+    cubic-bezier(.2,.8,.2,1)
+    both;
+}
+
+.community2-editor-footer {
+  background:
+    color-mix(
+      in srgb,
+      var(--app-bg) 85%,
+      transparent
+    ) !important;
+  backdrop-filter:
+    blur(18px)
+    saturate(1.07) !important;
+  -webkit-backdrop-filter:
+    blur(18px)
+    saturate(1.07) !important;
+}
+
+.community2-editor-footer button {
+  border-radius:
+    999px !important;
+  box-shadow:
+    0 9px 26px
+    color-mix(
+      in srgb,
+      var(--app-accent) 16%,
+      transparent
+    );
+  transition:
+    transform 150ms
+    cubic-bezier(.2,.8,.2,1),
+    box-shadow 170ms ease,
+    opacity 150ms ease;
+}
+
+.community2-editor-footer
+button:not(:disabled):active {
+  transform:
+    scale(.95);
+  box-shadow:
+    0 5px 16px
+    color-mix(
+      in srgb,
+      var(--app-accent) 11%,
+      transparent
+    );
+}
+
+/* =========================================================
+   COMMUNITY DETAIL — HEADER
+   ========================================================= */
+
+.community-detail {
+  position: relative;
+}
+
+.community-detail-back {
+  min-height:
+    38px !important;
+  padding:
+    0 10px 0 8px;
+  border-radius:
+    999px;
+  transition:
+    transform 150ms
+    cubic-bezier(.2,.8,.2,1),
+    color 160ms ease,
+    background-color 160ms ease;
+  animation:
+    alumniCommunitySoftUp
+    .34s
+    cubic-bezier(.2,.8,.2,1)
+    both;
+}
+
+.community-detail-back:active {
+  transform:
+    translateX(-2px)
+    scale(.96);
+  background:
+    var(--app-soft);
+  color:
+    var(--app-text);
+}
+
+.community-detail-header {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  padding:
+    16px 0 30px !important;
+  animation:
+    alumniCommunityDetailHeroIn
+    .52s
+    cubic-bezier(.2,.8,.2,1)
+    both;
+}
+
+.community-detail-header::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  top: -112px;
+  right: -92px;
+  width: 250px;
+  height: 250px;
+  border-radius: 999px;
+  background:
+    radial-gradient(
+      circle,
+      color-mix(
+        in srgb,
+        var(--app-accent) 12%,
+        transparent
+      ),
+      transparent 68%
+    );
+  pointer-events: none;
+  animation:
+    alumniCommunityGlowFloat
+    7.8s
+    ease-in-out
+    infinite;
+}
+
+.community-detail-title {
+  min-width: 0;
+}
+
+.community-detail-title > span {
+  display:
+    inline-flex !important;
+  width:
+    fit-content;
+  min-height:
+    24px;
+  padding:
+    0 8px;
+  border:
+    1px solid
+    color-mix(
+      in srgb,
+      var(--app-accent) 18%,
+      var(--app-border)
+    );
+  border-radius:
+    999px;
+  background:
+    color-mix(
+      in srgb,
+      var(--app-accent) 6%,
+      transparent
+    );
+  color:
+    var(--app-accent) !important;
+}
+
+.community-detail-title h1 {
+  max-width:
+    760px;
+  margin-top:
+    12px !important;
+  font-size:
+    clamp(
+      38px,
+      10vw,
+      60px
+    ) !important;
+  line-height:
+    .98 !important;
+  text-wrap:
+    balance;
+}
+
+.community-detail-title > p {
+  max-width:
+    680px !important;
+  font-size:
+    13.5px !important;
+  line-height:
+    1.68 !important;
+}
+
+.community-detail-meta {
+  gap:
+    9px 13px !important;
+}
+
+.community-detail-meta span,
+.community-detail-meta button {
+  min-width: 0;
+  transition:
+    color 160ms ease,
+    transform 150ms
+    cubic-bezier(.2,.8,.2,1);
+}
+
+.community-detail-meta button:active {
+  transform:
+    scale(.96);
+  color:
+    var(--app-accent);
+}
+
+.community-detail-actions {
+  flex-wrap: wrap;
+}
+
+.community-detail-actions > *,
+.community-detail-join {
+  transition:
+    transform 150ms
+    cubic-bezier(.2,.8,.2,1),
+    color 160ms ease,
+    background-color 160ms ease,
+    border-color 160ms ease;
+}
+
+.community-detail-actions > *:active,
+.community-detail-join:active {
+  transform:
+    scale(.96);
+}
+
+.community-detail-join {
+  min-height:
+    40px !important;
+  padding:
+    0 13px;
+  border:
+    1px solid
+    color-mix(
+      in srgb,
+      var(--app-accent) 18%,
+      var(--app-border)
+    ) !important;
+  border-radius:
+    999px;
+  background:
+    color-mix(
+      in srgb,
+      var(--app-accent) 7%,
+      transparent
+    ) !important;
+}
+
+.community-detail-join:disabled {
+  border-color:
+    var(--app-border) !important;
+  background:
+    transparent !important;
+}
+
+/* =========================================================
+   COMPOSER
+   ========================================================= */
+
+.community-composer {
+  position: relative;
+  padding:
+    21px 0 !important;
+  animation:
+    alumniCommunitySoftUp
+    .46s
+    cubic-bezier(.2,.8,.2,1)
+    both;
+  animation-delay:
+    .05s;
+}
+
+.community-composer textarea {
+  min-height:
+    100px !important;
+  padding:
+    10px 0 12px;
+  border:
+    0 !important;
+  border-radius:
+    0 !important;
+  background:
+    transparent !important;
+  font-size:
+    14px !important;
+  transition:
+    color 160ms ease;
+}
+
+.community-composer > div {
+  border-top:
+    1px solid
+    var(--app-border) !important;
+}
+
+.community-composer button {
+  min-height:
+    36px;
+  padding:
+    0 10px;
+  border-radius:
+    999px;
+  transition:
+    transform 150ms
+    cubic-bezier(.2,.8,.2,1),
+    background-color 160ms ease,
+    color 160ms ease;
+}
+
+.community-composer
+button:not(:disabled):active {
+  transform:
+    scale(.94);
+  background:
+    color-mix(
+      in srgb,
+      var(--app-accent) 7%,
+      transparent
+    );
+}
+
+/* =========================================================
+   COMMUNITY EVENTS
+   ========================================================= */
+
+.community-events-strip {
+  animation:
+    alumniCommunitySoftUp
+    .46s
+    cubic-bezier(.2,.8,.2,1)
+    both;
+  animation-delay:
+    .10s;
+}
+
+.community-events-strip
+> header a {
+  position: relative;
+  padding-bottom:
+    2px;
+}
+
+.community-events-strip
+> header a::after {
+  content: "";
+  position: absolute;
+  right: 0;
+  bottom: -2px;
+  left: 0;
+  height: 1px;
+  background:
+    var(--app-accent);
+  transform:
+    scaleX(.35);
+  transform-origin:
+    left;
+  transition:
+    transform 180ms
+    cubic-bezier(.2,.8,.2,1);
+}
+
+.community-events-strip
+> header a:hover::after,
+.community-events-strip
+> header a:active::after {
+  transform:
+    scaleX(1);
+}
+
+.community-event-row {
+  position: relative;
+  transition:
+    background-color 160ms ease,
+    transform 150ms
+    cubic-bezier(.2,.8,.2,1);
+  animation:
+    alumniCommunityEventIn
+    .34s
+    cubic-bezier(.2,.8,.2,1)
+    both;
+}
+
+.community-event-row:nth-child(2) { animation-delay: .03s; }
+.community-event-row:nth-child(3) { animation-delay: .06s; }
+.community-event-row:nth-child(4) { animation-delay: .09s; }
+
+.community-event-row:active {
+  transform:
+    translateX(2px);
+}
+
+.community-event-row > svg {
+  color:
+    var(--app-accent);
+  transition:
+    transform 160ms
+    cubic-bezier(.2,.8,.2,1);
+}
+
+.community-event-row:hover > svg,
+.community-event-row:active > svg {
+  transform:
+    scale(1.08);
+}
+
+/* =========================================================
+   COMMUNITY FEED
+   ========================================================= */
+
+.community-feed {
+  animation:
+    alumniCommunitySoftUp
+    .46s
+    cubic-bezier(.2,.8,.2,1)
+    both;
+  animation-delay:
+    .14s;
+}
+
+.community-post {
+  position: relative;
+  overflow: hidden;
+  animation:
+    alumniCommunityPostIn
+    .40s
+    cubic-bezier(.2,.8,.2,1)
+    both;
+}
+
+.community-post:nth-of-type(2) { animation-delay: .03s; }
+.community-post:nth-of-type(3) { animation-delay: .06s; }
+.community-post:nth-of-type(4) { animation-delay: .09s; }
+.community-post:nth-of-type(5) { animation-delay: .12s; }
+
+.community-post::before {
+  content: "";
+  position: absolute;
+  top: 20px;
+  bottom: 20px;
+  left: 0;
+  width: 2px;
+  border-radius: 99px;
+  background:
+    var(--app-accent);
+  opacity: 0;
+  transform:
+    scaleY(.35);
+  transition:
+    opacity 160ms ease,
+    transform 180ms
+    cubic-bezier(.2,.8,.2,1);
+}
+
+.community-post:hover::before {
+  opacity: .55;
+  transform:
+    scaleY(1);
+}
+
+.community-post-avatar {
+  box-shadow:
+    0 5px 16px
+    color-mix(
+      in srgb,
+      var(--app-shadow) 13%,
+      transparent
+    );
+  transition:
+    transform 170ms
+    cubic-bezier(.2,.8,.2,1);
+}
+
+.community-post > header a:active
+.community-post-avatar {
+  transform:
+    scale(.94);
+}
+
+/* =========================================================
+   MEMBERS MODAL
+   ========================================================= */
+
+.community2-modal-backdrop {
+  backdrop-filter:
+    blur(10px);
+  -webkit-backdrop-filter:
+    blur(10px);
+  animation:
+    alumniCommunityBackdropIn
+    .20s ease-out both;
+}
+
+.community-members-modal {
+  animation:
+    alumniCommunityMembersIn
+    .34s
+    cubic-bezier(.2,.8,.2,1)
+    both;
+}
+
+.community-member-row {
+  animation:
+    alumniCommunityMemberIn
+    .32s
+    cubic-bezier(.2,.8,.2,1)
+    both;
+}
+
+.community-member-row:nth-child(2) { animation-delay: .025s; }
+.community-member-row:nth-child(3) { animation-delay: .05s; }
+.community-member-row:nth-child(4) { animation-delay: .075s; }
+.community-member-row:nth-child(5) { animation-delay: .10s; }
+
+.community-member-row button {
+  transition:
+    transform 150ms
+    cubic-bezier(.2,.8,.2,1),
+    background-color 160ms ease;
+}
+
+.community-member-row button:active {
+  transform:
+    scale(.92);
+}
+
+/* =========================================================
+   MOBILE
+   ========================================================= */
+
+@media (max-width: 680px) {
+  .alumni-community-2 {
+    padding-top:
+      0 !important;
+  }
+
+  .community2-hero {
+    min-height:
+      92px;
+    align-items:
+      center !important;
+    flex-direction:
+      row !important;
+    gap:
+      12px !important;
+    padding-top:
+      12px !important;
+    padding-bottom:
+      17px !important;
+  }
+
+  .community2-hero > div {
+    min-width: 0;
+    flex: 1 1 auto;
+  }
+
+  .community2-hero h1 {
+    font-size:
+      34px !important;
+  }
+
+  .community2-primary-action {
+    width:
+      42px;
+    min-width:
+      42px;
+    height:
+      42px;
+    padding:
+      0 !important;
+    font-size:
+      0 !important;
+  }
+
+  .community2-primary-action svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  .community2-navigation {
+    display:
+      grid !important;
+    gap:
+      0 !important;
+    min-height:
+      0 !important;
+    padding-bottom:
+      0 !important;
+  }
+
+  .community2-tabs {
+    display:
+      grid !important;
+    grid-template-columns:
+      repeat(
+        2,
+        minmax(0,1fr)
+      );
+    width:
+      100%;
+    gap:
+      0 !important;
+  }
+
+  .community2-tabs button {
+    min-width:
+      0;
+    min-height:
+      48px !important;
+    font-size:
+      10.5px !important;
+  }
+
+  .community2-tabs
+  button[data-active="true"]::after {
+    right:
+      16px !important;
+    left:
+      16px !important;
+  }
+
+  .community2-search {
+    width:
+      100% !important;
+    max-width:
+      none !important;
+    min-height:
+      49px !important;
+  }
+
+  .community2-search::after {
+    bottom:
+      0;
+  }
+
+  .community2-row {
+    grid-template-columns:
+      43px
+      minmax(0,1fr)
+      18px !important;
+    min-height:
+      88px !important;
+    gap:
+      10px !important;
+  }
+
+  .community2-mark {
+    width:
+      36px !important;
+    height:
+      36px !important;
+  }
+
+  .community2-row-main > strong {
+    font-size:
+      14px !important;
+  }
+
+  .community2-row-main > small {
+    max-width:
+      100%;
+  }
+
+  .community2-editor-header {
+    grid-template-columns:
+      74px
+      minmax(0,1fr)
+      auto !important;
+    gap:
+      10px !important;
+    padding-left:
+      14px !important;
+    padding-right:
+      14px !important;
+  }
+
+  .community2-editor-back {
+    grid-column:
+      auto !important;
+  }
+
+  .community2-editor-body {
+    padding-inline:
+      14px !important;
+  }
+
+  .community2-editor-section {
+    grid-template-columns:
+      1fr !important;
+    gap:
+      16px !important;
+    padding:
+      24px 0 27px !important;
+  }
+
+  .community2-step {
+    padding-bottom:
+      0 !important;
+    border-bottom:
+      0 !important;
+  }
+
+  .community2-context-fields {
+    grid-template-columns:
+      1fr !important;
+  }
+
+  .community2-editor-footer {
+    padding-left:
+      14px !important;
+    padding-right:
+      14px !important;
+  }
+
+  .community-detail {
+    padding-top:
+      12px !important;
+  }
+
+  .community-detail-header {
+    gap:
+      18px !important;
+    padding-top:
+      10px !important;
+  }
+
+  .community-detail-title h1 {
+    font-size:
+      40px !important;
+  }
+
+  .community-detail-meta {
+    display:
+      flex !important;
+    max-width:
+      100%;
+  }
+
+  .community-detail-actions {
+    width:
+      100%;
+    justify-content:
+      flex-start !important;
+  }
+
+  .community-composer textarea {
+    min-height:
+      92px !important;
+  }
+
+  .community-events-strip
+  > header,
+  .community-feed
+  > header {
+    min-width: 0;
+  }
+
+  .community-event-row {
+    min-width: 0;
+  }
+
+  .community-event-row span {
+    min-width: 0;
+  }
+
+  .community-event-row strong,
+  .community-event-row small {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .community-post > p {
+    font-size:
+      13.5px !important;
+    line-height:
+      1.6 !important;
+  }
+
+  .community-members-modal {
+    max-height:
+      88dvh;
+    border-radius:
+      26px 26px 0 0 !important;
+  }
+}
+
+@media (max-width: 374px) {
+  .community2-hero h1 {
+    font-size:
+      31px !important;
+  }
+
+  .community2-row {
+    grid-template-columns:
+      40px
+      minmax(0,1fr)
+      16px !important;
+    gap:
+      9px !important;
+  }
+
+  .community2-row-kicker {
+    font-size:
+      8px !important;
+  }
+
+  .community2-row-main > strong {
+    font-size:
+      13.5px !important;
+  }
+
+  .community-detail-title h1 {
+    font-size:
+      36px !important;
+  }
+
+  .community-detail-actions {
+    gap:
+      9px !important;
+  }
+}
+
+/* =========================================================
+   MOTION
+   ========================================================= */
+
+@keyframes alumniCommunityHeroIn {
+  from {
+    opacity: 0;
+    transform:
+      translate3d(0,10px,0);
+  }
+  to {
+    opacity: 1;
+    transform:
+      translate3d(0,0,0);
+  }
+}
+
+@keyframes alumniCommunitySoftUp {
+  from {
+    opacity: 0;
+    transform:
+      translate3d(0,7px,0);
+  }
+  to {
+    opacity: 1;
+    transform:
+      translate3d(0,0,0);
+  }
+}
+
+@keyframes alumniCommunityRowIn {
+  from {
+    opacity: 0;
+    transform:
+      translate3d(8px,0,0);
+  }
+  to {
+    opacity: 1;
+    transform:
+      translate3d(0,0,0);
+  }
+}
+
+@keyframes alumniCommunityTabIn {
+  from {
+    opacity: 0;
+    transform:
+      scaleX(.28);
+  }
+  to {
+    opacity: 1;
+    transform:
+      scaleX(1);
+  }
+}
+
+@keyframes alumniCommunityGlowFloat {
+  0%,100% {
+    transform:
+      translate3d(0,0,0)
+      scale(1);
+  }
+  50% {
+    transform:
+      translate3d(-10px,8px,0)
+      scale(1.05);
+  }
+}
+
+@keyframes alumniCommunityNodesPulse {
+  0%,100% {
+    opacity: .42;
+    transform:
+      scale(.95);
+  }
+  50% {
+    opacity: .9;
+    transform:
+      scale(1.04);
+  }
+}
+
+@keyframes alumniCommunityEmptyFloat {
+  0%,100% {
+    transform:
+      translate3d(0,0,0);
+  }
+  50% {
+    transform:
+      translate3d(0,-5px,0)
+      rotate(-2deg);
+  }
+}
+
+@keyframes alumniCommunityBackdropIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes alumniCommunityEditorIn {
+  from {
+    opacity: 0;
+    transform:
+      translate3d(0,18px,0)
+      scale(.992);
+  }
+  to {
+    opacity: 1;
+    transform:
+      translate3d(0,0,0)
+      scale(1);
+  }
+}
+
+@keyframes alumniCommunityEditorSectionIn {
+  from {
+    opacity: 0;
+    transform:
+      translate3d(0,9px,0);
+  }
+  to {
+    opacity: 1;
+    transform:
+      translate3d(0,0,0);
+  }
+}
+
+@keyframes alumniCommunityChoicePop {
+  from {
+    transform:
+      scale(.55);
+  }
+  to {
+    transform:
+      scale(1);
+  }
+}
+
+@keyframes alumniCommunityDetailHeroIn {
+  from {
+    opacity: 0;
+    transform:
+      translate3d(0,10px,0);
+  }
+  to {
+    opacity: 1;
+    transform:
+      translate3d(0,0,0);
+  }
+}
+
+@keyframes alumniCommunityEventIn {
+  from {
+    opacity: 0;
+    transform:
+      translate3d(5px,0,0);
+  }
+  to {
+    opacity: 1;
+    transform:
+      translate3d(0,0,0);
+  }
+}
+
+@keyframes alumniCommunityPostIn {
+  from {
+    opacity: 0;
+    transform:
+      translate3d(0,7px,0);
+  }
+  to {
+    opacity: 1;
+    transform:
+      translate3d(0,0,0);
+  }
+}
+
+@keyframes alumniCommunityMembersIn {
+  from {
+    opacity: 0;
+    transform:
+      translate3d(0,14px,0)
+      scale(.99);
+  }
+  to {
+    opacity: 1;
+    transform:
+      translate3d(0,0,0)
+      scale(1);
+  }
+}
+
+@keyframes alumniCommunityMemberIn {
+  from {
+    opacity: 0;
+    transform:
+      translate3d(5px,0,0);
+  }
+  to {
+    opacity: 1;
+    transform:
+      translate3d(0,0,0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .community2-hero,
+  .community2-navigation,
+  .community2-row,
+  .community2-empty,
+  .community2-empty svg,
+  .community2-editor-backdrop,
+  .community2-editor,
+  .community2-editor-section,
+  .community-detail-back,
+  .community-detail-header,
+  .community-composer,
+  .community-events-strip,
+  .community-event-row,
+  .community-feed,
+  .community-post,
+  .community2-modal-backdrop,
+  .community-members-modal,
+  .community-member-row,
+  .community2-hero::before,
+  .community2-hero::after,
+  .community-detail-header::before {
+    animation:
+      none !important;
+  }
+
+  .community2-primary-action,
+  .community2-primary-action svg,
+  .community2-tabs button,
+  .community2-search,
+  .community2-search::after,
+  .community2-search svg,
+  .community2-row,
+  .community2-row::before,
+  .community2-mark,
+  .community2-row > svg,
+  .community2-editor-back,
+  .community2-category-list button,
+  .community2-access-list button,
+  .community2-editor-footer button,
+  .community-detail-back,
+  .community-detail-meta span,
+  .community-detail-meta button,
+  .community-detail-actions > *,
+  .community-detail-join,
+  .community-composer button,
+  .community-events-strip > header a::after,
+  .community-event-row,
+  .community-event-row > svg,
+  .community-post::before,
+  .community-post-avatar,
+  .community-member-row button {
+    transition:
+      none !important;
+  }
+}
+
+/* ALUMNI_MICRO_IMPROVEMENTS_BLOCK_5 */
