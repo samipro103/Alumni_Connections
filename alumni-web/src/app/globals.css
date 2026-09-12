@@ -6103,3 +6103,49 @@ button[data-active="true"] {
 /* ALUMNI_2_9_0_IMAGE_CSS */
 
 /* ALUMNI_GLOBAL_STYLE_CONSOLIDATION_4_2:END */
+
+/* =========================================================
+   ALUMNI_MOBILE_FOCUS_EVENTS_POLISH_5_1
+   Mobile field focus normalization.
+   Removes native square outlines/rings while preserving
+   each component's own border/background focus state.
+   ========================================================= */
+
+:where(
+  input,
+  textarea,
+  select,
+  [contenteditable="true"]
+):focus,
+:where(
+  input,
+  textarea,
+  select,
+  [contenteditable="true"]
+):focus-visible {
+  outline: none !important;
+  --tw-ring-offset-shadow: 0 0 #0000 !important;
+  --tw-ring-shadow: 0 0 #0000 !important;
+}
+
+input[type="search"] {
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+input[type="search"]::-webkit-search-decoration,
+input[type="search"]::-webkit-search-cancel-button,
+input[type="search"]::-webkit-search-results-button,
+input[type="search"]::-webkit-search-results-decoration {
+  -webkit-appearance: none;
+}
+
+@media (pointer: coarse) {
+  input,
+  textarea,
+  select {
+    font-size: max(16px, 1em);
+  }
+}
+
+/* ALUMNI_MOBILE_FOCUS_EVENTS_POLISH_5_1:GLOBALS */

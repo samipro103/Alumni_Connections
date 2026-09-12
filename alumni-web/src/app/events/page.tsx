@@ -309,6 +309,18 @@ export default function EventsPage() {
         </header>
 
         <div className="events2-navigation">
+          <label className="events2-search">
+            <Search size={15} />
+            <input
+              value={query}
+              onChange={(event) =>
+                setQuery(event.target.value)
+              }
+              placeholder="Buscar evento"
+              aria-label="Buscar evento"
+            />
+          </label>
+
           <div className="events2-tabs">
             {[
               ["upcoming", "Próximos"],
@@ -325,17 +337,6 @@ export default function EventsPage() {
               </button>
             ))}
           </div>
-
-          <label className="events2-search">
-            <Search size={15} />
-            <input
-              value={query}
-              onChange={(event) =>
-                setQuery(event.target.value)
-              }
-              placeholder="Buscar evento"
-            />
-          </label>
         </div>
 
         {loading ? (
@@ -586,7 +587,6 @@ export default function EventsPage() {
                                   }))
                                 }
                                 placeholder="Ej. Reencuentro generación 2022"
-                                autoFocus
                               />
                               <small>
                                 {form.title.length}/100
@@ -686,8 +686,7 @@ export default function EventsPage() {
                                         event.target.value,
                                     }))
                                   }
-                                  autoFocus
-                                />
+                              />
                               </label>
 
                               <label className="events2-field">
@@ -1029,3 +1028,5 @@ export default function EventsPage() {
 /* ALUMNI_EVENTS_COMMUNITIES_STYLE_CONSOLIDATION_4_1:EVENTS:MAIN */
 
 /* ALUMNI_CREATE_EXPERIENCE_PRO_5_0:EVENTS */
+
+{/* ALUMNI_MOBILE_FOCUS_EVENTS_POLISH_5_1:EVENTS */}

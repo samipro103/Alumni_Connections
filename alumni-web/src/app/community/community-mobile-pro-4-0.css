@@ -1557,3 +1557,36 @@ button:disabled {
 
 /* ALUMNI_CREATE_EXPERIENCE_PRO_5_0:COMMUNITIES_CSS */
 
+/* =========================================================
+   ALUMNI_MOBILE_FOCUS_EVENTS_POLISH_5_1 — COMMUNITY FIELD FOCUS CLEANUP
+   ========================================================= */
+
+@media (max-width: 520px) {
+  .alumni-community-mobile-pro
+  .community2-wizard
+  .community2-field:focus-within {
+    border-color:
+      color-mix(
+        in srgb,
+        var(--app-accent) 34%,
+        var(--app-border)
+      ) !important;
+    box-shadow: none !important;
+    outline: none !important;
+  }
+
+  .alumni-community-mobile-pro
+  .community2-wizard
+  .community2-field input:focus,
+  .alumni-community-mobile-pro
+  .community2-wizard
+  .community2-field textarea:focus,
+  .alumni-community-mobile-pro
+  .community2-wizard
+  .community2-field select:focus {
+    outline: none !important;
+    box-shadow: none !important;
+  }
+}
+
+/* ALUMNI_MOBILE_FOCUS_EVENTS_POLISH_5_1:COMMUNITY_CSS */
