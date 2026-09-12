@@ -12,9 +12,6 @@ import ProductAnalyticsTracker from "@/components/analytics/ProductAnalyticsTrac
 import { AlumniUXProvider } from "@/components/ui/AlumniUXProvider";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import "@/components/ui/alumni-ux.css";
-import "@/components/ui/alumni-loading.css";
-import "@/components/ui/alumni-image.css";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -168,3 +165,5 @@ export default function RootLayout({
 /* ALUMNI_INTERNAL_UI_1_0_DARK_LIGHT_CLEAN */
 
 /* ALUMNI_PRODUCT_INTELLIGENCE_1_0:ROOT */
+
+/* ALUMNI_GLOBAL_STYLE_CONSOLIDATION_4_2:LAYOUT */
