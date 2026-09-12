@@ -1,0 +1,35 @@
+ALUMNI — MICRO IMPROVEMENTS · BLOCK 3
+
+BASADO EN LA PÁGINA 7 DE "COSAS A MEJORAR.docx"
+
+FEEDBACK
+- mantiene el diseño limpio
+- agrega un visual animado sutil para inspirar participación
+- texto mínimo
+- mejora textarea y focus
+- elimina ImagePlus
+- adjuntar foto ahora es un botón "+"
+- elimina el avión de papel
+- enviar ahora usa flecha hacia arriba
+- mejora previews
+- conserva pantalla de éxito
+- respeta prefers-reduced-motion
+
+NO CAMBIA
+- envío a feedback_reports
+- subida de capturas
+- límite de 4 imágenes
+- metadata de plataforma/app
+- autenticación
+- lógica de errores
+
+EJECUTAR
+
+node .\aplicar_alumni_micro_improvements_block_3.js
+npm run build
+
+SI PASA
+
+git add .
+git commit -m "Polish feedback experience"
+git push origin main

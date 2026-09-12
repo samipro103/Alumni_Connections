@@ -12,9 +12,8 @@ import {
 import {
   ArrowLeft,
   Check,
-  Plus,
-  ArrowUp,
-  Sparkles,
+  ImagePlus,
+  Send,
   X,
 } from "lucide-react";
 import {
@@ -32,7 +31,6 @@ import {
   APP_VERSION,
 } from "@/lib/appVersion";
 import "./feedback-simple-4-0.css";
-import "./feedback-inspire-5-0.css";
 
 const MAX_FILES = 4;
 const MAX_FILE_SIZE =
@@ -520,168 +518,9 @@ export default function FeedbackPage() {
             ],
           }}
         >
-          <motion.div
-            className="alumni-feedback-inspire"
-            initial={
-              reduceMotion
-                ? false
-                : {
-                    opacity: 0,
-                    y: 8,
-                  }
-            }
-            animate={{
-              opacity: 1,
-              y: 0,
-            }}
-            transition={{
-              duration: .42,
-              ease: [
-                .2,
-                .8,
-                .2,
-                1,
-              ],
-            }}
-          >
-            <motion.div
-              className="alumni-feedback-inspire-visual"
-              aria-hidden="true"
-              animate={
-                reduceMotion
-                  ? undefined
-                  : {
-                      rotate: [
-                        0,
-                        2,
-                        0,
-                        -2,
-                        0,
-                      ],
-                    }
-              }
-              transition={
-                reduceMotion
-                  ? undefined
-                  : {
-                      duration: 6,
-                      repeat: Infinity,
-                      ease: "easeInOut",
-                    }
-              }
-            >
-              <motion.span
-                className="alumni-feedback-inspire-ring"
-                animate={
-                  reduceMotion
-                    ? undefined
-                    : {
-                        scale: [
-                          1,
-                          1.05,
-                          1,
-                        ],
-                        opacity: [
-                          .65,
-                          1,
-                          .65,
-                        ],
-                      }
-                }
-                transition={
-                  reduceMotion
-                    ? undefined
-                    : {
-                        duration: 2.8,
-                        repeat: Infinity,
-                        ease: "easeInOut",
-                      }
-                }
-              />
-
-              <span className="alumni-feedback-inspire-core">
-                <Sparkles
-                  size={18}
-                  strokeWidth={1.9}
-                />
-              </span>
-
-              <motion.span
-                className="alumni-feedback-inspire-dot is-one"
-                animate={
-                  reduceMotion
-                    ? undefined
-                    : {
-                        y: [
-                          0,
-                          -4,
-                          0,
-                        ],
-                      }
-                }
-                transition={
-                  reduceMotion
-                    ? undefined
-                    : {
-                        duration: 2.2,
-                        repeat: Infinity,
-                        ease: "easeInOut",
-                      }
-                }
-              />
-              <motion.span
-                className="alumni-feedback-inspire-dot is-two"
-                animate={
-                  reduceMotion
-                    ? undefined
-                    : {
-                        x: [
-                          0,
-                          4,
-                          0,
-                        ],
-                      }
-                }
-                transition={
-                  reduceMotion
-                    ? undefined
-                    : {
-                        duration: 2.5,
-                        repeat: Infinity,
-                        ease: "easeInOut",
-                      }
-                }
-              />
-              <motion.span
-                className="alumni-feedback-inspire-dot is-three"
-                animate={
-                  reduceMotion
-                    ? undefined
-                    : {
-                        y: [
-                          0,
-                          3,
-                          0,
-                        ],
-                      }
-                }
-                transition={
-                  reduceMotion
-                    ? undefined
-                    : {
-                        duration: 2.7,
-                        repeat: Infinity,
-                        ease: "easeInOut",
-                      }
-                }
-              />
-            </motion.div>
-
-            <h2>Haz Alumni mejor</h2>
-            <p>
-              Cuéntanos qué cambiarías.
-            </p>
-          </motion.div>
+          <p>
+            Cuéntanos qué podemos mejorar.
+          </p>
 
           <textarea
             value={message}
@@ -694,7 +533,8 @@ export default function FeedbackPage() {
               )
             }
             maxLength={3000}
-            placeholder="¿Qué podemos mejorar?"
+            placeholder="Escribe aquí..."
+            autoFocus
           />
 
           {previews.length >
@@ -749,17 +589,16 @@ export default function FeedbackPage() {
                 files.length >=
                 MAX_FILES
               }
-              aria-label="Añadir foto"
-              title="Añadir foto"
             >
-              <Plus
-                size={20}
-                strokeWidth={2}
+              <ImagePlus
+                size={18}
               />
+              Fotos
               {files.length >
                 0 && (
                 <span>
-                  {files.length}
+                  {files.length}/
+                  {MAX_FILES}
                 </span>
               )}
             </button>
@@ -775,9 +614,8 @@ export default function FeedbackPage() {
                 void sendFeedback()
               }
             >
-              <ArrowUp
-                size={18}
-                strokeWidth={2.3}
+              <Send
+                size={17}
               />
               {sending
                 ? "Enviando..."
@@ -808,5 +646,3 @@ export default function FeedbackPage() {
 
 /* ALUMNI_FEEDBACK_SIMPLE_4_0 */
 /* ALUMNI_CLEAN_RESET_1_0 */
-
-/* ALUMNI_MICRO_IMPROVEMENTS_BLOCK_3 */
