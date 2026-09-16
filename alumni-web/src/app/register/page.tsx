@@ -163,7 +163,10 @@ export default function RegisterPage() {
         code,
       });
 
-      const { error } = await supabase.auth.signInWithPassword({
+      const {
+        data: signInData,
+        error,
+      } = await supabase.auth.signInWithPassword({
         email: email.trim().toLowerCase(),
         password,
       });
@@ -173,7 +176,22 @@ export default function RegisterPage() {
         return;
       }
 
-      window.location.href = "/feed";
+      const {
+        error: onboardingError,
+      } = await supabase.auth.updateUser({
+        data: {
+          ...(signInData.user?.user_metadata || {}),
+          onboarding_started_v1: true,
+          onboarding_completed_v1: false,
+          onboarding_step_v1: 0,
+        },
+      });
+
+      if (onboardingError) {
+        console.warn("Onboarding metadata:", onboardingError);
+      }
+
+      window.location.href = "/onboarding";
     } catch (error: any) {
       alert(error?.message || "El código no es válido.");
       setCode("");
@@ -465,3 +483,5 @@ function Field({
 /* ALUMNI_1_0_12_SIGNUP_EMAIL_CODE */
 
 /* ALUMNI_2_9_4_SIGNUP_EMAIL_CODE_RECONNECTED */
+
+/* ALUMNI_ONBOARDING_1_0:REGISTER */

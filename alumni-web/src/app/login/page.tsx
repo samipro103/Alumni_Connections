@@ -25,7 +25,10 @@ export default function LoginPage() {
 
     setSubmitting(true);
 
-    const { error } = await supabase.auth.signInWithPassword({
+    const {
+      data,
+      error,
+    } = await supabase.auth.signInWithPassword({
       email: email.trim().toLowerCase(),
       password,
     });
@@ -36,7 +39,13 @@ export default function LoginPage() {
       return;
     }
 
-    window.location.href = "/feed";
+    const metadata = data.user?.user_metadata || {};
+
+    window.location.href =
+      metadata.onboarding_started_v1 === true &&
+      metadata.onboarding_completed_v1 !== true
+        ? "/onboarding"
+        : "/feed";
   }
 
   return (
@@ -167,3 +176,5 @@ export default function LoginPage() {
 }
 
 /* ALUMNI_1_0_12_LOGIN_NORMAL */
+
+/* ALUMNI_ONBOARDING_1_0:LOGIN */
