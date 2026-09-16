@@ -1,6 +1,8 @@
 "use client";
 
-import { supabase } from "@/lib/supabase";
+import {
+  supabase,
+} from "@/lib/supabase";
 
 export type RecommendedProfile = {
   id: string;
@@ -15,104 +17,116 @@ export type RecommendedProfile = {
   country?: string | null;
   residence_country_code?: string | null;
   bio?: string | null;
-is_private?: boolean | null;
-score: number;
-
+  is_private?: boolean | null;
+  score: number;
   mutualCount: number;
   reason: string;
+  recommendationBucket?: string;
 };
 
-function normalized(
-  value: unknown
-) {
+function normalized(value: unknown) {
   return String(value || "")
     .normalize("NFKD")
-    .replace(
-      /[\u0300-\u036f]/g,
-      ""
-    )
+    .replace(/[\u0300-\u036f]/g, "")
     .trim()
     .toLowerCase();
 }
 
-function same(
-  left: unknown,
-  right: unknown
-) {
+function same(left: unknown, right: unknown) {
   const a = normalized(left);
   const b = normalized(right);
-
-  return Boolean(
-    a && b && a === b
-  );
+  return Boolean(a && b && a === b);
 }
 
-function institution(
-  person: any
-) {
+function institution(person: any) {
   return (
-    person
-      ?.education_institution_name ||
+    person?.education_institution_name ||
     person?.university ||
     ""
   );
 }
 
-export async function getRecommendedProfiles(
+function mapServerRecommendation(row: any): RecommendedProfile {
+  return {
+    id: row.id,
+    username: row.username || "",
+    avatar_url: row.avatar_url || null,
+    full_name: row.full_name || null,
+    university: row.university || null,
+    education_institution_name:
+      row.education_institution_name || null,
+    education_program_name:
+      row.education_program_name || null,
+    career: row.career || null,
+    city: row.city || null,
+    country: row.country || null,
+    residence_country_code:
+      row.residence_country_code || null,
+    bio: row.bio || null,
+    is_private: Boolean(row.is_private),
+    score: Number(row.score || 0),
+    mutualCount: Number(
+      row.mutual_count || row.mutualCount || 0
+    ),
+    reason: row.reason || "Perfil de la comunidad",
+    recommendationBucket:
+      row.recommendation_bucket ||
+      row.recommendationBucket ||
+      "discover",
+  };
+}
+
+async function getServerRecommendations(limit: number) {
+  const { data, error } = await supabase.rpc(
+    "alumni_recommended_profiles_v2",
+    {
+      p_limit: Math.min(
+        30,
+        Math.max(1, Math.floor(limit))
+      ),
+    }
+  );
+
+  if (error) throw error;
+
+  return ((data || []) as any[]).map(
+    mapServerRecommendation
+  );
+}
+
+async function getFallbackRecommendations(
   userId: string,
-  limit = 8
+  limit: number
 ) {
-  /* ALUMNI_1_1_0_C_HOTFIX_TYPESCRIPT */
-  const { data: meData } =
-    await supabase
-      .from("profiles")
-      .select(
-        "id, university, education_institution_name, education_program_name, career, city, country, residence_country_code"
-      )
-      .eq("id", userId)
-      .maybeSingle();
+  const { data: meData } = await supabase
+    .from("profiles")
+    .select(
+      "id, university, education_institution_name, education_program_name, career, city, country, residence_country_code"
+    )
+    .eq("id", userId)
+    .maybeSingle();
 
   const me = meData as any;
 
-  const { data: mineRows } =
-    await supabase
-      .from("follows")
-      .select("following_id")
-      .eq(
-        "follower_id",
-        userId
-      );
+  const { data: mineRows } = await supabase
+    .from("follows")
+    .select("following_id")
+    .eq("follower_id", userId);
 
-  const mine =
-  new Set(
-    (mineRows || []).map(
-      (row: any) =>
-        row.following_id
-    )
+  const mine = new Set(
+    (mineRows || []).map((row: any) => row.following_id)
   );
 
-const {
-  data: pendingRows,
-} = await supabase
-  .from("follow_requests")
-  .select("target_id")
-  .eq(
-    "requester_id",
-    userId
+  const { data: pendingRows } = await supabase
+    .from("follow_requests")
+    .select("target_id")
+    .eq("requester_id", userId);
+
+  const pending = new Set(
+    (pendingRows || []).map((row: any) => row.target_id)
   );
 
-const pending =
-  new Set(
-    (pendingRows || []).map(
-      (row: any) =>
-        row.target_id
-    )
-  );
-
-const {
-  data: candidatesData,
-} = await supabase
-
+  const { data: candidatesData } = await supabase
     .from("profiles")
     .select(
       "id, username, avatar_url, full_name, university, education_institution_name, education_program_name, career, city, country, residence_country_code, bio, is_private"
@@ -120,238 +134,98 @@ const {
     .neq("id", userId)
     .limit(140);
 
-  const candidateRows =
-    (candidatesData || []) as any[];
-
-  const candidates =
-    candidateRows.filter(
-      (person: any) =>
-        !mine.has(person.id) &&
-!pending.has(person.id)
-    );
-
-  if (!candidates.length) {
-    return [];
-  }
-
-  const ids =
-    candidates.map(
-      (person: any) =>
-        person.id
-    );
-
-  const {
-    data: otherFollows,
-  } = await supabase
-    .from("follows")
-    .select(
-      "follower_id, following_id"
-    )
-    .in(
-      "follower_id",
-      ids
-    );
-
-  const followMap =
-    new Map<
-      string,
-      Set<string>
-    >();
-
-  (
-    otherFollows || []
-  ).forEach((row: any) => {
-    const set =
-      followMap.get(
-        row.follower_id
-      ) ||
-      new Set<string>();
-
-    set.add(
-      row.following_id
-    );
-
-    followMap.set(
-      row.follower_id,
-      set
-    );
-  });
-
-  const since =
-    new Date();
-
-  since.setDate(
-    since.getDate() - 30
+  const candidates = (candidatesData || []).filter(
+    (person: any) =>
+      !mine.has(person.id) && !pending.has(person.id)
   );
 
-  const {
-    data: recentPosts,
-  } = await supabase
+  if (!candidates.length) return [];
+
+  const ids = candidates.map((person: any) => person.id);
+
+  const { data: otherFollows } = await supabase
+    .from("follows")
+    .select("follower_id, following_id")
+    .in("follower_id", ids);
+
+  const followMap = new Map<string, Set<string>>();
+
+  (otherFollows || []).forEach((row: any) => {
+    const set =
+      followMap.get(row.follower_id) || new Set<string>();
+    set.add(row.following_id);
+    followMap.set(row.follower_id, set);
+  });
+
+  const since = new Date();
+  since.setDate(since.getDate() - 30);
+
+  const { data: recentPosts } = await supabase
     .from("posts")
     .select("user_id")
     .in("user_id", ids)
-    .gte(
-      "created_at",
-      since.toISOString()
-    );
+    .gte("created_at", since.toISOString());
 
-  const active =
-    new Set(
-      (
-        recentPosts || []
-      ).map(
-        (post: any) =>
-          post.user_id
-      )
-    );
+  const active = new Set(
+    (recentPosts || []).map((post: any) => post.user_id)
+  );
 
   return candidates
     .map((person: any) => {
       let score = 0;
       let mutualCount = 0;
-
       const theirs =
-        followMap.get(
-          person.id
-        ) ||
-        new Set<string>();
+        followMap.get(person.id) || new Set<string>();
 
       mine.forEach((id) => {
-        if (
-          theirs.has(id)
-        ) {
-          mutualCount += 1;
-        }
+        if (theirs.has(id)) mutualCount += 1;
       });
 
-      const sameInstitution =
-        same(
-          institution(me),
-          institution(person)
-        );
-
-      const sameProgram =
-        same(
-          me?.education_program_name,
-          person
-            .education_program_name
-        );
-
-      const sameCareer =
-        same(
-          me?.career,
-          person.career
-        );
-
-      const sameCity =
-        same(
-          me?.city,
-          person.city
-        );
-
-      const sameCountry =
-        same(
-          me
-            ?.residence_country_code ||
-            me?.country,
-          person
-            .residence_country_code ||
-            person.country
-        );
-
-      if (sameProgram) {
-        score += 48;
-      }
-
-      if (sameCareer) {
-        score += 39;
-      }
-
-      if (sameInstitution) {
-        score += 36;
-      }
-
-      score +=
-        Math.min(
-          mutualCount * 9,
-          27
-        );
-
-      if (sameCity) {
-        score += 12;
-      } else if (
-        sameCountry
-      ) {
-        score += 5;
-      }
-
-      if (
-        person.avatar_url
-      ) {
-        score += 3;
-      }
-
-      if (person.bio) {
-        score += 2;
-      }
-
-      if (
-        active.has(person.id)
-      ) {
-        score += 7;
-      }
-
-      let reason =
-        "Perfil de la comunidad";
-
-      if (
-        sameProgram &&
+      const sameInstitution = same(
+        institution(me),
+        institution(person)
+      );
+      const sameProgram = same(
+        me?.education_program_name,
         person.education_program_name
-      ) {
+      );
+      const sameCareer = same(me?.career, person.career);
+      const sameCity = same(me?.city, person.city);
+      const sameCountry = same(
+        me?.residence_country_code || me?.country,
+        person.residence_country_code || person.country
+      );
+
+      if (sameProgram) score += 48;
+      if (sameCareer) score += 39;
+      if (sameInstitution) score += 36;
+      score += Math.min(mutualCount * 9, 27);
+      if (sameCity) score += 12;
+      else if (sameCountry) score += 5;
+      if (person.avatar_url) score += 3;
+      if (person.bio) score += 2;
+      if (active.has(person.id)) score += 7;
+
+      let reason = "Perfil de la comunidad";
+
+      if (sameProgram && person.education_program_name) {
+        reason = person.education_program_name;
+      } else if (mutualCount) {
         reason =
-          person
-            .education_program_name;
-      } else if (
-        sameCareer &&
-        mutualCount
-      ) {
-        reason =
-          `${person.career} · ${mutualCount} ${
-            mutualCount === 1
-              ? "conexión en común"
-              : "conexiones en común"
-          }`;
-      } else if (
-        mutualCount
-      ) {
-        reason =
-          `${mutualCount} ${
-            mutualCount === 1
-              ? "conexión en común"
-              : "conexiones en común"
-          }`;
-      } else if (
-        sameCareer &&
-        person.career
-      ) {
-        reason =
-          `También estudia ${person.career}`;
-      } else if (
-        sameInstitution
-      ) {
-        reason =
-          institution(person);
-      } else if (
-        sameCity &&
-        person.city
-      ) {
-        reason =
-          `También está en ${person.city}`;
+          String(mutualCount) +
+          " " +
+          (mutualCount === 1
+            ? "conexión en común"
+            : "conexiones en común");
+      } else if (sameCareer && person.career) {
+        reason = person.career;
+      } else if (sameInstitution) {
+        reason = institution(person);
+      } else if (sameCity && person.city) {
+        reason = person.city;
       } else {
         reason =
-          person.career ||
-          institution(person) ||
-          reason;
+          person.career || institution(person) || reason;
       }
 
       return {
@@ -359,11 +233,40 @@ const {
         score,
         mutualCount,
         reason,
+        recommendationBucket: sameProgram
+          ? "program"
+          : sameCareer
+          ? "career"
+          : sameInstitution
+          ? "institution"
+          : mutualCount
+          ? "mutual"
+          : sameCity
+          ? "local"
+          : active.has(person.id)
+          ? "active"
+          : "discover",
       };
     })
-    .sort(
-      (a: any, b: any) =>
-        b.score - a.score
-    )
+    .sort((a: any, b: any) => b.score - a.score)
     .slice(0, limit);
 }
+
+export async function getRecommendedProfiles(
+  userId: string,
+  limit = 8
+): Promise<RecommendedProfile[]> {
+  const safeLimit = Math.min(
+    30,
+    Math.max(1, Math.floor(limit))
+  );
+
+  try {
+    return await getServerRecommendations(safeLimit);
+  } catch (error) {
+    console.warn("Recommendations 2.0 fallback:", error);
+    return getFallbackRecommendations(userId, safeLimit);
+  }
+}
+
+/* ALUMNI_RECOMMENDATIONS_2_0 */
