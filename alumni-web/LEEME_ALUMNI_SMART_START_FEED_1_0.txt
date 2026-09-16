@@ -1,0 +1,72 @@
+ALUMNI — INICIO MÁS VIVO 1.0
+
+OBJETIVO
+Que el Feed se sienta útil desde el primer minuto,
+especialmente después del onboarding.
+
+QUÉ CAMBIA
+
+1. BIENVENIDA BREVE
+Después de completar onboarding aparece una sola línea:
+"Tu inicio ya está listo"
+
+- solo una vez por sesión
+- desaparece sola
+- sin modal
+- sin tutorial
+- sin bloquear nada
+
+2. CONECTA
+Si el usuario todavía sigue a menos de 8 personas,
+Inicio muestra una fila horizontal pequeña de perfiles recomendados.
+
+- avatar
+- nombre
+- una razón corta
+- botón +
+- enlace a perfil
+- Ver más lleva a Buscar
+
+Cuando la red ya creció, esta sección desaparece sola.
+
+3. RECOMENDACIONES
+Usa getRecommendedProfiles().
+Por eso:
+- si Recomendaciones 2.0 está activa, usa el RPC nuevo;
+- si todavía no, usa el fallback actual.
+
+4. SEGUIR DESDE INICIO
+- perfiles públicos: sigue directamente
+- perfiles privados: crea solicitud
+- conserva la notificación de follow existente
+- registra señal de descubrimiento
+
+5. MOTION
+Las primeras publicaciones entran con movimiento muy leve.
+No mueve el layout ni hace animaciones exageradas.
+
+DISEÑO
+- mobile-first 360–430 px
+- poco texto
+- sin cards gigantes
+- sin tutoriales
+- sin nueva hoja CSS en el stack del Feed
+- usa los tokens Dark / Light actuales
+- prefers-reduced-motion
+
+NO REQUIERE SQL NUEVO.
+
+EJECUTAR
+
+node .\aplicar_alumni_smart_start_feed_1_0.js
+npm run design:audit:strict
+npm run build
+
+COMMIT
+
+del /q LEEME_ALUMNI_SMART_START_FEED_1_0.txt
+del /q aplicar_alumni_smart_start_feed_1_0.js
+
+git add -A
+git commit -m "Make Alumni home feel more alive"
+git push origin main
