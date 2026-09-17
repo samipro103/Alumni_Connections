@@ -19,7 +19,8 @@
     "src/app/events/[id]/page.tsx": [
       "../events-core-4-1.css",
       "../../interior-ui-1-0.css",
-      "../events-motion-3-0.css"
+      "../events-motion-3-0.css",
+      "../event-detail-chat-6-2.css"
     ],
     "src/app/feed/page.tsx": [
       "./feed-consolidated-base-4-0.css",

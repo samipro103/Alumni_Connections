@@ -1,7 +1,7 @@
 import { forwardRef } from "react";
 import type { ComponentPropsWithoutRef, ForwardedRef } from "react";
 
-interface AvatarProps extends ComponentPropsWithoutRef<"div"> {}
+type AvatarProps = ComponentPropsWithoutRef<"div">;
 
 export const Avatar = forwardRef(
   ({ className = "", ...props }: AvatarProps, ref: ForwardedRef<HTMLDivElement>) => (
@@ -14,7 +14,7 @@ export const Avatar = forwardRef(
 );
 Avatar.displayName = "Avatar";
 
-interface AvatarImageProps extends ComponentPropsWithoutRef<"img"> {}
+type AvatarImageProps = ComponentPropsWithoutRef<"img">;
 
 export const AvatarImage = forwardRef(
   ({ className = "", alt = "Avatar", ...props }: AvatarImageProps, ref: ForwardedRef<HTMLImageElement>) => (
@@ -28,7 +28,7 @@ export const AvatarImage = forwardRef(
 );
 AvatarImage.displayName = "AvatarImage";
 
-interface AvatarFallbackProps extends ComponentPropsWithoutRef<"div"> {}
+type AvatarFallbackProps = ComponentPropsWithoutRef<"div">;
 
 export const AvatarFallback = forwardRef(
   ({ className = "", ...props }: AvatarFallbackProps, ref: ForwardedRef<HTMLDivElement>) => (

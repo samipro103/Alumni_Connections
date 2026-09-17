@@ -1,7 +1,7 @@
 import { InputHTMLAttributes } from "react";
 import clsx from "clsx";
 
-interface Props extends InputHTMLAttributes<HTMLInputElement> {}
+type Props = InputHTMLAttributes<HTMLInputElement>;
 
 export default function Input({
   className,

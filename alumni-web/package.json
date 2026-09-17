@@ -6,7 +6,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint",
+    "lint": "eslint src scripts",
     "typecheck": "tsc --noEmit",
     "verify": "npm run typecheck && npm run build",
     "test": "vitest run",
@@ -60,3 +60,4 @@
     "vitest": "^4.1.11"
   }
 }
+

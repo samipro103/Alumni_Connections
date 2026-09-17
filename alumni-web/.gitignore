@@ -47,3 +47,8 @@ firebase-service-account*.json
 
 *.bak
 *.before-*.bak
+
+# ALUMNI local audit / patch helpers
+/ALUMNI_*.cmd
+/ALUMNI_*.ps1
+/LEEME.txt

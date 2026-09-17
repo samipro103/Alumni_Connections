@@ -1,7 +1,7 @@
 import { TextareaHTMLAttributes } from "react";
 import clsx from "clsx";
 
-interface Props extends TextareaHTMLAttributes<HTMLTextAreaElement> {}
+type Props = TextareaHTMLAttributes<HTMLTextAreaElement>;
 
 export default function Textarea({
   className,

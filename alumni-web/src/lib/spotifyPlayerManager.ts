@@ -323,9 +323,8 @@ export async function ensureSpotifyPlayer() {
     });
   }
 
-  let creation: Promise<string>;
-
-  creation = createPlayerAndWaitReady()
+  const creation: Promise<string> =
+    createPlayerAndWaitReady()
     .catch((error: any) => {
       disconnectCurrentPlayer();
 
