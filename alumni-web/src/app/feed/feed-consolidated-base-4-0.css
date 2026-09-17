@@ -3555,18 +3555,14 @@ button:focus-visible {
 
 /* ================================================================
    ALUMNI_FEED_1_7_1_HEADER_COMPOSER_UNIFICADO
-   REWORK 8.1 — compatible with structural floating TopBar 8.0.
+   REWORK 8.3 — clean blend between the top region and the feed.
 
-   The Feed must NEVER paint the global topbar.
-   Composer + tabs share the app background instead of creating
-   a second gray navigation slab.
+   Goal:
+   avoid the harsh jump between the pure app background on top and
+   the slightly elevated post surface below.
    ================================================================ */
 
 @media (max-width: 699px) {
-  /*
-   * Keep the existing edge-to-edge geometry, but remove the
-   * surface-colored sheet that was visually becoming a second bar.
-   */
   .alumni-feed-page.alumni-feed-pro {
     width: calc(100% + 32px) !important;
     max-width: none !important;
@@ -3581,11 +3577,6 @@ button:focus-visible {
     box-shadow: none !important;
   }
 
-  /*
-   * IMPORTANT:
-   * Feed styling no longer owns or paints the global mobile topbar.
-   * TopBar.tsx / topbar-glass-1-1.css are the only source of truth.
-   */
   body:has(.alumni-feed-page)
     [data-alumni-topbar="true"] {
     border: 0 !important;
@@ -3595,15 +3586,10 @@ button:focus-visible {
     box-shadow: none !important;
   }
 
-  /*
-   * Closed composer floats naturally on the same page background.
-   * Keep the input pill itself for affordance, but remove the full
-   * gray rectangular layer around it.
-   */
   .alumni-feed-page
     .alumni-pro-composer {
     margin: 0 !important;
-    padding: 10px 16px 10px !important;
+    padding: 10px 16px 8px !important;
 
     border-top: 0 !important;
     border-bottom: 0 !important;
@@ -3620,57 +3606,92 @@ button:focus-visible {
     background:
       color-mix(
         in srgb,
-        var(--app-surface) 28%,
+        var(--app-surface) 26%,
         transparent
       ) !important;
 
     border-color:
       color-mix(
         in srgb,
-        var(--app-border) 72%,
+        var(--app-border) 62%,
         transparent
       ) !important;
   }
 
   /*
-   * Tabs are part of the page, not another toolbar.
-   * One subtle separator below the tabs is enough.
+   * The tabs area now softly blends into the stream instead of ending
+   * with a hard flat edge. This keeps the top clean while making the
+   * transition feel intentional.
    */
   .alumni-feed-page
     .alumni-pro-feed-tabs {
     margin: 0 !important;
-    padding-right: 16px !important;
-    padding-left: 16px !important;
+    padding: 0 16px 12px !important;
 
     border-bottom:
       1px solid
       color-mix(
         in srgb,
-        var(--app-border) 58%,
+        var(--app-border) 42%,
         transparent
       ) !important;
 
-    background: transparent !important;
-    background-image: none !important;
+    background:
+      linear-gradient(
+        180deg,
+        transparent 0%,
+        color-mix(
+          in srgb,
+          var(--app-surface) 10%,
+          transparent
+        ) 70%,
+        color-mix(
+          in srgb,
+          var(--app-surface) 18%,
+          transparent
+        ) 100%
+      ) !important;
+
+    background-image:
+      linear-gradient(
+        180deg,
+        transparent 0%,
+        color-mix(
+          in srgb,
+          var(--app-surface) 10%,
+          transparent
+        ) 70%,
+        color-mix(
+          in srgb,
+          var(--app-surface) 18%,
+          transparent
+        ) 100%
+      ) !important;
+
     box-shadow: none !important;
   }
 
   /*
-   * The post stream inherits the same page background so there is
-   * no sudden gray-to-black band directly below the tabs.
+   * The stream starts with a very small fade from the tabs into the
+   * post surface. This removes the “cut” look without creating a bar.
    */
   .alumni-feed-page
     .alumni-pro-feed-list,
   .alumni-feed-page
     .alumni-feed-post-viewport {
-    background: transparent !important;
+    background:
+      linear-gradient(
+        180deg,
+        color-mix(
+          in srgb,
+          var(--app-surface) 16%,
+          transparent
+        ) 0px,
+        transparent 32px
+      ) !important;
   }
 }
 
-/*
- * Explicit theme safety:
- * neither dark nor light can reintroduce the old surface slab.
- */
 @media (max-width: 699px) {
   html[data-theme="dark"]
     body:has(.alumni-feed-page)
@@ -3694,19 +3715,23 @@ button:focus-visible {
     .alumni-pro-composer,
   html[data-theme="light"]
     .alumni-feed-page
-    .alumni-pro-composer,
+    .alumni-pro-composer {
+    background: transparent !important;
+    background-image: none !important;
+  }
+
   html[data-theme="dark"]
     .alumni-feed-page
     .alumni-pro-feed-tabs,
   html[data-theme="light"]
     .alumni-feed-page
     .alumni-pro-feed-tabs {
-    background: transparent !important;
-    background-image: none !important;
+    box-shadow: none !important;
   }
 }
 
 /* ALUMNI_FEED_1_7_1_HEADER_COMPOSER_UNIFICADO */
+/* ALUMNI_FEED_TOP_BLEND_8_3 */
 /* ALUMNI_FEED_TOP_CLEAN_8_1 */
 
 /* =========================================================
@@ -5929,4 +5954,5 @@ html[data-theme="light"] .alumni-story-viewer .alumni-story-opportunity-open {
 
 
 /* ALUMNI_FEED_STYLE_CONSOLIDATION_4_0_1:BASE:END */
+
 
