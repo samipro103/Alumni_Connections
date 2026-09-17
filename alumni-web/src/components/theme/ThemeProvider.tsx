@@ -2,10 +2,11 @@
 
 import {
   createContext,
+  useCallback,
   useContext,
   useEffect,
   useMemo,
-  useState,
+  useSyncExternalStore,
 } from "react";
 import {
   nativeHaptic,
@@ -58,6 +59,73 @@ const ThemeContext =
     null
   );
 
+const themeListeners =
+  new Set<() => void>();
+
+function isAlumniTheme(
+  value: unknown
+): value is AlumniTheme {
+  return ALUMNI_THEMES.some(
+    (item) =>
+      item.id === value
+  );
+}
+
+function getBrowserTheme(): AlumniTheme {
+  if (
+    typeof document ===
+    "undefined"
+  ) {
+    return "dark";
+  }
+
+  const domTheme =
+    document.documentElement
+      .dataset.theme;
+
+  if (
+    isAlumniTheme(
+      domTheme
+    )
+  ) {
+    return domTheme;
+  }
+
+  const saved =
+    localStorage.getItem(
+      "alumni-theme"
+    );
+
+  return isAlumniTheme(saved)
+    ? saved
+    : "dark";
+}
+
+function getServerTheme(): AlumniTheme {
+  return "dark";
+}
+
+function subscribeTheme(
+  listener: () => void
+) {
+  themeListeners.add(
+    listener
+  );
+
+  return () => {
+    themeListeners.delete(
+      listener
+    );
+  };
+}
+
+function emitThemeChange() {
+  themeListeners.forEach(
+    (listener) =>
+      listener()
+  );
+}
+
 function applyTheme(
   theme: AlumniTheme
 ) {
@@ -90,7 +158,21 @@ function applyTheme(
       themeColor
     );
 
-  void syncNativeTheme(theme);
+  void syncNativeTheme(
+    theme
+  );
+}
+
+function persistTheme(
+  theme: AlumniTheme
+) {
+  localStorage.setItem(
+    "alumni-theme",
+    theme
+  );
+
+  applyTheme(theme);
+  emitThemeChange();
 }
 
 export function ThemeProvider({
@@ -98,71 +180,46 @@ export function ThemeProvider({
 }: {
   children: React.ReactNode;
 }) {
-  const [
-    theme,
-    setThemeState,
-  ] =
-    useState<AlumniTheme>(
-      "dark"
+  const theme =
+    useSyncExternalStore<AlumniTheme>(
+      subscribeTheme,
+      getBrowserTheme,
+      getServerTheme
     );
 
   useEffect(() => {
-    const saved =
-      localStorage.getItem(
-        "alumni-theme"
-      ) as
-        | AlumniTheme
-        | null;
+    /*
+     * layout.tsx ya establece data-theme antes de hidratar.
+     * Aquí completamos la sincronización con theme-color
+     * y la capa nativa sin forzar un setState post-mount.
+     */
+    applyTheme(theme);
+  }, [theme]);
 
-    const valid =
-      ALUMNI_THEMES.some(
-        (item) =>
-          item.id ===
-          saved
-      );
+  const setTheme =
+    useCallback(
+      (
+        next: AlumniTheme
+      ) => {
+        persistTheme(next);
 
-    const next =
-      valid && saved
-        ? saved
-        : "dark";
-
-    if (!valid && saved) {
-      localStorage.setItem(
-        "alumni-theme",
-        "dark"
-      );
-    }
-
-    setThemeState(
-      next
+        void nativeHaptic(
+          "selection"
+        );
+      },
+      []
     );
-
-    applyTheme(next);
-  }, []);
-
-  function setTheme(
-    next: AlumniTheme
-  ) {
-    setThemeState(
-      next
-    );
-
-    localStorage.setItem(
-      "alumni-theme",
-      next
-    );
-
-    applyTheme(next);
-    void nativeHaptic("selection");
-  }
 
   const value =
-    useMemo(
+    useMemo<ThemeContextValue>(
       () => ({
         theme,
         setTheme,
       }),
-      [theme]
+      [
+        theme,
+        setTheme,
+      ]
     );
 
   return (
