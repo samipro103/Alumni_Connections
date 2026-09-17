@@ -1,32 +1,305 @@
 ﻿/*
- * ALUMNI TopBar Glass 1.1
- * Transparent enough to let content breathe underneath,
- * while keeping text/icons readable.
+ * ALUMNI TopBar Structural Rebuild 8.0
+ *
+ * Mobile/tablet is no longer styled as a rectangular navigation bar.
+ * Only ALUMNI + notification + avatar float above the content.
+ * Desktop retains the existing full navigation/search model.
  */
 
-[data-alumni-topbar="true"] {
-  border-bottom-color:
-    color-mix(
-      in srgb,
-      var(--app-border) 68%,
-      transparent
-    ) !important;
+/* =========================================================
+   MOBILE / TABLET — FLOATING CONTROLS, NO BAR
+   ========================================================= */
 
+.alumni-mobile-floating-topbar {
+  position: fixed;
+  inset: 0 0 auto 0;
+  z-index: 70;
+  height: 0;
+  overflow: visible;
+  pointer-events: none;
+  color: var(--app-text);
+}
+
+/*
+ * Option-E-like top fade:
+ * there is no edge, border, glass panel or solid rectangle.
+ * It simply helps text/icons survive over content in both themes.
+ */
+.alumni-mobile-floating-topbar::before {
+  content: "";
+  position: fixed;
+  inset: 0 0 auto 0;
+  z-index: -1;
+  height: calc(66px + env(safe-area-inset-top));
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--app-bg) 72%, transparent) 0%,
+      color-mix(in srgb, var(--app-bg) 30%, transparent) 54%,
+      transparent 100%
+    );
+  pointer-events: none;
+}
+
+/* Pull-refresh beam. Hidden in the normal state. */
+.alumni-mobile-floating-topbar::after {
+  content: "";
+  position: fixed;
+  top: calc(env(safe-area-inset-top) + 52px);
+  left: 0;
+  z-index: 4;
+  width: 36%;
+  height: 2px;
+  border-radius: 999px;
+  background:
+    linear-gradient(
+      90deg,
+      transparent 0%,
+      color-mix(in srgb, var(--app-accent) 20%, transparent) 18%,
+      color-mix(in srgb, var(--app-accent) 78%, white 22%) 46%,
+      white 50%,
+      color-mix(in srgb, var(--app-accent) 78%, white 22%) 54%,
+      color-mix(in srgb, var(--app-accent) 20%, transparent) 82%,
+      transparent 100%
+    );
+  opacity: 0;
+  transform: translate3d(-100%, 0, 0);
+  filter:
+    drop-shadow(
+      0 0 5px
+      color-mix(in srgb, var(--app-accent) 46%, transparent)
+    );
+  pointer-events: none;
+  will-change: transform, opacity;
+}
+
+.alumni-mobile-floating-controls {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 2;
+  min-height: calc(54px + env(safe-area-inset-top));
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding:
+    env(safe-area-inset-top)
+    max(14px, env(safe-area-inset-right))
+    0
+    max(14px, env(safe-area-inset-left));
+  pointer-events: auto;
+  transition:
+    transform 200ms cubic-bezier(.2,.8,.2,1),
+    opacity 150ms ease;
+  will-change: transform, opacity;
+}
+
+.alumni-mobile-floating-topbar[data-scroll-hidden="true"]
+  .alumni-mobile-floating-controls {
+  transform: translate3d(0, -115%, 0);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.alumni-mobile-floating-brand {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  background: transparent;
+  color: var(--app-text);
+  text-decoration: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.alumni-mobile-floating-actions {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.alumni-mobile-floating-icon {
+  position: relative;
+  width: 38px;
+  height: 38px;
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: 13px;
+  background: transparent;
+  color: var(--app-text-soft);
+  box-shadow: none;
+  text-decoration: none;
+  -webkit-tap-highlight-color: transparent;
+  transition:
+    transform 130ms cubic-bezier(.2,.8,.2,1),
+    background-color 130ms ease,
+    color 130ms ease;
+}
+
+.alumni-mobile-floating-icon:active {
+  transform: scale(.92);
+  background:
+    color-mix(in srgb, var(--app-surface) 44%, transparent);
+  color: var(--app-text);
+}
+
+.alumni-mobile-floating-avatar {
+  width: 38px !important;
+  height: 38px !important;
+  display: grid !important;
+  place-items: center;
+  overflow: hidden;
+  margin: 0 !important;
+  border: 0 !important;
+  border-radius: 999px;
+  background: transparent !important;
+  color: var(--app-text);
+  box-shadow:
+    0 0 0 1px
+    color-mix(in srgb, var(--app-border) 52%, transparent);
+  text-decoration: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.alumni-topbar-notification-badge {
+  position: absolute;
+  top: 0;
+  right: 0;
+  min-width: 16px;
+  min-height: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-inline: 4px;
+  border-radius: 999px;
+  background: var(--app-accent);
+  color: var(--app-on-accent);
+  box-shadow:
+    0 0 0 2px
+    color-mix(in srgb, var(--app-bg) 88%, transparent);
+  font-size: 9px;
+  font-weight: 900;
+  line-height: 1;
+}
+
+/* =========================================================
+   PULL TO REFRESH — KEEP THE EXISTING EXPERIENCE
+   ========================================================= */
+
+html[data-alumni-pull-refresh]
+  .alumni-mobile-floating-controls {
+  transform:
+    translate3d(
+      0,
+      var(--alumni-pull-group-y, 0px),
+      0
+    ) !important;
+  opacity: 1 !important;
+  pointer-events: auto !important;
+  transition: none !important;
+}
+
+html[data-alumni-pull-refresh]
+  .alumni-mobile-floating-brand {
+  transform:
+    scale(
+      var(--alumni-pull-brand-scale, 1)
+    );
+  transform-origin: left center;
+  transition: none !important;
+  will-change: transform;
+}
+
+html[data-alumni-pull-refresh]
+  .alumni-mobile-floating-icon,
+html[data-alumni-pull-refresh]
+  .alumni-mobile-floating-avatar {
+  transform:
+    scale(
+      var(--alumni-pull-side-scale, 1)
+    ) !important;
+  transform-origin: center;
+  transition: none !important;
+  will-change: transform;
+}
+
+html[data-alumni-pull-refresh]
+  .alumni-mobile-floating-topbar::after {
+  opacity:
+    var(--alumni-pull-light-opacity, .12);
+  transform:
+    translate3d(
+      var(--alumni-pull-light-x, -100%),
+      0,
+      0
+    );
+}
+
+html[data-alumni-pull-refresh="ready"]
+  .alumni-mobile-floating-topbar::after {
+  opacity: .96;
+}
+
+html[data-alumni-pull-refresh="refreshing"]
+  .alumni-mobile-floating-topbar::after {
+  opacity: 1;
+  animation:
+    alumniTopbarRefreshTravel
+    .78s
+    cubic-bezier(.42,0,.58,1)
+    infinite;
+}
+
+@keyframes alumniTopbarRefreshTravel {
+  0% {
+    transform: translate3d(-100%, 0, 0);
+    opacity: 0;
+  }
+
+  12% {
+    opacity: .92;
+  }
+
+  50% {
+    opacity: 1;
+  }
+
+  88% {
+    opacity: .92;
+  }
+
+  100% {
+    transform: translate3d(278%, 0, 0);
+    opacity: 0;
+  }
+}
+
+/* =========================================================
+   DESKTOP — PRESERVE CURRENT FULL NAVIGATION
+   ========================================================= */
+
+.alumni-desktop-topbar {
+  transition:
+    background-color 180ms ease,
+    border-color 180ms ease,
+    box-shadow 180ms ease;
+}
+
+.alumni-desktop-topbar[data-glass-scrolled="true"] {
   background:
     color-mix(
       in srgb,
-      var(--app-bg) 82%,
+      var(--app-surface) 94%,
       transparent
     ) !important;
-
-  -webkit-backdrop-filter:
-    blur(16px)
-    saturate(1.08) !important;
-
-  backdrop-filter:
-    blur(16px)
-    saturate(1.08) !important;
-
+  border-bottom-color:
+    color-mix(
+      in srgb,
+      var(--app-border) 82%,
+      transparent
+    ) !important;
   box-shadow:
     0 1px 0
     color-mix(
@@ -36,1682 +309,41 @@
     );
 }
 
-html[data-theme="light"]
-[data-alumni-topbar="true"] {
-  background:
-    color-mix(
-      in srgb,
-      var(--app-bg) 86%,
-      transparent
-    ) !important;
-}
-
-/* ALUMNI_TOPBAR_GLASS_1_1 */
-
 /* =========================================================
-   ALUMNI_GLASS_NAVIGATION_MOBILE_6_0 â€” ADAPTIVE GLASS TOPBAR
+   RESPONSIVE / ACCESSIBILITY
    ========================================================= */
 
-[data-alumni-topbar="true"] {
-  border-bottom-color:
-    color-mix(
-      in srgb,
-      var(--app-border) 44%,
-      transparent
-    ) !important;
-
-  background:
-    color-mix(
-      in srgb,
-      var(--app-bg) 58%,
-      transparent
-    ) !important;
-
-  -webkit-backdrop-filter:
-    blur(19px)
-    saturate(1.12) !important;
-
-  backdrop-filter:
-    blur(19px)
-    saturate(1.12) !important;
-
-  box-shadow:
-    0 1px 0
-      color-mix(
-        in srgb,
-        var(--app-text) 1.5%,
-        transparent
-      ) !important;
-
-  transition:
-    transform 200ms ease-out,
-    background-color 180ms ease,
-    border-color 180ms ease !important;
+@media (max-width: 639px) {
+  .alumni-mobile-floating-controls {
+    padding-left:
+      max(13px, env(safe-area-inset-left));
+    padding-right:
+      max(13px, env(safe-area-inset-right));
+  }
 }
 
-[data-alumni-topbar="true"][
-  data-glass-scrolled="true"
-] {
-  border-bottom-color:
-    color-mix(
-      in srgb,
-      var(--app-border) 62%,
-      transparent
-    ) !important;
-
-  background:
-    color-mix(
-      in srgb,
-      var(--app-bg) 72%,
-      transparent
-    ) !important;
-}
-
-html[data-theme="light"]
-[data-alumni-topbar="true"] {
-  background:
-    color-mix(
-      in srgb,
-      var(--app-bg) 64%,
-      transparent
-    ) !important;
-}
-
-html[data-theme="light"]
-[data-alumni-topbar="true"][
-  data-glass-scrolled="true"
-] {
-  background:
-    color-mix(
-      in srgb,
-      var(--app-bg) 78%,
-      transparent
-    ) !important;
-}
-
-@supports not (
-  backdrop-filter:
-    blur(1px)
-) {
-  [data-alumni-topbar="true"] {
-    background:
-      color-mix(
-        in srgb,
-        var(--app-bg) 92%,
-        transparent
-      ) !important;
+@media (min-width: 1024px) {
+  .alumni-mobile-floating-topbar {
+    display: none !important;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  [data-alumni-topbar="true"] {
-    transition:
-      none !important;
-  }
-}
-
-/* ALUMNI_GLASS_NAVIGATION_MOBILE_6_0:TOPBAR_CSS */
-
-/* =========================================================
-   ALUMNI_PULL_REFRESH_UNIFIED_TOPBAR_6_2
-   One unified pull-to-refresh animation.
-   The topbar itself becomes the refresh indicator.
-   ========================================================= */
-
-@media (max-width: 1023px) {
-  html[
-    data-alumni-pull-refresh
-  ]
-  [data-alumni-topbar="true"] {
-    overflow: visible !important;
-
-    background:
-      color-mix(
-        in srgb,
-        var(--app-bg) 72%,
-        transparent
-      ) !important;
-
-    border-bottom-color:
-      color-mix(
-        in srgb,
-        var(--app-accent) 12%,
-        var(--app-border)
-      ) !important;
-  }
-
-  html[
-    data-alumni-pull-refresh
-  ]
-  [data-alumni-topbar="true"]
-  > div {
-    transform:
-      translate3d(
-        0,
-        var(
-          --alumni-pull-row-y,
-          0px
-        ),
-        0
-      );
-
-    transition:
-      transform
-      70ms linear;
-  }
-
-  html[
-    data-alumni-pull-refresh
-  ]
-  [data-alumni-topbar="true"]
-  > div
-  > a[
-    aria-label="Alumni."
-  ] {
-    transform:
-      translate3d(
-        var(
-          --alumni-pull-brand-x,
-          0px
-        ),
-        0,
-        0
-      )
-      scale(
-        var(
-          --alumni-pull-brand-scale,
-          1
-        )
-      );
-
-    transform-origin:
-      left center;
-
-    transition:
-      transform
-      70ms linear;
-  }
-
-  html[
-    data-alumni-pull-refresh
-  ]
-  [data-alumni-topbar="true"]
-  a[
-    aria-label="Notificaciones"
-  ] {
-    transform:
-      translate3d(
-        0,
-        var(
-          --alumni-pull-bell-y,
-          0px
-        ),
-        0
-      )
-      rotate(
-        var(
-          --alumni-pull-bell-rotate,
-          0deg
-        )
-      );
-
-    transform-origin:
-      center top;
-
-    transition:
-      transform
-      70ms linear;
-  }
-
-  html[
-    data-alumni-pull-refresh
-  ]
-  [data-alumni-topbar="true"]
-  .alumni-topbar-profile-avatar {
-    transform:
-      translate3d(
-        0,
-        var(
-          --alumni-pull-avatar-y,
-          0px
-        ),
-        0
-      )
-      scale(
-        var(
-          --alumni-pull-avatar-scale,
-          1
-        )
-      );
-
-    transform-origin:
-      center;
-
-    transition:
-      transform
-      70ms linear;
-  }
-
-  [data-alumni-topbar="true"]::before {
-    content: "";
-    position: absolute;
-    left: 24%;
-    right: 24%;
-    bottom: -1px;
-    z-index: 4;
-    height: 2px;
-    border-radius: 999px;
-    background:
-      linear-gradient(
-        90deg,
-        transparent,
-        var(--app-accent),
-        transparent
-      );
-    opacity: 0;
-    transform:
-      scaleX(
-        var(
-          --alumni-pull-progress,
-          0
-        )
-      );
-    transform-origin:
-      center;
-    pointer-events: none;
-  }
-
-  html[
-    data-alumni-pull-refresh
-  ]
-  [data-alumni-topbar="true"]::before {
-    opacity:
-      calc(
-        .18 +
-        var(
-          --alumni-pull-progress,
-          0
-        ) * .64
-      );
-  }
-
-  [data-alumni-topbar="true"]::after {
-    position: absolute;
-    left: 50%;
-    bottom: -26px;
-    z-index: 5;
-
-    display: block;
-    width: max-content;
-    max-width:
-      calc(100vw - 40px);
-
-    padding:
-      5px
-      9px;
-
-    border:
-      1px solid
-      color-mix(
-        in srgb,
-        var(--app-border) 58%,
-        transparent
-      );
-
-    border-radius: 10px;
-
-    background:
-      color-mix(
-        in srgb,
-        var(--app-surface) 68%,
-        transparent
-      );
-
-    -webkit-backdrop-filter:
-      blur(16px)
-      saturate(1.1);
-
-    backdrop-filter:
-      blur(16px)
-      saturate(1.1);
-
-    color:
-      var(--app-text-soft);
-
-    box-shadow:
-      0 6px 18px
-      color-mix(
-        in srgb,
-        var(--app-shadow) 24%,
-        transparent
-      );
-
-    font-size: 9px;
-    font-weight: 760;
-    line-height: 1;
-    letter-spacing: -.01em;
-    white-space: nowrap;
-
-    opacity: 0;
-
-    transform:
-      translate3d(
-        -50%,
-        -5px,
-        0
-      )
-      scale(.97);
-
-    pointer-events: none;
-
-    transition:
-      opacity
-      90ms linear,
-      transform
-      90ms
-      cubic-bezier(.2,.8,.2,1);
-  }
-
-  html[
-    data-alumni-pull-refresh="pulling"
-  ]
-  [data-alumni-topbar="true"]::after {
-    content:
-      "Desliza para actualizar";
-
-    opacity:
-      var(
-        --alumni-pull-label-opacity,
-        0
-      );
-
-    transform:
-      translate3d(
-        -50%,
-        0,
-        0
-      )
-      scale(1);
-  }
-
-  html[
-    data-alumni-pull-refresh="ready"
-  ]
-  [data-alumni-topbar="true"]::after {
-    content:
-      "Suelta para actualizar";
-
-    opacity: 1;
-
-    color:
-      var(--app-accent);
-
-    border-color:
-      color-mix(
-        in srgb,
-        var(--app-accent) 20%,
-        var(--app-border)
-      );
-
-    transform:
-      translate3d(
-        -50%,
-        0,
-        0
-      )
-      scale(1);
-  }
-
-  html[
-    data-alumni-pull-refresh="refreshing"
-  ]
-  [data-alumni-topbar="true"]::after {
-    content:
-      "Actualizando";
-
-    opacity: 1;
-
-    color:
-      var(--app-accent);
-
-    transform:
-      translate3d(
-        -50%,
-        0,
-        0
-      )
-      scale(1);
-
-    animation:
-      alumniTopbarRefreshLabel
-      .9s
-      ease-in-out
-      infinite alternate;
-  }
-
-  html[
-    data-alumni-pull-refresh="refreshing"
-  ]
-  [data-alumni-topbar="true"]::before {
-    opacity: .88;
-
-    animation:
-      alumniTopbarRefreshLine
-      .8s
-      ease-in-out
-      infinite alternate;
-  }
-
-  html[
-    data-alumni-pull-refresh="refreshing"
-  ]
-  [data-alumni-topbar="true"]
-  > div
-  > a[
-    aria-label="Alumni."
-  ] {
-    animation:
-      alumniTopbarBrandBreathe
-      .8s
-      ease-in-out
-      infinite alternate;
-  }
-
-  @keyframes
-    alumniTopbarRefreshLabel {
-    from {
-      opacity: .6;
-    }
-
-    to {
-      opacity: 1;
-    }
-  }
-
-  @keyframes
-    alumniTopbarRefreshLine {
-    from {
-      transform:
-        scaleX(.58);
-    }
-
-    to {
-      transform:
-        scaleX(1);
-    }
-  }
-
-  @keyframes
-    alumniTopbarBrandBreathe {
-    from {
-      filter:
-        brightness(1);
-    }
-
-    to {
-      filter:
-        brightness(1.12);
-    }
-  }
-}
-
-@media (
-  max-width: 1023px
-)
-and (
-  prefers-reduced-motion:
-  reduce
-) {
-  html[
-    data-alumni-pull-refresh
-  ]
-  [data-alumni-topbar="true"]
-  > div,
-  html[
-    data-alumni-pull-refresh
-  ]
-  [data-alumni-topbar="true"]
-  > div
-  > a[
-    aria-label="Alumni."
-  ],
-  html[
-    data-alumni-pull-refresh
-  ]
-  [data-alumni-topbar="true"]
-  a[
-    aria-label="Notificaciones"
-  ],
-  html[
-    data-alumni-pull-refresh
-  ]
-  [data-alumni-topbar="true"]
-  .alumni-topbar-profile-avatar,
-  [data-alumni-topbar="true"]::after {
+  .alumni-mobile-floating-controls,
+  .alumni-mobile-floating-icon,
+  .alumni-mobile-floating-brand,
+  .alumni-mobile-floating-avatar,
+  .alumni-desktop-topbar {
     transition: none !important;
   }
 
-  html[
-    data-alumni-pull-refresh="refreshing"
-  ]
-  [data-alumni-topbar="true"]::before,
-  html[
-    data-alumni-pull-refresh="refreshing"
-  ]
-  [data-alumni-topbar="true"]::after,
-  html[
-    data-alumni-pull-refresh="refreshing"
-  ]
-  [data-alumni-topbar="true"]
-  > div
-  > a[
-    aria-label="Alumni."
-  ] {
-    animation:
-      none !important;
-  }
-}
-
-/* ALUMNI_PULL_REFRESH_UNIFIED_TOPBAR_6_2:TOPBAR_CSS */
-
-/* =========================================================
-   ALUMNI_PULL_REFRESH_FLUID_LIGHT_6_3
-   Fluid, textless, one-piece mobile pull refresh.
-   ========================================================= */
-
-@media (max-width: 1023px) {
-  /*
-   * Disable the 6.2 label entirely.
-   */
-  [data-alumni-topbar="true"]::after,
-  html[
-    data-alumni-pull-refresh
-  ]
-  [data-alumni-topbar="true"]::after {
-    content:
-      none !important;
-
-    display:
-      none !important;
-
-    animation:
-      none !important;
-  }
-
-  /*
-   * The whole topbar moves as one coordinated layer.
-   * JS already smooths the progress at requestAnimationFrame.
-   * No extra delayed CSS transition is added here.
-   */
-  html[
-    data-alumni-pull-refresh
-  ]
-  [data-alumni-topbar="true"]
-  > div {
-    transform:
-      translate3d(
-        0,
-        var(
-          --alumni-pull-group-y,
-          0px
-        ),
-        0
-      ) !important;
-
-    transition:
-      none !important;
-
-    will-change:
-      transform;
-  }
-
-  html[
-    data-alumni-pull-refresh
-  ]
-  [data-alumni-topbar="true"]
-  > div
-  > a[
-    aria-label="Alumni."
-  ] {
-    transform:
-      scale(
-        var(
-          --alumni-pull-brand-scale,
-          1
-        )
-      ) !important;
-
-    transform-origin:
-      left center;
-
-    transition:
-      none !important;
-
-    animation:
-      none !important;
-
-    will-change:
-      transform;
-  }
-
-  html[
-    data-alumni-pull-refresh
-  ]
-  [data-alumni-topbar="true"]
-  a[
-    aria-label="Notificaciones"
-  ],
-  html[
-    data-alumni-pull-refresh
-  ]
-  [data-alumni-topbar="true"]
-  .alumni-topbar-profile-avatar {
-    transform:
-      scale(
-        var(
-          --alumni-pull-side-scale,
-          1
-        )
-      ) !important;
-
-    transform-origin:
-      center;
-
-    transition:
-      none !important;
-
-    animation:
-      none !important;
-
-    will-change:
-      transform;
-  }
-
-  /*
-   * Main light line.
-   */
-  [data-alumni-topbar="true"]::before {
-    content:
-      "" !important;
-
-    position:
-      absolute;
-
-    left:
-      17%;
-
-    right:
-      17%;
-
-    bottom:
-      -1px;
-
-    z-index:
-      5;
-
-    display:
-      block !important;
-
-    height:
-      2px;
-
-    border-radius:
-      999px;
-
-    background:
-      linear-gradient(
-        90deg,
-        transparent 0%,
-        color-mix(
-          in srgb,
-          var(--app-accent) 72%,
-          white 28%
-        ) 34%,
-        color-mix(
-          in srgb,
-          var(--app-accent) 94%,
-          white 6%
-        ) 50%,
-        color-mix(
-          in srgb,
-          var(--app-accent) 72%,
-          white 28%
-        ) 66%,
-        transparent 100%
-      );
-
-    opacity:
-      0;
-
-    transform:
-      scaleX(.18);
-
-    transform-origin:
-      center;
-
-    filter:
-      drop-shadow(
-        0 0 5px
-        color-mix(
-          in srgb,
-          var(--app-accent) 36%,
-          transparent
-        )
-      );
-
-    pointer-events:
-      none;
-
-    will-change:
-      transform,
-      opacity;
-  }
-
-  html[
-    data-alumni-pull-refresh
-  ]
-  [data-alumni-topbar="true"]::before {
-    opacity:
-      var(
-        --alumni-pull-light-opacity,
-        .12
-      ) !important;
-
-    transform:
-      scaleX(
-        var(
-          --alumni-pull-light-scale,
-          .18
-        )
-      ) !important;
-
-    transition:
-      none !important;
-
-    animation:
-      none !important;
-  }
-
-  /*
-   * Slightly stronger glass while pulling.
-   */
-  html[
-    data-alumni-pull-refresh
-  ]
-  [data-alumni-topbar="true"] {
-    overflow:
-      visible !important;
-
-    background:
-      color-mix(
-        in srgb,
-        var(--app-bg) 68%,
-        transparent
-      ) !important;
-
-    border-bottom-color:
-      color-mix(
-        in srgb,
-        var(--app-accent) 10%,
-        var(--app-border)
-      ) !important;
-
-    box-shadow:
-      0 8px 26px
-      color-mix(
-        in srgb,
-        var(--app-shadow) 12%,
-        transparent
-      ) !important;
-  }
-
-  /*
-   * Once refresh fires, only the light moves.
-   * No text, spinner, circle or card appears.
-   */
-  html[
-    data-alumni-pull-refresh="refreshing"
-  ]
-  [data-alumni-topbar="true"]::before {
-    opacity:
-      .96 !important;
-
-    transform:
-      scaleX(1) !important;
-
-    background-size:
-      220% 100%;
-
-    animation:
-      alumniPullRefreshLightFlow
-      .76s
-      linear
-      infinite !important;
-  }
-
-  html[
-    data-alumni-pull-refresh="refreshing"
-  ]
-  [data-alumni-topbar="true"]
-  > div {
-    transform:
-      translate3d(
-        0,
-        2px,
-        0
-      ) !important;
-  }
-
-  html[
-    data-alumni-pull-refresh="refreshing"
-  ]
-  [data-alumni-topbar="true"]
-  > div
-  > a[
-    aria-label="Alumni."
-  ] {
-    transform:
-      scale(1.018)
-      !important;
-  }
-
-  html[
-    data-alumni-pull-refresh="refreshing"
-  ]
-  [data-alumni-topbar="true"]
-  a[
-    aria-label="Notificaciones"
-  ],
-  html[
-    data-alumni-pull-refresh="refreshing"
-  ]
-  [data-alumni-topbar="true"]
-  .alumni-topbar-profile-avatar {
-    transform:
-      scale(.988)
-      !important;
-  }
-
-  @keyframes
-    alumniPullRefreshLightFlow {
-    0% {
-      background-position:
-        110% 0;
-    }
-
-    100% {
-      background-position:
-        -110% 0;
-    }
-  }
-}
-
-@media (
-  max-width: 1023px
-)
-and (
-  prefers-reduced-motion:
-  reduce
-) {
-  html[
-    data-alumni-pull-refresh
-  ]
-  [data-alumni-topbar="true"]
-  > div,
-  html[
-    data-alumni-pull-refresh
-  ]
-  [data-alumni-topbar="true"]
-  > div
-  > a[
-    aria-label="Alumni."
-  ],
-  html[
-    data-alumni-pull-refresh
-  ]
-  [data-alumni-topbar="true"]
-  a[
-    aria-label="Notificaciones"
-  ],
-  html[
-    data-alumni-pull-refresh
-  ]
-  [data-alumni-topbar="true"]
-  .alumni-topbar-profile-avatar,
-  html[
-    data-alumni-pull-refresh
-  ]
-  [data-alumni-topbar="true"]::before {
-    transition:
-      none !important;
-  }
-
-  html[
-    data-alumni-pull-refresh="refreshing"
-  ]
-  [data-alumni-topbar="true"]::before {
-    animation:
-      none !important;
-  }
-}
-
-/* ALUMNI_PULL_REFRESH_FLUID_LIGHT_6_3:TOPBAR_CSS */
-
-/* =========================================================
-   ALUMNI_PULL_REFRESH_FULL_TRAVEL_6_4
-   Beam travels across the full topbar instead of scaling
-   from the middle.
-   ========================================================= */
-
-@media (max-width: 1023px) {
-  html[
-    data-alumni-pull-refresh
-  ]
-  [data-alumni-topbar="true"] {
-    overflow: hidden !important;
-  }
-
-  [data-alumni-topbar="true"]::before {
-    left: 0 !important;
-    right: auto !important;
-
-    width: 36% !important;
-    height: 2px !important;
-
-    opacity: 0 !important;
-
-    background:
-      linear-gradient(
-        90deg,
-        transparent 0%,
-        color-mix(
-          in srgb,
-          var(--app-accent) 20%,
-          transparent
-        ) 18%,
-        color-mix(
-          in srgb,
-          var(--app-accent) 78%,
-          white 22%
-        ) 46%,
-        white 50%,
-        color-mix(
-          in srgb,
-          var(--app-accent) 78%,
-          white 22%
-        ) 54%,
-        color-mix(
-          in srgb,
-          var(--app-accent) 20%,
-          transparent
-        ) 82%,
-        transparent 100%
-      ) !important;
-
-    background-size: 100% 100% !important;
-    background-repeat: no-repeat !important;
-
-    transform:
-      translate3d(
-        -100%,
-        0,
-        0
-      ) !important;
-
-    transform-origin: center !important;
-
-    filter:
-      drop-shadow(
-        0 0 5px
-        color-mix(
-          in srgb,
-          var(--app-accent) 46%,
-          transparent
-        )
-      ) !important;
-
-    box-shadow:
-      0 0 10px
-      color-mix(
-        in srgb,
-        var(--app-accent) 18%,
-        transparent
-      );
-
-    will-change:
-      transform,
-      opacity;
-  }
-
-  html[
-    data-alumni-pull-refresh
-  ]
-  [data-alumni-topbar="true"]::before {
-    opacity:
-      var(
-        --alumni-pull-light-opacity,
-        .12
-      ) !important;
-
-    transform:
-      translate3d(
-        var(
-          --alumni-pull-light-x,
-          -100%
-        ),
-        0,
-        0
-      ) !important;
-
-    animation:
-      none !important;
-
-    transition:
-      none !important;
-  }
-
-  html[
-    data-alumni-pull-refresh="ready"
-  ]
-  [data-alumni-topbar="true"]::before {
-    opacity: .96 !important;
-  }
-
-  html[
-    data-alumni-pull-refresh="refreshing"
-  ]
-  [data-alumni-topbar="true"]::before {
-    opacity: 1 !important;
-
-    transform:
-      translate3d(
-        -100%,
-        0,
-        0
-      ) !important;
-
-    animation:
-      alumniPullRefreshFullTravel
-      .78s
-      cubic-bezier(.42,0,.58,1)
-      infinite !important;
-  }
-
-  @keyframes
-    alumniPullRefreshFullTravel {
-    0% {
-      transform:
-        translate3d(
-          -100%,
-          0,
-          0
-        );
-      opacity: 0;
-    }
-
-    12% {
-      opacity: .92;
-    }
-
-    50% {
-      opacity: 1;
-    }
-
-    88% {
-      opacity: .92;
-    }
-
-    100% {
-      transform:
-        translate3d(
-          278%,
-          0,
-          0
-        );
-      opacity: 0;
-    }
-  }
-}
-
-@media (
-  max-width: 1023px
-)
-and (
-  prefers-reduced-motion:
-  reduce
-) {
-  html[
-    data-alumni-pull-refresh="refreshing"
-  ]
-  [data-alumni-topbar="true"]::before {
+  html[data-alumni-pull-refresh="refreshing"]
+    .alumni-mobile-floating-topbar::after {
     animation: none !important;
-
-    transform:
-      translate3d(
-        89%,
-        0,
-        0
-      ) !important;
-
-    opacity: .8 !important;
+    transform: translate3d(89%, 0, 0);
+    opacity: .8;
   }
 }
 
-/* ALUMNI_PULL_REFRESH_FULL_TRAVEL_6_4:CSS */
-
-/* =========================================================
-   ALUMNI_FLOATING_TOPBAR_7_0
-   Mobile/tablet topbar becomes a transparent floating control layer.
-   Desktop keeps the existing glass navigation with search.
-   ========================================================= */
-
-@media (max-width: 1023px) {
-  [data-alumni-topbar="true"],
-  [data-alumni-topbar="true"][data-glass-scrolled="true"],
-  html[data-theme="light"] [data-alumni-topbar="true"],
-  html[data-theme="light"]
-    [data-alumni-topbar="true"][data-glass-scrolled="true"],
-  html[data-alumni-pull-refresh]
-    [data-alumni-topbar="true"] {
-    height:
-      calc(56px + env(safe-area-inset-top))
-      !important;
-
-    border-bottom:
-      0 !important;
-
-    border-bottom-color:
-      transparent !important;
-
-    background:
-      transparent !important;
-
-    -webkit-backdrop-filter:
-      none !important;
-
-    backdrop-filter:
-      none !important;
-
-    box-shadow:
-      none !important;
-  }
-
-  /*
-   * The fixed header itself should not act like an invisible slab.
-   * Only the visible floating controls receive taps.
-   */
-  [data-alumni-topbar="true"] {
-    pointer-events:
-      none;
-  }
-
-  [data-alumni-topbar="true"]
-    > div,
-  [data-alumni-topbar="true"]
-    a,
-  [data-alumni-topbar="true"]
-    button,
-  [data-alumni-topbar="true"]
-    input,
-  [data-alumni-topbar="true"]
-    form {
-    pointer-events:
-      auto;
-  }
-
-  [data-alumni-topbar="true"]
-    > div {
-    height:
-      100% !important;
-
-    gap:
-      10px !important;
-
-    padding-left:
-      max(14px, env(safe-area-inset-left))
-      !important;
-
-    padding-right:
-      max(14px, env(safe-area-inset-right))
-      !important;
-  }
-
-  /*
-   * Brand floats directly on the page.
-   */
-  [data-alumni-topbar="true"]
-    > div
-    > a[aria-label="Alumni."] {
-    position:
-      relative;
-
-    z-index:
-      2;
-
-    filter:
-      drop-shadow(
-        0 1px 1px
-        color-mix(
-          in srgb,
-          var(--app-bg) 58%,
-          transparent
-        )
-      );
-  }
-
-  /*
-   * Keep the notification/avatar side compact.
-   * No shared background container is introduced.
-   */
-  [data-alumni-topbar="true"]
-    a[aria-label="Notificaciones"] {
-    width:
-      38px !important;
-
-    height:
-      38px !important;
-
-    border-radius:
-      13px !important;
-
-    background:
-      transparent !important;
-
-    color:
-      var(--app-text-soft)
-      !important;
-
-    box-shadow:
-      none !important;
-  }
-
-  [data-alumni-topbar="true"]
-    a[aria-label="Notificaciones"]:active {
-    background:
-      color-mix(
-        in srgb,
-        var(--app-surface) 52%,
-        transparent
-      )
-      !important;
-  }
-
-  [data-alumni-topbar="true"]
-    .alumni-topbar-profile-avatar {
-    width:
-      38px !important;
-
-    height:
-      38px !important;
-
-    margin-left:
-      2px !important;
-
-    background:
-      color-mix(
-        in srgb,
-        var(--app-surface) 72%,
-        transparent
-      )
-      !important;
-
-    border:
-      0 !important;
-
-    box-shadow:
-      0 0 0 1px
-      color-mix(
-        in srgb,
-        var(--app-border) 72%,
-        transparent
-      )
-      !important;
-  }
-
-  /*
-   * The existing Create action remains a floating pill on wider
-   * mobile/tablet sizes where it is already visible.
-   */
-  [data-alumni-topbar="true"]
-    .alumni-accent-button {
-    min-height:
-      38px;
-
-    border-radius:
-      13px !important;
-
-    box-shadow:
-      0 5px 15px
-      color-mix(
-        in srgb,
-        var(--app-accent) 14%,
-        transparent
-      );
-  }
-
-  /*
-   * Pull-to-refresh can keep its motion/progress line,
-   * but never paints a topbar surface.
-   */
-  html[data-alumni-pull-refresh]
-    [data-alumni-topbar="true"],
-  html[data-alumni-pull-refresh="pulling"]
-    [data-alumni-topbar="true"],
-  html[data-alumni-pull-refresh="ready"]
-    [data-alumni-topbar="true"],
-  html[data-alumni-pull-refresh="refreshing"]
-    [data-alumni-topbar="true"] {
-    background:
-      transparent !important;
-
-    border-bottom-color:
-      transparent !important;
-
-    box-shadow:
-      none !important;
-
-    -webkit-backdrop-filter:
-      none !important;
-
-    backdrop-filter:
-      none !important;
-  }
-}
-
-@media (max-width: 639px) {
-  [data-alumni-topbar="true"]
-    > div {
-    padding-left:
-      max(13px, env(safe-area-inset-left))
-      !important;
-
-    padding-right:
-      max(13px, env(safe-area-inset-right))
-      !important;
-  }
-
-  [data-alumni-topbar="true"]
-    > div
-    > a[aria-label="Alumni."] {
-    transform-origin:
-      left center;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  [data-alumni-topbar="true"] {
-    transition:
-      none !important;
-  }
-}
-
-/* ALUMNI_FLOATING_TOPBAR_7_0:END */
-
-/* =========================================================
-   ALUMNI_TOPBAR_OPTION_E_7_1
-   Premium translucent gradient overlay.
-   Keeps ALUMNI typography and existing iconography unchanged.
-   Mobile/tablet only. Desktop keeps current navigation.
-   ========================================================= */
-
-@media (max-width: 1023px) {
-  [data-alumni-topbar="true"],
-  [data-alumni-topbar="true"][data-glass-scrolled="true"],
-  html[data-theme="light"] [data-alumni-topbar="true"],
-  html[data-theme="light"]
-    [data-alumni-topbar="true"][data-glass-scrolled="true"],
-  html[data-alumni-pull-refresh]
-    [data-alumni-topbar="true"] {
-    height:
-      calc(56px + env(safe-area-inset-top))
-      !important;
-
-    border:
-      0 !important;
-
-    border-bottom:
-      0 !important;
-
-    box-shadow:
-      none !important;
-
-    /*
-     * Option E: not a visible bar.
-     * Just a soft translucent fade behind the floating controls.
-     */
-    background:
-      linear-gradient(
-        180deg,
-        color-mix(
-          in srgb,
-          var(--app-bg) 76%,
-          transparent
-        )
-        0%,
-        color-mix(
-          in srgb,
-          var(--app-bg) 34%,
-          transparent
-        )
-        58%,
-        transparent
-        100%
-      )
-      !important;
-
-    -webkit-backdrop-filter:
-      none !important;
-
-    backdrop-filter:
-      none !important;
-
-    pointer-events:
-      none;
-  }
-
-  /*
-   * The controls remain interactive while the transparent header
-   * itself never blocks content underneath.
-   */
-  [data-alumni-topbar="true"] > div,
-  [data-alumni-topbar="true"] a,
-  [data-alumni-topbar="true"] button,
-  [data-alumni-topbar="true"] form,
-  [data-alumni-topbar="true"] input {
-    pointer-events:
-      auto;
-  }
-
-  [data-alumni-topbar="true"] > div {
-    height:
-      100% !important;
-
-    gap:
-      10px !important;
-
-    padding-left:
-      max(14px, env(safe-area-inset-left))
-      !important;
-
-    padding-right:
-      max(14px, env(safe-area-inset-right))
-      !important;
-  }
-
-  /*
-   * ALUMNI stays exactly as it is: same BrandMark,
-   * same type, same size. Only its surrounding surface disappears.
-   */
-  [data-alumni-topbar="true"]
-    > div
-    > a[aria-label="Alumni."] {
-    position:
-      relative;
-
-    z-index:
-      2;
-
-    background:
-      transparent !important;
-
-    box-shadow:
-      none !important;
-  }
-
-  /*
-   * Bell stays visually naked/floating.
-   */
-  [data-alumni-topbar="true"]
-    a[aria-label="Notificaciones"] {
-    width:
-      38px !important;
-
-    height:
-      38px !important;
-
-    border:
-      0 !important;
-
-    border-radius:
-      13px !important;
-
-    background:
-      transparent !important;
-
-    box-shadow:
-      none !important;
-
-    color:
-      var(--app-text-soft)
-      !important;
-  }
-
-  [data-alumni-topbar="true"]
-    a[aria-label="Notificaciones"]:hover,
-  [data-alumni-topbar="true"]
-    a[aria-label="Notificaciones"]:active {
-    background:
-      color-mix(
-        in srgb,
-        var(--app-surface) 42%,
-        transparent
-      )
-      !important;
-  }
-
-  /*
-   * Avatar keeps its current image/size language,
-   * but loses the heavy "button" treatment.
-   */
-  [data-alumni-topbar="true"]
-    .alumni-topbar-profile-avatar {
-    width:
-      38px !important;
-
-    height:
-      38px !important;
-
-    margin-left:
-      2px !important;
-
-    border:
-      0 !important;
-
-    background:
-      transparent !important;
-
-    box-shadow:
-      0 0 0 1px
-      color-mix(
-        in srgb,
-        var(--app-border) 58%,
-        transparent
-      )
-      !important;
-  }
-
-  /*
-   * Existing create button remains unchanged in typography and
-   * branding. Only keep it compact when visible on wider phones.
-   */
-  [data-alumni-topbar="true"]
-    .alumni-accent-button {
-    min-height:
-      38px;
-
-    border-radius:
-      13px !important;
-
-    box-shadow:
-      none !important;
-  }
-
-  /*
-   * Pull-to-refresh must not repaint the old glass bar.
-   */
-  html[data-alumni-pull-refresh]
-    [data-alumni-topbar="true"],
-  html[data-alumni-pull-refresh="pulling"]
-    [data-alumni-topbar="true"],
-  html[data-alumni-pull-refresh="ready"]
-    [data-alumni-topbar="true"],
-  html[data-alumni-pull-refresh="refreshing"]
-    [data-alumni-topbar="true"] {
-    border:
-      0 !important;
-
-    border-bottom-color:
-      transparent !important;
-
-    box-shadow:
-      none !important;
-
-    -webkit-backdrop-filter:
-      none !important;
-
-    backdrop-filter:
-      none !important;
-
-    background:
-      linear-gradient(
-        180deg,
-        color-mix(
-          in srgb,
-          var(--app-bg) 76%,
-          transparent
-        )
-        0%,
-        color-mix(
-          in srgb,
-          var(--app-bg) 34%,
-          transparent
-        )
-        58%,
-        transparent
-        100%
-      )
-      !important;
-  }
-}
-
-@media (max-width: 639px) {
-  [data-alumni-topbar="true"] > div {
-    padding-left:
-      max(13px, env(safe-area-inset-left))
-      !important;
-
-    padding-right:
-      max(13px, env(safe-area-inset-right))
-      !important;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  [data-alumni-topbar="true"] {
-    transition:
-      none !important;
-  }
-}
-
-/* ALUMNI_TOPBAR_OPTION_E_7_1:END */
+/* ALUMNI_TOPBAR_STRUCTURAL_REBUILD_8_0:CSS */
 
