@@ -21,24 +21,13 @@
 }
 
 /*
- * Option-E-like top fade:
- * there is no edge, border, glass panel or solid rectangle.
- * It simply helps text/icons survive over content in both themes.
+ * 8.2 — uniform background.
+ * No fixed fade, no gray layer, no surface tint.
+ * The page background is the only background behind the controls.
  */
 .alumni-mobile-floating-topbar::before {
-  content: "";
-  position: fixed;
-  inset: 0 0 auto 0;
-  z-index: -1;
-  height: calc(66px + env(safe-area-inset-top));
-  background:
-    linear-gradient(
-      180deg,
-      color-mix(in srgb, var(--app-bg) 72%, transparent) 0%,
-      color-mix(in srgb, var(--app-bg) 30%, transparent) 54%,
-      transparent 100%
-    );
-  pointer-events: none;
+  content: none;
+  display: none;
 }
 
 /* Pull-refresh beam. Hidden in the normal state. */
@@ -346,4 +335,6 @@ html[data-alumni-pull-refresh="refreshing"]
 }
 
 /* ALUMNI_TOPBAR_STRUCTURAL_REBUILD_8_0:CSS */
+
+/* ALUMNI_TOPBAR_UNIFORM_BACKGROUND_8_2 */
 
