@@ -1447,3 +1447,271 @@ and (
 
 /* ALUMNI_FLOATING_TOPBAR_7_0:END */
 
+/* =========================================================
+   ALUMNI_TOPBAR_OPTION_E_7_1
+   Premium translucent gradient overlay.
+   Keeps ALUMNI typography and existing iconography unchanged.
+   Mobile/tablet only. Desktop keeps current navigation.
+   ========================================================= */
+
+@media (max-width: 1023px) {
+  [data-alumni-topbar="true"],
+  [data-alumni-topbar="true"][data-glass-scrolled="true"],
+  html[data-theme="light"] [data-alumni-topbar="true"],
+  html[data-theme="light"]
+    [data-alumni-topbar="true"][data-glass-scrolled="true"],
+  html[data-alumni-pull-refresh]
+    [data-alumni-topbar="true"] {
+    height:
+      calc(56px + env(safe-area-inset-top))
+      !important;
+
+    border:
+      0 !important;
+
+    border-bottom:
+      0 !important;
+
+    box-shadow:
+      none !important;
+
+    /*
+     * Option E: not a visible bar.
+     * Just a soft translucent fade behind the floating controls.
+     */
+    background:
+      linear-gradient(
+        180deg,
+        color-mix(
+          in srgb,
+          var(--app-bg) 76%,
+          transparent
+        )
+        0%,
+        color-mix(
+          in srgb,
+          var(--app-bg) 34%,
+          transparent
+        )
+        58%,
+        transparent
+        100%
+      )
+      !important;
+
+    -webkit-backdrop-filter:
+      none !important;
+
+    backdrop-filter:
+      none !important;
+
+    pointer-events:
+      none;
+  }
+
+  /*
+   * The controls remain interactive while the transparent header
+   * itself never blocks content underneath.
+   */
+  [data-alumni-topbar="true"] > div,
+  [data-alumni-topbar="true"] a,
+  [data-alumni-topbar="true"] button,
+  [data-alumni-topbar="true"] form,
+  [data-alumni-topbar="true"] input {
+    pointer-events:
+      auto;
+  }
+
+  [data-alumni-topbar="true"] > div {
+    height:
+      100% !important;
+
+    gap:
+      10px !important;
+
+    padding-left:
+      max(14px, env(safe-area-inset-left))
+      !important;
+
+    padding-right:
+      max(14px, env(safe-area-inset-right))
+      !important;
+  }
+
+  /*
+   * ALUMNI stays exactly as it is: same BrandMark,
+   * same type, same size. Only its surrounding surface disappears.
+   */
+  [data-alumni-topbar="true"]
+    > div
+    > a[aria-label="Alumni."] {
+    position:
+      relative;
+
+    z-index:
+      2;
+
+    background:
+      transparent !important;
+
+    box-shadow:
+      none !important;
+  }
+
+  /*
+   * Bell stays visually naked/floating.
+   */
+  [data-alumni-topbar="true"]
+    a[aria-label="Notificaciones"] {
+    width:
+      38px !important;
+
+    height:
+      38px !important;
+
+    border:
+      0 !important;
+
+    border-radius:
+      13px !important;
+
+    background:
+      transparent !important;
+
+    box-shadow:
+      none !important;
+
+    color:
+      var(--app-text-soft)
+      !important;
+  }
+
+  [data-alumni-topbar="true"]
+    a[aria-label="Notificaciones"]:hover,
+  [data-alumni-topbar="true"]
+    a[aria-label="Notificaciones"]:active {
+    background:
+      color-mix(
+        in srgb,
+        var(--app-surface) 42%,
+        transparent
+      )
+      !important;
+  }
+
+  /*
+   * Avatar keeps its current image/size language,
+   * but loses the heavy "button" treatment.
+   */
+  [data-alumni-topbar="true"]
+    .alumni-topbar-profile-avatar {
+    width:
+      38px !important;
+
+    height:
+      38px !important;
+
+    margin-left:
+      2px !important;
+
+    border:
+      0 !important;
+
+    background:
+      transparent !important;
+
+    box-shadow:
+      0 0 0 1px
+      color-mix(
+        in srgb,
+        var(--app-border) 58%,
+        transparent
+      )
+      !important;
+  }
+
+  /*
+   * Existing create button remains unchanged in typography and
+   * branding. Only keep it compact when visible on wider phones.
+   */
+  [data-alumni-topbar="true"]
+    .alumni-accent-button {
+    min-height:
+      38px;
+
+    border-radius:
+      13px !important;
+
+    box-shadow:
+      none !important;
+  }
+
+  /*
+   * Pull-to-refresh must not repaint the old glass bar.
+   */
+  html[data-alumni-pull-refresh]
+    [data-alumni-topbar="true"],
+  html[data-alumni-pull-refresh="pulling"]
+    [data-alumni-topbar="true"],
+  html[data-alumni-pull-refresh="ready"]
+    [data-alumni-topbar="true"],
+  html[data-alumni-pull-refresh="refreshing"]
+    [data-alumni-topbar="true"] {
+    border:
+      0 !important;
+
+    border-bottom-color:
+      transparent !important;
+
+    box-shadow:
+      none !important;
+
+    -webkit-backdrop-filter:
+      none !important;
+
+    backdrop-filter:
+      none !important;
+
+    background:
+      linear-gradient(
+        180deg,
+        color-mix(
+          in srgb,
+          var(--app-bg) 76%,
+          transparent
+        )
+        0%,
+        color-mix(
+          in srgb,
+          var(--app-bg) 34%,
+          transparent
+        )
+        58%,
+        transparent
+        100%
+      )
+      !important;
+  }
+}
+
+@media (max-width: 639px) {
+  [data-alumni-topbar="true"] > div {
+    padding-left:
+      max(13px, env(safe-area-inset-left))
+      !important;
+
+    padding-right:
+      max(13px, env(safe-area-inset-right))
+      !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-alumni-topbar="true"] {
+    transition:
+      none !important;
+  }
+}
+
+/* ALUMNI_TOPBAR_OPTION_E_7_1:END */
+

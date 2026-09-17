@@ -60,8 +60,8 @@ export default function AppShell({
             immersiveMobile
               ? "mx-auto w-full max-w-[1500px] px-0 pb-0 pt-0 lg:px-8 lg:pb-10 lg:pt-[84px]"
               : showPrimaryMobileNav
-              ? "mx-auto w-full max-w-[1500px] px-4 pb-24 pt-[calc(68px+env(safe-area-inset-top))] sm:px-6 lg:px-8 lg:pb-10 lg:pt-[84px]"
-              : "mx-auto w-full max-w-[1500px] px-4 pb-[calc(24px+env(safe-area-inset-bottom))] pt-[calc(68px+env(safe-area-inset-top))] sm:px-6 lg:px-8 lg:pb-10 lg:pt-[84px]"
+              ? "mx-auto w-full max-w-[1500px] px-4 pb-24 pt-[calc(64px+env(safe-area-inset-top))] sm:px-6 lg:px-8 lg:pb-10 lg:pt-[84px]"
+              : "mx-auto w-full max-w-[1500px] px-4 pb-[calc(24px+env(safe-area-inset-bottom))] pt-[calc(64px+env(safe-area-inset-top))] sm:px-6 lg:px-8 lg:pb-10 lg:pt-[84px]"
           }
         >
           <div
@@ -118,4 +118,6 @@ export default function AppShell({
 /* ALUMNI_GLASS_NAVIGATION_MOBILE_6_0:APP_SHELL */
 
 /* ALUMNI_FLOATING_TOPBAR_7_0:APP_SHELL */
+
+/* ALUMNI_TOPBAR_OPTION_E_7_1:APP_SHELL */
 
