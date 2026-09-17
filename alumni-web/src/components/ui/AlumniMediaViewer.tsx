@@ -2,11 +2,23 @@
 
 import {
   useEffect,
-  useState,
+  useSyncExternalStore,
 } from "react";
 import { createPortal } from "react-dom";
 import { X } from "lucide-react";
 import { toPublicImageCdnUrl } from "@/lib/imageCdn";
+
+function subscribeToClientMount() {
+  return () => {};
+}
+
+function getClientMountSnapshot() {
+  return true;
+}
+
+function getServerMountSnapshot() {
+  return false;
+}
 
 export default function AlumniMediaViewer({
   src,
@@ -19,27 +31,31 @@ export default function AlumniMediaViewer({
   alt?: string;
   onClose: () => void;
 }) {
-  const [mounted, setMounted] =
-    useState(false);
+  const mounted =
+    useSyncExternalStore(
+      subscribeToClientMount,
+      getClientMountSnapshot,
+      getServerMountSnapshot
+    );
 
   const resolvedSrc =
     type === "image"
-      ? toPublicImageCdnUrl(src)
+      ? toPublicImageCdnUrl(
+          src
+        )
       : src;
 
   useEffect(() => {
-    setMounted(true);
-
-    return () => {
-      setMounted(false);
-    };
-  }, []);
-
-  useEffect(() => {
-    if (!mounted || !resolvedSrc) return;
+    if (
+      !mounted ||
+      !resolvedSrc
+    ) {
+      return;
+    }
 
     const previous =
-      document.body.style.overflow;
+      document.body.style
+        .overflow;
 
     document.body.style.overflow =
       "hidden";
@@ -47,7 +63,10 @@ export default function AlumniMediaViewer({
     function keyDown(
       event: KeyboardEvent
     ) {
-      if (event.key === "Escape") {
+      if (
+        event.key ===
+        "Escape"
+      ) {
         event.preventDefault();
         onClose();
       }
@@ -63,15 +82,21 @@ export default function AlumniMediaViewer({
         "keydown",
         keyDown
       );
+
       document.body.style.overflow =
         previous;
     };
-  }, [mounted, resolvedSrc, onClose]);
+  }, [
+    mounted,
+    resolvedSrc,
+    onClose,
+  ]);
 
   if (
     !mounted ||
     !resolvedSrc ||
-    typeof document === "undefined"
+    typeof document ===
+      "undefined"
   ) {
     return null;
   }
@@ -81,7 +106,9 @@ export default function AlumniMediaViewer({
       role="dialog"
       aria-modal="true"
       aria-label="Visor de contenido"
-      onPointerDown={(event) => {
+      onPointerDown={(
+        event
+      ) => {
         if (
           event.target ===
           event.currentTarget
@@ -94,8 +121,10 @@ export default function AlumniMediaViewer({
         inset: 0,
         zIndex: 2147483646,
         display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
+        alignItems:
+          "center",
+        justifyContent:
+          "center",
         overflow: "auto",
         background:
           "rgba(3,4,5,.98)",
@@ -112,16 +141,20 @@ export default function AlumniMediaViewer({
             "max(14px, env(safe-area-inset-top))",
           right:
             "max(14px, env(safe-area-inset-right))",
-          zIndex: 2147483647,
+          zIndex:
+            2147483647,
           width: 42,
           height: 42,
           display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
+          alignItems:
+            "center",
+          justifyContent:
+            "center",
           padding: 0,
           border:
             "1px solid rgba(255,255,255,.14)",
-          borderRadius: "999px",
+          borderRadius:
+            "999px",
           background:
             "rgba(15,17,21,.72)",
           color:
@@ -132,49 +165,71 @@ export default function AlumniMediaViewer({
             "blur(14px)",
           WebkitBackdropFilter:
             "blur(14px)",
-          cursor: "pointer",
+          cursor:
+            "pointer",
           WebkitTapHighlightColor:
             "transparent",
         }}
       >
         <X
           size={20}
-          strokeWidth={2.15}
+          strokeWidth={
+            2.15
+          }
           aria-hidden="true"
         />
       </button>
 
-      {type === "video" ? (
+      {type ===
+      "video" ? (
         <video
           src={src}
           controls
           autoPlay
           playsInline
           style={{
-            display: "block",
+            display:
+              "block",
             width: "auto",
-            maxWidth: "100vw",
-            maxHeight: "100dvh",
-            objectFit: "contain",
-            background: "#000",
+            maxWidth:
+              "100vw",
+            maxHeight:
+              "100dvh",
+            objectFit:
+              "contain",
+            background:
+              "#000",
           }}
         />
       ) : (
-        <img
-          src={resolvedSrc}
-          alt={alt}
-          draggable={false}
-          style={{
-            display: "block",
-            width: "auto",
-            height: "auto",
-            maxWidth: "100vw",
-            maxHeight: "100dvh",
-            margin: "auto",
-            objectFit: "contain",
-            userSelect: "none",
-          }}
-        />
+        <>
+          {/* Native img is intentional in the full-resolution media viewer. */}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={
+              resolvedSrc
+            }
+            alt={alt}
+            draggable={
+              false
+            }
+            style={{
+              display:
+                "block",
+              width: "auto",
+              height: "auto",
+              maxWidth:
+                "100vw",
+              maxHeight:
+                "100dvh",
+              margin: "auto",
+              objectFit:
+                "contain",
+              userSelect:
+                "none",
+            }}
+          />
+        </>
       )}
     </div>,
     document.body

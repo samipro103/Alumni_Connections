@@ -13,6 +13,16 @@ import { toPublicImageCdnUrl } from "@/lib/imageCdn";
 const loadedSources =
   new Set<string>();
 
+type ImageStatus =
+  | "loading"
+  | "loaded"
+  | "error";
+
+type ImageLoadState = {
+  source: string;
+  status: ImageStatus;
+};
+
 type AlumniImageProps =
   Omit<
     ImgHTMLAttributes<HTMLImageElement>,
@@ -23,6 +33,18 @@ type AlumniImageProps =
     fallback?: ReactNode;
     priority?: boolean;
   };
+
+function getInitialStatus(
+  source: string
+): ImageStatus {
+  if (!source) {
+    return "error";
+  }
+
+  return loadedSources.has(source)
+    ? "loaded"
+    : "loading";
+}
 
 export default function AlumniImage({
   src,
@@ -48,17 +70,26 @@ export default function AlumniImage({
       rawSource
     );
 
-  const initialState =
-    !source
-      ? "error"
-      : loadedSources.has(source)
-      ? "loaded"
-      : "loading";
+  const [
+    loadState,
+    setLoadState,
+  ] =
+    useState<ImageLoadState>(
+      () => ({
+        source,
+        status:
+          getInitialStatus(
+            source
+          ),
+      })
+    );
 
-  const [state, setState] =
-    useState<
-      "loading" | "loaded" | "error"
-    >(initialState);
+  const state =
+    loadState.source === source
+      ? loadState.status
+      : getInitialStatus(
+          source
+        );
 
   const imageRef =
     useRef<HTMLImageElement>(
@@ -67,12 +98,30 @@ export default function AlumniImage({
 
   useEffect(() => {
     if (!source) {
-      setState("error");
       return;
     }
 
-    const image =
-      imageRef.current;
+    const commitStatus = (
+      status: ImageStatus
+    ) => {
+      setLoadState(
+        (current) => {
+          if (
+            current.source ===
+              source &&
+            current.status ===
+              status
+          ) {
+            return current;
+          }
+
+          return {
+            source,
+            status,
+          };
+        }
+      );
+    };
 
     const syncState = () => {
       const current =
@@ -83,23 +132,28 @@ export default function AlumniImage({
       }
 
       if (!current.complete) {
-        setState("loading");
+        commitStatus(
+          "loading"
+        );
         return;
       }
 
-      if (current.naturalWidth > 0) {
-        loadedSources.add(source);
-        setState("loaded");
+      if (
+        current.naturalWidth >
+        0
+      ) {
+        loadedSources.add(
+          source
+        );
+        commitStatus(
+          "loaded"
+        );
       } else {
-        setState("error");
+        commitStatus(
+          "error"
+        );
       }
     };
-
-    if (image?.complete) {
-      syncState();
-    } else {
-      setState("loading");
-    }
 
     const frame =
       window.requestAnimationFrame(
@@ -112,14 +166,16 @@ export default function AlumniImage({
         80
       );
 
-    const handleVisible = () => {
-      if (
-        document.visibilityState ===
-        "visible"
-      ) {
-        syncState();
-      }
-    };
+    const handleVisible =
+      () => {
+        if (
+          document
+            .visibilityState ===
+          "visible"
+        ) {
+          syncState();
+        }
+      };
 
     window.addEventListener(
       "pageshow",
@@ -135,13 +191,16 @@ export default function AlumniImage({
       window.cancelAnimationFrame(
         frame
       );
+
       window.clearTimeout(
         timer
       );
+
       window.removeEventListener(
         "pageshow",
         syncState
       );
+
       document.removeEventListener(
         "visibilitychange",
         handleVisible
@@ -155,46 +214,77 @@ export default function AlumniImage({
       data-image-state={state}
     >
       {source ? (
-        <img
-          ref={imageRef}
-          {...rest}
-          src={source}
-          alt={alt}
-          loading={
-            priority
-              ? "eager"
-              : loading || "lazy"
-          }
-          decoding={decoding}
-          fetchPriority={
-            priority
-              ? "high"
-              : fetchPriority
-          }
-          draggable={
-            rest.draggable ?? false
-          }
-          className={`alumni-image-element ${className}`}
-          onLoad={(event) => {
-            loadedSources.add(source);
-            setState("loaded");
-            onLoad?.(event);
-          }}
-          onError={(event) => {
-            setState("error");
-            onError?.(event);
-          }}
-        />
+        <>
+          {/* Native img is intentional: this shared layer accepts dynamic CDN/external sources. */}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            ref={imageRef}
+            {...rest}
+            src={source}
+            alt={alt}
+            loading={
+              priority
+                ? "eager"
+                : loading ||
+                  "lazy"
+            }
+            decoding={
+              decoding
+            }
+            fetchPriority={
+              priority
+                ? "high"
+                : fetchPriority
+            }
+            draggable={
+              rest.draggable ??
+              false
+            }
+            className={`alumni-image-element ${className}`}
+            onLoad={(
+              event
+            ) => {
+              loadedSources.add(
+                source
+              );
+
+              setLoadState({
+                source,
+                status:
+                  "loaded",
+              });
+
+              onLoad?.(
+                event
+              );
+            }}
+            onError={(
+              event
+            ) => {
+              setLoadState({
+                source,
+                status:
+                  "error",
+              });
+
+              onError?.(
+                event
+              );
+            }}
+          />
+        </>
       ) : null}
 
-      {state === "loading" && (
+      {state ===
+        "loading" && (
         <span
           className="alumni-image-shimmer"
           aria-hidden="true"
         />
       )}
 
-      {state === "error" && (
+      {state ===
+        "error" && (
         <span
           className="alumni-image-fallback"
           aria-hidden="true"
@@ -202,7 +292,9 @@ export default function AlumniImage({
           {fallback ?? (
             <ImageOff
               size={18}
-              strokeWidth={1.8}
+              strokeWidth={
+                1.8
+              }
             />
           )}
         </span>
@@ -234,15 +326,17 @@ export function AlumniAvatar({
       .trim();
 
   const initial =
-    Array.from(cleanName)[0]
-      ?.toUpperCase() || "A";
+    Array.from(
+      cleanName
+    )[0]?.toUpperCase() ||
+    "A";
 
   const resolvedAlt =
     alt !== undefined
       ? alt
       : cleanName
-      ? `Avatar de ${cleanName}`
-      : "Avatar";
+        ? `Avatar de ${cleanName}`
+        : "Avatar";
 
   return (
     <AlumniImage
