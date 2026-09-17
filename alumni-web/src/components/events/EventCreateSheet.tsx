@@ -7,6 +7,7 @@ import {
   Check,
   ChevronRight,
   Clock3,
+  EyeOff,
   Globe2,
   GraduationCap,
   MapPin,
@@ -15,6 +16,7 @@ import {
   Search,
   Sparkles,
   Trophy,
+  UserRound,
   Users,
   X,
 } from "lucide-react";
@@ -35,6 +37,7 @@ export type EventCreateForm = {
   visibility: string;
   community_id: string;
   max_attendees: string;
+  organizer_anonymous: boolean;
 };
 
 type Picker = "type" | "community" | null;
@@ -84,7 +87,6 @@ export default function EventCreateSheet({
 
   const selectedType =
     EVENT_TYPES.find((item) => item.id === form.event_type) ?? EVENT_TYPES[0];
-
   const SelectedTypeIcon = selectedType.icon;
 
   const selectedCommunity = communities.find(
@@ -407,6 +409,46 @@ export default function EventCreateSheet({
                       </AnimatePresence>
                     </section>
 
+                    <section className="events-create-v3-group">
+                      <div className="events-create-v3-label">Organizador</div>
+                      <div className="events-create-v3-segmented">
+                        <motion.button
+                          type="button"
+                          data-active={
+                            !form.organizer_anonymous ? "true" : "false"
+                          }
+                          onClick={() =>
+                            onChange({ organizer_anonymous: false })
+                          }
+                          whileTap={reduceMotion ? undefined : { scale: 0.98 }}
+                        >
+                          <UserRound size={16} />
+                          Mi perfil
+                        </motion.button>
+
+                        <motion.button
+                          type="button"
+                          data-active={
+                            form.organizer_anonymous ? "true" : "false"
+                          }
+                          onClick={() =>
+                            onChange({ organizer_anonymous: true })
+                          }
+                          whileTap={reduceMotion ? undefined : { scale: 0.98 }}
+                        >
+                          <EyeOff size={16} />
+                          Anónimo
+                        </motion.button>
+                      </div>
+                      <div className="events-create-v3-label">
+                        <span>
+                          {form.organizer_anonymous
+                            ? "Tu identidad no se mostrará en el evento."
+                            : "Tu nombre y foto podrán verse como organizador."}
+                        </span>
+                      </div>
+                    </section>
+
                     <section className="events-create-v3-group events-create-v3-last">
                       <div className="events-create-v3-label">
                         Cupo <span>opcional</span>
@@ -682,5 +724,5 @@ export default function EventCreateSheet({
   );
 }
 
-/* ALUMNI_EVENTS_CREATE_B_6_1 */
+/* ALUMNI_EVENTS_ORGANIZER_CHAT_6_2:CREATE */
 

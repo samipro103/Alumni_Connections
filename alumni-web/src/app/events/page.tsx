@@ -1,31 +1,15 @@
-"use client";
+﻿"use client";
 
 import {
-  ArrowLeft,
-  BookOpen,
-  Check,
   CalendarDays,
   ChevronRight,
   Clock3,
-  Globe2,
-  GraduationCap,
   MapPin,
-  Palette,
-  PartyPopper,
   Plus,
   Search,
-  Sparkles,
-  Trophy,
-  Users,
-  X,
 } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
-import {
-  AnimatePresence,
-  motion,
-  useReducedMotion,
-} from "framer-motion";
 import AppShell from "@/components/layout/AppShell";
 import { ListLoadingSkeleton } from "@/components/ui/AlumniLoading";
 import { useAuth } from "@/components/auth/AuthProvider";
@@ -36,47 +20,42 @@ import "../interior-ui-1-0.css";
 import "./events-mobile-pro-4-0.css";
 
 type Filter = "upcoming" | "mine" | "past";
-type CreateStep = 1 | 2 | 3;
 
-const EVENT_TYPES = [
-  { id: "meetup", label: "Encuentro", icon: Users },
-  { id: "party", label: "Fiesta", icon: PartyPopper },
-  { id: "sports", label: "Deporte", icon: Trophy },
-  { id: "academic", label: "Académico", icon: BookOpen },
-  { id: "cultural", label: "Cultural", icon: Palette },
-  { id: "graduation", label: "Graduación", icon: GraduationCap },
-  { id: "other", label: "Otro", icon: Sparkles },
-] as const;
+const EVENT_LABELS: Record<string, string> = {
+  meetup: "Encuentro",
+  party: "Fiesta",
+  sports: "Deporte",
+  academic: "Académico",
+  cultural: "Cultural",
+  graduation: "Graduación",
+  other: "Otro",
+};
 
-const EVENT_LABELS = Object.fromEntries(
-  EVENT_TYPES.map((item) => [item.id, item.label])
-);
+const EMPTY_FORM = {
+  title: "",
+  description: "",
+  event_date: "",
+  end_date: "",
+  location: "",
+  event_type: "meetup",
+  visibility: "public",
+  community_id: "",
+  max_attendees: "",
+  organizer_anonymous: false,
+};
 
 export default function EventsPage() {
   const { user } = useAuth();
-  const reduceMotion = useReducedMotion();
   const [events, setEvents] = useState<any[]>([]);
   const [rsvps, setRsvps] = useState<any[]>([]);
   const [communities, setCommunities] = useState<any[]>([]);
   const [filter, setFilter] = useState<Filter>("upcoming");
   const [query, setQuery] = useState("");
   const [createOpen, setCreateOpen] = useState(false);
-  const [createStep, setCreateStep] = useState<CreateStep>(1);
-  const [stepDirection, setStepDirection] = useState(1);
   const [creating, setCreating] = useState(false);
   const [createError, setCreateError] = useState("");
   const [loading, setLoading] = useState(true);
-  const [form, setForm] = useState({
-    title: "",
-    description: "",
-    event_date: "",
-    end_date: "",
-    location: "",
-    event_type: "meetup",
-    visibility: "public",
-    community_id: "",
-    max_attendees: "",
-  });
+  const [form, setForm] = useState({ ...EMPTY_FORM });
 
   useEffect(() => {
     void load();
@@ -181,8 +160,6 @@ export default function EventsPage() {
 
   function openCreate() {
     setCreateError("");
-    setCreateStep(1);
-    setStepDirection(1);
     setCreateOpen(true);
   }
 
@@ -192,93 +169,110 @@ export default function EventsPage() {
     setCreateOpen(false);
   }
 
-  function goToCreateStep(next: CreateStep) {
-    setStepDirection(next > createStep ? 1 : -1);
-    setCreateStep(next);
-  }
-
-  function nextCreateStep() {
-    if (createStep === 1) {
-      if (!form.title.trim()) return;
-      goToCreateStep(2);
-      return;
-    }
-
-    if (createStep === 2) {
-      if (!form.event_date) return;
-      goToCreateStep(3);
-    }
-  }
-
-  function previousCreateStep() {
-    if (createStep === 3) {
-      goToCreateStep(2);
-      return;
-    }
-
-    if (createStep === 2) {
-      goToCreateStep(1);
-    }
-  }
-
-  const currentStepReady =
-    createStep === 1
-      ? Boolean(form.title.trim())
-      : createStep === 2
-      ? Boolean(form.event_date)
-      : form.visibility !== "community" ||
-        Boolean(form.community_id);
-
   async function createEvent() {
     if (!user || creating) return;
+
     const title = form.title.trim();
-    if (!title) { setCreateError("Agrega un nombre para el evento."); return; }
-    if (!form.event_date) { setCreateError("Selecciona cuándo empieza."); return; }
-    if (form.visibility === "community" && !form.community_id) { setCreateError("Selecciona una comunidad."); return; }
+    if (!title) {
+      setCreateError("Agrega un nombre para el evento.");
+      return;
+    }
+
+    if (!form.event_date) {
+      setCreateError("Selecciona cuándo empieza.");
+      return;
+    }
+
+    if (form.visibility === "community" && !form.community_id) {
+      setCreateError("Selecciona una comunidad.");
+      return;
+    }
+
     const startsAt = new Date(form.event_date);
-    if (Number.isNaN(startsAt.getTime())) { setCreateError("La fecha de inicio no es válida."); return; }
+    if (Number.isNaN(startsAt.getTime())) {
+      setCreateError("La fecha de inicio no es válida.");
+      return;
+    }
+
     let endsAt: Date | null = null;
     if (form.end_date) {
       endsAt = new Date(form.end_date);
-      if (Number.isNaN(endsAt.getTime())) { setCreateError("La fecha final no es válida."); return; }
-      if (endsAt.getTime() < startsAt.getTime()) { setCreateError("El evento no puede terminar antes de empezar."); return; }
+      if (Number.isNaN(endsAt.getTime())) {
+        setCreateError("La fecha final no es válida.");
+        return;
+      }
+      if (endsAt.getTime() < startsAt.getTime()) {
+        setCreateError("El evento no puede terminar antes de empezar.");
+        return;
+      }
     }
+
     let capacity: number | null = null;
     if (form.max_attendees) {
       const parsed = Number(form.max_attendees);
-      if (!Number.isInteger(parsed) || parsed < 1 || parsed > 100000) { setCreateError("El cupo debe ser un número válido."); return; }
+      if (!Number.isInteger(parsed) || parsed < 1 || parsed > 100000) {
+        setCreateError("El cupo debe ser un número válido.");
+        return;
+      }
       capacity = parsed;
     }
+
     setCreating(true);
     setCreateError("");
+
     try {
-      const { data, error } = await supabase.from("events").insert({
-        created_by: user.id,
-        title,
-        description: form.description.trim() || null,
-        event_date: startsAt.toISOString(),
-        end_date: endsAt ? endsAt.toISOString() : null,
-        location: form.location.trim() || null,
-        event_type: form.event_type,
-        visibility: form.visibility,
-        community_id: form.visibility === "community" ? form.community_id : null,
-        max_attendees: capacity,
-      }).select("id").single();
-      if (error || !data?.id) throw (error || new Error("No se recibió el evento creado."));
-      setForm({ title:"", description:"", event_date:"", end_date:"", location:"", event_type:"meetup", visibility:"public", community_id:"", max_attendees:"" });
+      const { data, error } = await supabase
+        .from("events")
+        .insert({
+          created_by: user.id,
+          title,
+          description: form.description.trim() || null,
+          event_date: startsAt.toISOString(),
+          end_date: endsAt ? endsAt.toISOString() : null,
+          location: form.location.trim() || null,
+          event_type: form.event_type,
+          visibility: form.visibility,
+          community_id:
+            form.visibility === "community"
+              ? form.community_id
+              : null,
+          max_attendees: capacity,
+          organizer_anonymous: form.organizer_anonymous,
+        })
+        .select("id")
+        .single();
+
+      if (error || !data?.id) {
+        throw error || new Error("No se recibió el evento creado.");
+      }
+
+      setForm({ ...EMPTY_FORM });
       setCreateOpen(false);
       window.location.href = `/events/${data.id}`;
     } catch (error: any) {
       console.error("[Alumni Events] create:", error);
+
       const raw = String(error?.message || "");
       const lower = raw.toLowerCase();
-      setCreateError(lower.includes("row-level security") || lower.includes("permission") || lower.includes("policy") ? "No tienes permiso para crear este evento." : (raw || "No pudimos crear el evento. Intenta de nuevo."));
-    } finally { setCreating(false); }
+
+      setCreateError(
+        lower.includes("row-level security") ||
+        lower.includes("permission") ||
+        lower.includes("policy")
+          ? "No tienes permiso para crear este evento."
+          : raw || "No pudimos crear el evento. Intenta de nuevo."
+      );
+    } finally {
+      setCreating(false);
+    }
   }
 
   return (
     <AppShell>
-      <main className="alumni-events-2 alumni-events-mobile-pro mx-auto w-full max-w-[920px]" data-alumni-motion-ignore="true">
+      <main
+        className="alumni-events-2 alumni-events-mobile-pro mx-auto w-full max-w-[920px]"
+        data-alumni-motion-ignore="true"
+      >
         <header className="events2-hero">
           <div>
             <h1>Eventos</h1>
@@ -337,7 +331,6 @@ export default function EventsPage() {
                 ? "Todavía no tienes planes."
                 : "No hay eventos por aquí."}
             </strong>
-
           </section>
         ) : (
           <section className="events2-list">
@@ -362,10 +355,9 @@ export default function EventsPage() {
 
                   <span className="events2-row-main">
                     <span className="events2-row-kicker">
-                      {EVENT_LABELS[event.event_type] || "Evento"}
                       {event.visibility === "community"
-                        ? " · Solo comunidad"
-                        : ""}
+                        ? "Solo comunidad"
+                        : "Evento público"}
                     </span>
 
                     <strong className="events2-row-title">
@@ -390,12 +382,8 @@ export default function EventsPage() {
                   </span>
 
                   <span className="events2-row-side">
-                    {response === "going" && (
-                      <em>Vas</em>
-                    )}
-                    {response === "interested" && (
-                      <em>Te interesa</em>
-                    )}
+                    {response === "going" && <em>Vas</em>}
+                    {response === "interested" && <em>Te interesa</em>}
                     <ChevronRight size={17} />
                   </span>
                 </Link>
@@ -422,20 +410,5 @@ export default function EventsPage() {
   );
 }
 
-/* ALUMNI_2_1_5_EVENTS_EDITORIAL_REDESIGN */
+/* ALUMNI_EVENTS_ORGANIZER_CHAT_6_2:LIST_CREATE */
 
-/* ALUMNI_2_7_0_LOADING_STATES:EVENTS */
-
-/* ALUMNI_3_1_1_PRODUCT_COPY_CLEANUP */
-
-/* ALUMNI_MICRO_IMPROVEMENTS_BLOCK_4:EVENTS_HOME */
-
-/* ALUMNI_EVENTS_MOBILE_PRO_4_0 */
-
-/* ALUMNI_EVENTS_COMMUNITIES_STYLE_CONSOLIDATION_4_1:EVENTS:MAIN */
-
-/* ALUMNI_CREATE_EXPERIENCE_PRO_5_0:EVENTS */
-
-/* ALUMNI_MOBILE_FOCUS_EVENTS_POLISH_5_1:EVENTS */
-
-/* ALUMNI_EVENTS_CREATE_PRO_6_0:PAGE */
