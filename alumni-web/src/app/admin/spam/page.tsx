@@ -10,11 +10,30 @@ import {
   CheckCircle2,
   Search,
   ShieldAlert,
-  ShieldCheck,
   XCircle,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import AdminShell from "@/components/admin/AdminShell";
+
+type AntiSpamEvent = {
+  id: number;
+  user_id: string;
+  status: string;
+  reason?: string | null;
+  action_key: string;
+  signal_type: string;
+  severity: string;
+  created_at: string;
+  details?: Record<string, unknown> | null;
+};
+
+type SpamProfile = {
+  id: string;
+  username?: string | null;
+  full_name?: string | null;
+  avatar_url?: string | null;
+  is_verified?: boolean | null;
+};
 
 function severityClass(
   value: string
@@ -81,9 +100,9 @@ function signalLabel(
 
 export default function AdminSpamPage() {
   const [rows, setRows] =
-    useState<any[]>([]);
+    useState<AntiSpamEvent[]>([]);
   const [profiles, setProfiles] =
-    useState<any[]>([]);
+    useState<SpamProfile[]>([]);
   const [search, setSearch] =
     useState("");
   const [loading, setLoading] =
@@ -118,18 +137,24 @@ export default function AdminSpamPage() {
       return;
     }
 
+    const events =
+      (data ||
+        []) as unknown as
+        AntiSpamEvent[];
+
     const userIds = [
       ...new Set(
-        (data || [])
+        events
           .map(
-            (item: any) =>
+            (item) =>
               item.user_id
           )
           .filter(Boolean)
       ),
     ];
 
-    let profileRows: any[] = [];
+    let profileRows:
+      SpamProfile[] = [];
 
     if (userIds.length) {
       const {
@@ -145,10 +170,12 @@ export default function AdminSpamPage() {
         );
 
       profileRows =
-        result || [];
+        (result ||
+          []) as unknown as
+          SpamProfile[];
     }
 
-    setRows(data || []);
+    setRows(events);
     setProfiles(profileRows);
     setLoading(false);
   }

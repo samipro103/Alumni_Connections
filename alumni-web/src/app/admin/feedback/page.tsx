@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useEffect, useMemo, useState } from "react";
 import {
@@ -37,6 +37,16 @@ type FeedbackReport = {
     avatar_url?: string | null;
   } | null;
 };
+
+type FeedbackReportPatch =
+  Partial<
+    Pick<
+      FeedbackReport,
+      | "status"
+      | "admin_notes"
+      | "priority"
+    >
+  >;
 
 const STATUS_LABELS: Record<string, string> = {
   new: "Nuevo",
@@ -129,14 +139,17 @@ export default function AdminFeedbackPage() {
 
     setSignedUrls(
       (data || [])
-        .map((item: any) => item.signedUrl)
-        .filter(Boolean)
+        .map((item) => item.signedUrl)
+        .filter(
+          (url): url is string =>
+            typeof url === "string" && url.length > 0
+        )
     );
   }
 
   async function updateReport(
     reportId: string,
-    patch: Record<string, any>
+    patch: FeedbackReportPatch
   ) {
     setSaving(true);
 
@@ -153,7 +166,9 @@ export default function AdminFeedbackPage() {
 
     setReports((current) =>
       current.map((report) =>
-        report.id === reportId ? { ...report, ...patch } : report
+        report.id === reportId
+          ? { ...report, ...patch }
+          : report
       )
     );
 
@@ -355,7 +370,9 @@ export default function AdminFeedbackPage() {
                   )}
 
                   <div>
-                    <p className="font-black text-zinc-400">Contexto</p>
+                    <p className="font-black text-zinc-400">
+                      Contexto
+                    </p>
                     <p className="mt-1 leading-5 text-zinc-600">
                       {selected.platform || "Web"} ·{" "}
                       {selected.source_path || "/"} ·{" "}
@@ -379,6 +396,7 @@ export default function AdminFeedbackPage() {
                           rel="noreferrer"
                           className="group relative aspect-[4/3] overflow-hidden rounded-xl border border-white/[0.07]"
                         >
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
                           <img
                             src={url}
                             alt={`Captura ${index + 1}`}
@@ -455,6 +473,7 @@ export default function AdminFeedbackPage() {
                     </button>
                   )}
                 </div>
+
                 <div>
                   <p className="mb-2 text-xs font-black text-zinc-400">
                     Nota interna
@@ -487,4 +506,3 @@ export default function AdminFeedbackPage() {
     </AdminShell>
   );
 }
-
