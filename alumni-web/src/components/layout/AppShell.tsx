@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { ReactNode } from "react";
 import { usePathname } from "next/navigation";
@@ -17,8 +17,8 @@ import AlumniMotionDirector from "@/components/motion/AlumniMotionDirector";
 interface Props {
   children: ReactNode;
   /**
-   * Para pantallas que ya tienen su propio header/footer móvil,
-   * como una conversación. En escritorio conserva el shell normal.
+   * Para pantallas que ya tienen su propio header/footer mÃ³vil,
+   * como una conversaciÃ³n. En escritorio conserva el shell normal.
    */
   immersiveMobile?: boolean;
 }
@@ -60,8 +60,8 @@ export default function AppShell({
             immersiveMobile
               ? "mx-auto w-full max-w-[1500px] px-0 pb-0 pt-0 lg:px-8 lg:pb-10 lg:pt-[84px]"
               : showPrimaryMobileNav
-              ? "mx-auto w-full max-w-[1500px] px-4 pb-24 pt-[calc(84px+env(safe-area-inset-top))] sm:px-6 lg:px-8 lg:pb-10 lg:pt-[84px]"
-              : "mx-auto w-full max-w-[1500px] px-4 pb-[calc(24px+env(safe-area-inset-bottom))] pt-[calc(84px+env(safe-area-inset-top))] sm:px-6 lg:px-8 lg:pb-10 lg:pt-[84px]"
+              ? "mx-auto w-full max-w-[1500px] px-4 pb-24 pt-[calc(68px+env(safe-area-inset-top))] sm:px-6 lg:px-8 lg:pb-10 lg:pt-[84px]"
+              : "mx-auto w-full max-w-[1500px] px-4 pb-[calc(24px+env(safe-area-inset-bottom))] pt-[calc(68px+env(safe-area-inset-top))] sm:px-6 lg:px-8 lg:pb-10 lg:pt-[84px]"
           }
         >
           <div
@@ -116,3 +116,6 @@ export default function AppShell({
 /* ALUMNI_MOTION_PASS_2_0_FULL_APP */
 
 /* ALUMNI_GLASS_NAVIGATION_MOBILE_6_0:APP_SHELL */
+
+/* ALUMNI_FLOATING_TOPBAR_7_0:APP_SHELL */
+

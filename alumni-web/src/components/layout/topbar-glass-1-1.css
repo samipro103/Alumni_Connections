@@ -1,4 +1,4 @@
-/*
+﻿/*
  * ALUMNI TopBar Glass 1.1
  * Transparent enough to let content breathe underneath,
  * while keeping text/icons readable.
@@ -49,7 +49,7 @@ html[data-theme="light"]
 /* ALUMNI_TOPBAR_GLASS_1_1 */
 
 /* =========================================================
-   ALUMNI_GLASS_NAVIGATION_MOBILE_6_0 — ADAPTIVE GLASS TOPBAR
+   ALUMNI_GLASS_NAVIGATION_MOBILE_6_0 â€” ADAPTIVE GLASS TOPBAR
    ========================================================= */
 
 [data-alumni-topbar="true"] {
@@ -1198,3 +1198,252 @@ and (
 }
 
 /* ALUMNI_PULL_REFRESH_FULL_TRAVEL_6_4:CSS */
+
+/* =========================================================
+   ALUMNI_FLOATING_TOPBAR_7_0
+   Mobile/tablet topbar becomes a transparent floating control layer.
+   Desktop keeps the existing glass navigation with search.
+   ========================================================= */
+
+@media (max-width: 1023px) {
+  [data-alumni-topbar="true"],
+  [data-alumni-topbar="true"][data-glass-scrolled="true"],
+  html[data-theme="light"] [data-alumni-topbar="true"],
+  html[data-theme="light"]
+    [data-alumni-topbar="true"][data-glass-scrolled="true"],
+  html[data-alumni-pull-refresh]
+    [data-alumni-topbar="true"] {
+    height:
+      calc(56px + env(safe-area-inset-top))
+      !important;
+
+    border-bottom:
+      0 !important;
+
+    border-bottom-color:
+      transparent !important;
+
+    background:
+      transparent !important;
+
+    -webkit-backdrop-filter:
+      none !important;
+
+    backdrop-filter:
+      none !important;
+
+    box-shadow:
+      none !important;
+  }
+
+  /*
+   * The fixed header itself should not act like an invisible slab.
+   * Only the visible floating controls receive taps.
+   */
+  [data-alumni-topbar="true"] {
+    pointer-events:
+      none;
+  }
+
+  [data-alumni-topbar="true"]
+    > div,
+  [data-alumni-topbar="true"]
+    a,
+  [data-alumni-topbar="true"]
+    button,
+  [data-alumni-topbar="true"]
+    input,
+  [data-alumni-topbar="true"]
+    form {
+    pointer-events:
+      auto;
+  }
+
+  [data-alumni-topbar="true"]
+    > div {
+    height:
+      100% !important;
+
+    gap:
+      10px !important;
+
+    padding-left:
+      max(14px, env(safe-area-inset-left))
+      !important;
+
+    padding-right:
+      max(14px, env(safe-area-inset-right))
+      !important;
+  }
+
+  /*
+   * Brand floats directly on the page.
+   */
+  [data-alumni-topbar="true"]
+    > div
+    > a[aria-label="Alumni."] {
+    position:
+      relative;
+
+    z-index:
+      2;
+
+    filter:
+      drop-shadow(
+        0 1px 1px
+        color-mix(
+          in srgb,
+          var(--app-bg) 58%,
+          transparent
+        )
+      );
+  }
+
+  /*
+   * Keep the notification/avatar side compact.
+   * No shared background container is introduced.
+   */
+  [data-alumni-topbar="true"]
+    a[aria-label="Notificaciones"] {
+    width:
+      38px !important;
+
+    height:
+      38px !important;
+
+    border-radius:
+      13px !important;
+
+    background:
+      transparent !important;
+
+    color:
+      var(--app-text-soft)
+      !important;
+
+    box-shadow:
+      none !important;
+  }
+
+  [data-alumni-topbar="true"]
+    a[aria-label="Notificaciones"]:active {
+    background:
+      color-mix(
+        in srgb,
+        var(--app-surface) 52%,
+        transparent
+      )
+      !important;
+  }
+
+  [data-alumni-topbar="true"]
+    .alumni-topbar-profile-avatar {
+    width:
+      38px !important;
+
+    height:
+      38px !important;
+
+    margin-left:
+      2px !important;
+
+    background:
+      color-mix(
+        in srgb,
+        var(--app-surface) 72%,
+        transparent
+      )
+      !important;
+
+    border:
+      0 !important;
+
+    box-shadow:
+      0 0 0 1px
+      color-mix(
+        in srgb,
+        var(--app-border) 72%,
+        transparent
+      )
+      !important;
+  }
+
+  /*
+   * The existing Create action remains a floating pill on wider
+   * mobile/tablet sizes where it is already visible.
+   */
+  [data-alumni-topbar="true"]
+    .alumni-accent-button {
+    min-height:
+      38px;
+
+    border-radius:
+      13px !important;
+
+    box-shadow:
+      0 5px 15px
+      color-mix(
+        in srgb,
+        var(--app-accent) 14%,
+        transparent
+      );
+  }
+
+  /*
+   * Pull-to-refresh can keep its motion/progress line,
+   * but never paints a topbar surface.
+   */
+  html[data-alumni-pull-refresh]
+    [data-alumni-topbar="true"],
+  html[data-alumni-pull-refresh="pulling"]
+    [data-alumni-topbar="true"],
+  html[data-alumni-pull-refresh="ready"]
+    [data-alumni-topbar="true"],
+  html[data-alumni-pull-refresh="refreshing"]
+    [data-alumni-topbar="true"] {
+    background:
+      transparent !important;
+
+    border-bottom-color:
+      transparent !important;
+
+    box-shadow:
+      none !important;
+
+    -webkit-backdrop-filter:
+      none !important;
+
+    backdrop-filter:
+      none !important;
+  }
+}
+
+@media (max-width: 639px) {
+  [data-alumni-topbar="true"]
+    > div {
+    padding-left:
+      max(13px, env(safe-area-inset-left))
+      !important;
+
+    padding-right:
+      max(13px, env(safe-area-inset-right))
+      !important;
+  }
+
+  [data-alumni-topbar="true"]
+    > div
+    > a[aria-label="Alumni."] {
+    transform-origin:
+      left center;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-alumni-topbar="true"] {
+    transition:
+      none !important;
+  }
+}
+
+/* ALUMNI_FLOATING_TOPBAR_7_0:END */
+
