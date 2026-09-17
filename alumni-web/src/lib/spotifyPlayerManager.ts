@@ -1,7 +1,10 @@
 "use client";
 
 import { supabase } from "@/lib/supabase";
-import { loadSpotifyWebPlaybackSdk } from "@/lib/spotifyWebPlayback";
+import {
+  loadSpotifyWebPlaybackSdk,
+  type SpotifyWebPlaybackPlayer,
+} from "@/lib/spotifyWebPlayback";
 
 type Snapshot = {
   ready: boolean;
@@ -13,7 +16,40 @@ type Snapshot = {
 
 type Listener = (snapshot: Snapshot) => void;
 
-let player: any = null;
+function getErrorMessage(
+  error: unknown,
+  fallback: string
+) {
+  if (
+    error instanceof Error &&
+    error.message
+  ) {
+    return error.message;
+  }
+
+  if (
+    typeof error === "object" &&
+    error !== null &&
+    "message" in error
+  ) {
+    const message = (
+      error as {
+        message?: unknown;
+      }
+    ).message;
+
+    if (
+      typeof message === "string" &&
+      message
+    ) {
+      return message;
+    }
+  }
+
+  return fallback;
+}
+
+let player: SpotifyWebPlaybackPlayer | null = null;
 let playerReadyPromise: Promise<string> | null = null;
 let playerGeneration = 0;
 
@@ -114,11 +150,12 @@ async function createPlayerAndWaitReady(): Promise<string> {
       ) => {
         try {
           callback(await getSpotifyAccessToken());
-        } catch (tokenError: any) {
+        } catch (tokenError: unknown) {
           emit({
-            error:
-              tokenError?.message ||
-              "Vuelve a conectar Spotify.",
+            error: getErrorMessage(
+              tokenError,
+              "Vuelve a conectar Spotify."
+            ),
           });
         }
       },
@@ -198,7 +235,7 @@ async function createPlayerAndWaitReady(): Promise<string> {
 
     nextPlayer.addListener(
       "player_state_changed",
-      (state: any) => {
+      (state) => {
         if (!state || !currentGeneration()) return;
 
         emit({
@@ -273,10 +310,12 @@ async function createPlayerAndWaitReady(): Promise<string> {
           "Spotify no pudo conectar el reproductor."
         );
       }
-    } catch (connectionError: any) {
+    } catch (connectionError: unknown) {
       finishError(
-        connectionError?.message ||
+        getErrorMessage(
+          connectionError,
           "Spotify no pudo conectar el reproductor."
+        )
       );
     }
   });
@@ -325,16 +364,17 @@ export async function ensureSpotifyPlayer() {
 
   const creation: Promise<string> =
     createPlayerAndWaitReady()
-    .catch((error: any) => {
+    .catch((error: unknown) => {
       disconnectCurrentPlayer();
 
       emit({
         ready: false,
         deviceId: "",
         isPlaying: false,
-        error:
-          error?.message ||
-          "No se pudo iniciar Spotify.",
+        error: getErrorMessage(
+          error,
+          "No se pudo iniciar Spotify."
+        ),
       });
 
       throw error;
