@@ -22,6 +22,39 @@ type Options = {
   enabled?: boolean;
 };
 
+function getErrorMessage(
+  error: unknown,
+  fallback: string
+) {
+  if (
+    error instanceof Error &&
+    error.message
+  ) {
+    return error.message;
+  }
+
+  if (
+    typeof error === "object" &&
+    error !== null &&
+    "message" in error
+  ) {
+    const message = (
+      error as {
+        message?: unknown;
+      }
+    ).message;
+
+    if (
+      typeof message === "string" &&
+      message
+    ) {
+      return message;
+    }
+  }
+
+  return fallback;
+}
+
 async function getAlumniAccessToken() {
   const {
     data: { session },
@@ -158,7 +191,7 @@ export function useSpotifyPremiumPlayer({
     }, []);
 
   const armLoop =
-    useCallback(() => {
+    useCallback(function scheduleLoop() {
       clearLoopTimer();
 
       if (
@@ -182,7 +215,7 @@ export function useSpotifyPremiumPlayer({
 
             await spotifyResume();
 
-            armLoop();
+            scheduleLoop();
           },
           Math.max(
             1000,
@@ -385,11 +418,13 @@ export function useSpotifyPremiumPlayer({
 
           return true;
         } catch (
-          playError: any
+          playError: unknown
         ) {
           setError(
-            playError?.message ||
+            getErrorMessage(
+              playError,
               "Spotify no pudo iniciar la canción."
+            )
           );
 
           return false;
@@ -501,11 +536,13 @@ export function useSpotifyPremiumPlayer({
 
           return true;
         } catch (
-          playError: any
+          playError: unknown
         ) {
           setError(
-            playError?.message ||
+            getErrorMessage(
+              playError,
               "Spotify no pudo iniciar la canción."
+            )
           );
 
           return false;
