@@ -1,3 +1,26 @@
+export type SpotifyIframeController = {
+  play?: () => void;
+  pause?: () => void;
+  resume?: () => void;
+  seek?: (seconds: number) => void;
+  destroy?: () => void;
+  loadUri?: (
+    uri: string
+  ) => void;
+  addListener?: (
+    event: string,
+    callback: (
+      payload?: unknown
+    ) => void
+  ) => void;
+  removeListener?: (
+    event: string,
+    callback?: (
+      payload?: unknown
+    ) => void
+  ) => void;
+};
+
 export type SpotifyIframeApi = {
   createController: (
     element: HTMLElement,
@@ -7,7 +30,7 @@ export type SpotifyIframeApi = {
       width?: number | string;
       height?: number | string;
     },
-    callback: (controller: any) => void
+    callback: (controller: SpotifyIframeController) => void
   ) => void;
 };
 

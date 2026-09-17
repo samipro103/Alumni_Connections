@@ -1,8 +1,15 @@
 "use client";
 
+export type StoryMusicController = {
+  play?: () => void;
+  pause?: () => void;
+  seek?: (seconds: number) => void;
+  destroy?: () => void;
+};
+
 type StoryMusicEntry = {
   storyId: string;
-  controller: any;
+  controller: StoryMusicController;
   trackUrl: string;
   startSeconds: number;
   clipDurationSeconds: number;
@@ -33,7 +40,7 @@ function emit(storyId: string, playing: boolean) {
 
 export function registerStoryMusicController(
   storyId: string,
-  controller: any,
+  controller: StoryMusicController,
   trackUrl: string,
   startSeconds: number,
   clipDurationSeconds = 15
