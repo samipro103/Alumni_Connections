@@ -1,20 +1,72 @@
-type RankedPost = {
-  _forYouScore?: number;
-  _forYouReason?: string;
-  [key: string]: any;
+type FeedRankingProfile = {
+  id?: string | null;
+  university?: string | null;
+  education_institution_name?: string | null;
+  education_program_name?: string | null;
+  career?: string | null;
+  city?: string | null;
+  country?: string | null;
+  residence_country_code?: string | null;
 };
 
-function clean(value: unknown) {
-  return String(value || "")
+type FeedRankingPostView = {
+  user_id: string;
+  created_at: string;
+  likesCount?: number | null;
+  likes?: {
+    length: number;
+  } | null;
+  commentsCount?: number | null;
+  comments?: {
+    length: number;
+  } | null;
+  image_url?: unknown;
+  content?: unknown;
+  profiles?:
+    | FeedRankingProfile
+    | null;
+  _discoveryBoost?:
+    | number
+    | string
+    | null;
+};
+
+type RankingMetadata = {
+  _forYouScore?: number;
+  _forYouReason?: string;
+};
+
+type RankedPost<
+  T extends object
+> =
+  T &
+  FeedRankingPostView &
+  RankingMetadata;
+
+function clean(
+  value: unknown
+) {
+  return String(
+    value || ""
+  )
     .normalize("NFKD")
-    .replace(/[\u0300-\u036f]/g, "")
+    .replace(
+      /[\u0300-\u036f]/g,
+      ""
+    )
     .trim()
     .toLowerCase();
 }
 
-function same(a: unknown, b: unknown) {
-  const left = clean(a);
-  const right = clean(b);
+function same(
+  a: unknown,
+  b: unknown
+) {
+  const left =
+    clean(a);
+
+  const right =
+    clean(b);
 
   return Boolean(
     left &&
@@ -23,17 +75,54 @@ function same(a: unknown, b: unknown) {
   );
 }
 
-function institutionOf(profile: any) {
+function asProfile(
+  value: unknown
+): FeedRankingProfile {
+  if (
+    typeof value ===
+      "object" &&
+    value !== null
+  ) {
+    return value as
+      FeedRankingProfile;
+  }
+
+  return {};
+}
+
+function asPostView<
+  T extends object
+>(
+  post: T
+) {
+  return post as
+    T &
+    FeedRankingPostView;
+}
+
+function institutionOf(
+  profile:
+    | FeedRankingProfile
+    | null
+    | undefined
+) {
   return (
-    profile?.education_institution_name ||
+    profile
+      ?.education_institution_name ||
     profile?.university ||
     ""
   );
 }
 
-function programOf(profile: any) {
+function programOf(
+  profile:
+    | FeedRankingProfile
+    | null
+    | undefined
+) {
   return (
-    profile?.education_program_name ||
+    profile
+      ?.education_program_name ||
     ""
   );
 }
@@ -41,28 +130,37 @@ function programOf(profile: any) {
 function freshnessScore(
   createdAt: string
 ) {
-  const ageHours = Math.max(
-    0,
-    (Date.now() -
-      new Date(
-        createdAt
-      ).getTime()) /
-      3600000
-  );
+  const ageHours =
+    Math.max(
+      0,
+      (Date.now() -
+        new Date(
+          createdAt
+        ).getTime()) /
+        3600000
+    );
 
-  if (ageHours <= 3) {
+  if (
+    ageHours <= 3
+  ) {
     return 46;
   }
 
-  if (ageHours <= 12) {
+  if (
+    ageHours <= 12
+  ) {
     return 42;
   }
 
-  if (ageHours <= 24) {
+  if (
+    ageHours <= 24
+  ) {
     return 36;
   }
 
-  if (ageHours <= 72) {
+  if (
+    ageHours <= 72
+  ) {
     return Math.max(
       22,
       36 -
@@ -71,7 +169,9 @@ function freshnessScore(
     );
   }
 
-  if (ageHours <= 168) {
+  if (
+    ageHours <= 168
+  ) {
     return Math.max(
       8,
       22 -
@@ -89,7 +189,7 @@ function freshnessScore(
 }
 
 function engagementScore(
-  post: any
+  post: FeedRankingPostView
 ) {
   const likes =
     post.likesCount ??
@@ -107,9 +207,13 @@ function engagementScore(
     pero no puede dominar todo el feed.
   */
   const raw =
-    Math.log2(likes + 1) *
+    Math.log2(
+      likes + 1
+    ) *
       4.2 +
-    Math.log2(comments + 1) *
+    Math.log2(
+      comments + 1
+    ) *
       6.1;
 
   return Math.min(
@@ -119,11 +223,13 @@ function engagementScore(
 }
 
 function richnessScore(
-  post: any
+  post: FeedRankingPostView
 ) {
   let score = 0;
 
-  if (post.image_url) {
+  if (
+    post.image_url
+  ) {
     score += 3;
   }
 
@@ -132,50 +238,66 @@ function richnessScore(
       post.content || ""
     ).trim();
 
-  if (content.length >= 40) {
+  if (
+    content.length >= 40
+  ) {
     score += 2;
   }
 
-  if (content.length >= 120) {
+  if (
+    content.length >= 120
+  ) {
     score += 2;
   }
 
   return score;
 }
 
-function scorePost(
-  post: any,
-  profile: any,
-  following: Set<string>
-): RankedPost {
+function scorePost<
+  T extends object
+>(
+  post: T,
+  profile:
+    FeedRankingProfile,
+  following:
+    Set<string>
+): RankedPost<T> {
+  const view =
+    asPostView(post);
+
   let score =
     freshnessScore(
-      post.created_at
+      view.created_at
     );
 
-  const reasons: Array<{
-    score: number;
-    text: string;
-  }> = [];
+  const reasons:
+    Array<{
+      score: number;
+      text: string;
+    }> = [];
 
   if (
     following.has(
-      post.user_id
+      view.user_id
     )
   ) {
     score += 31;
+
     reasons.push({
       score: 31,
-      text: "De una conexión",
+      text:
+        "De una conexión",
     });
   }
 
   const myInstitution =
-    institutionOf(profile);
+    institutionOf(
+      profile
+    );
 
   const postInstitution =
     institutionOf(
-      post.profiles
+      view.profiles
     );
 
   if (
@@ -185,21 +307,26 @@ function scorePost(
     )
   ) {
     score += 25;
+
     reasons.push({
       score: 25,
-      text: "Tu institución",
+      text:
+        "Tu institución",
     });
   }
 
   if (
     same(
-      programOf(profile),
       programOf(
-        post.profiles
+        profile
+      ),
+      programOf(
+        view.profiles
       )
     )
   ) {
     score += 22;
+
     reasons.push({
       score: 22,
       text: "Tu programa",
@@ -208,11 +335,13 @@ function scorePost(
 
   if (
     same(
-      profile?.career,
-      post.profiles?.career
+      profile.career,
+      view.profiles
+        ?.career
     )
   ) {
     score += 21;
+
     reasons.push({
       score: 21,
       text: "Tu carrera",
@@ -221,30 +350,34 @@ function scorePost(
 
   if (
     same(
-      profile?.city,
-      post.profiles?.city
+      profile.city,
+      view.profiles?.city
     )
   ) {
     score += 9;
+
     reasons.push({
       score: 9,
-      text: "Cerca de ti",
+      text:
+        "Cerca de ti",
     });
   } else if (
     same(
-      profile?.residence_country_code ||
-        profile?.country,
-      post.profiles
+      profile
+        .residence_country_code ||
+        profile.country,
+      view.profiles
         ?.residence_country_code ||
-        post.profiles?.country
+        view.profiles
+          ?.country
     )
   ) {
     score += 4;
   }
 
   if (
-    profile?.id &&
-    post.user_id ===
+    profile.id &&
+    view.user_id ===
       profile.id
   ) {
     /*
@@ -254,56 +387,76 @@ function scorePost(
     score += 3;
   }
 
-  const discoveryBoost = Math.min(
-    Math.max(
-      Number(
-        post._discoveryBoost ||
-          0
+  const discoveryBoost =
+    Math.min(
+      Math.max(
+        Number(
+          view
+            ._discoveryBoost ||
+            0
+        ),
+        0
       ),
-      0
-    ),
-    18
-  );
+      18
+    );
 
-  if (discoveryBoost > 0) {
-    score += discoveryBoost;
+  if (
+    discoveryBoost > 0
+  ) {
+    score +=
+      discoveryBoost;
 
-    if (discoveryBoost >= 5) {
+    if (
+      discoveryBoost >= 5
+    ) {
       reasons.push({
-        score: discoveryBoost,
-        text: "Según lo que exploras",
+        score:
+          discoveryBoost,
+        text:
+          "Según lo que exploras",
       });
     }
   }
 
   score +=
-    engagementScore(post);
+    engagementScore(
+      view
+    );
 
   score +=
-    richnessScore(post);
+    richnessScore(
+      view
+    );
 
   reasons.sort(
     (a, b) =>
-      b.score - a.score
+      b.score -
+      a.score
   );
 
   return {
     ...post,
-    _forYouScore: score,
+    _forYouScore:
+      score,
     _forYouReason:
-      reasons[0]?.text ||
+      reasons[0]
+        ?.text ||
       "Actividad reciente",
-  };
+  } as RankedPost<T>;
 }
 
-function diversifyAuthors(
-  posts: RankedPost[]
+function diversifyAuthors<
+  T extends object
+>(
+  posts:
+    RankedPost<T>[]
 ) {
   const remaining =
     [...posts];
 
   const output:
-    RankedPost[] = [];
+    RankedPost<T>[] =
+    [];
 
   const recentAuthors:
     string[] = [];
@@ -312,6 +465,7 @@ function diversifyAuthors(
     remaining.length > 0
   ) {
     let bestIndex = 0;
+
     let bestValue =
       -Infinity;
 
@@ -328,7 +482,8 @@ function diversifyAuthors(
 
     for (
       let index = 0;
-      index < windowSize;
+      index <
+      windowSize;
       index += 1
     ) {
       const candidate =
@@ -348,7 +503,8 @@ function diversifyAuthors(
 
       const appearances =
         recentAuthors.filter(
-          (id) => id === author
+          (id) =>
+            id === author
         ).length;
 
       const diversityPenalty =
@@ -359,17 +515,22 @@ function diversifyAuthors(
 
       const value =
         Number(
-          candidate._forYouScore ||
+          candidate
+            ._forYouScore ||
             0
         ) -
         diversityPenalty -
         index * 0.35;
 
       if (
-        value > bestValue
+        value >
+        bestValue
       ) {
-        bestValue = value;
-        bestIndex = index;
+        bestValue =
+          value;
+
+        bestIndex =
+          index;
       }
     }
 
@@ -379,7 +540,9 @@ function diversifyAuthors(
         1
       );
 
-    output.push(selected);
+    output.push(
+      selected
+    );
 
     recentAuthors.push(
       String(
@@ -389,7 +552,8 @@ function diversifyAuthors(
     );
 
     if (
-      recentAuthors.length > 5
+      recentAuthors.length >
+      5
     ) {
       recentAuthors.shift();
     }
@@ -398,36 +562,48 @@ function diversifyAuthors(
   return output;
 }
 
-export function rankForYouPosts(
-  posts: any[],
-  profile: any,
+export function rankForYouPosts<
+  T extends object
+>(
+  posts: T[],
+  profile: unknown,
   followingIds: string[]
-) {
+): RankedPost<T>[] {
+  const safeProfile =
+    asProfile(profile);
+
   const following =
-    new Set(followingIds);
+    new Set(
+      followingIds
+    );
 
   const scored =
     posts
-      .map((post) =>
-        scorePost(
-          post,
-          profile,
-          following
-        )
+      .map(
+        (post) =>
+          scorePost(
+            post,
+            safeProfile,
+            following
+          )
       )
       .sort(
         (a, b) => {
           const byScore =
             Number(
-              b._forYouScore ||
+              b
+                ._forYouScore ||
                 0
             ) -
             Number(
-              a._forYouScore ||
+              a
+                ._forYouScore ||
                 0
             );
 
-          if (byScore !== 0) {
+          if (
+            byScore !== 0
+          ) {
             return byScore;
           }
 
