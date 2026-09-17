@@ -5,6 +5,16 @@ import {
 } from "lucide-react";
 import { AlumniAvatar } from "@/components/ui/AlumniImage";
 
+type ExplorePerson = {
+  username: string;
+  avatar_url?: string | null;
+  full_name?: string | null;
+  is_private?: boolean | null;
+  career?: string | null;
+  education_institution_name?: string | null;
+  university?: string | null;
+  city?: string | null;
+};
 export default function ExplorePersonRow({
   person,
   following,
@@ -13,7 +23,7 @@ export default function ExplorePersonRow({
   onFollow,
   onOpen,
 }: {
-  person: any;
+  person: ExplorePerson;
   following: boolean;
   busy: boolean;
   reason?: string;

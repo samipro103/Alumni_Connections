@@ -3,9 +3,18 @@
 import { motion, useReducedMotion } from "framer-motion";
 import { MapPin } from "lucide-react";
 
+type ProfileOverviewData = {
+  residence_city?: string | null;
+  city?: string | null;
+  residence_country_name?: string | null;
+  country?: string | null;
+  nationality_name?: string | null;
+  nationality?: string | null;
+};
+
 type Props = {
-  profile: any;
-  posts: any[];
+  profile: ProfileOverviewData;
+  posts: unknown[];
   followers: number;
   following: number;
   own?: boolean;

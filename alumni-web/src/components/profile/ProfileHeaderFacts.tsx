@@ -3,7 +3,21 @@
 import { Flag, MapPin } from "lucide-react";
 import { flagEmoji } from "@/lib/profileCatalog";
 
-export default function ProfileHeaderFacts({ profile }: { profile: any }) {
+type ProfileHeaderFactsData = {
+  residence_country_code?: string | null;
+  nationality_primary_code?: string | null;
+  nationality_secondary_code?: string | null;
+  city?: string | null;
+  country?: string | null;
+  nationality_primary_name?: string | null;
+  nationality_secondary_name?: string | null;
+};
+
+export default function ProfileHeaderFacts({
+  profile,
+}: {
+  profile: ProfileHeaderFactsData;
+}) {
   const residenceFlag = flagEmoji(profile.residence_country_code);
   const primaryFlag = flagEmoji(profile.nationality_primary_code);
   const secondaryFlag = flagEmoji(profile.nationality_secondary_code);

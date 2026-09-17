@@ -3,7 +3,20 @@
 import { GraduationCap, Sparkles } from "lucide-react";
 import OriginalMonochromeLogo from "@/components/profile/OriginalMonochromeLogo";
 
-export default function ProfileIdentityMeta({ profile }: { profile: any }) {
+type ProfileIdentityData = {
+  education_institution_name?: string | null;
+  university?: string | null;
+  education_institution_logo_url?: string | null;
+  education_program_name?: string | null;
+  education_program_logo_url?: string | null;
+  career?: string | null;
+};
+
+export default function ProfileIdentityMeta({
+  profile,
+}: {
+  profile: ProfileIdentityData;
+}) {
   const institution =
     profile.education_institution_name || profile.university || "";
   const institutionLogo = profile.education_institution_logo_url || null;

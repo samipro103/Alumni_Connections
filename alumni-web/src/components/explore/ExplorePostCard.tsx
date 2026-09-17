@@ -9,12 +9,36 @@ import {
 import { useMemo } from "react";
 import { AlumniAvatar } from "@/components/ui/AlumniImage";
 
+type ExplorePostProfile = {
+  username?: string | null;
+  avatar_url?: string | null;
+  career?: string | null;
+  education_institution_name?: string | null;
+  university?: string | null;
+};
+
+type ExplorePostMedia = {
+  media_type?: string | null;
+  media_url?: string | null;
+};
+
+type ExplorePost = {
+  id: string | number;
+  content?: string | null;
+  image_url?: string | null;
+  profiles?: ExplorePostProfile | null;
+  mediaItems?: ExplorePostMedia[] | null;
+  likesCount?: number | null;
+  likes?: { length: number } | null;
+  commentsCount?: number | null;
+  repostsCount?: number | null;
+};
 export default function ExplorePostCard({
   post,
   onOpen,
   compact = false,
 }: {
-  post: any;
+  post: ExplorePost;
   onOpen?: () => void;
   compact?: boolean;
 }) {
@@ -93,6 +117,10 @@ export default function ExplorePostCard({
           onClick={onOpen}
           className="mt-3 block overflow-hidden bg-[#05070b]"
         >
+          {/* Dynamic post media intentionally uses the resolved external/CDN URL. */}
+
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+
           <img
             src={imageUrl}
             alt=""

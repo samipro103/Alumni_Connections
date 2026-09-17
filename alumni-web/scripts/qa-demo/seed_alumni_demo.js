@@ -221,11 +221,6 @@ function sample(list, count) {
 
   return out;
 }
-
-function shuffled(list) {
-  return sample(list, list.length);
-}
-
 function daysAgo(days, hours = 0) {
   return new Date(
     Date.now() -
