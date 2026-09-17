@@ -54,6 +54,20 @@ type ModerationRow = {
   expires_at?: string | null;
 };
 
+type UserWarningOverview = {
+  id: string | number;
+  category?: string | null;
+  severity?: string | null;
+  reason?: string | null;
+  created_at?: string | null;
+};
+
+type UserAdminActionOverview = {
+  id: string | number;
+  action?: string | null;
+  created_at?: string | null;
+};
+
 type UserOverview = {
   posts_count?: number;
   comments_count?: number;
@@ -61,9 +75,9 @@ type UserOverview = {
   pending_reports_count?: number;
   warnings_count?: number;
   moderation?: ModerationRow | null;
-  recent_warnings?: any[];
-  recent_reports?: any[];
-  recent_admin_actions?: any[];
+  recent_warnings?: UserWarningOverview[];
+  recent_reports?: unknown[];
+  recent_admin_actions?: UserAdminActionOverview[];
 };
 
 const CATEGORIES = [
@@ -1271,7 +1285,7 @@ export default function AdminUsersPage() {
                           []
                         ).map(
                           (
-                            item: any
+                            item
                           ) => (
                             <div
                               key={
@@ -1325,7 +1339,7 @@ export default function AdminUsersPage() {
                           []
                         ).map(
                           (
-                            item: any
+                            item
                           ) => (
                             <div
                               key={

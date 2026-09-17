@@ -5,8 +5,16 @@ import { CalendarDays, MapPin, Plus, Trash2 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import AdminShell from "@/components/admin/AdminShell";
 
+type AdminEvent = {
+  id: number;
+  title: string;
+  description?: string | null;
+  location?: string | null;
+  event_date: string;
+  created_by?: string | null;
+};
 export default function AdminEventsPage() {
-  const [events, setEvents] = useState<any[]>([]);
+  const [events, setEvents] = useState<AdminEvent[]>([]);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [location, setLocation] = useState("");
@@ -19,7 +27,7 @@ export default function AdminEventsPage() {
 
   async function getEvents() {
     const { data } = await supabase.from("events").select("*").order("event_date", { ascending: true });
-    setEvents(data || []);
+    setEvents((data || []) as unknown as AdminEvent[]);
   }
 
   async function createEvent() {
@@ -80,7 +88,7 @@ export default function AdminEventsPage() {
       </section>
 
       <div className="mt-5 grid gap-3">
-        {events.map((event: any) => (
+        {events.map((event) => (
           <article key={event.id} className="flex flex-col gap-4 rounded-[22px] border border-white/[0.07] bg-[#101318]/95 p-5 sm:flex-row sm:items-center">
             <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#6d7cff]/10 text-[#8d98ff]">
               <CalendarDays size={18} />

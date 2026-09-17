@@ -14,6 +14,26 @@ import {
 import { supabase } from "@/lib/supabase";
 import AdminShell from "@/components/admin/AdminShell";
 
+type AdminReport = {
+  id: string;
+  reason: string;
+  details?: string | null;
+  target_type?: string | null;
+  target_id?: string | number | null;
+  status: string;
+  category?: string | null;
+  severity?: string | null;
+  resolution_note?: string | null;
+  created_at?: string | null;
+};
+
+type AdminReportPatch =
+  Partial<
+    Pick<
+      AdminReport,
+      "category" | "severity"
+    >
+  >;
 const CATEGORIES = [
   ["spam", "Spam"],
   ["harassment", "Acoso"],
@@ -67,7 +87,7 @@ function severityClass(
 
 export default function AdminReportsPage() {
   const [rows, setRows] =
-    useState<any[]>([]);
+    useState<AdminReport[]>([]);
   const [search, setSearch] =
     useState("");
   const [loading, setLoading] =
@@ -110,10 +130,7 @@ export default function AdminReportsPage() {
 
   function patchReport(
     id: string,
-    patch: Record<
-      string,
-      any
-    >
+    patch: AdminReportPatch
   ) {
     setRows((current) =>
       current.map(
@@ -129,7 +146,7 @@ export default function AdminReportsPage() {
   }
 
   async function saveReport(
-    report: any,
+    report: AdminReport,
     status:
       | "reviewing"
       | "resolved"
