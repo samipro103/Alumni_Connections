@@ -1,9 +1,9 @@
-/*
+﻿/*
  * ALUMNI_FEED_STYLE_CONSOLIDATION_4_0_1
  * FINAL
  *
  * Contenido legado preservado EN EL MISMO ORDEN DE CASCADA.
- * Esta fase consolida fuentes sin rediseñar.
+ * Esta fase consolida fuentes sin rediseÃ±ar.
  */
 
 /* =========================================================
@@ -12,7 +12,7 @@
 
 /*
  * ALUMNI_FEED_PHOTO_SELECT_1_0_LIMPIO
- * Selector / confirmación de foto limpio.
+ * Selector / confirmaciÃ³n de foto limpio.
  * Mobile-first.
  */
 
@@ -171,7 +171,7 @@
 }
 
 /*
- * La cuadrícula SIEMPRE permanece visible.
+ * La cuadrÃ­cula SIEMPRE permanece visible.
  * Regla de tercios, limpia, sin texto.
  */
 .alumni-photo-confirm-grid {
@@ -244,7 +244,7 @@
 
 /*
  * El preview del compositor queda limpio:
- * no "Ajustar" encima de la fotografía.
+ * no "Ajustar" encima de la fotografÃ­a.
  */
 .alumni-feed-preview-crop {
   display: none !important;
@@ -325,8 +325,8 @@ html[data-theme="light"]
 
 /* =========================================================
    ALUMNI_FEED_PHOTO_SELECT_1_0_3_X_CHECK_VISIBLE
-   ÚNICAMENTE: hacer siempre visibles X y ✓.
-   No modifica foto, cuadrícula, +, arrastre ni lógica.
+   ÃšNICAMENTE: hacer siempre visibles X y âœ“.
+   No modifica foto, cuadrÃ­cula, +, arrastre ni lÃ³gica.
    ========================================================= */
 
 .alumni-photo-confirm-close {
@@ -437,8 +437,8 @@ html[data-theme="light"]
 
 /* =========================================================
    ALUMNI_FEED_PHOTO_SELECT_1_0_4_MOBILE_X_OK_VISIBLE
-   Forzar visibilidad móvil de X y OK al publicar foto.
-   No cambia cuadrícula, foto, recorte ni lógica.
+   Forzar visibilidad mÃ³vil de X y OK al publicar foto.
+   No cambia cuadrÃ­cula, foto, recorte ni lÃ³gica.
    ========================================================= */
 
 @media (max-width: 699px) {
@@ -542,8 +542,8 @@ html[data-theme="light"]
 
 /* =========================================================
    ALUMNI_FEED_PHOTO_SELECT_1_0_5_MOBILE_OVERLAY_CONTROLS
-   Responsive real para teléfono + controles visibles sobre la foto.
-   No toca la cuadrícula ni el comportamiento del stage.
+   Responsive real para telÃ©fono + controles visibles sobre la foto.
+   No toca la cuadrÃ­cula ni el comportamiento del stage.
    ========================================================= */
 
 .alumni-photo-confirm-dialog {
@@ -700,3 +700,118 @@ html[data-theme="light"]
 
 
 /* ALUMNI_FEED_STYLE_CONSOLIDATION_4_0_1:FINAL:END */
+
+/* =========================================================
+   ALUMNI_FEED_ONE_COLOR_8_5
+   Final mobile feed color authority.
+
+   feed-consolidated-final-4-0.css is imported AFTER the base CSS.
+   Therefore this block is intentionally placed here so older
+   --app-surface rules cannot repaint the feed.
+   ========================================================= */
+
+@media (max-width: 767px) {
+  /*
+   * One background token for the whole feed canvas.
+   * Dark:  --app-bg (#090b0f)
+   * Light: --app-bg (#f4f6fa)
+   */
+  .alumni-feed-page,
+  .alumni-feed-page.alumni-feed-pro,
+  .alumni-feed-page .alumni-pro-composer,
+  .alumni-feed-page .alumni-pro-feed-tabs,
+  .alumni-feed-page .alumni-pro-feed-list,
+  .alumni-feed-page .alumni-feed-post-viewport,
+  .alumni-feed-page .alumni-pro-post {
+    background-color: var(--app-bg) !important;
+    background-image: none !important;
+    box-shadow: none !important;
+  }
+
+  .alumni-feed-page,
+  .alumni-feed-page.alumni-feed-pro {
+    border-top-color: transparent !important;
+  }
+
+  /*
+   * The global floating topbar remains truly transparent.
+   * The same --app-bg from AppShell shows underneath it.
+   */
+  body:has(.alumni-feed-page)
+    [data-alumni-topbar="true"],
+  body:has(.alumni-feed-page)
+    .alumni-mobile-floating-topbar,
+  body:has(.alumni-feed-page)
+    .alumni-mobile-floating-controls {
+    background: transparent !important;
+    background-color: transparent !important;
+    background-image: none !important;
+    border-color: transparent !important;
+    box-shadow: none !important;
+  }
+
+  body:has(.alumni-feed-page)
+    .alumni-mobile-floating-topbar::before {
+    content: none !important;
+    display: none !important;
+    background: transparent !important;
+    background-image: none !important;
+  }
+
+  /*
+   * Composer itself is part of the single canvas.
+   * Only the input pill keeps a subtle independent boundary.
+   */
+  .alumni-feed-page .alumni-pro-composer {
+    border-top: 0 !important;
+    border-bottom: 0 !important;
+  }
+
+  .alumni-feed-page
+    .alumni-pro-composer[data-expanded="false"]
+    .alumni-pro-composer-open {
+    background: var(--app-bg) !important;
+    background-image: none !important;
+    border-color:
+      color-mix(
+        in srgb,
+        var(--app-border) 82%,
+        transparent
+      ) !important;
+    box-shadow: none !important;
+  }
+
+  /*
+   * Tabs stay on the same canvas. Keep only their intentional
+   * separator and active indicator.
+   */
+  .alumni-feed-page .alumni-pro-feed-tabs {
+    border-bottom-color:
+      color-mix(
+        in srgb,
+        var(--app-border) 58%,
+        transparent
+      ) !important;
+  }
+
+  /*
+   * Legacy post card theme rules must not recreate #101318.
+   */
+  .alumni-feed-page .alumni-post-card,
+  .alumni-feed-page .alumni-post-card:hover {
+    background-color: var(--app-bg) !important;
+    background-image: none !important;
+    box-shadow: none !important;
+  }
+
+  /*
+   * Hidden Stories must not leave a surface-color strip behind.
+   */
+  .alumni-feed-page .alumni-stories-section {
+    background-color: var(--app-bg) !important;
+    background-image: none !important;
+  }
+}
+
+/* ALUMNI_FEED_ONE_COLOR_8_5:END */
+
