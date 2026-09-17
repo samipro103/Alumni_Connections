@@ -12,47 +12,78 @@ import {
 import { supabase } from "@/lib/supabase";
 import AdminShell from "@/components/admin/AdminShell";
 
+type AdminCommentProfile = {
+  username?: string | null;
+  full_name?: string | null;
+  avatar_url?: string | null;
+  is_verified?: boolean | null;
+};
+
+type AdminCommentRow = {
+  id: string | number;
+  post_id: string | number;
+  user_id: string;
+  content?: string | null;
+  created_at: string;
+  parent_comment_id?:
+    | string
+    | number
+    | null;
+  profiles?:
+    | AdminCommentProfile
+    | null;
+};
+
 export default function AdminCommentsPage() {
   const [rows, setRows] =
-    useState<any[]>([]);
+    useState<AdminCommentRow[]>(
+      []
+    );
   const [search, setSearch] =
     useState("");
   const [loading, setLoading] =
     useState(true);
 
   useEffect(() => {
-    void load();
+    let active = true;
+
+    void (async () => {
+      const { data, error } =
+        await supabase
+          .from("comments")
+          .select(
+            "id,post_id,user_id,content,created_at,parent_comment_id,profiles:user_id(username,full_name,avatar_url,is_verified)"
+          )
+          .order(
+            "created_at",
+            {
+              ascending: false,
+            }
+          )
+          .limit(500);
+
+      if (!active) {
+        return;
+      }
+
+      if (error) {
+        alert(error.message);
+      }
+
+      setRows(
+        (data || []) as unknown as
+          AdminCommentRow[]
+      );
+      setLoading(false);
+    })();
+
+    return () => {
+      active = false;
+    };
   }, []);
 
-  async function load() {
-    setLoading(true);
-
-    const { data, error } =
-      await supabase
-        .from("comments")
-        .select(
-          "id,post_id,user_id,content,created_at,parent_comment_id,profiles:user_id(username,full_name,avatar_url,is_verified)"
-        )
-        .order(
-          "created_at",
-          {
-            ascending: false,
-          }
-        )
-        .limit(500);
-
-    if (error) {
-      alert(error.message);
-    }
-
-    setRows(
-      data || []
-    );
-    setLoading(false);
-  }
-
   async function remove(
-    comment: any
+    comment: AdminCommentRow
   ) {
     const reason =
       window.prompt(

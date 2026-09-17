@@ -11,44 +11,60 @@ import {
 import { supabase } from "@/lib/supabase";
 import AdminShell from "@/components/admin/AdminShell";
 
+type AdminAuditRow = {
+  id: string | number;
+  action?: string | null;
+  actor_user_id?: string | null;
+  target_user_id?: string | null;
+  created_at: string;
+  details?: unknown;
+};
+
 export default function AdminAuditPage() {
   const [rows, setRows] =
-    useState<any[]>([]);
+    useState<AdminAuditRow[]>([]);
   const [search, setSearch] =
     useState("");
   const [loading, setLoading] =
     useState(true);
 
   useEffect(() => {
-    void load();
+    let active = true;
+
+    void (async () => {
+      const { data, error } =
+        await supabase
+          .from(
+            "admin_audit_log"
+          )
+          .select("*")
+          .order(
+            "created_at",
+            {
+              ascending: false,
+            }
+          )
+          .limit(500);
+
+      if (!active) {
+        return;
+      }
+
+      if (error) {
+        alert(error.message);
+      }
+
+      setRows(
+        (data || []) as
+          AdminAuditRow[]
+      );
+      setLoading(false);
+    })();
+
+    return () => {
+      active = false;
+    };
   }, []);
-
-  async function load() {
-    setLoading(true);
-
-    const { data, error } =
-      await supabase
-        .from(
-          "admin_audit_log"
-        )
-        .select("*")
-        .order(
-          "created_at",
-          {
-            ascending: false,
-          }
-        )
-        .limit(500);
-
-    if (error) {
-      alert(error.message);
-    }
-
-    setRows(
-      data || []
-    );
-    setLoading(false);
-  }
 
   const filtered =
     useMemo(() => {
