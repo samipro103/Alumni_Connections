@@ -2993,7 +2993,7 @@ html[data-theme="light"] {
 html[data-theme="dark"] .alumni-feed-page,
 html[data-theme="light"] .alumni-feed-page {
   color: var(--app-text);
-  background: var(--app-surface) !important;
+  background: var(--app-bg) !important;
   border-color: var(--app-border) !important;
 }
 
@@ -3006,7 +3006,7 @@ html[data-theme="light"] .alumni-feed-page .alumni-pro-composer,
 html[data-theme="dark"] .alumni-feed-page .alumni-pro-feed-tabs,
 html[data-theme="light"] .alumni-feed-page .alumni-pro-feed-tabs {
   color: var(--app-text);
-  background: var(--app-surface) !important;
+  background: var(--app-bg) !important;
   border-color: var(--app-border) !important;
 }
 
