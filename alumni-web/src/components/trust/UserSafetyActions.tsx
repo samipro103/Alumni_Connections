@@ -28,6 +28,39 @@ const REASONS = [
   ["other", "Otro"],
 ] as const;
 
+function getErrorMessage(
+  error: unknown,
+  fallback: string
+) {
+  if (
+    error instanceof Error &&
+    error.message
+  ) {
+    return error.message;
+  }
+
+  if (
+    typeof error === "object" &&
+    error !== null &&
+    "message" in error
+  ) {
+    const message = (
+      error as {
+        message?: unknown;
+      }
+    ).message;
+
+    if (
+      typeof message === "string" &&
+      message
+    ) {
+      return message;
+    }
+  }
+
+  return fallback;
+}
+
 export default function UserSafetyActions({
   targetUserId,
   targetUsername,
@@ -38,6 +71,8 @@ export default function UserSafetyActions({
   onBlocked?: () => void;
 }) {
   const { user } = useAuth();
+  const userId = user?.id;
+
   const [open, setOpen] =
     useState(false);
   const [reportOpen, setReportOpen] =
@@ -57,8 +92,8 @@ export default function UserSafetyActions({
 
   useEffect(() => {
     if (
-      !user ||
-      user.id === targetUserId
+      !userId ||
+      userId === targetUserId
     ) {
       return;
     }
@@ -73,7 +108,7 @@ export default function UserSafetyActions({
         supabase
           .from("user_mutes")
           .select("muted_user_id")
-          .eq("user_id", user.id)
+          .eq("user_id", userId)
           .eq(
             "muted_user_id",
             targetUserId
@@ -82,7 +117,7 @@ export default function UserSafetyActions({
         supabase
           .from("user_blocks")
           .select("blocked_id")
-          .eq("blocker_id", user.id)
+          .eq("blocker_id", userId)
           .eq(
             "blocked_id",
             targetUserId
@@ -99,7 +134,7 @@ export default function UserSafetyActions({
     return () => {
       active = false;
     };
-  }, [user?.id, targetUserId]);
+  }, [userId, targetUserId]);
 
   useEffect(() => {
     if (!open) return;
@@ -172,10 +207,12 @@ export default function UserSafetyActions({
       }
 
       setOpen(false);
-    } catch (error: any) {
+    } catch (error: unknown) {
       alert(
-        error?.message ||
+        getErrorMessage(
+          error,
           "No se pudo actualizar el silencio."
+        )
       );
     } finally {
       setBusy(false);
@@ -217,10 +254,12 @@ export default function UserSafetyActions({
       if (!blocked) {
         onBlocked?.();
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       alert(
-        error?.message ||
+        getErrorMessage(
+          error,
           "No se pudo actualizar el bloqueo."
+        )
       );
     } finally {
       setBusy(false);
@@ -265,10 +304,12 @@ export default function UserSafetyActions({
       alert(
         "Reporte enviado. Gracias por ayudarnos a cuidar Alumni."
       );
-    } catch (error: any) {
+    } catch (error: unknown) {
       alert(
-        error?.message ||
+        getErrorMessage(
+          error,
           "No se pudo enviar el reporte."
+        )
       );
     } finally {
       setBusy(false);
