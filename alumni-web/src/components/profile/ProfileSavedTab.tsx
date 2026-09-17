@@ -19,12 +19,41 @@ import {
   shouldPostMediaCover,
 } from "@/lib/postMediaPresentation";
 
+type SavedRow = {
+  post_id: number;
+  created_at: string;
+};
+
+type SavedCommentRow = {
+  post_id: number;
+};
+
+type SavedProfilePost = {
+  id: number;
+  user_id: string;
+  content?: string | null;
+  image_url?: string | null;
+  image_path?: string | null;
+  media_bucket?: PostMediaItem["media_bucket"] | null;
+  profiles?: {
+    username?: string | null;
+    avatar_url?: string | null;
+    full_name?: string | null;
+    career?: string | null;
+    university?: string | null;
+  } | null;
+  likes?: Array<{
+    user_id: string;
+  }> | null;
+  commentsCount?: number;
+  mediaItems?: PostMediaItem[];
+};
 export default function ProfileSavedTab({
   userId,
 }: {
   userId: string;
 }) {
-  const [posts, setPosts] = useState<any[]>([]);
+  const [posts, setPosts] = useState<SavedProfilePost[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -49,7 +78,7 @@ export default function ProfileSavedTab({
       }
 
       const ids = (savedRows || []).map(
-        (row: any) => row.post_id
+        (row: SavedRow) => row.post_id
       );
 
       if (!ids.length) {
@@ -93,31 +122,34 @@ export default function ProfileSavedTab({
       ]);
 
       const hydrated = await hydratePostMedia(
-        (postsData || []) as any[]
+        (postsData || []) as unknown as SavedProfilePost[]
       );
 
       const mediaRows = await hydratePostMediaItems(
-        (mediaRaw || []) as any[]
+        (mediaRaw || []) as unknown as PostMediaItem[]
       );
 
       const byId = new Map(
-        hydrated.map((post: any) => [
+        hydrated.map((post) => [
           post.id,
           {
             ...post,
             commentsCount: (commentsData || []).filter(
-              (comment: any) => comment.post_id === post.id
+              (comment: SavedCommentRow) => comment.post_id === post.id
             ).length,
             mediaItems: mediaRows.filter(
-              (item: any) => item.post_id === post.id
+              (item) => item.post_id === post.id
             ),
           },
         ])
       );
 
       const ordered = (savedRows || [])
-        .map((row: any) => byId.get(row.post_id))
-        .filter(Boolean);
+        .map((row: SavedRow) => byId.get(row.post_id))
+        .filter(
+          (post): post is NonNullable<typeof post> =>
+            Boolean(post)
+        );
 
       for (const post of ordered) {
         if (!post.mediaItems?.length && post.image_url) {

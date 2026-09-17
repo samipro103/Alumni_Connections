@@ -16,8 +16,16 @@ const SWIPE_TRIGGER = 54;
 const SWIPE_MAX = 82;
 const SETTLE_MS = 185;
 
+type ReplyMessage = {
+  id: number;
+  content?: string | null;
+  media_type?: string | null;
+  message_type?: string | null;
+  reply_to_id?: number | null;
+  sender_id?: string | null;
+};
 function messageSummary(
-  message: any
+  message: ReplyMessage
 ) {
   if (!message) return "Mensaje";
 
@@ -506,8 +514,8 @@ export function MessageReplyQuote({
   peerUsername,
   onJump,
 }: {
-  message: any;
-  messages: any[];
+  message: ReplyMessage;
+  messages: ReplyMessage[];
   currentUserId?:
     | string
     | null;
@@ -579,7 +587,7 @@ export function ComposerReplyPreview({
   peerUsername,
   onClose,
 }: {
-  message: any;
+  message: ReplyMessage;
   currentUserId?:
     | string
     | null;

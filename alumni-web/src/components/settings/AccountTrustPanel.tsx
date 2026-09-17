@@ -23,6 +23,27 @@ import {
 import { useAuth } from "@/components/auth/AuthProvider";
 import { supabase } from "@/lib/supabase";
 
+type SafetyPerson = {
+  id: string;
+  username?: string | null;
+  avatar_url?: string | null;
+};
+
+type BlockRow = {
+  blocked_id: string;
+};
+
+type MuteRow = {
+  muted_user_id: string;
+};
+
+function getErrorMessage(
+  error: unknown
+) {
+  return error instanceof Error
+    ? error.message
+    : null;
+}
 function Panel({
   children,
 }: {
@@ -98,9 +119,9 @@ export default function AccountTrustPanel({
     useState<1 | 2>(1);
 
   const [blocked, setBlocked] =
-    useState<any[]>([]);
+    useState<SafetyPerson[]>([]);
   const [muted, setMuted] =
-    useState<any[]>([]);
+    useState<SafetyPerson[]>([]);
 
   useEffect(() => {
     if (!user) return;
@@ -126,13 +147,13 @@ export default function AccountTrustPanel({
 
     const blockedIds =
       (blockRows || []).map(
-        (row: any) =>
+        (row: BlockRow) =>
           row.blocked_id
       );
 
     const mutedIds =
       (muteRows || []).map(
-        (row: any) =>
+        (row: MuteRow) =>
           row.muted_user_id
       );
 
@@ -143,7 +164,7 @@ export default function AccountTrustPanel({
       ]),
     ];
 
-    let people: any[] = [];
+    let people: SafetyPerson[] = [];
 
     if (all.length) {
       const { data } =
@@ -154,7 +175,7 @@ export default function AccountTrustPanel({
           )
           .in("id", all);
 
-      people = data || [];
+      people = (data || []) as unknown as SafetyPerson[];
     }
 
     const person = (id: string) =>
@@ -215,9 +236,9 @@ export default function AccountTrustPanel({
       setPassword("");
       setConfirmPassword("");
       setFlowDone(true);
-    } catch (error: any) {
+    } catch (error: unknown) {
       alert(
-        error?.message ||
+        getErrorMessage(error) ||
           "No se pudo cambiar la contraseña."
       );
     } finally {
@@ -249,9 +270,9 @@ export default function AccountTrustPanel({
       if (error) throw error;
 
       setFlowDone(true);
-    } catch (error: any) {
+    } catch (error: unknown) {
       alert(
-        error?.message ||
+        getErrorMessage(error) ||
           "No se pudo enviar el correo."
       );
     } finally {
@@ -366,9 +387,9 @@ export default function AccountTrustPanel({
       anchor.click();
 
       URL.revokeObjectURL(url);
-    } catch (error: any) {
+    } catch (error: unknown) {
       alert(
-        error?.message ||
+        getErrorMessage(error) ||
           "No se pudieron exportar tus datos."
       );
     } finally {
@@ -443,9 +464,9 @@ export default function AccountTrustPanel({
       await supabase.auth.signOut();
       window.location.href =
         "/login";
-    } catch (error: any) {
+    } catch (error: unknown) {
       alert(
-        error?.message ||
+        getErrorMessage(error) ||
           "No se pudo eliminar la cuenta."
       );
       setDeleting(false);

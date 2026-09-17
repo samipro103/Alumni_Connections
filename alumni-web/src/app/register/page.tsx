@@ -54,6 +54,34 @@ async function signupCode(payload: Record<string, unknown>) {
   return data;
 }
 
+function getSignupErrorCode(
+  error: unknown
+) {
+  if (
+    typeof error === "object" &&
+    error !== null &&
+    "code" in error
+  ) {
+    const code =
+      (error as {
+        code?: unknown;
+      }).code;
+
+    return typeof code === "string"
+      ? code
+      : undefined;
+  }
+
+  return undefined;
+}
+
+function getSignupErrorMessage(
+  error: unknown
+) {
+  return error instanceof Error
+    ? error.message
+    : undefined;
+}
 export default function RegisterPage() {
   const [step, setStep] = useState<Step>("form");
   const [username, setUsername] = useState("");
@@ -136,15 +164,15 @@ export default function RegisterPage() {
       setCode("");
       setStep("code");
       setResendSeconds(60);
-    } catch (error: any) {
-      if (error?.code === "ACCOUNT_EXISTS") {
+    } catch (error: unknown) {
+      if (getSignupErrorCode(error) === "ACCOUNT_EXISTS") {
         alert("Ya existe una cuenta con este correo. Inicia sesión.");
-      } else if (error?.code === "USERNAME_TAKEN") {
+      } else if (getSignupErrorCode(error) === "USERNAME_TAKEN") {
         alert("Ese nombre de usuario ya está en uso.");
-      } else if (error?.code === "EMAIL_PROVIDER_NOT_CONFIGURED") {
+      } else if (getSignupErrorCode(error) === "EMAIL_PROVIDER_NOT_CONFIGURED") {
         alert("El correo de verificación de Alumni todavía no está configurado.");
       } else {
-        alert(error?.message || "No pudimos crear la cuenta.");
+        alert(getSignupErrorMessage(error) || "No pudimos crear la cuenta.");
       }
     } finally {
       setSubmitting(false);
@@ -192,8 +220,8 @@ export default function RegisterPage() {
       }
 
       window.location.href = "/onboarding";
-    } catch (error: any) {
-      alert(error?.message || "El código no es válido.");
+    } catch (error: unknown) {
+      alert(getSignupErrorMessage(error) || "El código no es válido.");
       setCode("");
       setVerifying(false);
     }
@@ -213,8 +241,8 @@ export default function RegisterPage() {
       if (result.masked_email) setMaskedEmail(result.masked_email);
       setCode("");
       setResendSeconds(60);
-    } catch (error: any) {
-      alert(error?.message || "No pudimos reenviar el código.");
+    } catch (error: unknown) {
+      alert(getSignupErrorMessage(error) || "No pudimos reenviar el código.");
     } finally {
       setResending(false);
     }

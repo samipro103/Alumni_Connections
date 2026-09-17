@@ -23,9 +23,39 @@ type Props = {
   username: string;
 };
 
+type RepostRow = {
+  post_id: number;
+  created_at: string;
+};
+
+type RepostCommentRow = {
+  post_id: number;
+};
+
+type RepostProfilePost = {
+  id: number;
+  user_id: string;
+  content?: string | null;
+  image_url?: string | null;
+  image_path?: string | null;
+  media_bucket?: PostMediaItem["media_bucket"] | null;
+  profiles?: {
+    username?: string | null;
+    avatar_url?: string | null;
+    full_name?: string | null;
+    university?: string | null;
+    career?: string | null;
+  } | null;
+  likes?: Array<{
+    user_id: string;
+  }> | null;
+  commentsCount?: number;
+  mediaItems?: PostMediaItem[];
+};
+
 type Entry = {
   repostedAt: string;
-  post: any;
+  post: RepostProfilePost;
 };
 
 export default function ProfileRepostsTab({
@@ -65,7 +95,7 @@ export default function ProfileRepostsTab({
       }
 
       const postIds = (repostRows || []).map(
-        (row: any) => row.post_id
+        (row: RepostRow) => row.post_id
       );
 
       if (!postIds.length) {
@@ -112,26 +142,26 @@ export default function ProfileRepostsTab({
 
       const hydratedPosts =
         await hydratePostMedia(
-          (postsData || []) as any[]
+          (postsData || []) as unknown as RepostProfilePost[]
         );
 
       const mediaRows =
         await hydratePostMediaItems(
-          (mediaRaw || []) as any[]
+          (mediaRaw || []) as unknown as PostMediaItem[]
         );
 
       const postsById = new Map(
-        hydratedPosts.map((post: any) => [
+        hydratedPosts.map((post) => [
           post.id,
           {
             ...post,
             commentsCount:
               (commentsData || []).filter(
-                (comment: any) =>
+                (comment: RepostCommentRow) =>
                   comment.post_id === post.id
               ).length,
             mediaItems: mediaRows.filter(
-              (item: any) =>
+              (item) =>
                 item.post_id === post.id
             ),
           },

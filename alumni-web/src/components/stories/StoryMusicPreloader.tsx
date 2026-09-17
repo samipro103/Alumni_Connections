@@ -1,7 +1,10 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { loadSpotifyIframeApi } from "@/lib/spotifyIframe";
+import {
+  loadSpotifyIframeApi,
+  type SpotifyIframeController,
+} from "@/lib/spotifyIframe";
 import {
   markStoryMusicReady,
   registerStoryMusicController,
@@ -27,7 +30,7 @@ export default function StoryMusicPreloader({
   useEffect(() => {
     let cancelled = false;
     let readyTimer: number | null = null;
-    let controller: any = null;
+    let controller: SpotifyIframeController | null = null;
     let prepared = false;
 
     async function setup() {
@@ -43,7 +46,7 @@ export default function StoryMusicPreloader({
             width: 300,
             height: 80,
           },
-          (nextController: any) => {
+          (nextController) => {
             if (cancelled) {
               nextController?.destroy?.();
               return;
@@ -53,7 +56,7 @@ export default function StoryMusicPreloader({
 
             registerStoryMusicController(
               storyId,
-              controller,
+              nextController,
               trackUrl,
               startSeconds,
               clipDurationSeconds
@@ -67,7 +70,7 @@ export default function StoryMusicPreloader({
               // la historia. Al tocar el círculo solo queda hacer play().
               if (startSeconds > 0) {
                 try {
-                  controller.loadEntity?.(
+                  nextController.loadEntity?.(
                     trackUrl,
                     false,
                     Math.max(
@@ -77,7 +80,7 @@ export default function StoryMusicPreloader({
                   );
                 } catch {
                   try {
-                    controller.seek?.(
+                    nextController.seek?.(
                       Math.max(
                         0,
                         Math.floor(startSeconds)
@@ -96,12 +99,12 @@ export default function StoryMusicPreloader({
               }, startSeconds > 0 ? 320 : 80);
             };
 
-            controller.addListener?.(
+            nextController.addListener?.(
               "ready",
               prepare
             );
 
-            controller.addListener?.(
+            nextController.addListener?.(
               "playback_started",
               () => {
                 updateStoryMusicState(storyId, {
@@ -110,9 +113,14 @@ export default function StoryMusicPreloader({
               }
             );
 
-            controller.addListener?.(
+            nextController.addListener?.(
               "playback_update",
-              (event: any) => {
+              (event: {
+                data?: {
+                  isPaused?: boolean;
+                  position?: number;
+                };
+              }) => {
                 const data = event?.data || {};
 
                 updateStoryMusicState(storyId, {

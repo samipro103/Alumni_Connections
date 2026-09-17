@@ -24,12 +24,41 @@ type Props = {
   onBack: () => void;
 };
 
+type SavedRow = {
+  post_id: number;
+  created_at: string;
+};
+
+type SavedCommentRow = {
+  post_id: number;
+};
+
+type SettingsSavedPost = {
+  id: number;
+  user_id: string;
+  content?: string | null;
+  image_url?: string | null;
+  image_path?: string | null;
+  media_bucket?: PostMediaItem["media_bucket"] | null;
+  profiles?: {
+    username?: string | null;
+    avatar_url?: string | null;
+    full_name?: string | null;
+    career?: string | null;
+    university?: string | null;
+  } | null;
+  likes?: Array<{
+    user_id: string;
+  }> | null;
+  commentsCount?: number;
+  mediaItems?: PostMediaItem[];
+};
 export default function SavedPostsPanel({
   userId,
   onBack,
 }: Props) {
   const [posts, setPosts] =
-    useState<any[]>([]);
+    useState<SettingsSavedPost[]>([]);
   const [loading, setLoading] =
     useState(true);
 
@@ -73,7 +102,7 @@ export default function SavedPostsPanel({
       const ids = (
         saveRows || []
       ).map(
-        (row: any) =>
+        (row: SavedRow) =>
           row.post_id
       );
 
@@ -126,18 +155,18 @@ export default function SavedPostsPanel({
       const hydrated =
         await hydratePostMedia(
           (postsData ||
-            []) as any[]
+            []) as unknown as SettingsSavedPost[]
         );
 
       const media =
         await hydratePostMediaItems(
           (mediaRaw ||
-            []) as any[]
+            []) as unknown as PostMediaItem[]
         );
 
       const byId = new Map(
         hydrated.map(
-          (post: any) => [
+          (post) => [
             post.id,
             {
               ...post,
@@ -147,7 +176,7 @@ export default function SavedPostsPanel({
                   []
                 ).filter(
                   (
-                    comment: any
+                    comment: SavedCommentRow
                   ) =>
                     comment.post_id ===
                     post.id
@@ -155,7 +184,7 @@ export default function SavedPostsPanel({
               mediaItems:
                 media.filter(
                   (
-                    item: any
+                    item
                   ) =>
                     item.post_id ===
                     post.id
@@ -165,7 +194,7 @@ export default function SavedPostsPanel({
         )
       );
 
-      const ordered = [];
+      const ordered: SettingsSavedPost[] = [];
 
       for (
         const row of
