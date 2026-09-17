@@ -7,16 +7,21 @@ export type SpotifyIframeController = {
   loadUri?: (
     uri: string
   ) => void;
-  addListener?: (
+  loadEntity?: (
+    uri: string,
+    play?: boolean,
+    startAt?: number
+  ) => void;
+  addListener?: <T = unknown>(
     event: string,
     callback: (
-      payload?: unknown
+      payload: T
     ) => void
   ) => void;
-  removeListener?: (
+  removeListener?: <T = unknown>(
     event: string,
     callback?: (
-      payload?: unknown
+      payload: T
     ) => void
   ) => void;
 };

@@ -7,7 +7,10 @@ import {
   useRef,
   useState,
 } from "react";
-import { loadSpotifyIframeApi } from "@/lib/spotifyIframe";
+import {
+  loadSpotifyIframeApi,
+  type SpotifyIframeController,
+} from "@/lib/spotifyIframe";
 
 type Options = {
   mountRef: RefObject<HTMLDivElement | null>;
@@ -17,6 +20,47 @@ type Options = {
   clipDurationSeconds?: number;
 };
 
+type SpotifyPlaybackUpdateEvent = {
+  data?: {
+    duration?: number;
+    position?: number;
+    isPaused?: boolean;
+  };
+};
+
+function getErrorMessage(
+  error: unknown,
+  fallback: string
+) {
+  if (
+    error instanceof Error &&
+    error.message
+  ) {
+    return error.message;
+  }
+
+  if (
+    typeof error === "object" &&
+    error !== null &&
+    "message" in error
+  ) {
+    const message = (
+      error as {
+        message?: unknown;
+      }
+    ).message;
+
+    if (
+      typeof message === "string" &&
+      message
+    ) {
+      return message;
+    }
+  }
+
+  return fallback;
+}
+
 export function useSpotifyClip({
   mountRef,
   trackUrl,
@@ -24,7 +68,7 @@ export function useSpotifyClip({
   startSeconds,
   clipDurationSeconds = 30,
 }: Options) {
-  const controllerRef = useRef<any>(null);
+  const controllerRef = useRef<SpotifyIframeController | null>(null);
   const readyRef = useRef(false);
   const playingRef = useRef(false);
 
@@ -267,7 +311,7 @@ export function useSpotifyClip({
             width: embedWidth,
             height: 80,
           },
-          (controller: any) => {
+          (controller) => {
             if (cancelled) {
               controller?.destroy?.();
               return;
@@ -332,9 +376,9 @@ export function useSpotifyClip({
               }
             );
 
-            controller.addListener?.(
+            controller.addListener?.<SpotifyPlaybackUpdateEvent>(
               "playback_update",
-              (event: any) => {
+              (event) => {
                 const state =
                   event?.data || {};
 
@@ -421,13 +465,15 @@ export function useSpotifyClip({
               );
           }
         );
-      } catch (setupError: any) {
+      } catch (setupError: unknown) {
         if (!cancelled) {
           setFailed(true);
 
           setError(
-            setupError?.message ||
+            getErrorMessage(
+              setupError,
               "No se pudo inicializar Spotify."
+            )
           );
         }
       }
@@ -521,15 +567,17 @@ export function useSpotifyClip({
       }
 
       controller.play?.();
-    } catch (playError: any) {
+    } catch (playError: unknown) {
       console.error(
         "Spotify play failed:",
         playError
       );
 
       setError(
-        playError?.message ||
+        getErrorMessage(
+          playError,
           "Spotify no pudo iniciar el fragmento."
+        )
       );
     }
   }, [trackUrl]);
