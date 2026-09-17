@@ -82,43 +82,109 @@ export default function AdminFeedbackPage() {
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    loadReports();
+    let active = true;
+
+    void (async () => {
+      const { data, error } = await supabase
+        .from("feedback_reports")
+        .select(
+          "*, profiles:user_id(username, full_name, avatar_url)"
+        )
+        .order("created_at", { ascending: false })
+        .limit(250);
+
+      if (!active) {
+        return;
+      }
+
+      if (error) {
+        console.error(error);
+        alert(error.message);
+      }
+
+      const next =
+        (data || []) as unknown as FeedbackReport[];
+
+      const first =
+        next[0] || null;
+
+      setReports(next);
+      setSelectedId(
+        first?.id || null
+      );
+      setNotes(
+        first?.admin_notes || ""
+      );
+
+      if (
+        first?.attachments?.length
+      ) {
+        const signed =
+          await supabase.storage
+            .from("feedback")
+            .createSignedUrls(
+              first.attachments,
+              3600
+            );
+
+        if (!active) {
+          return;
+        }
+
+        if (signed.error) {
+          console.error(
+            signed.error
+          );
+          setSignedUrls([]);
+        } else {
+          setSignedUrls(
+            (signed.data || [])
+              .map(
+                (item) =>
+                  item.signedUrl
+              )
+              .filter(
+                (
+                  url
+                ): url is string =>
+                  typeof url ===
+                    "string" &&
+                  url.length > 0
+              )
+          );
+        }
+      } else {
+        setSignedUrls([]);
+      }
+
+      setLoading(false);
+    })();
+
+    return () => {
+      active = false;
+    };
   }, []);
 
   const selected =
-    reports.find((report) => report.id === selectedId) || null;
+    reports.find(
+      (report) =>
+        report.id ===
+        selectedId
+    ) || null;
 
-  useEffect(() => {
-    if (!selected) {
-      setSignedUrls([]);
-      setNotes("");
-      return;
-    }
+  function selectReport(
+    report: FeedbackReport
+  ) {
+    setSelectedId(
+      report.id
+    );
+    setNotes(
+      report.admin_notes || ""
+    );
 
-    setNotes(selected.admin_notes || "");
-    loadAttachments(selected.attachments || []);
-  }, [selectedId]);
-
-  async function loadReports() {
-    setLoading(true);
-
-    const { data, error } = await supabase
-      .from("feedback_reports")
-      .select(
-        "*, profiles:user_id(username, full_name, avatar_url)"
-      )
-      .order("created_at", { ascending: false })
-      .limit(250);
-
-    if (error) {
-      console.error(error);
-      alert(error.message);
-    }
-
-    const next = (data || []) as unknown as FeedbackReport[];
-    setReports(next);
-    setSelectedId((current) => current || next[0]?.id || null);
-    setLoading(false);
+    void loadAttachments(
+      report.attachments || []
+    );
   }
 
   async function loadAttachments(paths: string[]) {
@@ -277,7 +343,7 @@ export default function AdminFeedbackPage() {
                 return (
                   <button
                     key={report.id}
-                    onClick={() => setSelectedId(report.id)}
+                    onClick={() => selectReport(report)}
                     className={`flex w-full gap-3 px-2 py-4 text-left transition ${
                       active ? "bg-white/[0.035]" : "hover:bg-white/[0.02]"
                     }`}

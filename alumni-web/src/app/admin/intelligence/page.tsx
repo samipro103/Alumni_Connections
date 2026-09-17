@@ -86,6 +86,14 @@ type IntelligencePayload = {
   }>;
 };
 
+function fetchProductIntelligence() {
+  return supabase.rpc(
+    "alumni_product_intelligence_v1",
+    {
+      p_days: 30,
+    }
+  );
+}
 function pct(
   value: number,
   total: number
@@ -206,6 +214,9 @@ export default function ProductIntelligencePage() {
     loading: accessLoading,
   } = useAdminAccess();
 
+  const canViewStats =
+    can("view_stats");
+
   const [data, setData] =
     useState<IntelligencePayload | null>(
       null
@@ -220,7 +231,7 @@ export default function ProductIntelligencePage() {
   async function load() {
     if (
       accessLoading ||
-      !can("view_stats")
+      !canViewStats
     ) {
       return;
     }
@@ -229,12 +240,7 @@ export default function ProductIntelligencePage() {
     setError("");
 
     const result =
-      await supabase.rpc(
-        "alumni_product_intelligence_v1",
-        {
-          p_days: 30,
-        }
-      );
+      await fetchProductIntelligence();
 
     if (result.error) {
       console.error(
@@ -257,18 +263,55 @@ export default function ProductIntelligencePage() {
 
   useEffect(() => {
     if (
-      !accessLoading &&
-      can("view_stats")
+      accessLoading ||
+      !canViewStats
     ) {
-      void load();
-    } else if (
-      !accessLoading
-    ) {
-      setLoading(false);
+      return;
     }
+
+    let active = true;
+
+    void (async () => {
+      const result =
+        await fetchProductIntelligence();
+
+      if (!active) {
+        return;
+      }
+
+      if (result.error) {
+        console.error(
+          "[Product Intelligence]",
+          result.error
+        );
+
+        setError(
+          "No se pudieron cargar las métricas."
+        );
+        setLoading(false);
+        return;
+      }
+
+      setData(
+        result.data as IntelligencePayload
+      );
+      setLoading(false);
+    })();
+
+    return () => {
+      active = false;
+    };
   }, [
     accessLoading,
+    canViewStats,
   ]);
+
+  const displayLoading =
+    accessLoading ||
+    (
+      canViewStats &&
+      loading
+    );
 
   const maxDaily =
     useMemo(
@@ -339,13 +382,25 @@ export default function ProductIntelligencePage() {
         )
       : null;
 
+  const trackingReferenceMs =
+    data?.generated_at
+      ? new Date(
+          data.generated_at
+        ).getTime()
+      : Number.NaN;
+
   const trackingDays =
-    trackingDate
+    trackingDate &&
+    Number.isFinite(
+      trackingReferenceMs
+    )
       ? Math.max(
           0,
           Math.floor(
-            (Date.now() -
-              trackingDate.getTime()) /
+            (
+              trackingReferenceMs -
+              trackingDate.getTime()
+            ) /
               86400000
           )
         )
@@ -407,7 +462,7 @@ export default function ProductIntelligencePage() {
             }
             disabled={
               loading ||
-              !can("view_stats")
+              !canViewStats
             }
             aria-label="Actualizar"
           >
@@ -422,7 +477,7 @@ export default function ProductIntelligencePage() {
           </button>
         </motion.div>
 
-        {loading ? (
+        {displayLoading ? (
           <div className="alumni-pi-loading">
             <Loader2
               size={20}
