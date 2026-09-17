@@ -41,9 +41,42 @@ const EMPTY_ACCESS: AdminAccess = {
   manage_verifications: false,
 };
 
+async function loadAdminAccess(): Promise<AdminAccess> {
+  const {
+    data: { session },
+  } =
+    await supabase.auth.getSession();
+
+  if (!session?.user) {
+    return EMPTY_ACCESS;
+  }
+
+  const { data, error } =
+    await supabase.rpc(
+      "get_my_admin_access"
+    );
+
+  if (error) {
+    console.error(
+      "No se pudieron cargar permisos administrativos:",
+      error
+    );
+
+    return EMPTY_ACCESS;
+  }
+
+  return {
+    ...EMPTY_ACCESS,
+    ...((data || {}) as Partial<AdminAccess>),
+  };
+}
+
 export function useAdminAccess() {
   const [access, setAccess] =
-    useState<AdminAccess>(EMPTY_ACCESS);
+    useState<AdminAccess>(
+      EMPTY_ACCESS
+    );
+
   const [loading, setLoading] =
     useState(true);
 
@@ -51,50 +84,40 @@ export function useAdminAccess() {
     async () => {
       setLoading(true);
 
-      const {
-        data: { session },
-      } =
-        await supabase.auth.getSession();
+      const nextAccess =
+        await loadAdminAccess();
 
-      if (!session?.user) {
-        setAccess(EMPTY_ACCESS);
-        setLoading(false);
-        return;
-      }
-
-      const { data, error } =
-        await supabase.rpc(
-          "get_my_admin_access"
-        );
-
-      if (error) {
-        console.error(
-          "No se pudieron cargar permisos administrativos:",
-          error
-        );
-        setAccess(EMPTY_ACCESS);
-      } else {
-        setAccess({
-          ...EMPTY_ACCESS,
-          ...((data || {}) as Partial<AdminAccess>),
-        });
-      }
-
+      setAccess(nextAccess);
       setLoading(false);
     },
     []
   );
 
   useEffect(() => {
-    void refresh();
-  }, [refresh]);
+    let active = true;
+
+    void loadAdminAccess().then(
+      (nextAccess) => {
+        if (!active) return;
+
+        setAccess(nextAccess);
+        setLoading(false);
+      }
+    );
+
+    return () => {
+      active = false;
+    };
+  }, []);
 
   function can(
     permission: AdminPermission
   ) {
     return (
       access.is_admin &&
-      Boolean(access[permission])
+      Boolean(
+        access[permission]
+      )
     );
   }
 
