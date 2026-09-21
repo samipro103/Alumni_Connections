@@ -1,8 +1,9 @@
-﻿"use client";
+"use client";
 
 import {
   ArrowLeft,
   CalendarDays,
+  CalendarPlus,
   CheckCircle2,
   Clock3,
   MapPin,
@@ -20,6 +21,9 @@ import { useAuth } from "@/components/auth/AuthProvider";
 import { supabase } from "@/lib/supabase";
 import SocialInvitePicker from "@/components/social/SocialInvitePicker";
 import EventPrivateChatSheet from "@/components/events/EventPrivateChatSheet";
+import {
+  downloadEventCalendarFile,
+} from "@/lib/eventCalendar";
 import "../events-core-4-1.css";
 import "../../interior-ui-1-0.css";
 import "../events-motion-3-0.css";
@@ -198,6 +202,38 @@ export default function EventDetailPage() {
     } catch {}
   }
 
+  function addToCalendar() {
+    if (!event) return;
+
+    try {
+      downloadEventCalendarFile({
+        id: event.id,
+        title: event.title,
+        description:
+          event.description,
+        location:
+          event.location,
+        startsAt:
+          event.event_date,
+        endsAt:
+          event.end_date,
+        url:
+          window.location.href,
+      });
+    } catch (error) {
+      console.error(
+        "[Alumni Events] calendar:",
+        error
+      );
+
+      alert(
+        error instanceof Error
+          ? error.message
+          : "No pudimos crear el archivo de calendario."
+      );
+    }
+  }
+
   if (loading) {
     return (
       <AppShell>
@@ -243,6 +279,49 @@ export default function EventDetailPage() {
   const chatAvailable =
     Number.isFinite(eventEndMs) &&
     Date.now() < eventEndMs + 24 * 60 * 60 * 1000;
+
+  const maxAttendees =
+    Number(
+      event.max_attendees ||
+        0
+    );
+
+  const hasCapacity =
+    Number.isFinite(
+      maxAttendees
+    ) &&
+    maxAttendees > 0;
+
+  const remainingPlaces =
+    hasCapacity
+      ? Math.max(
+          0,
+          maxAttendees -
+            going.length
+        )
+      : null;
+
+  const capacityFull =
+    hasCapacity &&
+    remainingPlaces === 0;
+
+  const canChooseGoing =
+    !capacityFull ||
+    myStatus === "going";
+
+  const capacityPercent =
+    hasCapacity
+      ? Math.min(
+          100,
+          Math.round(
+            (
+              going.length /
+              maxAttendees
+            ) *
+              100
+          )
+        )
+      : 0;
 
   const organizerCardInner = (
     <>
@@ -348,6 +427,44 @@ export default function EventDetailPage() {
             </p>
           </div>
 
+          {hasCapacity && (
+            <div className="mb-4 rounded-[14px] border border-[var(--app-border)] bg-[var(--app-soft)] px-3.5 py-3">
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <strong className="text-[11px] font-black text-[var(--app-text-soft)]">
+                    {capacityFull
+                      ? "Cupo completo"
+                      : `${remainingPlaces} ${
+                          remainingPlaces ===
+                          1
+                            ? "lugar disponible"
+                            : "lugares disponibles"
+                        }`}
+                  </strong>
+
+                  <p className="mt-1 text-[9.5px] font-semibold text-[var(--app-muted-2)]">
+                    {going.length} de{" "}
+                    {maxAttendees} lugares confirmados
+                  </p>
+                </div>
+
+                <span className="text-[10px] font-black text-[var(--app-muted-2)]">
+                  {capacityPercent}%
+                </span>
+              </div>
+
+              <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-[var(--app-border)]">
+                <span
+                  className="block h-full rounded-full bg-[var(--app-accent)] transition-[width]"
+                  style={{
+                    width:
+                      `${capacityPercent}%`,
+                  }}
+                />
+              </div>
+            </div>
+          )}
+
           <div
             className="event-rsvp-choice"
             role="group"
@@ -358,13 +475,26 @@ export default function EventDetailPage() {
               data-active={
                 myStatus === "going" ? "true" : "false"
               }
-              disabled={Boolean(busy)}
+              disabled={
+                Boolean(busy) ||
+                !canChooseGoing
+              }
               onClick={() => void setRsvp("going")}
             >
               <CheckCircle2 size={17} />
               <span>
-                <strong>Voy</strong>
-                <small>Cuenta conmigo</small>
+                <strong>
+                  {capacityFull &&
+                  myStatus !== "going"
+                    ? "Cupo lleno"
+                    : "Voy"}
+                </strong>
+                <small>
+                  {capacityFull &&
+                  myStatus !== "going"
+                    ? "Ya no hay lugares"
+                    : "Cuenta conmigo"}
+                </small>
               </span>
             </button>
 
@@ -454,6 +584,16 @@ export default function EventDetailPage() {
 
               <button
                 type="button"
+                onClick={
+                  addToCalendar
+                }
+              >
+                <CalendarPlus size={15} />
+                Agregar al calendario
+              </button>
+
+              <button
+                type="button"
                 onClick={() => void shareEvent()}
               >
                 <Share2 size={15} />
@@ -493,10 +633,18 @@ export default function EventDetailPage() {
             </div>
           )}
 
-          {event.max_attendees && (
+          {hasCapacity && (
             <p className="event-capacity">
-              {going.length} de {event.max_attendees} lugares
-              confirmados.
+              {capacityFull
+                ? "Cupo completo."
+                : `${remainingPlaces} ${
+                    remainingPlaces ===
+                    1
+                      ? "lugar disponible"
+                      : "lugares disponibles"
+                  }.`}{" "}
+              {going.length} de{" "}
+              {maxAttendees} confirmados.
             </p>
           )}
         </section>
@@ -516,4 +664,6 @@ export default function EventDetailPage() {
 }
 
 /* ALUMNI_EVENTS_ORGANIZER_CHAT_6_2:DETAIL */
+
+/* ALUMNI_EVENTS_CALENDAR_CAPACITY_10_5 */
 
