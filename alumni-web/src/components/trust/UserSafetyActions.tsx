@@ -87,6 +87,10 @@ export default function UserSafetyActions({
     useState("spam");
   const [details, setDetails] =
     useState("");
+  const [
+    blockAfterReport,
+    setBlockAfterReport,
+  ] = useState(false);
   const menuRef =
     useRef<HTMLDivElement>(null);
 
@@ -298,12 +302,56 @@ export default function UserSafetyActions({
 
       if (error) throw error;
 
+      let blockCompleted =
+        false;
+      let blockFailed =
+        false;
+
+      if (
+        blockAfterReport &&
+        !blocked
+      ) {
+        const {
+          error: blockError,
+        } = await supabase.rpc(
+          "block_user",
+          {
+            p_target:
+              targetUserId,
+          }
+        );
+
+        if (blockError) {
+          blockFailed =
+            true;
+        } else {
+          blockCompleted =
+            true;
+          setBlocked(true);
+        }
+      }
+
       setReportOpen(false);
       setOpen(false);
       setDetails("");
-      alert(
-        "Reporte enviado. Gracias por ayudarnos a cuidar Alumni."
-      );
+      setBlockAfterReport(false);
+
+      if (blockCompleted) {
+        alert(
+          "Reporte enviado y usuario bloqueado."
+        );
+        onBlocked?.();
+      } else if (
+        blockFailed
+      ) {
+        alert(
+          "Reporte enviado. No pudimos completar el bloqueo, pero el reporte sí quedó registrado."
+        );
+      } else {
+        alert(
+          "Reporte enviado. Gracias por ayudarnos a cuidar Alumni."
+        );
+      }
     } catch (error: unknown) {
       alert(
         getErrorMessage(
@@ -419,9 +467,10 @@ export default function UserSafetyActions({
 
               <button
                 type="button"
-                onClick={() =>
-                  setReportOpen(false)
-                }
+                onClick={() => {
+                  setReportOpen(false);
+                  setBlockAfterReport(false);
+                }}
                 className="flex h-9 w-9 items-center justify-center rounded-full text-[var(--app-muted)] hover:bg-[var(--app-soft)]"
                 aria-label="Cerrar"
               >
@@ -475,6 +524,34 @@ export default function UserSafetyActions({
                   placeholder="Cuéntanos qué ocurrió..."
                 />
               </label>
+
+              {!blocked && (
+                <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-[var(--app-border)] bg-[var(--app-soft)] p-3">
+                  <input
+                    type="checkbox"
+                    checked={
+                      blockAfterReport
+                    }
+                    onChange={(
+                      event
+                    ) =>
+                      setBlockAfterReport(
+                        event.target.checked
+                      )
+                    }
+                    className="mt-0.5 h-4 w-4 accent-[var(--app-accent)]"
+                  />
+
+                  <span>
+                    <strong className="block text-xs font-black text-[var(--app-text-soft)]">
+                      También bloquear a @{targetUsername}
+                    </strong>
+                    <small className="mt-1 block text-[10px] font-semibold leading-4 text-[var(--app-muted-2)]">
+                      Ya no podrán seguirse, enviarse mensajes ni acceder a contenido privado entre sí.
+                    </small>
+                  </span>
+                </label>
+              )}
             </div>
 
             <button

@@ -11,8 +11,6 @@ import {
   Mail,
   ShieldCheck,
   Trash2,
-  UserRoundX,
-  VolumeX,
   X,
 } from "lucide-react";
 import Link from "next/link";
@@ -22,12 +20,10 @@ import {
 } from "react";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { supabase } from "@/lib/supabase";
-
-type SafetyPerson = {
-  id: string;
-  username?: string | null;
-  avatar_url?: string | null;
-};
+import SafetyCenterPanel, {
+  type SafetyPerson,
+  type SafetyReport,
+} from "@/components/trust/SafetyCenterPanel";
 
 type BlockRow = {
   blocked_id: string;
@@ -36,6 +32,12 @@ type BlockRow = {
 type MuteRow = {
   muted_user_id: string;
 };
+
+type SafetyReportRow =
+  Omit<
+    SafetyReport,
+    "target"
+  >;
 
 function getErrorMessage(
   error: unknown
@@ -122,6 +124,8 @@ export default function AccountTrustPanel({
     useState<SafetyPerson[]>([]);
   const [muted, setMuted] =
     useState<SafetyPerson[]>([]);
+  const [reports, setReports] =
+    useState<SafetyReport[]>([]);
 
   useEffect(() => {
     if (!user) return;
@@ -134,6 +138,7 @@ export default function AccountTrustPanel({
     const [
       { data: blockRows },
       { data: muteRows },
+      { data: reportRows },
     ] = await Promise.all([
       supabase
         .from("user_blocks")
@@ -143,6 +148,19 @@ export default function AccountTrustPanel({
         .from("user_mutes")
         .select("muted_user_id")
         .eq("user_id", user.id),
+      supabase
+        .from("user_reports")
+        .select(
+          "id,target_user_id,target_type,reason,status,resolution_note,created_at"
+        )
+        .eq("reporter_id", user.id)
+        .order(
+          "created_at",
+          {
+            ascending: false,
+          }
+        )
+        .limit(8),
     ]);
 
     const blockedIds =
@@ -157,10 +175,27 @@ export default function AccountTrustPanel({
           row.muted_user_id
       );
 
+    const typedReports =
+      (reportRows || []) as unknown as
+        SafetyReportRow[];
+
+    const reportTargetIds =
+      typedReports
+        .map(
+          (report) =>
+            report.target_user_id
+        )
+        .filter(
+          (id): id is string =>
+            typeof id === "string" &&
+            id.length > 0
+        );
+
     const all = [
       ...new Set([
         ...blockedIds,
         ...mutedIds,
+        ...reportTargetIds,
       ]),
     ];
 
@@ -193,6 +228,20 @@ export default function AccountTrustPanel({
     );
     setMuted(
       mutedIds.map(person)
+    );
+
+    setReports(
+      typedReports.map(
+        (report) => ({
+          ...report,
+          target:
+            report.target_user_id
+              ? person(
+                  report.target_user_id
+                )
+              : null,
+        })
+      )
     );
   }
 
@@ -580,98 +629,23 @@ export default function AccountTrustPanel({
 
 
 
-      {(blocked.length > 0 ||
-        muted.length > 0) && (
-        <Panel>
-          <p className="text-sm font-black text-[var(--app-text)]">
-            Controles de comunidad
-          </p>
-
-          {blocked.length > 0 && (
-            <div className="mt-4">
-              <p className="mb-2 text-[10px] font-black uppercase tracking-[0.12em] text-[var(--app-muted-3)]">
-                Bloqueados
-              </p>
-              <div className="divide-y divide-[var(--app-border)]">
-                {blocked.map(
-                  (person) => (
-                    <div
-                      key={
-                        person.id
-                      }
-                      className="flex items-center gap-3 py-3"
-                    >
-                      <UserRoundX
-                        size={16}
-                        className="text-red-400"
-                      />
-                      <span className="min-w-0 flex-1 truncate text-xs font-bold text-[var(--app-muted)]">
-                        @
-                        {
-                          person.username
-                        }
-                      </span>
-                      <button
-                        type="button"
-                        onClick={() =>
-                          void unblock(
-                            person.id
-                          )
-                        }
-                        className="text-[10px] font-black text-[var(--app-accent)]"
-                      >
-                        Desbloquear
-                      </button>
-                    </div>
-                  )
-                )}
-              </div>
-            </div>
-          )}
-
-          {muted.length > 0 && (
-            <div className="mt-4">
-              <p className="mb-2 text-[10px] font-black uppercase tracking-[0.12em] text-[var(--app-muted-3)]">
-                Silenciados
-              </p>
-              <div className="divide-y divide-[var(--app-border)]">
-                {muted.map(
-                  (person) => (
-                    <div
-                      key={
-                        person.id
-                      }
-                      className="flex items-center gap-3 py-3"
-                    >
-                      <VolumeX
-                        size={16}
-                        className="text-[var(--app-muted-2)]"
-                      />
-                      <span className="min-w-0 flex-1 truncate text-xs font-bold text-[var(--app-muted)]">
-                        @
-                        {
-                          person.username
-                        }
-                      </span>
-                      <button
-                        type="button"
-                        onClick={() =>
-                          void unmute(
-                            person.id
-                          )
-                        }
-                        className="text-[10px] font-black text-[var(--app-accent)]"
-                      >
-                        Activar
-                      </button>
-                    </div>
-                  )
-                )}
-              </div>
-            </div>
-          )}
-        </Panel>
-      )}
+      <SafetyCenterPanel
+        blocked={
+          blocked
+        }
+        muted={
+          muted
+        }
+        reports={
+          reports
+        }
+        onUnblock={
+          unblock
+        }
+        onUnmute={
+          unmute
+        }
+      />
 
       <Panel>
         <p className="text-sm font-black text-[var(--app-text)]">
