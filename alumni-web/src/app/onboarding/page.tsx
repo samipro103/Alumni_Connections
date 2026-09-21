@@ -12,15 +12,19 @@ import {
   useReducedMotion,
 } from "framer-motion";
 import {
+  CalendarDays,
   Camera,
   Check,
   ChevronLeft,
   ChevronRight,
+  Compass,
   GraduationCap,
+  Home,
   Loader2,
   MapPin,
   Sparkles,
   UserPlus,
+  Users,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import BrandMark from "@/components/brand/BrandMark";
@@ -34,7 +38,7 @@ import {
   type RecommendedProfile,
 } from "@/lib/recommendations";
 
-type Step = 0 | 1 | 2 | 3;
+type Step = 0 | 1 | 2 | 3 | 4;
 
 type FormState = {
   full_name: string;
@@ -44,11 +48,51 @@ type FormState = {
   countryCode: string;
 };
 
+type ProfileBootstrap = {
+  full_name?: string | null;
+  avatar_url?: string | null;
+  university?: string | null;
+  education_institution_name?: string | null;
+  education_program_name?: string | null;
+  career?: string | null;
+  city?: string | null;
+  country?: string | null;
+  residence_country_code?: string | null;
+};
+
 const TITLES = [
   "Hazlo tuyo",
   "Tu camino",
   "Tu lugar",
   "Tu red",
+  "Empieza aquí",
+] as const;
+
+const QUICK_STARTS = [
+  {
+    href: "/feed",
+    label: "Feed",
+    description: "Mira publicaciones y empieza a participar.",
+    icon: Home,
+  },
+  {
+    href: "/explore",
+    label: "Explorar",
+    description: "Encuentra personas, temas y publicaciones.",
+    icon: Compass,
+  },
+  {
+    href: "/community",
+    label: "Comunidades",
+    description: "Únete a espacios por universidad, carrera o interés.",
+    icon: Users,
+  },
+  {
+    href: "/events",
+    label: "Eventos",
+    description: "Descubre actividades y conecta con tu red.",
+    icon: CalendarDays,
+  },
 ] as const;
 
 const FIELD =
@@ -56,9 +100,34 @@ const FIELD =
 
 function safeStep(value: unknown): Step {
   const n = Number(value);
-  return Number.isFinite(n) && n >= 0 && n <= 3
+  return Number.isFinite(n) && n >= 0 && n <= 4
     ? (n as Step)
     : 0;
+}
+
+function getOnboardingErrorMessage(
+  error: unknown
+) {
+  if (error instanceof Error) {
+    return error.message;
+  }
+
+  if (
+    typeof error === "object" &&
+    error !== null &&
+    "message" in error
+  ) {
+    const message =
+      (error as {
+        message?: unknown;
+      }).message;
+
+    return typeof message === "string"
+      ? message
+      : "";
+  }
+
+  return "";
 }
 
 export default function OnboardingPage() {
@@ -74,7 +143,7 @@ export default function OnboardingPage() {
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [avatarPreview, setAvatarPreview] = useState("");
   const [recommendations, setRecommendations] = useState<RecommendedProfile[]>([]);
-  const [recsLoading, setRecsLoading] = useState(false);
+  const [recsLoading, setRecsLoading] = useState(true);
   const [personBusy, setPersonBusy] = useState<string | null>(null);
   const [followed, setFollowed] = useState<
     Record<string, "following" | "requested">
@@ -125,7 +194,9 @@ export default function OnboardingPage() {
         console.error("Onboarding profile:", error);
       }
 
-      const profile = (data || {}) as any;
+      const profile =
+        (data || {}) as unknown as
+          ProfileBootstrap;
       const countryCode =
         String(profile.residence_country_code || "").toUpperCase() ||
         COUNTRIES.find((item) => item.name === profile.country)?.code ||
@@ -149,7 +220,11 @@ export default function OnboardingPage() {
     return () => {
       active = false;
     };
-  }, [authLoading, user?.id, router]);
+  }, [
+    authLoading,
+    user,
+    router,
+  ]);
 
   useEffect(() => {
     return () => {
@@ -163,7 +238,6 @@ export default function OnboardingPage() {
     if (!user || step !== 3 || booting) return;
 
     let active = true;
-    setRecsLoading(true);
 
     void getRecommendedProfiles(user.id, 6)
       .then((data) => {
@@ -179,7 +253,11 @@ export default function OnboardingPage() {
     return () => {
       active = false;
     };
-  }, [step, user?.id, booting]);
+  }, [
+    step,
+    user,
+    booting,
+  ]);
 
   function update(field: keyof FormState, value: string) {
     setForm((current) => ({
@@ -282,7 +360,10 @@ export default function OnboardingPage() {
     }
   }
 
-  async function finish(skipped: boolean) {
+  async function finish(
+    skipped: boolean,
+    destination = "/feed"
+  ) {
     if (!user || saving) return;
 
     setSaving(true);
@@ -295,14 +376,18 @@ export default function OnboardingPage() {
       await saveMeta({
         onboarding_completed_v1: true,
         onboarding_skipped_v1: skipped,
-        onboarding_step_v1: 4,
+        onboarding_step_v1: 5,
+        onboarding_destination_v1: destination,
         onboarding_completed_at_v1: new Date().toISOString(),
       });
 
-      router.replace("/feed");
-    } catch (error: any) {
+      router.replace(destination);
+    } catch (error: unknown) {
       console.error(error);
-      alert(error?.message || "No pudimos terminar la configuración.");
+      alert(
+        getOnboardingErrorMessage(error) ||
+          "No pudimos terminar la configuración."
+      );
       setSaving(false);
     }
   }
@@ -310,7 +395,7 @@ export default function OnboardingPage() {
   async function next() {
     if (!user || saving) return;
 
-    if (step === 3) {
+    if (step === 4) {
       await finish(false);
       return;
     }
@@ -322,6 +407,10 @@ export default function OnboardingPage() {
 
       const nextStep = (step + 1) as Step;
 
+      if (nextStep === 3) {
+        setRecsLoading(true);
+      }
+
       await saveMeta({
         onboarding_completed_v1: false,
         onboarding_step_v1: nextStep,
@@ -329,9 +418,12 @@ export default function OnboardingPage() {
 
       setDirection(1);
       setStep(nextStep);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error(error);
-      alert(error?.message || "No pudimos guardar este paso.");
+      alert(
+        getOnboardingErrorMessage(error) ||
+          "No pudimos guardar este paso."
+      );
     } finally {
       setSaving(false);
     }
@@ -339,6 +431,10 @@ export default function OnboardingPage() {
 
   function back() {
     if (saving || step === 0) return;
+
+    if (step === 4) {
+      setRecsLoading(true);
+    }
 
     setDirection(-1);
     setStep((step - 1) as Step);
@@ -393,8 +489,11 @@ export default function OnboardingPage() {
         p_signal_value: person.id,
         p_weight: 2.2,
       });
-    } catch (error: any) {
-      alert(error?.message || "No se pudo completar la acción.");
+    } catch (error: unknown) {
+      alert(
+        getOnboardingErrorMessage(error) ||
+          "No se pudo completar la acción."
+      );
     } finally {
       setPersonBusy(null);
     }
@@ -466,10 +565,10 @@ export default function OnboardingPage() {
         </header>
 
         <div
-          className="grid grid-cols-4 gap-1.5 pt-3"
-          aria-label={`Paso ${step + 1} de 4`}
+          className="grid grid-cols-5 gap-1.5 pt-3"
+          aria-label={`Paso ${step + 1} de 5`}
         >
-          {[0, 1, 2, 3].map((item) => (
+          {[0, 1, 2, 3, 4].map((item) => (
             <motion.span
               key={item}
               className="h-[3px] rounded-full"
@@ -499,14 +598,16 @@ export default function OnboardingPage() {
                 <GraduationCap size={19} />
               ) : step === 2 ? (
                 <MapPin size={18} />
-              ) : (
+              ) : step === 3 ? (
                 <Sparkles size={18} />
+              ) : (
+                <Compass size={18} />
               )}
             </motion.div>
 
             <div>
               <p className="mb-0.5 text-[9px] font-extrabold tracking-[0.08em] text-[var(--app-muted-3)]">
-                {step + 1} / 4
+                {step + 1} / 5
               </p>
               <h1 className="m-0 text-[29px] font-black leading-none tracking-[-0.048em]">
                 {TITLES[step]}
@@ -724,6 +825,54 @@ export default function OnboardingPage() {
                   )}
                 </div>
               )}
+
+              {step === 4 && (
+                <div className="grid gap-0.5">
+                  <p className="mb-3 text-[11px] font-semibold leading-5 text-[var(--app-muted-2)]">
+                    Ya tienes lo básico. Elige dónde quieres comenzar;
+                    después podrás moverte por toda Alumni normalmente.
+                  </p>
+
+                  {QUICK_STARTS.map((item) => {
+                    const Icon = item.icon;
+
+                    return (
+                      <motion.button
+                        key={item.href}
+                        type="button"
+                        whileTap={
+                          reduceMotion
+                            ? undefined
+                            : { scale: 0.985 }
+                        }
+                        disabled={saving}
+                        onClick={() =>
+                          void finish(false, item.href)
+                        }
+                        className="grid min-h-[70px] grid-cols-[42px_minmax(0,1fr)_24px] items-center gap-3 border-b border-[color-mix(in_srgb,var(--app-border)_72%,transparent)] px-0.5 py-2.5 text-left last:border-b-0 disabled:opacity-50"
+                      >
+                        <span className="grid h-[42px] w-[42px] place-items-center rounded-[14px] bg-[color-mix(in_srgb,var(--app-accent)_8%,var(--app-surface))] text-[var(--app-accent)]">
+                          <Icon size={17} />
+                        </span>
+
+                        <span className="min-w-0">
+                          <strong className="block text-[12px] font-extrabold text-[var(--app-text)]">
+                            {item.label}
+                          </strong>
+                          <span className="mt-1 block text-[9.5px] font-semibold leading-4 text-[var(--app-muted-2)]">
+                            {item.description}
+                          </span>
+                        </span>
+
+                        <ChevronRight
+                          size={16}
+                          className="text-[var(--app-muted-3)]"
+                        />
+                      </motion.button>
+                    );
+                  })}
+                </div>
+              )}
             </motion.div>
           </AnimatePresence>
         </section>
@@ -752,9 +901,9 @@ export default function OnboardingPage() {
           >
             {saving ? (
               <Loader2 size={16} className="animate-spin" />
-            ) : step === 3 ? (
+            ) : step === 4 ? (
               <>
-                Entrar
+                Ir al feed
                 <Check size={16} />
               </>
             ) : (
@@ -770,4 +919,4 @@ export default function OnboardingPage() {
   );
 }
 
-/* ALUMNI_ONBOARDING_1_0 */
+/* ALUMNI_ONBOARDING_2_0_GUIDED_START */
