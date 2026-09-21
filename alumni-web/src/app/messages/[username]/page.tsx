@@ -33,7 +33,9 @@ import AppShell from "@/components/layout/AppShell";
 import MessageProTools from "@/components/messages/MessageProTools";
 import DeferredMessageMedia from "@/components/messages/DeferredMessageMedia";
 import MessageConnectionBar from "@/components/messages/MessageConnectionBar";
+import MessageErrorBanner from "@/components/messages/MessageErrorBanner";
 import { createMessageMediaPreview } from "@/lib/messageMedia";
+import { getMessageErrorText } from "@/lib/messageErrors";
 import {
   OUTBOX_RETRY_EVENT,
   matchesOutboxRetryEvent,
@@ -178,6 +180,11 @@ export default function ChatPage() {
     sending,
     setSending,
   ] = useState(false);
+
+  const [
+    sendError,
+    setSendError,
+  ] = useState("");
 
   const [
     mediaFile,
@@ -1819,7 +1826,7 @@ setMessages(
       !image &&
       !video
     ) {
-      alert(
+      setSendError(
         "Solo puedes enviar fotos o videos."
       );
       return;
@@ -1830,7 +1837,7 @@ setMessages(
       file.size >
         MAX_IMAGE
     ) {
-      alert(
+      setSendError(
         "La imagen debe pesar 15 MB o menos."
       );
       return;
@@ -1841,12 +1848,13 @@ setMessages(
       file.size >
         MAX_VIDEO
     ) {
-      alert(
+      setSendError(
         "El video debe pesar 50 MB o menos."
       );
       return;
     }
 
+    setSendError("");
     clearMedia();
 
     setMediaFile(file);
@@ -2003,6 +2011,8 @@ setMessages(
       return;
     }
 
+    setSendError("");
+
     const textToSend =
       newMessage.trim();
 
@@ -2015,7 +2025,7 @@ setMessages(
       !navigator.onLine
     ) {
       if (fileToSend) {
-        alert(
+        setSendError(
           "Sin conexión. La foto o video se mantendrá listo para enviar cuando vuelvas a conectarte."
         );
         return;
@@ -2287,7 +2297,7 @@ setMessages(
         );
       }
     } catch (
-      error: any
+      error: unknown
     ) {
       setMessages(
         (current) =>
@@ -2334,9 +2344,11 @@ setMessages(
         );
       }
 
-      alert(
-        error?.message ||
+      setSendError(
+        getMessageErrorText(
+          error,
           "No se pudo enviar el mensaje."
+        )
       );
     } finally {
       setSending(false);
@@ -3632,6 +3644,15 @@ setMessages(
           }
           className="alumni-chat-composer-shell alumni-chat-focus-composer-shell shrink-0"
         >
+          <MessageErrorBanner
+            message={
+              sendError
+            }
+            onDismiss={() =>
+              setSendError("")
+            }
+          />
+
           {editingMessage && (
             <div className="alumni-composer-reply-preview">
               <div className="alumni-composer-reply-copy">

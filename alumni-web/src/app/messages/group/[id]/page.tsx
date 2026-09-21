@@ -9,6 +9,7 @@ import {
   ImagePlus,
   Loader2,
   MoreHorizontal,
+  Search,
   Send,
   Users,
   X,
@@ -30,6 +31,7 @@ import {
 import AppShell from "@/components/layout/AppShell";
 import DeferredMessageMedia from "@/components/messages/DeferredMessageMedia";
 import MessageConnectionBar from "@/components/messages/MessageConnectionBar";
+import MessageErrorBanner from "@/components/messages/MessageErrorBanner";
 import GroupAdminPanel from "@/components/messages/GroupAdminPanel";
 import MessageProTools from "@/components/messages/MessageProTools";
 import {
@@ -42,6 +44,9 @@ import "../../../interior-ui-1-0.css";
 import {
   createMessageMediaPreview,
 } from "@/lib/messageMedia";
+import {
+  getMessageErrorText,
+} from "@/lib/messageErrors";
 import {
   OUTBOX_RETRY_EVENT,
   matchesOutboxRetryEvent,
@@ -116,6 +121,12 @@ export default function GroupChatPage() {
     useState("");
   const [sending, setSending] =
     useState(false);
+  const [sendError, setSendError] =
+    useState("");
+  const [searchOpen, setSearchOpen] =
+    useState(false);
+  const [groupSearch, setGroupSearch] =
+    useState("");
   const [replyingTo, setReplyingTo] =
     useState<any>(null);
   const [mediaFile, setMediaFile] =
@@ -172,6 +183,11 @@ export default function GroupChatPage() {
     );
   const scrollRef =
     useRef<HTMLDivElement>(
+      null
+    );
+
+  const searchInputRef =
+    useRef<HTMLInputElement>(
       null
     );
 
@@ -1422,7 +1438,7 @@ export default function GroupChatPage() {
       !image &&
       !video
     ) {
-      alert(
+      setSendError(
         "Solo puedes enviar fotos o videos."
       );
       return;
@@ -1432,12 +1448,13 @@ export default function GroupChatPage() {
       file.size >
       50 * 1024 * 1024
     ) {
-      alert(
+      setSendError(
         "El archivo debe pesar 50 MB o menos."
       );
       return;
     }
 
+    setSendError("");
     clearMedia();
 
     setMediaFile(file);
@@ -1588,6 +1605,8 @@ export default function GroupChatPage() {
       return;
     }
 
+    setSendError("");
+
     const textToSend =
       text.trim();
 
@@ -1600,7 +1619,7 @@ export default function GroupChatPage() {
       !navigator.onLine
     ) {
       if (fileToSend) {
-        alert(
+        setSendError(
           "Sin conexión. El archivo se mantendrá listo para enviar cuando vuelvas a conectarte."
         );
         return;
@@ -1895,7 +1914,7 @@ export default function GroupChatPage() {
         );
       }
     } catch (
-      error: any
+      error: unknown
     ) {
       setMessages(
         (current) =>
@@ -1942,9 +1961,11 @@ export default function GroupChatPage() {
         );
       }
 
-      alert(
-        error?.message ||
-          "No se pudo enviar."
+      setSendError(
+        getMessageErrorText(
+          error,
+          "No se pudo enviar el mensaje."
+        )
       );
     } finally {
       setSending(false);
@@ -2409,6 +2430,59 @@ export default function GroupChatPage() {
       [members.length]
     );
 
+  const visibleMessages =
+    useMemo(() => {
+      const query =
+        groupSearch
+          .trim()
+          .toLowerCase();
+
+      if (
+        !searchOpen ||
+        !query
+      ) {
+        return messages;
+      }
+
+      return messages.filter(
+        (message) =>
+          [
+            message.content,
+            message.media_name,
+            message
+              .sender_profile
+              ?.username,
+          ]
+            .filter(Boolean)
+            .some((value) =>
+              String(value)
+                .toLowerCase()
+                .includes(query)
+            )
+      );
+    }, [
+      messages,
+      searchOpen,
+      groupSearch,
+    ]);
+
+  function openGroupSearch() {
+    setGroupInfoOpen(false);
+    setSearchOpen(true);
+
+    window.setTimeout(
+      () =>
+        searchInputRef.current
+          ?.focus(),
+      40
+    );
+  }
+
+  function closeGroupSearch() {
+    setSearchOpen(false);
+    setGroupSearch("");
+  }
+
   if (
     !loadingChat &&
     !group
@@ -2487,6 +2561,19 @@ export default function GroupChatPage() {
 
             <button
               type="button"
+              onClick={
+                openGroupSearch
+              }
+              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-[var(--app-muted-2)] hover:bg-[var(--app-soft)]"
+              aria-label="Buscar en el grupo"
+            >
+              <Search
+                size={18}
+              />
+            </button>
+
+            <button
+              type="button"
               onClick={() =>
                 setGroupInfoOpen(
                   true
@@ -2501,6 +2588,52 @@ export default function GroupChatPage() {
             </button>
           </div>
         </header>
+
+        {searchOpen && (
+          <div className="relative z-30 flex shrink-0 items-center gap-2 border-b border-[var(--app-border)] bg-[var(--app-surface)] px-3 py-2">
+            <Search
+              size={15}
+              className="shrink-0 text-[var(--app-muted-2)]"
+            />
+
+            <input
+              ref={
+                searchInputRef
+              }
+              value={
+                groupSearch
+              }
+              onChange={(
+                event
+              ) =>
+                setGroupSearch(
+                  event.target.value
+                )
+              }
+              placeholder="Buscar en este grupo"
+              className="alumni-mobile-input h-9 min-w-0 flex-1 bg-transparent text-[16px] text-[var(--app-text)] outline-none placeholder:text-[var(--app-muted-3)] sm:text-[14px]"
+            />
+
+            {groupSearch && (
+              <span className="shrink-0 text-[10px] font-bold text-[var(--app-muted-2)]">
+                {
+                  visibleMessages.length
+                }
+              </span>
+            )}
+
+            <button
+              type="button"
+              onClick={
+                closeGroupSearch
+              }
+              className="grid h-8 w-8 shrink-0 place-items-center rounded-full text-[var(--app-muted-2)] active:bg-[var(--app-soft)]"
+              aria-label="Cerrar búsqueda"
+            >
+              <X size={16} />
+            </button>
+          </div>
+        )}
 
         <MessageConnectionBar
           scope="group"
@@ -2551,7 +2684,7 @@ export default function GroupChatPage() {
             </div>
           ) : messages.length ? (
             <div>
-              {messages.map(
+              {visibleMessages.map(
                 (message) => {
                   const mine =
                     message.sender_id ===
@@ -2881,6 +3014,15 @@ export default function GroupChatPage() {
           }
           className="alumni-chat-composer-shell alumni-chat-focus-composer-shell shrink-0"
         >
+          <MessageErrorBanner
+            message={
+              sendError
+            }
+            onDismiss={() =>
+              setSendError("")
+            }
+          />
+
           {editingMessage && (
             <div className="alumni-composer-reply-preview">
               <div className="alumni-composer-reply-copy">
