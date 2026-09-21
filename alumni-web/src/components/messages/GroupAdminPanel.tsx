@@ -24,6 +24,33 @@ import {
   supabase,
 } from "@/lib/supabase";
 
+type GroupAdminGroup = {
+  id: string;
+  name?: string | null;
+  avatar_url?: string | null;
+};
+
+type GroupAdminMember = {
+  user_id: string;
+  username?: string | null;
+  avatar_url?: string | null;
+  role?: string | null;
+};
+
+function getGroupAdminErrorMessage(error: unknown) {
+  if (error instanceof Error) return error.message;
+
+  if (
+    typeof error === "object" &&
+    error !== null &&
+    "message" in error
+  ) {
+    const message = (error as { message?: unknown }).message;
+    return typeof message === "string" ? message : "";
+  }
+
+  return "";
+}
 const GROUP_BUCKET =
   "group-message-media";
 
@@ -36,8 +63,8 @@ export default function GroupAdminPanel({
 }: {
   open: boolean;
   onClose: () => void;
-  group: any;
-  members: any[];
+  group: GroupAdminGroup;
+  members: GroupAdminMember[];
   onChanged: () =>
     void | Promise<void>;
 }) {
@@ -175,7 +202,7 @@ export default function GroupAdminPanel({
 
       await onChanged();
     } catch (
-      error: any
+      error: unknown
     ) {
       if (
         uploadedPath
@@ -190,7 +217,7 @@ export default function GroupAdminPanel({
       }
 
       alert(
-        error?.message ||
+        getGroupAdminErrorMessage(error) ||
           "No se pudo cambiar la foto."
       );
     } finally {
@@ -199,7 +226,7 @@ export default function GroupAdminPanel({
   }
 
   async function setRole(
-    member: any,
+    member: GroupAdminMember,
     role:
       | "admin"
       | "member"
@@ -230,10 +257,10 @@ export default function GroupAdminPanel({
 
       await onChanged();
     } catch (
-      error: any
+      error: unknown
     ) {
       alert(
-        error?.message ||
+        getGroupAdminErrorMessage(error) ||
           "No se pudo cambiar el rol."
       );
     } finally {
@@ -242,7 +269,7 @@ export default function GroupAdminPanel({
   }
 
   async function removeMember(
-    member: any
+    member: GroupAdminMember
   ) {
     if (
       !confirm(
@@ -276,10 +303,10 @@ export default function GroupAdminPanel({
 
       await onChanged();
     } catch (
-      error: any
+      error: unknown
     ) {
       alert(
-        error?.message ||
+        getGroupAdminErrorMessage(error) ||
           "No se pudo quitar al miembro."
       );
     } finally {
@@ -323,11 +350,11 @@ export default function GroupAdminPanel({
         "/messages"
       );
     } catch (
-      error: any
+      error: unknown
     ) {
       const message =
         String(
-          error?.message ||
+          getGroupAdminErrorMessage(error) ||
             ""
         );
 
@@ -341,7 +368,7 @@ export default function GroupAdminPanel({
         );
       } else {
         alert(
-          error?.message ||
+          getGroupAdminErrorMessage(error) ||
             "No se pudo salir del grupo."
         );
       }
@@ -496,7 +523,7 @@ export default function GroupAdminPanel({
                             member.avatar_url
                           }
                           alt={
-                            member.username
+                            member.username || ""
                           }
                           className="h-full w-full object-cover"
                         />

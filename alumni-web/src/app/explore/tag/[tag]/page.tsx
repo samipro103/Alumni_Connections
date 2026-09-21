@@ -15,10 +15,54 @@ import ExplorePostCard from "@/components/explore/ExplorePostCard";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { supabase } from "@/lib/supabase";
 import { hydratePostMedia } from "@/lib/privateMedia";
-import { hydratePostMediaItems } from "@/lib/feedMedia";
+import {
+  hydratePostMediaItems,
+  type PostMediaItem,
+} from "@/lib/feedMedia";
 import "../../explore-pro.css";
 
-async function hydratePosts(postIds: number[]) {
+type TagProfile = {
+  id?: string;
+  username?: string | null;
+  avatar_url?: string | null;
+  full_name?: string | null;
+  university?: string | null;
+  education_institution_name?: string | null;
+  education_program_name?: string | null;
+  career?: string | null;
+  city?: string | null;
+  country?: string | null;
+  residence_country_code?: string | null;
+};
+
+type TagPost = {
+  id: number;
+  user_id?: string | null;
+  content?: string | null;
+  image_url?: string | null;
+  image_path?: string | null;
+  media_bucket?: string | null;
+  profiles?: TagProfile | null;
+  likes?: Array<{
+    user_id?: string | null;
+  }> | null;
+};
+
+type TagPostDecorated = TagPost & {
+  likesCount: number;
+  commentsCount: number;
+  repostsCount: number;
+  mediaItems: PostMediaItem[];
+};
+
+type PostIdRow = {
+  post_id: number | string;
+};
+
+type PostCountRow = {
+  post_id: number;
+};
+async function hydratePosts(postIds: number[]): Promise<TagPostDecorated[]> {
   if (!postIds.length) return [];
 
   const [
@@ -65,26 +109,26 @@ async function hydratePosts(postIds: number[]) {
   ]);
 
   const hydrated = await hydratePostMedia(
-    (postsData || []) as any[]
+    (postsData || []) as unknown as TagPost[]
   );
   const mediaRows = await hydratePostMediaItems(
-    (mediaRaw || []) as any[]
+    (mediaRaw || []) as unknown as PostMediaItem[]
   );
 
   const byId = new Map(
-    hydrated.map((post: any) => [
+    hydrated.map((post) => [
       post.id,
       {
         ...post,
         likesCount: post.likes?.length || 0,
         commentsCount: (commentsData || []).filter(
-          (row: any) => row.post_id === post.id
+          (row: PostCountRow) => row.post_id === post.id
         ).length,
         repostsCount: (repostData || []).filter(
-          (row: any) => row.post_id === post.id
+          (row: PostCountRow) => row.post_id === post.id
         ).length,
         mediaItems: mediaRows.filter(
-          (row: any) => row.post_id === post.id
+          (row: PostCountRow) => row.post_id === post.id
         ),
       },
     ])
@@ -92,7 +136,10 @@ async function hydratePosts(postIds: number[]) {
 
   return postIds
     .map((id) => byId.get(id))
-    .filter(Boolean);
+    .filter(
+      (post): post is TagPostDecorated =>
+        Boolean(post)
+    );
 }
 
 export default function ExploreTagPage() {
@@ -104,7 +151,7 @@ export default function ExploreTagPage() {
     .replace(/^#/, "")
     .toLowerCase();
 
-  const [posts, setPosts] = useState<any[]>([]);
+  const [posts, setPosts] = useState<TagPostDecorated[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -124,14 +171,14 @@ export default function ExploreTagPage() {
       );
 
       const ids = (data || []).map(
-        (row: any) => Number(row.post_id)
+        (row: PostIdRow) => Number(row.post_id)
       );
 
       const hydrated = await hydratePosts(ids);
 
       if (!active) return;
 
-      const filtered = hydrated.filter((post: any) =>
+      const filtered = hydrated.filter((post) =>
         (
           String(post.content || "").match(
             /#[A-Za-z0-9_]{2,40}/g
@@ -160,7 +207,10 @@ export default function ExploreTagPage() {
     return () => {
       active = false;
     };
-  }, [tag, user?.id]);
+  }, [
+    tag,
+    user,
+  ]);
 
   return (
     <AppShell>

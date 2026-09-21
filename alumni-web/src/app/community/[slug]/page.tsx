@@ -27,16 +27,77 @@ import "../community-core-4-1.css";
 import "../../interior-ui-1-0.css";
 import "../community-motion-3-0.css";
 
+type CommunityDetail = {
+  id: string;
+  name: string;
+  description?: string | null;
+  visibility?: string | null;
+  institution?: string | null;
+  career?: string | null;
+  city?: string | null;
+};
+
+type CommunityProfile = {
+  id: string;
+  username?: string | null;
+  full_name?: string | null;
+  avatar_url?: string | null;
+};
+
+type CommunityMember = {
+  community_id: string;
+  user_id: string;
+  role?: string | null;
+  status?: string | null;
+  joined_at?: string | null;
+  profile?: CommunityProfile | null;
+};
+
+type CommunityPost = {
+  id: string | number;
+  community_id?: string | null;
+  user_id: string;
+  content?: string | null;
+  created_at: string;
+  profile?: CommunityProfile | null;
+};
+
+type CommunityEvent = {
+  id: string | number;
+  title: string;
+  event_date: string;
+  location?: string | null;
+};
+
+function getCommunityErrorMessage(error: unknown) {
+  if (error instanceof Error) return error.message;
+
+  if (
+    typeof error === "object" &&
+    error !== null &&
+    "message" in error
+  ) {
+    const message = (error as { message?: unknown }).message;
+    return typeof message === "string" ? message : "";
+  }
+
+  return "";
+}
 export default function CommunityDetailPage() {
   const params = useParams<{ slug: string }>();
   const slug = decodeURIComponent(String(params.slug || ""));
   const { user } = useAuth();
 
-  const [community, setCommunity] = useState<any>(null);
-  const [membership, setMembership] = useState<any>(null);
-  const [members, setMembers] = useState<any[]>([]);
-  const [posts, setPosts] = useState<any[]>([]);
-  const [events, setEvents] = useState<any[]>([]);
+  const [community, setCommunity] =
+    useState<CommunityDetail | null>(null);
+  const [membership, setMembership] =
+    useState<CommunityMember | null>(null);
+  const [members, setMembers] =
+    useState<CommunityMember[]>([]);
+  const [posts, setPosts] =
+    useState<CommunityPost[]>([]);
+  const [events, setEvents] =
+    useState<CommunityEvent[]>([]);
   const [content, setContent] = useState("");
   const [loading, setLoading] = useState(true);
   const [joining, setJoining] = useState(false);
@@ -85,13 +146,23 @@ export default function CommunityDetailPage() {
           .limit(6),
       ]);
 
-    const memberRows = membersResult.data || [];
+    const memberRows =
+      (membersResult.data || []) as unknown as
+        CommunityMember[];
+
+    const postRows =
+      (postsResult.data || []) as unknown as
+        CommunityPost[];
+
+    const eventRows =
+      (eventsResult.data || []) as unknown as
+        CommunityEvent[];
     const userIds = [
-      ...new Set(memberRows.map((row: any) => row.user_id)),
+      ...new Set(memberRows.map((row) => row.user_id)),
     ];
 
     const postUserIds = [
-      ...new Set((postsResult.data || []).map((row: any) => row.user_id)),
+      ...new Set(postRows.map((row) => row.user_id)),
     ];
 
     const allProfileIds = [
@@ -103,32 +174,38 @@ export default function CommunityDetailPage() {
           .from("profiles")
           .select("id,username,full_name,avatar_url")
           .in("id", allProfileIds)
-      : { data: [] as any[] };
+      : { data: [] as CommunityProfile[] };
+
+    const profileRows =
+      (profilesResult.data || []) as unknown as
+        CommunityProfile[];
 
     const profileMap = new Map(
-      (profilesResult.data || []).map((profile: any) => [
+      profileRows.map((profile) => [
         profile.id,
         profile,
       ])
     );
 
-    setCommunity(communityData);
+    setCommunity(
+      communityData as unknown as CommunityDetail
+    );
     setMembers(
-      memberRows.map((row: any) => ({
+      memberRows.map((row) => ({
         ...row,
         profile: profileMap.get(row.user_id) || null,
       }))
     );
     setPosts(
-      (postsResult.data || []).map((row: any) => ({
+      postRows.map((row) => ({
         ...row,
         profile: profileMap.get(row.user_id) || null,
       }))
     );
-    setEvents(eventsResult.data || []);
+    setEvents(eventRows);
     setMembership(
       user
-        ? memberRows.find((row: any) => row.user_id === user.id) || null
+        ? memberRows.find((row) => row.user_id === user.id) || null
         : null
     );
     setLoading(false);
@@ -142,7 +219,9 @@ export default function CommunityDetailPage() {
   const canPost = membership?.status === "active";
   const canManage =
     membership?.status === "active" &&
-    ["owner", "moderator"].includes(membership.role);
+    ["owner", "moderator"].includes(
+      membership?.role || ""
+    );
 
   async function joinOrLeave() {
     if (!user || !community || joining) return;
@@ -165,8 +244,8 @@ export default function CommunityDetailPage() {
       }
 
       await load();
-    } catch (error: any) {
-      alert(error?.message || "No se pudo completar.");
+    } catch (error: unknown) {
+      alert(getCommunityErrorMessage(error) || "No se pudo completar.");
     } finally {
       setJoining(false);
     }
@@ -198,8 +277,19 @@ export default function CommunityDetailPage() {
     await load();
   }
 
-  async function moderate(row: any, action: "approve" | "reject" | "remove") {
-    if (!canManage) return;
+  async function moderate(
+    row: CommunityMember,
+    action:
+      | "approve"
+      | "reject"
+      | "remove"
+  ) {
+    if (
+      !canManage ||
+      !community
+    ) {
+      return;
+    }
 
     const { error } = await supabase.rpc(
       "alumni_moderate_community_member",
@@ -378,7 +468,7 @@ export default function CommunityDetailPage() {
               Aún no hay publicaciones en esta comunidad.
             </p>
           ) : (
-            posts.map((post: any) => (
+            posts.map((post) => (
               <article key={post.id} className="community-post">
                 <header>
                   <Link href={`/u/${post.profile?.username || ""}`}>

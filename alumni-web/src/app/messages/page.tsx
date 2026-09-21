@@ -26,14 +26,64 @@ import CreateMessageGroupModal from "@/components/messages/CreateMessageGroupMod
 import "./messages-design-1-6.css";
 import "../interior-ui-1-0.css";
 
+type MessagePreview = {
+  id?: string | number | null;
+  sender_id?: string | null;
+  receiver_id?: string | null;
+  content?: string | null;
+  message_type?: string | null;
+  media_type?: string | null;
+  media_name?: string | null;
+  read_at?: string | null;
+  created_at?: string;
+};
+
 type Conversation = {
   id: string;
   username: string;
   avatar_url: string | null;
   university: string | null;
   career: string | null;
-  lastMessage: any;
+  lastMessage: MessagePreview;
   unreadCount: number;
+};
+
+type MessageGroupInboxRow = {
+  group_id: string;
+  name?: string | null;
+  member_count?: number | null;
+  unread_count?: number | null;
+  last_message_content?: string | null;
+  last_message_type?: string | null;
+  last_sender_username?: string | null;
+};
+
+type MessageGroupConversation = MessageGroupInboxRow & {
+  avatar_url: string;
+};
+
+type GroupAvatarRow = {
+  id: string;
+  avatar_path?: string | null;
+  avatar_updated_at?: string | null;
+};
+
+type DirectConversationRow = {
+  peer_id: string;
+  username: string;
+  avatar_url?: string | null;
+  university?: string | null;
+  career?: string | null;
+  unread_count?: number | null;
+  last_message_id?: string | number | null;
+  last_sender_id?: string | null;
+  last_receiver_id?: string | null;
+  last_content?: string | null;
+  last_message_type?: string | null;
+  last_media_type?: string | null;
+  last_media_name?: string | null;
+  last_read_at?: string | null;
+  last_created_at?: string | null;
 };
 
 type InboxFilter = "all" | "unread";
@@ -55,7 +105,7 @@ export default function MessagesPage() {
   const [
     groups,
     setGroups,
-  ] = useState<any[]>([]);
+  ] = useState<MessageGroupConversation[]>([]);
 
   const [
     groupModalOpen,
@@ -114,12 +164,13 @@ export default function MessagesPage() {
     }
 
     const rows =
-      data || [];
+      (data || []) as unknown as
+        MessageGroupInboxRow[];
 
     const groupIds =
       rows
         .map(
-          (group: any) =>
+          (group) =>
             group.group_id
         )
         .filter(Boolean);
@@ -146,15 +197,20 @@ export default function MessagesPage() {
         );
 
     const avatarRows =
-      groupRows || [];
+      (groupRows || []) as unknown as
+        GroupAvatarRow[];
 
     const avatarPaths =
       avatarRows
         .map(
-          (group: any) =>
+          (group) =>
             group.avatar_path
         )
-        .filter(Boolean);
+        .filter(
+          (path): path is string =>
+            typeof path === "string" &&
+            path.length > 0
+        );
 
     const avatarUrlByPath =
       avatarPaths.length
@@ -180,7 +236,7 @@ export default function MessagesPage() {
 
     setGroups(
       rows.map(
-        (group: any) => ({
+        (group) => ({
           ...group,
           avatar_url:
             avatarByGroup.get(
@@ -448,9 +504,10 @@ export default function MessagesPage() {
     }
 
     const merged = (
-      data || []
+      (data || []) as unknown as
+        DirectConversationRow[]
     ).map(
-      (row: any) => ({
+      (row) => ({
         id: row.peer_id,
         username: row.username,
         avatar_url:
@@ -481,7 +538,8 @@ export default function MessagesPage() {
           read_at:
             row.last_read_at,
           created_at:
-            row.last_created_at,
+            row.last_created_at ||
+            undefined,
         },
       })
     ) as Conversation[];

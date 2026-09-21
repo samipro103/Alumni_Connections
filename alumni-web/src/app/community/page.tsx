@@ -31,6 +31,24 @@ import "./community-core-4-1.css";
 import "../interior-ui-1-0.css";
 import "./community-mobile-pro-4-0.css";
 
+type CommunityListItem = {
+  id: string;
+  slug: string;
+  name: string;
+  description?: string | null;
+  category: string;
+  visibility?: string | null;
+  institution?: string | null;
+  career?: string | null;
+  city?: string | null;
+};
+
+type CommunityMembership = {
+  community_id: string;
+  role?: string | null;
+  status?: string | null;
+  joined_at?: string | null;
+};
 type CreateStep = 1 | 2 | 3;
 
 const CATEGORIES = [
@@ -73,8 +91,10 @@ const CATEGORY_LABELS = Object.fromEntries(
 export default function CommunityPage() {
   const { user } = useAuth();
   const reduceMotion = useReducedMotion();
-  const [communities, setCommunities] = useState<any[]>([]);
-  const [members, setMembers] = useState<any[]>([]);
+  const [communities, setCommunities] =
+    useState<CommunityListItem[]>([]);
+  const [members, setMembers] =
+    useState<CommunityMembership[]>([]);
   const [query, setQuery] = useState("");
   const [mode, setMode] = useState<"discover" | "mine">("discover");
   const [loading, setLoading] = useState(true);
@@ -120,18 +140,26 @@ export default function CommunityPage() {
             .from("community_members")
             .select("community_id,role,status,joined_at")
             .eq("user_id", user.id)
-        : Promise.resolve({ data: [] } as any),
+        : Promise.resolve({
+            data: [] as CommunityMembership[],
+          }),
     ]);
 
-    setCommunities(communitiesResult.data || []);
-    setMembers(membersResult.data || []);
+    setCommunities(
+      (communitiesResult.data || []) as unknown as
+        CommunityListItem[]
+    );
+    setMembers(
+      (membersResult.data || []) as unknown as
+        CommunityMembership[]
+    );
     setLoading(false);
   }
 
   const memberMap = useMemo(
     () =>
       new Map(
-        members.map((row: any) => [
+        members.map((row) => [
           row.community_id,
           row,
         ])
@@ -142,7 +170,7 @@ export default function CommunityPage() {
   const filtered = useMemo(() => {
     const value = query.trim().toLowerCase();
 
-    return communities.filter((community: any) => {
+    return communities.filter((community) => {
       const membership = memberMap.get(community.id);
 
       if (
@@ -338,7 +366,7 @@ export default function CommunityPage() {
           </section>
         ) : (
           <section className="community2-list">
-            {filtered.map((community: any) => {
+            {filtered.map((community) => {
               const membership = memberMap.get(
                 community.id
               );
