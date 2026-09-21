@@ -1,8 +1,12 @@
 "use client";
 
+export type OutboxScope =
+  | "direct"
+  | "group";
+
 export type AlumniOutboxItem = {
   id: string;
-  scope: "direct" | "group";
+  scope: OutboxScope;
   conversationId: string;
   receiverId?: string;
   content: string;
@@ -10,17 +14,55 @@ export type AlumniOutboxItem = {
   createdAt: string;
 };
 
-const KEY = "alumni-message-outbox-v1";
+type OutboxRetryDetail = {
+  scope: OutboxScope;
+  conversationId: string;
+};
 
-export function getOutbox(): AlumniOutboxItem[] {
-  if (typeof window === "undefined") return [];
+const KEY =
+  "alumni-message-outbox-v1";
+
+export const OUTBOX_CHANGE_EVENT =
+  "alumni-message-outbox-change";
+
+export const OUTBOX_RETRY_EVENT =
+  "alumni-message-outbox-retry";
+
+function notifyOutboxChange() {
+  if (
+    typeof window ===
+    "undefined"
+  ) {
+    return;
+  }
+
+  window.dispatchEvent(
+    new Event(
+      OUTBOX_CHANGE_EVENT
+    )
+  );
+}
+
+export function getOutbox():
+  AlumniOutboxItem[] {
+  if (
+    typeof window ===
+    "undefined"
+  ) {
+    return [];
+  }
 
   try {
-    const parsed = JSON.parse(
-      localStorage.getItem(KEY) || "[]"
-    );
+    const parsed =
+      JSON.parse(
+        localStorage.getItem(
+          KEY
+        ) || "[]"
+      );
 
-    return Array.isArray(parsed)
+    return Array.isArray(
+      parsed
+    )
       ? parsed
       : [];
   } catch {
@@ -29,23 +71,37 @@ export function getOutbox(): AlumniOutboxItem[] {
 }
 
 function setOutbox(
-  items: AlumniOutboxItem[]
+  items:
+    AlumniOutboxItem[]
 ) {
+  if (
+    typeof window ===
+    "undefined"
+  ) {
+    return;
+  }
+
   localStorage.setItem(
     KEY,
-    JSON.stringify(items)
+    JSON.stringify(
+      items
+    )
   );
+
+  notifyOutboxChange();
 }
 
 export function queueOutbox(
   item: AlumniOutboxItem
 ) {
-  const current = getOutbox();
+  const current =
+    getOutbox();
 
   if (
     current.some(
       (entry) =>
-        entry.id === item.id
+        entry.id ===
+        item.id
     )
   ) {
     return;
@@ -69,15 +125,70 @@ export function removeOutbox(
 }
 
 export function outboxFor(
-  scope: "direct" | "group",
+  scope: OutboxScope,
   conversationId: string
 ) {
   return getOutbox().filter(
     (item) =>
-      item.scope === scope &&
+      item.scope ===
+        scope &&
       item.conversationId ===
         conversationId
   );
 }
 
-/* ALUMNI_1_5_0_OUTBOX */
+export function requestOutboxRetry(
+  scope: OutboxScope,
+  conversationId: string
+) {
+  if (
+    typeof window ===
+    "undefined"
+  ) {
+    return;
+  }
+
+  window.dispatchEvent(
+    new CustomEvent<OutboxRetryDetail>(
+      OUTBOX_RETRY_EVENT,
+      {
+        detail: {
+          scope,
+          conversationId,
+        },
+      }
+    )
+  );
+}
+
+export function matchesOutboxRetryEvent(
+  event: Event,
+  scope: OutboxScope,
+  conversationId: string
+) {
+  if (
+    typeof CustomEvent ===
+      "undefined" ||
+    !(
+      event instanceof
+      CustomEvent
+    )
+  ) {
+    return false;
+  }
+
+  const detail =
+    event.detail as
+      | OutboxRetryDetail
+      | undefined;
+
+  return (
+    detail?.scope ===
+      scope &&
+    detail
+      .conversationId ===
+      conversationId
+  );
+}
+
+/* ALUMNI_10_2_OUTBOX_RELIABILITY */

@@ -29,6 +29,7 @@ import {
 } from "@/components/auth/AuthProvider";
 import AppShell from "@/components/layout/AppShell";
 import DeferredMessageMedia from "@/components/messages/DeferredMessageMedia";
+import MessageConnectionBar from "@/components/messages/MessageConnectionBar";
 import GroupAdminPanel from "@/components/messages/GroupAdminPanel";
 import MessageProTools from "@/components/messages/MessageProTools";
 import {
@@ -42,6 +43,8 @@ import {
   createMessageMediaPreview,
 } from "@/lib/messageMedia";
 import {
+  OUTBOX_RETRY_EVENT,
+  matchesOutboxRetryEvent,
   outboxFor,
   queueOutbox,
   removeOutbox,
@@ -603,15 +606,39 @@ export default function GroupChatPage() {
 
     void flush();
 
+    const retryQueued = (
+      event: Event
+    ) => {
+      if (
+        matchesOutboxRetryEvent(
+          event,
+          "group",
+          groupId
+        )
+      ) {
+        void flush();
+      }
+    };
+
     window.addEventListener(
       "online",
       flush
+    );
+
+    window.addEventListener(
+      OUTBOX_RETRY_EVENT,
+      retryQueued
     );
 
     return () => {
       window.removeEventListener(
         "online",
         flush
+      );
+
+      window.removeEventListener(
+        OUTBOX_RETRY_EVENT,
+        retryQueued
       );
     };
   }, [
@@ -2474,6 +2501,13 @@ export default function GroupChatPage() {
             </button>
           </div>
         </header>
+
+        <MessageConnectionBar
+          scope="group"
+          conversationId={
+            groupId
+          }
+        />
 
         <div
           ref={scrollRef}

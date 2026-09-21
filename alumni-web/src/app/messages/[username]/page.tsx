@@ -32,8 +32,11 @@ import { useAuth } from "@/components/auth/AuthProvider";
 import AppShell from "@/components/layout/AppShell";
 import MessageProTools from "@/components/messages/MessageProTools";
 import DeferredMessageMedia from "@/components/messages/DeferredMessageMedia";
+import MessageConnectionBar from "@/components/messages/MessageConnectionBar";
 import { createMessageMediaPreview } from "@/lib/messageMedia";
 import {
+  OUTBOX_RETRY_EVENT,
+  matchesOutboxRetryEvent,
   outboxFor,
   queueOutbox,
   removeOutbox,
@@ -894,15 +897,39 @@ const mediaUrlCacheRef =
 
     void flush();
 
+    const retryQueued = (
+      event: Event
+    ) => {
+      if (
+        matchesOutboxRetryEvent(
+          event,
+          "direct",
+          username
+        )
+      ) {
+        void flush();
+      }
+    };
+
     window.addEventListener(
       "online",
       flush
+    );
+
+    window.addEventListener(
+      OUTBOX_RETRY_EVENT,
+      retryQueued
     );
 
     return () => {
       window.removeEventListener(
         "online",
         flush
+      );
+
+      window.removeEventListener(
+        OUTBOX_RETRY_EVENT,
+        retryQueued
       );
     };
   }, [
@@ -3018,6 +3045,13 @@ setMessages(
             </div>
           )}
         </header>
+
+        <MessageConnectionBar
+          scope="direct"
+          conversationId={
+            username
+          }
+        />
 
         <div
           ref={scrollRef}
