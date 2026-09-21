@@ -1,7 +1,6 @@
 "use client";
 
 import {
-  ArrowLeft,
   AtSign,
   Bell,
   CalendarDays,
@@ -32,6 +31,7 @@ import {
 } from "@/lib/pushNotifications";
 import { hydratePostMediaItems } from "@/lib/feedMedia";
 import InvitationNotificationActions from "@/components/social/InvitationNotificationActions";
+import NotificationPreferencesPanel from "@/components/notifications/NotificationPreferencesPanel";
 import "./notifications-pro.css";
 import "../interior-ui-1-0.css";
 import "./notifications-clean-motion-3-0.css";
@@ -319,6 +319,8 @@ export default function NotificationsPage() {
     useState<Preferences>(DEFAULT_PREFS);
   const [savingPreference, setSavingPreference] =
     useState<keyof Preferences | null>(null);
+  const [savingAllPreferences, setSavingAllPreferences] =
+    useState(false);
 
   const requestRef = useRef(0);
 
@@ -964,6 +966,72 @@ export default function NotificationsPage() {
     );
   }
 
+  async function setAllActivityPreferences(
+    enabled: boolean
+  ) {
+    if (
+      !user ||
+      savingPreference ||
+      savingAllPreferences
+    ) {
+      return;
+    }
+
+    const previous =
+      preferences;
+
+    const next: Preferences = {
+      ...preferences,
+      messages: enabled,
+      story_replies: enabled,
+      likes: enabled,
+      comments: enabled,
+      follows: enabled,
+      events: enabled,
+    };
+
+    setSavingAllPreferences(
+      true
+    );
+
+    setPreferences(
+      next
+    );
+
+    const { error } =
+      await supabase
+        .from(
+          "notification_preferences"
+        )
+        .upsert(
+          {
+            user_id:
+              user.id,
+            ...next,
+            updated_at:
+              new Date().toISOString(),
+          },
+          {
+            onConflict:
+              "user_id",
+          }
+        );
+
+    if (error) {
+      setPreferences(
+        previous
+      );
+
+      alert(
+        error.message
+      );
+    }
+
+    setSavingAllPreferences(
+      false
+    );
+  }
+
   const tabs: Array<{
     id: FilterType;
     label: string;
@@ -1226,100 +1294,26 @@ export default function NotificationsPage() {
               }
             }}
           >
-            <section
-              className="alumni-notification-settings"
-              role="dialog"
-              aria-modal="true"
-              aria-label="Preferencias de notificaciones"
-            >
-              <header>
-                <button
-                  type="button"
-                  onClick={() => closePreferences()}
-                  aria-label="Volver"
-                >
-                  <ArrowLeft
-                    size={19}
-                    strokeWidth={2}
-                  />
-                </button>
-
-                <div>
-                  <p>Notificaciones</p>
-                  <h2>Qué quieres recibir</h2>
-                </div>
-              </header>
-
-              <div className="alumni-notification-preferences-list">
-                {(
-                  [
-                    [
-                      "push_enabled",
-                      "Push",
-                      "Avisos en este dispositivo.",
-                    ],
-                    [
-                      "messages",
-                      "Mensajes",
-                      "Mensajes privados y actividad importante de grupos.",
-                    ],
-                    [
-                      "story_replies",
-                      "Respuestas a historias",
-                      "Cuando alguien responde a una historia.",
-                    ],
-                    [
-                      "likes",
-                      "Likes y compartidos",
-                      "Reacciones, likes y reposts.",
-                    ],
-                    [
-                      "comments",
-                      "Comentarios y respuestas",
-                      "Comentarios, respuestas y menciones.",
-                    ],
-                    [
-                      "follows",
-                      "Seguidores",
-                      "Nuevos seguidores, solicitudes e invitaciones.",
-                    ],
-                    [
-                      "events",
-                      "Eventos",
-                      "Invitaciones y recordatorios de eventos.",
-                    ],
-                  ] as Array<
-                    [
-                      keyof Preferences,
-                      string,
-                      string
-                    ]
-                  >
-                ).map(([key, title, description]) => (
-                  <button
-                    key={key}
-                    type="button"
-                    onClick={() =>
-                      void togglePreference(key)
-                    }
-                    disabled={Boolean(savingPreference)}
-                  >
-                    <span>
-                      <strong>{title}</strong>
-                      <small>{description}</small>
-                    </span>
-
-                    <i
-                      data-on={
-                        preferences[key] ? "true" : "false"
-                      }
-                    >
-                      <b />
-                    </i>
-                  </button>
-                ))}
-              </div>
-            </section>
+            <NotificationPreferencesPanel
+              preferences={
+                preferences
+              }
+              savingPreference={
+                savingPreference
+              }
+              savingAll={
+                savingAllPreferences
+              }
+              onToggle={
+                togglePreference
+              }
+              onSetAllCategories={
+                setAllActivityPreferences
+              }
+              onClose={
+                closePreferences
+              }
+            />
           </div>
         )}
       </main>
@@ -1342,5 +1336,7 @@ export default function NotificationsPage() {
 /* ALUMNI_COMMENT_THREADS_1_0 */
 
 /* ALUMNI_NOTIFICATIONS_2_0 */
+
+/* ALUMNI_10_3_NOTIFICATION_PREFERENCES */
 
 /* ALUMNI_MICRO_IMPROVEMENTS_BLOCK_2 */
