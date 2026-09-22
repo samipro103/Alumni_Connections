@@ -7,6 +7,7 @@ import {
 import {
   Activity,
   BarChart3,
+  Bug,
   BadgeCheck,
   CalendarDays,
   FileText,
@@ -112,6 +113,14 @@ function permissionForPath(
 
   if (
     pathname.startsWith(
+      "/admin/observability"
+    )
+  ) {
+    return "manage_feedback";
+  }
+
+  if (
+    pathname.startsWith(
       "/admin/intelligence"
     ) ||
     pathname.startsWith(
@@ -205,6 +214,13 @@ export default function AdminShell({
       label: "Feedback",
       icon: MessageSquareWarning,
       visible: can("manage_feedback"),
+    },
+    {
+      href: "/admin/observability",
+      label: "Observabilidad",
+      icon: Bug,
+      visible:
+        can("manage_feedback"),
     },
     {
       href: "/admin/audit",

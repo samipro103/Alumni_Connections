@@ -9,6 +9,7 @@ import { ThemeProvider } from "@/components/theme/ThemeProvider";
 import GlobalPullToRefresh from "@/components/layout/GlobalPullToRefresh";
 import PWAProBootstrap from "@/components/pwa/PWAProBootstrap";
 import ProductAnalyticsTracker from "@/components/analytics/ProductAnalyticsTracker";
+import ObservabilityBootstrap from "@/components/observability/ObservabilityBootstrap";
 import { AlumniUXProvider } from "@/components/ui/AlumniUXProvider";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
@@ -134,6 +135,7 @@ export default function RootLayout({
             <GlobalPullToRefresh />
             <PWAProBootstrap />
             <ProductAnalyticsTracker />
+            <ObservabilityBootstrap />
 
             <div
               id="alumni-root-content"

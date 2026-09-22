@@ -3,6 +3,7 @@
 import Link from "next/link";
 import {
   BarChart3,
+  Bug,
   CalendarDays,
   FileText,
   MessageSquareWarning,
@@ -90,6 +91,15 @@ export default function AdminPage() {
         "Revisa errores, capturas, sugerencias y reportes técnicos.",
       icon: MessageSquareWarning,
       visible: can("manage_feedback"),
+    },
+    {
+      href: "/admin/observability",
+      title: "Observabilidad",
+      description:
+        "Monitorea errores de producción, frecuencia, impacto y dispositivos afectados.",
+      icon: Bug,
+      visible:
+        can("manage_feedback"),
     },
     {
       href: "/admin/audit",
