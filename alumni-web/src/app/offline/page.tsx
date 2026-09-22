@@ -1,12 +1,53 @@
 "use client";
 
 import {
+  CheckCircle2,
   CloudOff,
   RefreshCw,
 } from "lucide-react";
+import {
+  useSyncExternalStore,
+} from "react";
 import styles from "./offline.module.css";
 
+function subscribe(
+  notify: () => void
+) {
+  window.addEventListener(
+    "online",
+    notify
+  );
+
+  window.addEventListener(
+    "offline",
+    notify
+  );
+
+  return () => {
+    window.removeEventListener(
+      "online",
+      notify
+    );
+
+    window.removeEventListener(
+      "offline",
+      notify
+    );
+  };
+}
+
+function onlineSnapshot() {
+  return navigator.onLine;
+}
+
 export default function OfflinePage() {
+  const online =
+    useSyncExternalStore(
+      subscribe,
+      onlineSnapshot,
+      () => false
+    );
+
   return (
     <main className={styles.page}>
       <div className={styles.mark}>
@@ -15,15 +56,21 @@ export default function OfflinePage() {
 
       <div className={styles.copy}>
         <span>
-          Sin conexión
+          {online
+            ? "Conexión disponible"
+            : "Sin conexión"}
         </span>
 
         <h1>
-          Alumni sigue aquí.
+          {online
+            ? "La conexión volvió."
+            : "Alumni sigue aquí."}
         </h1>
 
         <p>
-          No pudimos cargar esta pantalla porque no hay conexión. Tus datos privados no se guardan como páginas offline; vuelve a intentar cuando tengas internet.
+          {online
+            ? "Ya puedes volver a cargar Alumni. Tus datos privados se obtendrán nuevamente desde la red."
+            : "No pudimos cargar esta pantalla porque no hay conexión. Tus páginas y datos privados no se guardan como contenido offline."}
         </p>
       </div>
 
@@ -34,15 +81,29 @@ export default function OfflinePage() {
         }
       >
         <RefreshCw size={16} />
-        Reintentar
+        {online
+          ? "Volver a Alumni"
+          : "Reintentar"}
       </button>
 
       <div className={styles.line}>
-        <CloudOff size={14} />
-        La app se reconectará normalmente cuando vuelva la red.
+        {online ? (
+          <CheckCircle2
+            size={14}
+          />
+        ) : (
+          <CloudOff
+            size={14}
+          />
+        )}
+
+        {online
+          ? "La red está disponible otra vez."
+          : "Los mensajes de texto compatibles con la cola offline se enviarán cuando vuelva la conexión."}
       </div>
     </main>
   );
 }
 
 /* ALUMNI_2_0_OFFLINE_PAGE */
+/* ALUMNI_10_9_OFFLINE_STATUS */

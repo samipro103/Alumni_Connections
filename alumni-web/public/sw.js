@@ -1,5 +1,5 @@
 const ALUMNI_VERSION =
-  "alumni-pwa-2.0.0";
+  "alumni-pwa-2.1.0";
 
 const STATIC_CACHE =
   `${ALUMNI_VERSION}-static`;
@@ -9,6 +9,7 @@ const OFFLINE_CACHE =
 
 const PRECACHE = [
   "/offline",
+  "/manifest.webmanifest",
   "/icons/alumni-192.png",
   "/icons/alumni-512.png",
   "/icons/alumni-512-maskable.png",
@@ -191,7 +192,9 @@ function canCacheStatic(
     ) ||
     url.pathname.startsWith(
       "/icons/"
-    )
+    ) ||
+    url.pathname ===
+      "/manifest.webmanifest"
   );
 }
 
@@ -532,3 +535,5 @@ self.addEventListener(
  */
 
 /* ALUMNI_2_0_PWA_STABILITY_SERVICE_WORKER */
+
+/* ALUMNI_10_9_PWA_INSTALL_OFFLINE */
