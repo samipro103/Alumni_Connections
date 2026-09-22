@@ -7,9 +7,18 @@ export default function robots(): MetadataRoute.Robots {
         userAgent: "*",
         allow: "/",
         disallow: [
-          "/admin/",
-          "/api/",
-          "/messages/",
+          "/admin",
+          "/api",
+          "/feed",
+          "/messages",
+          "/notifications",
+          "/settings",
+          "/profile",
+          "/more",
+          "/passport",
+          "/onboarding",
+          "/feedback",
+          "/offline",
         ],
       },
     ],
@@ -19,3 +28,4 @@ export default function robots(): MetadataRoute.Robots {
 }
 
 /* ALUMNI_3_6_1_PUBLIC_LANDING_ADSENSE_READINESS */
+/* ALUMNI_10_10_LAUNCH_ROBOTS */

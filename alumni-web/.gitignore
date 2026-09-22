@@ -52,3 +52,8 @@ firebase-service-account*.json
 /ALUMNI_*.cmd
 /ALUMNI_*.ps1
 /LEEME.txt
+# launch security: local recovery / key material
+/recovery-codes*.txt
+*.key
+*.p12
+*.pfx
