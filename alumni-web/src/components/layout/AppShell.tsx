@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { ReactNode } from "react";
 import { usePathname } from "next/navigation";
@@ -38,6 +38,13 @@ export default function AppShell({
 
   return (
     <>
+      <a
+        href="#alumni-main-content"
+        className="alumni-skip-link"
+      >
+        Saltar al contenido
+      </a>
+
       <EventReminderBootstrap />
       <PushNotificationBootstrap />
       <AlumniMotionDirector />
@@ -75,7 +82,11 @@ export default function AppShell({
               <LeftSidebar />
             </aside>
 
-            <main className="min-w-0">
+            <main
+              id="alumni-main-content"
+              tabIndex={-1}
+              className="min-w-0 outline-none"
+            >
               <AlumniRouteMotion>
                 {children}
               </AlumniRouteMotion>
@@ -122,4 +133,6 @@ export default function AppShell({
 /* ALUMNI_TOPBAR_OPTION_E_7_1:APP_SHELL */
 
 /* ALUMNI_TOPBAR_STRUCTURAL_REBUILD_8_0:APP_SHELL */
+
+/* ALUMNI_ACCESSIBILITY_MOBILE_10_7:APP_SHELL */
 

@@ -29,7 +29,10 @@ export default function LeftSidebar() {
 
   return (
     <div className="sticky top-[88px]">
-      <nav className="space-y-1">
+      <nav
+        className="space-y-1"
+        aria-label="Navegación principal"
+      >
         {items.map(({ href, icon: Icon, text }) => {
           const active = pathname === href || (href !== "/feed" && pathname.startsWith(`${href}/`));
 
@@ -37,6 +40,11 @@ export default function LeftSidebar() {
             <Link
               key={href}
               href={href}
+              aria-current={
+                active
+                  ? "page"
+                  : undefined
+              }
               className={`flex items-center gap-3 rounded-xl px-3 py-3 text-[15px] font-medium transition ${active
                   ? "bg-[var(--app-soft-strong)] text-[var(--app-text)]"
                   : "text-[var(--app-muted)] hover:bg-[var(--app-soft)] hover:text-[var(--app-text-soft)]"}`}
@@ -58,3 +66,5 @@ export default function LeftSidebar() {
 /* ALUMNI_3_1_1_PRODUCT_COPY_CLEANUP */
 
 /* ALUMNI_INTERNAL_UI_1_0_DARK_LIGHT_CLEAN */
+
+/* ALUMNI_ACCESSIBILITY_MOBILE_10_7:SIDEBAR */

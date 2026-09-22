@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useEffect, useState } from "react";
 import type { FormEvent } from "react";
@@ -301,6 +301,7 @@ export default function TopBar() {
               <Search className="h-[18px] w-[18px] text-[var(--app-muted-2)]" />
 
               <input
+                aria-label="Buscar en Alumni"
                 value={search}
                 onChange={(event) => setSearch(event.target.value)}
                 placeholder="Buscar personas, carrera, programa o universidad"
@@ -350,4 +351,6 @@ export default function TopBar() {
 }
 
 /* ALUMNI_TOPBAR_STRUCTURAL_REBUILD_8_0 */
+
+/* ALUMNI_ACCESSIBILITY_MOBILE_10_7:TOPBAR */
 
