@@ -23,6 +23,8 @@
     "test:visual:update": "playwright test -c playwright.visual.config.ts --update-snapshots",
     "design:audit:verbose": "node scripts/qa-design/audit_styles.js --verbose",
     "design:audit:strict": "node scripts/qa-design/audit_styles.js --strict",
+    "qa:launch": "node scripts/qa-launch/release_check.mjs && npm run test:security && npm run qa && npm run design:audit",
+    "qa:launch": "node scripts/qa-launch/release_check.mjs && npm run test:security && npm run qa && npm run design:audit",
     "qa:launch": "node scripts/qa-launch/release_check.mjs && npm run test:security && npm run qa && npm run design:audit"
   },
   "dependencies": {
